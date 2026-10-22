@@ -42,7 +42,6 @@ import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.util.WebUtils;
 
 @Slf4j
@@ -60,16 +59,16 @@ public abstract class AbstractAuthenticator implements Authenticator {
     /**
      * user login and return user in db
      *
-     * @param userId user identity field
+     * @param userName user identity field
      * @param password user login password
      * @return user object in databse
      */
-    public abstract User login(@NonNull String userId, String password);
+    public abstract User login(@NonNull String userName, String password);
 
     @Override
-    public Result<Map<String, String>> authenticate(@NonNull String userId, String password, @NonNull String ip) {
+    public Result<Map<String, String>> authenticate(@NonNull String userName, String password, @NonNull String ip) {
         Result<Map<String, String>> result = new Result<>();
-        User user = login(userId, password);
+        User user = login(userName, password);
         if (user == null) {
             if (Objects.equals(securityConfig.getType(), AuthenticationType.CASDOOR_SSO.name())) {
                 log.error("State or code entered incorrectly.");
@@ -92,7 +91,7 @@ public abstract class AbstractAuthenticator implements Authenticator {
         }
 
         // create session
-        Session session = sessionService.createSessionIfAbsent(user, null);
+        Session session = sessionService.createSessionIfAbsent(user);
         if (session == null) {
             result.setCode(Status.LOGIN_SESSION_FAILED.getCode());
             result.setMsg(Status.LOGIN_SESSION_FAILED.getMsg());
@@ -120,49 +119,16 @@ public abstract class AbstractAuthenticator implements Authenticator {
                 sessionId = cookie.getValue();
             }
         }
-        Session session = sessionService.getSession(sessionId);
+        final Session session = sessionService.getSession(sessionId);
         if (session == null) {
             return null;
         }
+        if (sessionService.isSessionExpire(session)) {
+            sessionService.expireSession(session.getUserId());
+            return null;
+        }
         // get user object from session
-        return userService.queryUserById(session.getUserId());
+        return userService.queryUser(session.getUserId());
     }
 
-    @Override
-    public Result<Map<String, String>> validation(String token, String extra) {
-        Result<Map<String, String>> result = new Result<>();
-        Map<String, String> resData = new HashMap<>();
-        resData.put(Constants.LOGOUT_URL, securityConfig.getLogoutUrl());
-        result.setData(resData);
-        User user = tokenValidation(token);
-        if (user == null) {
-            result.setCode(Status.USER_NAME_PASSWD_ERROR.getCode());
-            result.setMsg(Status.USER_NAME_PASSWD_ERROR.getMsg());
-            return result;
-        }
-
-        // check user state
-        if (user.getState() == Flag.NO.ordinal()) {
-            result.setCode(Status.USER_DISABLED.getCode());
-            result.setMsg(Status.USER_DISABLED.getMsg());
-            return result;
-        }
-
-        // create session
-        Session session = sessionService.createSessionIfAbsent(user, token);
-        if (session == null) {
-            result.setCode(Status.LOGIN_SESSION_FAILED.getCode());
-            result.setMsg(Status.LOGIN_SESSION_FAILED.getMsg());
-            return result;
-        }
-        log.info("sessionId : {}", session.getId());
-        resData.put(Constants.SESSION_ID, session.getId());
-
-        result.setCode(Status.SUCCESS.getCode());
-        result.setMsg(Status.LOGIN_SUCCESS.getMsg());
-        return result;
-    }
-    protected User tokenValidation(String token) {
-        return null;
-    }
 }

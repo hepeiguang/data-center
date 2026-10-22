@@ -91,7 +91,7 @@ public class CasdoorAuthenticatorTest extends AbstractControllerTest {
         beanFactory.autowireBean(casdoorAuthenticator);
 
         mockUser = new User();
-        mockUser.setId("1");;
+        mockUser.setId(1);
         mockUser.setUserName(casdoorUsername);
         mockUser.setEmail(casdoorEmail);
         mockUser.setUserType(userType);
@@ -100,7 +100,7 @@ public class CasdoorAuthenticatorTest extends AbstractControllerTest {
         mockSession = new Session();
         mockSession.setId(UUID.randomUUID().toString());
         mockSession.setIp(ip);
-        mockSession.setUserId("1");
+        mockSession.setUserId(1);
         mockSession.setLastLoginTime(new Date());
 
         mockCasdoorUser = new CasdoorUser();
@@ -112,7 +112,7 @@ public class CasdoorAuthenticatorTest extends AbstractControllerTest {
     @Test
     public void testAuthenticate() {
         when(usersService.getUserByUserName(casdoorUsername)).thenReturn(mockUser);
-        when(sessionService.createSessionIfAbsent(mockUser, null)).thenReturn(mockSession);
+        when(sessionService.createSessionIfAbsent(mockUser)).thenReturn(mockSession);
 
         when(casdoorAuthService.getOAuthToken(code, state)).thenReturn(token);
         when(casdoorAuthService.parseJwtToken(token)).thenReturn(mockCasdoorUser);
@@ -131,13 +131,13 @@ public class CasdoorAuthenticatorTest extends AbstractControllerTest {
 
         Objects.requireNonNull(request.getSession()).setAttribute(Constants.SSO_LOGIN_USER_STATE, state);
         RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
-        when(sessionService.createSessionIfAbsent(mockUser, null)).thenReturn(null);
+        when(sessionService.createSessionIfAbsent(mockUser)).thenReturn(null);
         result = casdoorAuthenticator.authenticate(state, code, ip);
         Assertions.assertEquals(Status.LOGIN_SESSION_FAILED.getCode(), (int) result.getCode());
 
         Objects.requireNonNull(request.getSession()).setAttribute(Constants.SSO_LOGIN_USER_STATE, state);
         RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
-        when(sessionService.createSessionIfAbsent(mockUser, null)).thenReturn(mockSession);
+        when(sessionService.createSessionIfAbsent(mockUser)).thenReturn(mockSession);
         when(usersService.getUserByUserName(casdoorUsername)).thenReturn(null);
         when(usersService.createUser(userType, casdoorUsername, casdoorEmail)).thenReturn(null);
         result = casdoorAuthenticator.authenticate(state, code, ip);

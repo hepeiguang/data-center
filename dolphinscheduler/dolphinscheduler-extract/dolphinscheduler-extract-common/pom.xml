@@ -23,17 +23,15 @@
     <parent>
         <groupId>org.apache.dolphinscheduler</groupId>
         <artifactId>dolphinscheduler-extract</artifactId>
-        <version>3.2.2</version>
+        <version>3.4.3</version>
     </parent>
 
-    <groupId>org.apache.dolphinscheduler</groupId>
     <artifactId>dolphinscheduler-extract-common</artifactId>
 
     <dependencies>
         <dependency>
             <groupId>org.apache.dolphinscheduler</groupId>
             <artifactId>dolphinscheduler-extract-base</artifactId>
-            <version>${project.version}</version>
         </dependency>
     </dependencies>
 

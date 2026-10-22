@@ -23,8 +23,7 @@ import {
   NPagination,
   NSpace,
   NTooltip,
-  NPopconfirm,
-  NModal
+  NPopconfirm
 } from 'naive-ui'
 import {
   defineComponent,
@@ -38,7 +37,6 @@ import { useTable } from './use-table'
 import { useRouter, useRoute } from 'vue-router'
 import { useUISettingStore } from '@/store/ui-setting/ui-setting'
 import Card from '@/components/card'
-import ImportModal from './components/import-modal'
 import StartModal from './components/start-modal'
 import TimingModal from './components/timing-modal'
 import VersionModal from './components/version-modal'
@@ -46,6 +44,7 @@ import CopyModal from './components/copy-modal'
 import type { Router } from 'vue-router'
 import Search from '@/components/input-search'
 import DependenciesModal from '@/views/projects/components/dependencies/dependencies-modal'
+import totalCount from '@/utils/tableTotalCount'
 
 export default defineComponent({
   name: 'WorkflowDefinitionList',
@@ -60,7 +59,6 @@ export default defineComponent({
       createColumns,
       getTableData,
       batchDeleteWorkflow,
-      batchExportWorkflow,
       batchCopyWorkflow
     } = useTable()
 
@@ -79,10 +77,6 @@ export default defineComponent({
     const handleCopyUpdateList = () => {
       variables.checkedRowKeys = []
       requestData()
-    }
-
-    const confirmToSetWorkflowTiming = () => {
-      variables.timingShowRef = true
     }
 
     const handleSearch = () => {
@@ -139,10 +133,8 @@ export default defineComponent({
       createDefinitionDynamic,
       handleChangePageSize,
       batchDeleteWorkflow,
-      batchExportWorkflow,
       batchCopyWorkflow,
       handleCopyUpdateList,
-      confirmToSetWorkflowTiming,
       ...toRefs(variables),
       uiSettingStore,
       trim
@@ -156,12 +148,12 @@ export default defineComponent({
       <NSpace vertical>
         <Card>
           <NSpace justify='space-between'>
-            {/* <NSpace>
+            <NSpace>
               <NButton
                 type='primary'
                 size='small'
                 onClick={this.createDefinition}
-                class='btn-create-process'
+                class='btn-create-workflow'
               >
                 {t('project.workflow.create_workflow')}
               </NButton>
@@ -174,15 +166,7 @@ export default defineComponent({
                   {t('project.workflow.create_workflow_dynamic')}
                 </NButton>
               )}
-              <NButton
-                strong
-                secondary
-                size='small'
-                onClick={() => (this.showRef = true)}
-              >
-                {t('project.workflow.import_workflow')}
-              </NButton>
-            </NSpace> */}
+            </NSpace>
             <NSpace>
               <Search
                 placeholder={t('resource.function.enter_keyword_tips')}
@@ -198,132 +182,75 @@ export default defineComponent({
             </NSpace>
           </NSpace>
         </Card>
-
         <Card title={t('project.workflow.workflow_definition')}>
-          {{
-            default: () => (
-              <NSpace vertical>
-                {/*表格*/}
-                <NDataTable
-                  loading={loadingRef}
-                  rowKey={(row) => row.code}
-                  columns={this.columns}
-                  data={this.tableData}
-                  striped
-                  v-model:checked-row-keys={this.checkedRowKeys}
-                  row-class-name='items'
-                  scrollX={this.tableWidth}
-                />
-                <NSpace justify='space-between'>
-                  {/*底部操作*/}
-                  <NSpace>
-                    <NTooltip>
-                      {{
-                        default: () => t('project.workflow.batch_delete'),
-                        trigger: () => (
-                          <NPopconfirm onPositiveClick={this.batchDeleteWorkflow}>
-                            {{
-                              default: () => t('project.workflow.delete_confirm'),
-                              trigger: () => (
-                                <NButton
-                                  tag='div'
-                                  size='small'
-                                  type='primary'
-                                  disabled={this.checkedRowKeys.length <= 0}
-                                  class='btn-delete-all'
-                                >
-                                  {t('project.workflow.batch_delete')}
-                                </NButton>
-                              )
-                            }}
-                          </NPopconfirm>
-                        )
-                      }}
-                    </NTooltip>
-                    <NTooltip>
-                      {{
-                        default: () => t('project.workflow.batch_export'),
-                        trigger: () => (
-                          <NButton
-                            tag='div'
-                            size='small'
-                            type='primary'
-                            disabled={this.checkedRowKeys.length <= 0}
-                            onClick={this.batchExportWorkflow}
-                            class='btn-delete-all'
-                          >
-                            {t('project.workflow.batch_export')}
-                          </NButton>
-                        )
-                      }}
-                    </NTooltip>
-                    <NTooltip>
-                      {{
-                        default: () => t('project.workflow.batch_copy'),
-                        trigger: () => (
-                          <NButton
-                            tag='div'
-                            size='small'
-                            type='primary'
-                            disabled={this.checkedRowKeys.length <= 0}
-                            onClick={() => (this.copyShowRef = true)}
-                            class='btn-delete-all'
-                          >
-                            {t('project.workflow.batch_copy')}
-                          </NButton>
-                        )
-                      }}
-                    </NTooltip>
-                  </NSpace>
-                  {/*分页*/}
-                  <NPagination
-                    v-model:page={this.page}
-                    v-model:page-size={this.pageSize}
-                    page-count={this.totalPage}
-                    show-size-picker
-                    page-sizes={[10, 30, 50]}
-                    show-quick-jumper
-                    onUpdatePage={this.requestData}
-                    onUpdatePageSize={this.handleChangePageSize}
-                  />
-                </NSpace>
-              </NSpace>
-            ),
-            'header-extra': () => (
+          <NSpace vertical>
+            <NDataTable
+              loading={loadingRef}
+              rowKey={(row) => row.code}
+              columns={this.columns}
+              data={this.tableData}
+              striped
+              v-model:checked-row-keys={this.checkedRowKeys}
+              row-class-name='items'
+              scrollX={this.tableWidth}
+            />
+            <NSpace justify='space-between'>
               <NSpace>
-              <NButton
-                type='primary'
-                size='small'
-                onClick={this.createDefinition}
-                class='btn-create-process'
-              >
-                {t('project.workflow.create_workflow')}
-              </NButton>
-              {this.uiSettingStore.getDynamicTask && (
-                <NButton
-                  type='warning'
-                  size='small'
-                  onClick={this.createDefinitionDynamic}
-                >
-                  {t('project.workflow.create_workflow_dynamic')}
-                </NButton>
-              )}
-              <NButton
-                strong
-                secondary
-                size='small'
-                onClick={() => (this.showRef = true)}
-              >
-                {t('project.workflow.import_workflow')}
-              </NButton>
+                <NTooltip>
+                  {{
+                    default: () => t('project.workflow.batch_delete'),
+                    trigger: () => (
+                      <NPopconfirm onPositiveClick={this.batchDeleteWorkflow}>
+                        {{
+                          default: () => t('project.workflow.delete_confirm'),
+                          trigger: () => (
+                            <NButton
+                              tag='div'
+                              size='small'
+                              type='primary'
+                              disabled={this.checkedRowKeys.length <= 0}
+                              class='btn-delete-all'
+                            >
+                              {t('project.workflow.batch_delete')}
+                            </NButton>
+                          )
+                        }}
+                      </NPopconfirm>
+                    )
+                  }}
+                </NTooltip>
+                <NTooltip>
+                  {{
+                    default: () => t('project.workflow.batch_copy'),
+                    trigger: () => (
+                      <NButton
+                        tag='div'
+                        size='small'
+                        type='primary'
+                        disabled={this.checkedRowKeys.length <= 0}
+                        onClick={() => (this.copyShowRef = true)}
+                        class='btn-delete-all'
+                      >
+                        {t('project.workflow.batch_copy')}
+                      </NButton>
+                    )
+                  }}
+                </NTooltip>
+              </NSpace>
+              <NPagination
+                v-model:page={this.page}
+                v-model:page-size={this.pageSize}
+                show-size-picker
+                page-sizes={[10, 30, 50]}
+                show-quick-jumper
+                onUpdatePage={this.requestData}
+                onUpdatePageSize={this.handleChangePageSize}
+                itemCount={this.totalCount}
+                prefix={totalCount}
+              />
             </NSpace>
-            )
-          }}
+          </NSpace>
         </Card>
-        <ImportModal
-          v-model:show={this.showRef}
-          onUpdateList={this.handleUpdateList}
-        />
         <StartModal
           v-model:row={this.row}
           v-model:show={this.startShowRef}
@@ -345,16 +272,6 @@ export default defineComponent({
           v-model:codes={this.checkedRowKeys}
           v-model:show={this.copyShowRef}
           onUpdateList={this.handleCopyUpdateList}
-        />
-        <NModal
-          v-model:show={this.setTimingDialogShowRef}
-          preset={'dialog'}
-          title={t('project.workflow.success')}
-          content={t('project.workflow.want_to_set_timing')}
-          positiveText={t('project.workflow.confirm')}
-          negativeText={t('project.workflow.cancel')}
-          maskClosable={false}
-          onPositiveClick={this.confirmToSetWorkflowTiming}
         />
         <DependenciesModal
           v-model:row={this.row}

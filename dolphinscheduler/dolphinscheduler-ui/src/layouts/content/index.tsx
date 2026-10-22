@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-import { defineComponent, onMounted, watch, toRefs, ref, computed } from 'vue'
+import { defineComponent, onMounted, watch, toRefs, ref } from 'vue'
 import { NLayout, NLayoutContent, NLayoutHeader, useMessage } from 'naive-ui'
 import NavBar from './components/navbar'
 import SideBar from './components/sidebar'
@@ -24,8 +24,7 @@ import { useLocalesStore } from '@/store/locales/locales'
 import { useRouteStore } from '@/store/route/route'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
-import { singleSignOnValue } from '@/router/singleSignOnMode'
-import { useParentAppProps } from '@/store/parentAppProps/parentAppProps'
+
 const Content = defineComponent({
   name: 'DSContent',
   setup() {
@@ -35,7 +34,6 @@ const Content = defineComponent({
     const { locale } = useI18n()
     const localesStore = useLocalesStore()
     const routeStore = useRouteStore()
-    const parentAppProps = useParentAppProps()
     const {
       state,
       changeMenuOption,
@@ -59,33 +57,6 @@ const Content = defineComponent({
           ?.children || state.menuOptions
       state.isShowSide = route.meta.showSide
     }
-
-    // const isSingleSign = ref(window.APP_CONFIG.singleSignOnValue)
-    const isSingleSign = ref(!window.APP_CONFIG.showMenu)
-    const headerStyle = computed(() => {
-      return isSingleSign.value? { display: 'none'}: { height: '65px' }
-    })
-    // 集成有的需要左侧导航栏
-    const sideStyle = computed(() => {
-      return (isSingleSign.value && !parentAppProps.isAside) ? { display: 'none'}: {}
-    })
-
-
-    const mainStyle = computed(() => {
-      return isSingleSign.value ? { top: '0' } : { top: '65px' }
-    })
-    /**
-     *   const isSingleSign = ref(!window.APP_CONFIG.showMenu)
-          const headerStyle = computed(() => {
-            return isSingleSign.value? { display: 'none'}: { height: '65px' }
-          })
-
-          const sideStyle = computed(() => {
-            return isSingleSign.value? { display: 'none'}: {}
-          })
-
-     */
-
 
     watch(useI18n().locale, () => {
       changeMenuOption(state)
@@ -126,16 +97,13 @@ const Content = defineComponent({
       ...toRefs(state),
       changeMenuOption,
       sideKeyRef,
-      currentRoute: route,
-      headerStyle,
-      sideStyle,
-      mainStyle
+      currentRoute: route
     }
   },
   render() {
     return (
       <NLayout style='height: 100%'>
-        <NLayoutHeader style={ this.headerStyle }>
+        <NLayoutHeader style='height: 65px'>
           <NavBar
             class='tab-horizontal'
             headerMenuOptions={this.headerMenuOptions}
@@ -144,10 +112,9 @@ const Content = defineComponent({
             userDropdownOptions={this.userDropdownOptions}
           />
         </NLayoutHeader>
-        <NLayout has-sider position='absolute' style={this.mainStyle}>
+        <NLayout has-sider position='absolute' style='top: 65px'>
           {this.isShowSide && (
             <SideBar
-              style={this.sideStyle}
               sideMenuOptions={this.sideMenuOptions}
               sideKey={this.sideKeyRef}
             />

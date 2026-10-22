@@ -23,6 +23,11 @@ import org.apache.seatunnel.shade.com.fasterxml.jackson.databind.JsonNode;
 import org.apache.seatunnel.shade.com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.seatunnel.shade.com.google.common.annotations.VisibleForTesting;
 
+import org.apache.seatunnel.transform.nlpmodel.ModelInvocationContext;
+import org.apache.seatunnel.transform.nlpmodel.ModelInvocationErrorType;
+import org.apache.seatunnel.transform.nlpmodel.ModelInvocationException;
+import org.apache.seatunnel.transform.nlpmodel.ModelInvocationOptions;
+import org.apache.seatunnel.transform.nlpmodel.ProviderAdapter;
 import org.apache.seatunnel.transform.nlpmodel.embedding.remote.AbstractModel;
 
 import org.apache.http.client.config.RequestConfig;
@@ -45,57 +50,136 @@ public class OpenAIModel extends AbstractModel {
     private final String apiPath;
 
     public OpenAIModel(String apiKey, String model, String apiPath, Integer vectorizedNumber) {
-        super(vectorizedNumber);
+        this(
+                apiKey,
+                model,
+                apiPath,
+                vectorizedNumber,
+                ModelInvocationOptions.defaults(),
+                HttpClients.createDefault());
+    }
+
+    public OpenAIModel(
+            String apiKey,
+            String model,
+            String apiPath,
+            Integer vectorizedNumber,
+            ModelInvocationOptions invocationOptions) {
+        this(
+                apiKey,
+                model,
+                apiPath,
+                vectorizedNumber,
+                invocationOptions,
+                HttpClients.createDefault());
+    }
+
+    public OpenAIModel(
+            String apiKey,
+            String model,
+            String apiPath,
+            Integer vectorizedNumber,
+            CloseableHttpClient client) {
+        this(apiKey, model, apiPath, vectorizedNumber, ModelInvocationOptions.defaults(), client);
+    }
+
+    public OpenAIModel(
+            String apiKey,
+            String model,
+            String apiPath,
+            Integer vectorizedNumber,
+            ModelInvocationOptions invocationOptions,
+            CloseableHttpClient client) {
+        super(vectorizedNumber, invocationOptions);
         this.apiKey = apiKey;
         this.model = model;
         this.apiPath = apiPath;
-        this.client = HttpClients.createDefault();
+        this.client = client;
     }
 
     @Override
-    protected List<List<Double>> vector(Object[] fields) throws IOException {
+    protected List<List<Float>> vector(Object[] fields) throws IOException {
         if (fields.length > 1) {
             throw new IllegalArgumentException("OpenAI model only supports single input");
         }
-        return vectorGeneration(fields);
+        return invocationRuntime.invoke(
+                fields,
+                new ProviderAdapter<List<List<Float>>>() {
+                    @Override
+                    public List<List<Float>> invoke(Object[] inputs, ModelInvocationContext context)
+                            throws IOException {
+                        return vectorGeneration(inputs, context.getRequestTimeoutMs());
+                    }
+
+                    @Override
+                    public int getOutputCount(List<List<Float>> output) {
+                        return output == null ? 0 : output.size();
+                    }
+
+                    @Override
+                    public String getProvider() {
+                        return "OPENAI";
+                    }
+
+                    @Override
+                    public String getModel() {
+                        return model;
+                    }
+                });
     }
 
     @Override
     public Integer dimension() throws IOException {
-        return vectorGeneration(new Object[] {DIMENSION_EXAMPLE}).size();
+        return vector(new Object[] {DIMENSION_EXAMPLE}).get(0).size();
     }
 
-    private List<List<Double>> vectorGeneration(Object[] fields) throws IOException {
+    private List<List<Float>> vectorGeneration(Object[] fields, int requestTimeoutMs)
+            throws IOException {
         HttpPost post = new HttpPost(apiPath);
         post.setHeader("Authorization", "Bearer " + apiKey);
         post.setHeader("Content-Type", "application/json");
         post.setConfig(
-                RequestConfig.custom().setConnectTimeout(20000).setSocketTimeout(20000).build());
+                RequestConfig.custom()
+                        .setConnectTimeout(requestTimeoutMs)
+                        .setSocketTimeout(requestTimeoutMs)
+                        .build());
 
         post.setEntity(
                 new StringEntity(
                         OBJECT_MAPPER.writeValueAsString(createJsonNodeFromData(fields)), "UTF-8"));
 
-        CloseableHttpResponse response = client.execute(post);
-        String responseStr = EntityUtils.toString(response.getEntity());
+        try (CloseableHttpResponse response = client.execute(post)) {
+            String responseStr = EntityUtils.toString(response.getEntity());
 
-        if (response.getStatusLine().getStatusCode() != 200) {
-            throw new IOException("Failed to get vector from openai, response: " + responseStr);
-        }
+            if (response.getStatusLine().getStatusCode() != 200) {
+                throw ModelInvocationException.fromHttpStatus(
+                        "OPENAI", model, response.getStatusLine().getStatusCode(), responseStr);
+            }
 
-        JsonNode data = OBJECT_MAPPER.readTree(responseStr).get("data");
-        List<List<Double>> embeddings = new ArrayList<>();
+            try {
+                JsonNode data = OBJECT_MAPPER.readTree(responseStr).get("data");
+                List<List<Float>> embeddings = new ArrayList<>();
 
-        if (data.isArray()) {
-            for (JsonNode node : data) {
-                JsonNode embeddingNode = node.get("embedding");
-                List<Double> embedding =
-                        OBJECT_MAPPER.readValue(
-                                embeddingNode.traverse(), new TypeReference<List<Double>>() {});
-                embeddings.add(embedding);
+                if (data.isArray()) {
+                    for (JsonNode node : data) {
+                        JsonNode embeddingNode = node.get("embedding");
+                        List<Float> embedding =
+                                OBJECT_MAPPER.readValue(
+                                        embeddingNode.traverse(),
+                                        new TypeReference<List<Float>>() {});
+                        embeddings.add(embedding);
+                    }
+                }
+                return embeddings;
+            } catch (IOException | RuntimeException e) {
+                throw ModelInvocationException.nonRetryable(
+                        ModelInvocationErrorType.RESPONSE_PARSE_ERROR,
+                        "OPENAI",
+                        model,
+                        "Failed to parse OpenAI embedding response",
+                        e);
             }
         }
-        return embeddings;
     }
 
     @VisibleForTesting

@@ -42,6 +42,15 @@ import java.util.List;
 @Slf4j
 public class DamengCatalog extends AbstractJdbcCatalog {
 
+    /** Sink {@code table_options} key for Dameng table tablespace ({@code STORAGE (ON ...)}). */
+    public static final String TABLE_OPTION_TABLESPACE = "tablespace";
+
+    /**
+     * Sink {@code table_options} key for Dameng page fill factor ({@code STORAGE (FILLFACTOR
+     * ...)}).
+     */
+    public static final String TABLE_OPTION_FILLFACTOR = "fillfactor";
+
     private static final String SELECT_COLUMNS_SQL =
             "SELECT COLUMNS.COLUMN_NAME, COLUMNS.DATA_TYPE, COLUMNS.DATA_LENGTH, COLUMNS.DATA_PRECISION, COLUMNS.DATA_SCALE "
                     + ", COLUMNS.NULLABLE, COLUMNS.DATA_DEFAULT, COMMENTS.COMMENTS ,"
@@ -71,16 +80,12 @@ public class DamengCatalog extends AbstractJdbcCatalog {
 
     @Override
     protected void createDatabaseInternal(String databaseName) {
-        //throw new UnsupportedOperationException();
-        // DAMENG 不支持 CREATE DATABASE，直接返回
-        log.warn("DAMENG does not support CREATE DATABASE operation, skipped.(DAMENG 不支持 CREATE DATABASE)");
+        throw new UnsupportedOperationException();
     }
 
     @Override
     protected void dropDatabaseInternal(String databaseName) throws CatalogException {
-        //throw new UnsupportedOperationException();
-        // DAMENG 不支持 CREATE DATABASE，直接返回
-        log.warn("DAMENG does not support DROP DATABASE operation, skipped.(DAMENG 不支持 DROP DATABASE)");
+        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -111,6 +116,12 @@ public class DamengCatalog extends AbstractJdbcCatalog {
 
     @Override
     protected String getCreateTableSql(
+            TablePath tablePath, CatalogTable table, boolean createIndex) {
+        return getCreateTableSqls(tablePath, table, createIndex).get(0);
+    }
+
+    @Override
+    protected List<String> getCreateTableSqls(
             TablePath tablePath, CatalogTable table, boolean createIndex) {
         return new DamengCreateTableSqlBuilder(table, createIndex).build(tablePath);
     }
@@ -212,11 +223,5 @@ public class DamengCatalog extends AbstractJdbcCatalog {
     public CatalogTable getTable(String sqlQuery) throws SQLException {
         Connection defaultConnection = getConnection(defaultUrl);
         return CatalogUtils.getCatalogTable(defaultConnection, sqlQuery, new DmdbTypeMapper());
-    }
-
-    @Override
-    public boolean databaseExists(String databaseName) throws CatalogException {
-        // DAMENG 中 database 实际是 schema 用户，可以始终返回 true
-        return true;
     }
 }

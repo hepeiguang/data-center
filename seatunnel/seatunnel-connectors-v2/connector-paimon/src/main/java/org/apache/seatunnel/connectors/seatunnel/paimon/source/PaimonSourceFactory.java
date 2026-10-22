@@ -19,6 +19,7 @@ package org.apache.seatunnel.connectors.seatunnel.paimon.source;
 
 import org.apache.seatunnel.api.configuration.ReadonlyConfig;
 import org.apache.seatunnel.api.configuration.util.OptionRule;
+import org.apache.seatunnel.api.options.table.CatalogOptions;
 import org.apache.seatunnel.api.source.SeaTunnelSource;
 import org.apache.seatunnel.api.source.SourceSplit;
 import org.apache.seatunnel.api.table.connector.TableSource;
@@ -28,8 +29,8 @@ import org.apache.seatunnel.api.table.factory.TableSourceFactoryContext;
 import org.apache.seatunnel.connectors.seatunnel.paimon.catalog.PaimonCatalog;
 import org.apache.seatunnel.connectors.seatunnel.paimon.catalog.PaimonCatalogEnum;
 import org.apache.seatunnel.connectors.seatunnel.paimon.catalog.PaimonCatalogFactory;
-import org.apache.seatunnel.connectors.seatunnel.paimon.config.PaimonConfig;
-import org.apache.seatunnel.connectors.seatunnel.paimon.config.PaimonSourceConfig;
+import org.apache.seatunnel.connectors.seatunnel.paimon.config.PaimonSinkOptions;
+import org.apache.seatunnel.connectors.seatunnel.paimon.config.PaimonSourceOptions;
 
 import com.google.auto.service.AutoService;
 
@@ -40,21 +41,28 @@ public class PaimonSourceFactory implements TableSourceFactory {
 
     @Override
     public String factoryIdentifier() {
-        return "Paimon";
+        return PaimonSinkOptions.CONNECTOR_IDENTITY;
     }
 
     @Override
     public OptionRule optionRule() {
         return OptionRule.builder()
-                .required(PaimonConfig.WAREHOUSE, PaimonConfig.DATABASE, PaimonConfig.TABLE)
+                .required(PaimonSourceOptions.WAREHOUSE)
                 .optional(
-                        PaimonConfig.CATALOG_TYPE,
-                        PaimonConfig.HDFS_SITE_PATH,
-                        PaimonSourceConfig.QUERY_SQL,
-                        PaimonConfig.HADOOP_CONF,
-                        PaimonConfig.HADOOP_CONF_PATH)
+                        PaimonSourceOptions.CATALOG_NAME,
+                        PaimonSourceOptions.DATABASE,
+                        PaimonSourceOptions.CATALOG_TYPE,
+                        PaimonSourceOptions.HDFS_SITE_PATH,
+                        PaimonSourceOptions.QUERY_SQL,
+                        PaimonSourceOptions.HADOOP_CONF,
+                        PaimonSourceOptions.HADOOP_CONF_PATH,
+                        PaimonSourceOptions.USER,
+                        PaimonSourceOptions.PASSWORD)
+                .exclusive(PaimonSourceOptions.TABLE, CatalogOptions.TABLE_LIST)
                 .conditional(
-                        PaimonConfig.CATALOG_TYPE, PaimonCatalogEnum.HIVE, PaimonConfig.CATALOG_URI)
+                        PaimonSourceOptions.CATALOG_TYPE,
+                        PaimonCatalogEnum.HIVE,
+                        PaimonSourceOptions.CATALOG_URI)
                 .build();
     }
 

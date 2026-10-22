@@ -28,9 +28,6 @@ import java.util.List;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 
-/**
- * project mapper interface
- */
 public interface ProjectMapper extends BaseMapper<Project> {
 
     /**
@@ -85,49 +82,49 @@ public interface ProjectMapper extends BaseMapper<Project> {
      * @param userId userId
      * @return project list
      */
-    List<Project> queryProjectCreatedByUser(@Param("userId") String userId);
+    List<Project> queryProjectCreatedByUser(@Param("userId") int userId);
 
     /**
      * query authed project list by userId
      * @param userId userId
      * @return project list
      */
-    List<Project> queryAuthedProjectListByUserId(@Param("userId") String userId);
+    List<Project> queryAuthedProjectListByUserId(@Param("userId") int userId);
 
     /**
      * query relation project list by userId
      * @param userId userId
      * @return project list
      */
-    List<Project> queryRelationProjectListByUserId(@Param("userId") String userId);
+    List<Project> queryRelationProjectListByUserId(@Param("userId") int userId);
 
     /**
      * query project except userId
      * @param userId userId
      * @return project list
      */
-    List<Project> queryProjectExceptUserId(@Param("userId") String userId);
+    List<Project> queryProjectExceptUserId(@Param("userId") int userId);
 
     /**
      * query project list by userId
      * @param userId
      * @return
      */
-    List<Project> queryProjectCreatedAndAuthorizedByUserId(@Param("userId") String userId);
+    List<Project> queryProjectCreatedAndAuthorizedByUserId(@Param("userId") int userId);
 
     /**
-     * query project name and user name by processInstanceId.
-     * @param processInstanceId processInstanceId
+     * query project name and user name by workflowInstanceId.
+     * @param workflowInstanceId workflowInstanceId
      * @return projectName and userName
      */
-    ProjectUser queryProjectWithUserByProcessInstanceId(@Param("processInstanceId") int processInstanceId);
+    ProjectUser queryProjectWithUserByWorkflowInstanceId(@Param("workflowInstanceId") int workflowInstanceId);
 
     /**
      * query all project
      * @param userId
      * @return projectList
      */
-    List<Project> queryAllProject(@Param("userId") String userId);
+    List<Project> queryAllProject(@Param("userId") int userId);
 
     /**
      * list authorized Projects
@@ -136,7 +133,7 @@ public interface ProjectMapper extends BaseMapper<Project> {
      * @param <T>
      * @return
      */
-    List<Project> listAuthorizedProjects(@Param("userId") String userId, @Param("projectsIds") List<Integer> projectsIds);
+    List<Project> listAuthorizedProjects(@Param("userId") int userId, @Param("projectsIds") List<Integer> projectsIds);
 
     /**
      * query all project for dependent node

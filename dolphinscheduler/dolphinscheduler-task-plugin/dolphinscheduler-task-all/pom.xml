@@ -20,18 +20,12 @@
     <parent>
         <groupId>org.apache.dolphinscheduler</groupId>
         <artifactId>dolphinscheduler-task-plugin</artifactId>
-        <version>3.2.2</version>
+        <version>3.4.3</version>
     </parent>
 
     <artifactId>dolphinscheduler-task-all</artifactId>
 
     <dependencies>
-
-        <dependency>
-            <groupId>org.apache.dolphinscheduler</groupId>
-            <artifactId>dolphinscheduler-task-dataquality</artifactId>
-            <version>${project.version}</version>
-        </dependency>
 
         <dependency>
             <groupId>org.apache.dolphinscheduler</groupId>
@@ -53,6 +47,12 @@
 
         <dependency>
             <groupId>org.apache.dolphinscheduler</groupId>
+            <artifactId>dolphinscheduler-task-grpc</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.dolphinscheduler</groupId>
             <artifactId>dolphinscheduler-task-http</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -60,12 +60,6 @@
         <dependency>
             <groupId>org.apache.dolphinscheduler</groupId>
             <artifactId>dolphinscheduler-task-mr</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.dolphinscheduler</groupId>
-            <artifactId>dolphinscheduler-task-pigeon</artifactId>
             <version>${project.version}</version>
         </dependency>
 
@@ -114,6 +108,12 @@
         <dependency>
             <groupId>org.apache.dolphinscheduler</groupId>
             <artifactId>dolphinscheduler-task-emr</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.dolphinscheduler</groupId>
+            <artifactId>dolphinscheduler-task-emr-serverless</artifactId>
             <version>${project.version}</version>
         </dependency>
 
@@ -173,12 +173,6 @@
 
         <dependency>
             <groupId>org.apache.dolphinscheduler</groupId>
-            <artifactId>dolphinscheduler-task-pytorch</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.dolphinscheduler</groupId>
             <artifactId>dolphinscheduler-task-hivecli</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -221,40 +215,12 @@
             <artifactId>dolphinscheduler-task-remoteshell</artifactId>
             <version>${project.version}</version>
         </dependency>
+
         <dependency>
             <groupId>org.apache.dolphinscheduler</groupId>
-            <artifactId>dolphinscheduler-task-webhook</artifactId>
+            <artifactId>dolphinscheduler-task-aliyunserverlessspark</artifactId>
             <version>${project.version}</version>
         </dependency>
-        <dependency>
-            <groupId>org.apache.dolphinscheduler</groupId>
-            <artifactId>dolphinscheduler-task-asyncstate</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.dolphinscheduler</groupId>
-            <artifactId>dolphinscheduler-task-extract</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.dolphinscheduler</groupId>
-            <artifactId>dolphinscheduler-task-minio</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.dolphinscheduler</groupId>
-            <artifactId>dolphinscheduler-task-flexiblehttp</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-	<dependency>
-            <groupId>org.apache.dolphinscheduler</groupId>
-            <artifactId>dolphinscheduler-task-yunhezi</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-<!--        <dependency>-->
-<!--            <groupId>org.apache.dolphinscheduler</groupId>-->
-<!--            <artifactId>dolphinscheduler-task-flexibleapi</artifactId>-->
-<!--            <version>${project.version}</version>-->
-<!--        </dependency>-->
     </dependencies>
+
 </project>

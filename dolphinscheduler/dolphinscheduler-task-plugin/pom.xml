@@ -20,7 +20,7 @@
     <parent>
         <groupId>org.apache.dolphinscheduler</groupId>
         <artifactId>dolphinscheduler</artifactId>
-        <version>3.2.2</version>
+        <version>3.4.3</version>
     </parent>
 
     <artifactId>dolphinscheduler-task-plugin</artifactId>
@@ -32,6 +32,7 @@
         <module>dolphinscheduler-task-shell</module>
         <module>dolphinscheduler-task-datax</module>
         <module>dolphinscheduler-task-flink</module>
+        <module>dolphinscheduler-task-grpc</module>
         <module>dolphinscheduler-task-http</module>
         <module>dolphinscheduler-task-mr</module>
         <module>dolphinscheduler-task-python</module>
@@ -39,8 +40,6 @@
         <module>dolphinscheduler-task-sql</module>
         <module>dolphinscheduler-task-sqoop</module>
         <module>dolphinscheduler-task-procedure</module>
-        <module>dolphinscheduler-task-pigeon</module>
-        <module>dolphinscheduler-task-dataquality</module>
         <module>dolphinscheduler-task-seatunnel</module>
         <module>dolphinscheduler-task-emr</module>
         <module>dolphinscheduler-task-k8s</module>
@@ -54,7 +53,6 @@
         <module>dolphinscheduler-task-sagemaker</module>
         <module>dolphinscheduler-task-chunjun</module>
         <module>dolphinscheduler-task-flink-stream</module>
-        <module>dolphinscheduler-task-pytorch</module>
         <module>dolphinscheduler-task-hivecli</module>
         <module>dolphinscheduler-task-dms</module>
         <module>dolphinscheduler-task-datasync</module>
@@ -62,13 +60,8 @@
         <module>dolphinscheduler-task-linkis</module>
         <module>dolphinscheduler-task-datafactory</module>
         <module>dolphinscheduler-task-remoteshell</module>
-        <module>dolphinscheduler-task-webhook</module>
-        <module>dolphinscheduler-task-asyncstate</module>
-        <module>dolphinscheduler-task-extract</module>
-        <module>dolphinscheduler-task-minio</module>
-        <module>dolphinscheduler-task-flexiblehttp</module>
-        <module>dolphinscheduler-task-yunhezi</module>
-<!--        <module>dolphinscheduler-task-flexibleapi</module>-->
+        <module>dolphinscheduler-task-aliyunserverlessspark</module>
+        <module>dolphinscheduler-task-emr-serverless</module>
     </modules>
 
     <dependencyManagement>

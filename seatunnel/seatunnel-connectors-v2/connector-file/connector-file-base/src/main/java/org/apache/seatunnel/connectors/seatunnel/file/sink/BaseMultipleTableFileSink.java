@@ -30,11 +30,13 @@ import org.apache.seatunnel.api.sink.SinkAggregatedCommitter;
 import org.apache.seatunnel.api.sink.SinkWriter;
 import org.apache.seatunnel.api.sink.SupportMultiTableSink;
 import org.apache.seatunnel.api.sink.SupportSaveMode;
+import org.apache.seatunnel.api.sink.SupportSchemaEvolutionSink;
 import org.apache.seatunnel.api.table.catalog.Catalog;
 import org.apache.seatunnel.api.table.catalog.CatalogTable;
 import org.apache.seatunnel.api.table.factory.CatalogFactory;
+import org.apache.seatunnel.api.table.schema.SchemaChangeType;
 import org.apache.seatunnel.api.table.type.SeaTunnelRow;
-import org.apache.seatunnel.connectors.seatunnel.file.config.BaseSinkConfig;
+import org.apache.seatunnel.connectors.seatunnel.file.config.FileBaseSinkOptions;
 import org.apache.seatunnel.connectors.seatunnel.file.config.HadoopConf;
 import org.apache.seatunnel.connectors.seatunnel.file.sink.commit.FileAggregatedCommitInfo;
 import org.apache.seatunnel.connectors.seatunnel.file.sink.commit.FileCommitInfo;
@@ -44,6 +46,8 @@ import org.apache.seatunnel.connectors.seatunnel.file.sink.state.FileSinkState;
 import org.apache.seatunnel.connectors.seatunnel.file.sink.writer.WriteStrategy;
 import org.apache.seatunnel.connectors.seatunnel.file.sink.writer.WriteStrategyFactory;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -53,7 +57,10 @@ public abstract class BaseMultipleTableFileSink
         implements SeaTunnelSink<
                         SeaTunnelRow, FileSinkState, FileCommitInfo, FileAggregatedCommitInfo>,
                 SupportMultiTableSink,
-                SupportSaveMode {
+                SupportSaveMode,
+                SupportSchemaEvolutionSink {
+
+    private static final long serialVersionUID = 1L;
 
     private final HadoopConf hadoopConf;
     private final CatalogTable catalogTable;
@@ -69,12 +76,12 @@ public abstract class BaseMultipleTableFileSink
         this.readonlyConfig = readonlyConfig;
         this.hadoopConf = hadoopConf;
         this.fileSinkConfig =
-                new FileSinkConfig(readonlyConfig.toConfig(), catalogTable.getSeaTunnelRowType());
+                new FileSinkConfig(readonlyConfig, catalogTable.getSeaTunnelRowType());
         this.catalogTable = catalogTable;
     }
 
     public void preCheckConfig() {
-        if (readonlyConfig.get(BaseSinkConfig.SINGLE_FILE_MODE)
+        if (readonlyConfig.get(FileBaseSinkOptions.SINGLE_FILE_MODE)
                 && jobContext.isEnableCheckpoint()) {
             throw new IllegalArgumentException(
                     "Single file mode is not supported when checkpoint is enabled or in streaming mode.");
@@ -121,6 +128,18 @@ public abstract class BaseMultipleTableFileSink
         return Optional.of(new DefaultSerializer<>());
     }
 
+    @Override
+    public List<SchemaChangeType> supports() {
+        if (!fileSinkConfig.isSchemaEvolutionEnabled()) {
+            return Collections.emptyList();
+        }
+        return Arrays.asList(
+                SchemaChangeType.ADD_COLUMN,
+                SchemaChangeType.DROP_COLUMN,
+                SchemaChangeType.RENAME_COLUMN,
+                SchemaChangeType.UPDATE_COLUMN);
+    }
+
     protected WriteStrategy createWriteStrategy() {
         WriteStrategy writeStrategy =
                 WriteStrategyFactory.of(fileSinkConfig.getFileFormat(), fileSinkConfig);
@@ -140,8 +159,8 @@ public abstract class BaseMultipleTableFileSink
             return Optional.empty();
         }
         final Catalog catalog = catalogFactory.createCatalog(getPluginName(), readonlyConfig);
-        SchemaSaveMode schemaSaveMode = readonlyConfig.get(BaseSinkConfig.SCHEMA_SAVE_MODE);
-        DataSaveMode dataSaveMode = readonlyConfig.get(BaseSinkConfig.DATA_SAVE_MODE);
+        SchemaSaveMode schemaSaveMode = readonlyConfig.get(FileBaseSinkOptions.SCHEMA_SAVE_MODE);
+        DataSaveMode dataSaveMode = readonlyConfig.get(FileBaseSinkOptions.DATA_SAVE_MODE);
         return Optional.of(
                 new DefaultSaveModeHandler(
                         schemaSaveMode, dataSaveMode, catalog, catalogTable, null));

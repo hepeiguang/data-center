@@ -17,50 +17,76 @@
 
 package org.apache.dolphinscheduler.api.service;
 
-import org.apache.dolphinscheduler.dao.entity.TaskMainInfo;
+import org.apache.dolphinscheduler.dao.entity.DependentLineageTask;
+import org.apache.dolphinscheduler.dao.entity.DependentWorkflowDefinition;
+import org.apache.dolphinscheduler.dao.entity.User;
 import org.apache.dolphinscheduler.dao.entity.WorkFlowLineage;
+import org.apache.dolphinscheduler.dao.entity.WorkFlowRelationDetail;
+import org.apache.dolphinscheduler.dao.entity.WorkflowDefinition;
+import org.apache.dolphinscheduler.dao.entity.WorkflowTaskLineage;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 
-/**
- * work flow lineage service
- */
-public interface WorkFlowLineageService {
+public interface WorkflowLineageService {
 
-    List<WorkFlowLineage> queryWorkFlowLineageByName(long projectCode, String workFlowName);
+    List<WorkFlowRelationDetail> queryWorkFlowLineageByName(User loginUser, long projectCode,
+                                                            String workflowDefinitionName);
 
-    Map<String, Object> queryWorkFlowLineageByCode(long projectCode, long workFlowCode);
+    WorkFlowLineage queryWorkFlowLineageByCode(User loginUser, long projectCode, long workflowDefinitionCode);
 
-    Map<String, Object> queryWorkFlowLineage(long projectCode);
+    WorkFlowLineage queryWorkFlowLineage(User loginUser, long projectCode);
 
     /**
-     * Query tasks depend on process definition, include upstream or downstream
+     * Query downstream tasks depend on a workflow definition or a task
      *
-     * @param projectCode Project code want to query tasks dependence
-     * @param processDefinitionCode Process definition code want to query tasks dependence
-     * @return Set of TaskMainInfo
+     * @param workflowDefinitionCode workflow definition code want to query tasks dependence
+     * @return downstream dependent workflow definition list
      */
-    Set<TaskMainInfo> queryTaskDepOnProcess(long projectCode, long processDefinitionCode);
+    List<DependentWorkflowDefinition> queryDownstreamDependentWorkflowDefinitions(Long workflowDefinitionCode);
 
     /**
-     * Query downstream tasks depend on a process definition or a task
+     * Resolve downstream workflow definitions that depend on the given root workflow, using stored lineage.
+     * <ul>
+     *     <li>{@code allLevelDependent == false}: only direct dependents of the root.</li>
+     *     <li>{@code allLevelDependent == true}: transitive dependents (BFS over direct dependents), skipping the root
+     *     when it reappears as an edge target (cycle back to root).</li>
+     * </ul>
+     * When {@code filterOfflineWorkflow} is true, offline workflow definitions are excluded from the result and are
+     * not expanded further during transitive traversal.
      *
-     * @param processDefinitionCode Process definition code want to query tasks dependence
-     * @param taskCode Task code want to query tasks dependence
-     * @return downstream dependent tasks
+     * @param rootWorkflowDefinitionCode workflow to start from (not included in the result)
+     * @param allLevelDependent          {@code true} for transitive closure, {@code false} for one hop only
+     * @param filterOfflineWorkflow      whether offline workflows should be filtered out during traversal
+     * @return ordered distinct downstream workflow definitions (stable order: BFS / insertion order)
      */
-    Map<String, Object> queryDownstreamDependentTasks(Long processDefinitionCode, Long taskCode);
+    List<WorkflowDefinition> resolveDownstreamWorkflowDefinitionCodes(long rootWorkflowDefinitionCode,
+                                                                      boolean allLevelDependent,
+                                                                      boolean filterOfflineWorkflow);
 
     /**
      * Query and return tasks dependence with string format, is a wrapper of queryTaskDepOnTask and task query method.
      *
-     * @param projectCode Project code want to query tasks dependence
-     * @param processDefinitionCode Process definition code want to query tasks dependence
-     * @param taskCode Task code want to query tasks dependence
-     * @return dependent process definition
+     * @param projectCode           Project code want to query tasks dependence
+     * @param workflowDefinitionCode workflow definition code want to query tasks dependence
+     * @param taskCode              Task code want to query tasks dependence
+     * @return dependent workflow definition
      */
-    Optional<String> taskDepOnTaskMsg(long projectCode, long processDefinitionCode, long taskCode);
+    Optional<String> taskDependentMsg(User loginUser, long projectCode, long workflowDefinitionCode, long taskCode);
+
+    List<DependentLineageTask> queryDependentWorkflowDefinitions(User loginUser, long projectCode,
+                                                                 long workflowDefinitionCode,
+                                                                 Long taskCode);
+
+    /**
+     * Replace the lineage of given workflow definition by new lineage list.
+     * When the list is empty, existing lineage data will be deleted.
+     *
+     * @param workflowDefinitionCode workflow definition to update
+     * @param workflowTaskLineages   new lineage list, can be empty
+     * @return affected rows
+     */
+    int updateWorkflowLineage(long workflowDefinitionCode, List<WorkflowTaskLineage> workflowTaskLineages);
+
+    int deleteWorkflowLineage(List<Long> workflowDefinitionCodes);
 }

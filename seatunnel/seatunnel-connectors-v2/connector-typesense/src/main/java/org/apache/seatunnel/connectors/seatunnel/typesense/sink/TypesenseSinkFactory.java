@@ -18,48 +18,52 @@
 package org.apache.seatunnel.connectors.seatunnel.typesense.sink;
 
 import org.apache.seatunnel.api.configuration.ReadonlyConfig;
+import org.apache.seatunnel.api.configuration.util.Conditions;
 import org.apache.seatunnel.api.configuration.util.OptionRule;
+import org.apache.seatunnel.api.options.SinkConnectorCommonOptions;
 import org.apache.seatunnel.api.table.catalog.CatalogTable;
 import org.apache.seatunnel.api.table.catalog.TableIdentifier;
 import org.apache.seatunnel.api.table.connector.TableSink;
 import org.apache.seatunnel.api.table.factory.Factory;
 import org.apache.seatunnel.api.table.factory.TableSinkFactory;
 import org.apache.seatunnel.api.table.factory.TableSinkFactoryContext;
-import org.apache.seatunnel.connectors.seatunnel.typesense.config.SinkConfig;
+import org.apache.seatunnel.connectors.seatunnel.typesense.config.TypesenseSinkOptions;
 
 import com.google.auto.service.AutoService;
-
-import static org.apache.seatunnel.connectors.seatunnel.typesense.config.SinkConfig.COLLECTION;
-import static org.apache.seatunnel.connectors.seatunnel.typesense.config.SinkConfig.KEY_DELIMITER;
-import static org.apache.seatunnel.connectors.seatunnel.typesense.config.SinkConfig.PRIMARY_KEYS;
-import static org.apache.seatunnel.connectors.seatunnel.typesense.config.TypesenseConnectionConfig.APIKEY;
-import static org.apache.seatunnel.connectors.seatunnel.typesense.config.TypesenseConnectionConfig.HOSTS;
 
 @AutoService(Factory.class)
 public class TypesenseSinkFactory implements TableSinkFactory {
 
     @Override
     public String factoryIdentifier() {
-        return "Typesense";
+        return TypesenseSinkOptions.CONNECTOR_IDENTITY;
     }
 
     @Override
     public OptionRule optionRule() {
         return OptionRule.builder()
                 .required(
-                        HOSTS,
-                        COLLECTION,
-                        APIKEY,
-                        SinkConfig.SCHEMA_SAVE_MODE,
-                        SinkConfig.DATA_SAVE_MODE)
-                .optional(PRIMARY_KEYS, KEY_DELIMITER)
+                        TypesenseSinkOptions.HOSTS, Conditions.notEmpty(TypesenseSinkOptions.HOSTS))
+                .required(
+                        TypesenseSinkOptions.COLLECTION,
+                        Conditions.notBlank(TypesenseSinkOptions.COLLECTION))
+                .required(
+                        TypesenseSinkOptions.APIKEY,
+                        Conditions.notBlank(TypesenseSinkOptions.APIKEY))
+                .required(
+                        TypesenseSinkOptions.SCHEMA_SAVE_MODE, TypesenseSinkOptions.DATA_SAVE_MODE)
+                .optional(TypesenseSinkOptions.PRIMARY_KEYS)
+                .optional(TypesenseSinkOptions.KEY_DELIMITER)
+                .optional(TypesenseSinkOptions.MAX_BATCH_SIZE)
+                .optional(TypesenseSinkOptions.MAX_RETRY_COUNT)
+                .optional(SinkConnectorCommonOptions.MULTI_TABLE_SINK_REPLICA)
                 .build();
     }
 
     @Override
     public TableSink createSink(TableSinkFactoryContext context) {
         ReadonlyConfig readonlyConfig = context.getOptions();
-        String original = readonlyConfig.get(COLLECTION);
+        String original = readonlyConfig.get(TypesenseSinkOptions.COLLECTION);
         CatalogTable newTable =
                 CatalogTable.of(
                         TableIdentifier.of(

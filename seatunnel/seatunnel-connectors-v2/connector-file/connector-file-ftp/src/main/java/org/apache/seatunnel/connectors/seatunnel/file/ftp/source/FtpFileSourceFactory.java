@@ -25,10 +25,12 @@ import org.apache.seatunnel.api.table.connector.TableSource;
 import org.apache.seatunnel.api.table.factory.Factory;
 import org.apache.seatunnel.api.table.factory.TableSourceFactory;
 import org.apache.seatunnel.api.table.factory.TableSourceFactoryContext;
-import org.apache.seatunnel.connectors.seatunnel.file.config.BaseSourceConfigOptions;
+import org.apache.seatunnel.connectors.seatunnel.file.config.FileBaseSourceOptions;
 import org.apache.seatunnel.connectors.seatunnel.file.config.FileFormat;
+import org.apache.seatunnel.connectors.seatunnel.file.config.FilePostSyncAction;
+import org.apache.seatunnel.connectors.seatunnel.file.config.FileSyncMode;
 import org.apache.seatunnel.connectors.seatunnel.file.config.FileSystemType;
-import org.apache.seatunnel.connectors.seatunnel.file.ftp.config.FtpConfigOptions;
+import org.apache.seatunnel.connectors.seatunnel.file.ftp.config.FtpFileSourceOptions;
 
 import com.google.auto.service.AutoService;
 
@@ -45,29 +47,37 @@ public class FtpFileSourceFactory implements TableSourceFactory {
     @Override
     public <T, SplitT extends SourceSplit, StateT extends Serializable>
             TableSource<T, SplitT, StateT> createSource(TableSourceFactoryContext context) {
-        return () -> (SeaTunnelSource<T, SplitT, StateT>) new FtpFileSource(context.getOptions());
+        return () ->
+                (SeaTunnelSource<T, SplitT, StateT>)
+                        new FtpFileSource(context.getOptions(), discoverTableSchemas(context));
     }
 
     @Override
     public OptionRule optionRule() {
         return OptionRule.builder()
-                .optional(FtpConfigOptions.FILE_PATH)
-                .optional(FtpConfigOptions.FTP_HOST)
-                .optional(FtpConfigOptions.FTP_PORT)
-                .optional(FtpConfigOptions.FTP_USERNAME)
-                .optional(FtpConfigOptions.FTP_PASSWORD)
-                .optional(FtpConfigOptions.FILE_FORMAT_TYPE)
+                .exclusive(FtpFileSourceOptions.TABLE_CONFIGS, FtpFileSourceOptions.FILE_PATH)
+                .optional(FtpFileSourceOptions.FTP_HOST)
+                .optional(FtpFileSourceOptions.FTP_PORT)
+                .optional(FtpFileSourceOptions.FTP_USERNAME)
+                .optional(FtpFileSourceOptions.FTP_PASSWORD)
+                .optional(FileBaseSourceOptions.FILE_FORMAT_TYPE)
                 .conditional(
-                        BaseSourceConfigOptions.FILE_FORMAT_TYPE,
+                        FileBaseSourceOptions.FILE_FORMAT_TYPE,
                         FileFormat.TEXT,
-                        BaseSourceConfigOptions.FIELD_DELIMITER)
+                        FileBaseSourceOptions.ROW_DELIMITER,
+                        FileBaseSourceOptions.FIELD_DELIMITER,
+                        FileBaseSourceOptions.SKIP_HEADER_ROW_NUMBER)
                 .conditional(
-                        BaseSourceConfigOptions.FILE_FORMAT_TYPE,
+                        FileBaseSourceOptions.FILE_FORMAT_TYPE,
                         FileFormat.XML,
-                        BaseSourceConfigOptions.XML_ROW_TAG,
-                        BaseSourceConfigOptions.XML_USE_ATTR_FORMAT)
+                        FileBaseSourceOptions.XML_ROW_TAG,
+                        FileBaseSourceOptions.XML_USE_ATTR_FORMAT)
                 .conditional(
-                        BaseSourceConfigOptions.FILE_FORMAT_TYPE,
+                        FileBaseSourceOptions.FILE_FORMAT_TYPE,
+                        FileFormat.CSV,
+                        FileBaseSourceOptions.SKIP_HEADER_ROW_NUMBER)
+                .conditional(
+                        FileBaseSourceOptions.FILE_FORMAT_TYPE,
                         Arrays.asList(
                                 FileFormat.TEXT,
                                 FileFormat.JSON,
@@ -75,16 +85,64 @@ public class FtpFileSourceFactory implements TableSourceFactory {
                                 FileFormat.CSV,
                                 FileFormat.XML),
                         ConnectorCommonOptions.SCHEMA)
-                .optional(BaseSourceConfigOptions.PARSE_PARTITION_FROM_PATH)
-                .optional(BaseSourceConfigOptions.DATE_FORMAT)
-                .optional(BaseSourceConfigOptions.DATETIME_FORMAT)
-                .optional(BaseSourceConfigOptions.TIME_FORMAT)
-                .optional(BaseSourceConfigOptions.FILE_FILTER_PATTERN)
-                .optional(BaseSourceConfigOptions.COMPRESS_CODEC)
-                .optional(FtpConfigOptions.FTP_CONNECTION_MODE)
-                .optional(BaseSourceConfigOptions.ARCHIVE_COMPRESS_CODEC)
-                .optional(BaseSourceConfigOptions.NULL_FORMAT)
-                .optional(BaseSourceConfigOptions.FILENAME_EXTENSION)
+                .conditional(
+                        FileBaseSourceOptions.FILE_FORMAT_TYPE,
+                        Arrays.asList(
+                                FileFormat.TEXT, FileFormat.JSON, FileFormat.CSV, FileFormat.XML),
+                        FileBaseSourceOptions.ENCODING)
+                .optional(FileBaseSourceOptions.PARSE_PARTITION_FROM_PATH)
+                .optional(FileBaseSourceOptions.DATE_FORMAT_LEGACY)
+                .optional(FileBaseSourceOptions.DATETIME_FORMAT_LEGACY)
+                .optional(FileBaseSourceOptions.TIME_FORMAT_LEGACY)
+                .optional(FileBaseSourceOptions.FILE_FILTER_PATTERN)
+                .optional(FileBaseSourceOptions.COMPRESS_CODEC)
+                .optional(FtpFileSourceOptions.FTP_CONNECTION_MODE)
+                .optional(FileBaseSourceOptions.ARCHIVE_COMPRESS_CODEC)
+                .optional(FileBaseSourceOptions.NULL_FORMAT)
+                .optional(FileBaseSourceOptions.FILENAME_EXTENSION)
+                .optional(FileBaseSourceOptions.READ_COLUMNS)
+                .optional(
+                        FileBaseSourceOptions.SHEET_NAME,
+                        FileBaseSourceOptions.EXCEL_ENGINE,
+                        FileBaseSourceOptions.POI_EXCEL_MAX_FILE_SIZE)
+                .conditional(
+                        FileBaseSourceOptions.FILE_FORMAT_TYPE,
+                        FileFormat.MARKDOWN,
+                        FileBaseSourceOptions.MARKDOWN_RAG_METADATA_ENABLED)
+                .conditional(
+                        FileBaseSourceOptions.FILE_FORMAT_TYPE,
+                        FileFormat.PDF,
+                        FileBaseSourceOptions.PDF_RAG_METADATA_ENABLED)
+                .optional(FtpFileSourceOptions.FTP_REMOTE_VERIFICATION_ENABLED)
+                .optional(FtpFileSourceOptions.FTP_CONTROL_ENCODING)
+                .optional(FileBaseSourceOptions.QUOTE_CHAR)
+                .optional(FileBaseSourceOptions.ESCAPE_CHAR)
+                .optional(ConnectorCommonOptions.METALAKE_TYPE)
+                .optional(
+                        FileBaseSourceOptions.DISCOVERY_MODE,
+                        FileBaseSourceOptions.SCAN_INTERVAL,
+                        FileBaseSourceOptions.START_MODE)
+                .optional(
+                        FileBaseSourceOptions.SYNC_MODE,
+                        FileBaseSourceOptions.TARGET_HADOOP_CONF,
+                        FileBaseSourceOptions.UPDATE_STRATEGY,
+                        FileBaseSourceOptions.COMPARE_MODE,
+                        FileBaseSourceOptions.UPDATE_COMPARE_PARALLELISM,
+                        FileBaseSourceOptions.UPDATE_COMPARE_BULK_THRESHOLD)
+                .optional(
+                        FileBaseSourceOptions.POST_SYNC_ACTION,
+                        FileBaseSourceOptions.BACKUP_PATH,
+                        FileBaseSourceOptions.RETENTION_MAX_AGE,
+                        FileBaseSourceOptions.RETENTION_CHECK_INTERVAL)
+                .conditional(
+                        FileBaseSourceOptions.SYNC_MODE,
+                        FileSyncMode.UPDATE,
+                        FileBaseSourceOptions.TARGET_PATH)
+                .conditional(
+                        FileBaseSourceOptions.POST_SYNC_ACTION,
+                        FilePostSyncAction.BACKUP,
+                        FileBaseSourceOptions.BACKUP_PATH)
+                .optional(FileBaseSourceOptions.RECURSIVE_FILE_SCAN)
                 .build();
     }
 

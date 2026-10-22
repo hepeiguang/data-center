@@ -29,12 +29,6 @@ import java.util.Map;
 
 public class IcebergSinkOptions extends IcebergCommonOptions {
 
-    public static final Option<Map<String, String>> TABLE_PROPS =
-            Options.key("iceberg.table.config")
-                    .mapType()
-                    .defaultValue(new HashMap<>())
-                    .withDescription("Iceberg table configs");
-
     public static final Option<Map<String, String>> WRITE_PROPS =
             Options.key("iceberg.table.write-props")
                     .mapType()
@@ -61,7 +55,10 @@ public class IcebergSinkOptions extends IcebergCommonOptions {
                     .stringType()
                     .noDefaultValue()
                     .withDescription(
-                            "Default comma-separated list of columns that identify a row in tables (primary key)");
+                            "Default comma-separated list of columns that identify a row in tables (primary key). "
+                                    + "Required and must be non-blank when 'iceberg.table.upsert-mode-enabled' is true: "
+                                    + "upsert mode needs an explicit primary-key list because the source table primary key "
+                                    + "is no longer inherited automatically (see: apache/seatunnel#10747)");
 
     public static final Option<String> TABLE_DEFAULT_PARTITION_KEYS =
             Options.key("iceberg.table.partition-keys")

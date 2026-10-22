@@ -17,120 +17,69 @@
 
 package org.apache.seatunnel.connectors.seatunnel.file.config;
 
-import org.apache.seatunnel.shade.com.typesafe.config.Config;
-
+import org.apache.seatunnel.api.configuration.ReadonlyConfig;
 import org.apache.seatunnel.common.utils.DateTimeUtils;
 import org.apache.seatunnel.common.utils.DateUtils;
 import org.apache.seatunnel.common.utils.TimeUtils;
-
-import org.apache.commons.lang3.StringUtils;
 
 import lombok.Data;
 import lombok.NonNull;
 
 import java.io.File;
 import java.io.Serializable;
-import java.util.Locale;
 
 import static org.apache.seatunnel.shade.com.google.common.base.Preconditions.checkNotNull;
 
 @Data
 public class BaseFileSinkConfig implements DelimiterConfig, Serializable {
     private static final long serialVersionUID = 1L;
-    protected CompressFormat compressFormat = BaseSinkConfig.COMPRESS_CODEC.defaultValue();
-    protected String fieldDelimiter = BaseSinkConfig.FIELD_DELIMITER.defaultValue();
-    protected String rowDelimiter = BaseSinkConfig.ROW_DELIMITER.defaultValue();
-    protected int batchSize = BaseSinkConfig.BATCH_SIZE.defaultValue();
+    protected CompressFormat compressFormat;
+    protected String fieldDelimiter;
+    protected int sheetMaxRows;
+    protected String rowDelimiter;
+    protected int batchSize;
     protected String path;
-    protected String fileNameExpression = BaseSinkConfig.FILE_NAME_EXPRESSION.defaultValue();
-    protected boolean singleFileMode = BaseSinkConfig.SINGLE_FILE_MODE.defaultValue();
-    protected boolean createEmptyFileWhenNoData =
-            BaseSinkConfig.CREATE_EMPTY_FILE_WHEN_NO_DATA.defaultValue();
+    protected String fileNameExpression;
+    protected boolean customFilename;
+    protected boolean singleFileMode;
+    protected boolean createEmptyFileWhenNoData;
     protected FileFormat fileFormat;
-    protected String filenameExtension = BaseSinkConfig.FILENAME_EXTENSION.defaultValue();
-    protected DateUtils.Formatter dateFormat = DateUtils.Formatter.YYYY_MM_DD;
-    protected DateTimeUtils.Formatter datetimeFormat = DateTimeUtils.Formatter.YYYY_MM_DD_HH_MM_SS;
-    protected TimeUtils.Formatter timeFormat = TimeUtils.Formatter.HH_MM_SS;
+    protected String filenameExtension;
+    protected DateUtils.Formatter dateFormat;
+    protected DateTimeUtils.Formatter datetimeFormat;
+    protected TimeUtils.Formatter timeFormat;
     protected Boolean enableHeaderWriter = false;
 
-    public BaseFileSinkConfig(@NonNull Config config) {
-        if (config.hasPath(BaseSinkConfig.COMPRESS_CODEC.key())) {
-            String compressCodec = config.getString(BaseSinkConfig.COMPRESS_CODEC.key());
-            this.compressFormat = CompressFormat.valueOf(compressCodec.toUpperCase());
-        }
-        if (config.hasPath(BaseSinkConfig.BATCH_SIZE.key())) {
-            this.batchSize = config.getInt(BaseSinkConfig.BATCH_SIZE.key());
-        }
-        if (config.hasPath(BaseSinkConfig.FIELD_DELIMITER.key())
-                && StringUtils.isNotEmpty(config.getString(BaseSinkConfig.FIELD_DELIMITER.key()))) {
-            this.fieldDelimiter = config.getString(BaseSinkConfig.FIELD_DELIMITER.key());
-        }
-
-        if (config.hasPath(BaseSinkConfig.ROW_DELIMITER.key())) {
-            this.rowDelimiter = config.getString(BaseSinkConfig.ROW_DELIMITER.key());
-        }
-
-        if (config.hasPath(BaseSinkConfig.FILE_PATH.key())
-                && !StringUtils.isBlank(config.getString(BaseSinkConfig.FILE_PATH.key()))) {
-            this.path = config.getString(BaseSinkConfig.FILE_PATH.key());
-        }
+    public BaseFileSinkConfig(@NonNull ReadonlyConfig pluginConfig) {
+        this.compressFormat = pluginConfig.get(FileBaseSinkOptions.COMPRESS_CODEC);
+        this.batchSize = pluginConfig.get(FileBaseSinkOptions.BATCH_SIZE);
+        this.sheetMaxRows = pluginConfig.get(FileBaseSinkOptions.SHEET_MAX_ROWS);
+        this.rowDelimiter = pluginConfig.get(FileBaseSinkOptions.ROW_DELIMITER);
+        this.path = pluginConfig.get(FileBaseSinkOptions.FILE_PATH);
         checkNotNull(path);
-
         if (path.equals(File.separator)) {
             this.path = "";
         }
-
-        if (config.hasPath(BaseSinkConfig.FILE_NAME_EXPRESSION.key())
-                && !StringUtils.isBlank(
-                        config.getString(BaseSinkConfig.FILE_NAME_EXPRESSION.key()))) {
-            this.fileNameExpression = config.getString(BaseSinkConfig.FILE_NAME_EXPRESSION.key());
-        }
-
-        if (config.hasPath(BaseSinkConfig.SINGLE_FILE_MODE.key())) {
-            this.singleFileMode = config.getBoolean(BaseSinkConfig.SINGLE_FILE_MODE.key());
-        }
-
-        if (config.hasPath(BaseSinkConfig.CREATE_EMPTY_FILE_WHEN_NO_DATA.key())) {
-            this.createEmptyFileWhenNoData =
-                    config.getBoolean(BaseSinkConfig.CREATE_EMPTY_FILE_WHEN_NO_DATA.key());
-        }
-
-        if (config.hasPath(BaseSinkConfig.FILE_FORMAT_TYPE.key())
-                && !StringUtils.isBlank(config.getString(BaseSinkConfig.FILE_FORMAT_TYPE.key()))) {
-            this.fileFormat =
-                    FileFormat.valueOf(
-                            config.getString(BaseSinkConfig.FILE_FORMAT_TYPE.key())
-                                    .toUpperCase(Locale.ROOT));
+        this.fileNameExpression = pluginConfig.get(FileBaseSinkOptions.FILE_NAME_EXPRESSION);
+        this.customFilename = pluginConfig.get(FileBaseSinkOptions.CUSTOM_FILENAME);
+        this.singleFileMode = pluginConfig.get(FileBaseSinkOptions.SINGLE_FILE_MODE);
+        this.createEmptyFileWhenNoData =
+                pluginConfig.get(FileBaseSinkOptions.CREATE_EMPTY_FILE_WHEN_NO_DATA);
+        this.fileFormat = pluginConfig.get(FileBaseSinkOptions.FILE_FORMAT_TYPE);
+        // if set, use user config, if not set, when format is csv, use "," otherwise use default
+        // delimiter
+        if (pluginConfig.getOptional(FileBaseSinkOptions.FIELD_DELIMITER).isPresent()) {
+            this.fieldDelimiter = pluginConfig.get(FileBaseSinkOptions.FIELD_DELIMITER);
+        } else if (FileFormat.CSV.equals(this.fileFormat)) {
+            this.fieldDelimiter = ",";
         } else {
-            // fall back to the default
-            this.fileFormat = BaseSinkConfig.FILE_FORMAT_TYPE.defaultValue();
+            this.fieldDelimiter = FileBaseSinkOptions.FIELD_DELIMITER.defaultValue();
         }
-
-        if (config.hasPath(BaseSinkConfig.FILENAME_EXTENSION.key())
-                && !StringUtils.isBlank(
-                        config.getString(BaseSinkConfig.FILENAME_EXTENSION.key()))) {
-            this.filenameExtension = config.getString(BaseSinkConfig.FILENAME_EXTENSION.key());
-        }
-
-        if (config.hasPath(BaseSinkConfig.DATE_FORMAT.key())) {
-            dateFormat =
-                    DateUtils.Formatter.parse(config.getString(BaseSinkConfig.DATE_FORMAT.key()));
-        }
-
-        if (config.hasPath(BaseSinkConfig.DATETIME_FORMAT.key())) {
-            datetimeFormat =
-                    DateTimeUtils.Formatter.parse(
-                            config.getString(BaseSinkConfig.DATETIME_FORMAT.key()));
-        }
-
-        if (config.hasPath(BaseSinkConfig.TIME_FORMAT.key())) {
-            timeFormat =
-                    TimeUtils.Formatter.parse(config.getString(BaseSinkConfig.TIME_FORMAT.key()));
-        }
-
-        if (config.hasPath(BaseSinkConfig.ENABLE_HEADER_WRITE.key())) {
-            enableHeaderWriter = config.getBoolean(BaseSinkConfig.ENABLE_HEADER_WRITE.key());
-        }
+        this.filenameExtension = pluginConfig.get(FileBaseSinkOptions.FILENAME_EXTENSION);
+        this.dateFormat = pluginConfig.get(FileBaseSinkOptions.DATE_FORMAT_LEGACY);
+        this.datetimeFormat = pluginConfig.get(FileBaseSinkOptions.DATETIME_FORMAT_LEGACY);
+        this.timeFormat = pluginConfig.get(FileBaseSinkOptions.TIME_FORMAT_LEGACY);
+        this.enableHeaderWriter = pluginConfig.get(FileBaseSinkOptions.ENABLE_HEADER_WRITE);
     }
 
     public BaseFileSinkConfig() {}

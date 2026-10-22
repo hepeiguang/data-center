@@ -42,7 +42,7 @@ public interface AccessTokenMapper extends BaseMapper<AccessToken> {
      */
     IPage<AccessToken> selectAccessTokenPage(Page page,
                                              @Param("userName") String userName,
-                                             @Param("userId") String userId);
+                                             @Param("userId") int userId);
 
     /**
      * Query access token for specified user
@@ -50,7 +50,7 @@ public interface AccessTokenMapper extends BaseMapper<AccessToken> {
      * @param userId userId
      * @return access token for specified user
      */
-    List<AccessToken> queryAccessTokenByUser(@Param("userId") String userId);
+    List<AccessToken> queryAccessTokenByUser(@Param("userId") int userId);
 
     /**
      * delete by userId
@@ -58,7 +58,7 @@ public interface AccessTokenMapper extends BaseMapper<AccessToken> {
      * @param userId userId
      * @return delete result
      */
-    int deleteAccessTokenByUserId(@Param("userId") String userId);
+    int deleteAccessTokenByUserId(@Param("userId") int userId);
 
     /**
      * list authorized Projects
@@ -66,6 +66,6 @@ public interface AccessTokenMapper extends BaseMapper<AccessToken> {
      * @param accessTokensIds
      * @return access token for specified user
      */
-    List<AccessToken> listAuthorizedAccessToken(@Param("userId") String userId,
+    List<AccessToken> listAuthorizedAccessToken(@Param("userId") int userId,
                                                 @Param("accessTokensIds") List<Integer> accessTokensIds);
 }

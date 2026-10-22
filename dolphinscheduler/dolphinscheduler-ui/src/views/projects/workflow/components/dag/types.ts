@@ -18,8 +18,7 @@
 import type { TaskType } from '@/store/project/types'
 export type { ITaskState } from '@/common/types'
 
-export interface ProcessDefinition {
-  taskType: string
+export interface WorkflowDefinition {
   id: number
   code: number
   name: string
@@ -49,9 +48,9 @@ export interface ProcessDefinition {
 export interface Connect {
   id?: number
   name: string
-  processDefinitionVersion?: number
+  workflowDefinitionVersion?: number
   projectCode?: number
-  processDefinitionCode?: number
+  workflowDefinitionCode?: number
   preTaskCode: number
   preTaskVersion: number
   postTaskCode: number
@@ -96,14 +95,12 @@ export interface TaskDefinition {
 export type NodeData = {
   code: number
   taskType: TaskType
-  name: string,
-  include_fields?: any,
-  children?: any,
+  name: string
 } & Partial<TaskDefinition>
 
 export interface WorkflowDefinition {
-  processDefinition: ProcessDefinition
-  processTaskRelationList: Connect[]
+  workflowDefinition: WorkflowDefinition
+  workflowTaskRelationList: Connect[]
   taskDefinitionList: TaskDefinition[]
 }
 
@@ -114,7 +111,7 @@ export interface WorkflowInstance {
   commandType: string
   commandParam: string
   failureStrategy: string
-  processInstancePriority: string
+  workflowInstancePriority: string
   workerGroup: string
   tenantCode: string
   warningType: string
@@ -122,8 +119,8 @@ export interface WorkflowInstance {
 }
 
 export interface EditWorkflowDefinition {
-  processDefinition: ProcessDefinition
-  processTaskRelationList: Connect[]
+  workflowDefinition: WorkflowDefinition
+  workflowTaskRelationList: Connect[]
   taskDefinitionList: NodeData[]
 }
 
@@ -131,7 +128,6 @@ export interface Dragged {
   x: number
   y: number
   type: TaskType
-  name: string
 }
 
 export interface Coordinate {
@@ -142,6 +138,7 @@ export interface Coordinate {
 export interface GlobalParam {
   key: string
   direct: string
+  type: string
   value: string
 }
 
@@ -153,23 +150,20 @@ export interface SaveForm {
   timeout: number
   globalParams: GlobalParam[]
   release: boolean
-  sync: boolean,
-  taskType: string
+  sync: boolean
 }
 
 export interface Location {
   taskCode: number
   x: number
   y: number
-  width: number
-  height: number
 }
 
 export interface IStartupParam {
   commandType: string
   commandParam: string
   failureStrategy: string
-  processInstancePriority: string
+  workflowInstancePriority: string
   workerGroup: string
   tenantCode: string
   warningType: string

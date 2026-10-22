@@ -60,7 +60,7 @@ public interface AlertGroupMapper extends BaseMapper<AlertGroup> {
      * @param userId userId
      * @return alertgroup list
      */
-    List<AlertGroup> queryByUserId(@Param("userId") String userId);
+    List<AlertGroup> queryByUserId(@Param("userId") int userId);
 
     /**
      * query all group list
@@ -87,7 +87,7 @@ public interface AlertGroupMapper extends BaseMapper<AlertGroup> {
      * @param alertGroupsIds
      * @return
      */
-    <T> List<AlertGroup> listAuthorizedAlertGroupList(@Param("userId") String userId,
+    <T> List<AlertGroup> listAuthorizedAlertGroupList(@Param("userId") int userId,
                                                       @Param("alertGroupsIds") List<Integer> alertGroupsIds);
 
     /**

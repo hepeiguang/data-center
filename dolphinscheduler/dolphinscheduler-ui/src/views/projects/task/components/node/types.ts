@@ -275,7 +275,7 @@ interface ITaskParams {
   taskManagerMemory?: string
   slot?: number
   taskManager?: number
-  parallelism?: number | null
+  parallelism?: number
   mainClass?: string
   deployMode?: string
   appName?: string
@@ -286,6 +286,13 @@ interface ITaskParams {
   executorCores?: number
   mainArgs?: string
   others?: string
+  grpcCredentialType?: string
+  grpcServiceDefinition?: string
+  grpcServiceDefinitionJSON?: string
+  methodName?: string
+  message?: string
+  grpcCheckCondition?: string
+  grpcConnectTimeoutMs?: number
   httpMethod?: string
   httpBody?: string
   httpCheckCondition?: string
@@ -297,6 +304,8 @@ interface ITaskParams {
   type?: string
   datasource?: string
   sql?: string
+  sqlSource?: string
+  sqlResource?: string
   sqlType?: string
   sendEmail?: boolean
   displayRows?: number
@@ -333,6 +342,7 @@ interface ITaskParams {
   targetTable?: string
   jobSpeedByte?: number
   jobSpeedRecord?: number
+  jobChannel?: number
   xms?: number
   xmx?: number
   sparkParameters?: ISparkParameters
@@ -340,6 +350,9 @@ interface ITaskParams {
   ruleInputParameter?: IRuleParameters
   jobFlowDefineJson?: string
   stepsDefineJson?: string
+  applicationId?: string
+  executionRoleArn?: string
+  startJobRunRequestJson?: string
   zeppelinNoteId?: string
   zeppelinParagraphId?: string
   zeppelinRestEndpoint?: string
@@ -350,6 +363,18 @@ interface ITaskParams {
   password?: string
   zeppelinProductionNoteDirectory?: string
   productionNoteDirectory?: string
+  regionId?: string
+  accessKeyId?: string
+  accessKeySecret?: string
+  workspaceId?: string
+  resourceQueueId?: string
+  codeType?: string
+  engineReleaseVersion?: string
+  templateId?: string
+  entryPoint?: string
+  entryPointArguments?: string
+  sparkSubmitParameters?: string
+  isProduction?: boolean
   hiveCliOptions?: string
   hiveSqlScript?: string
   hiveCliTaskExecutionType?: string
@@ -365,12 +390,11 @@ interface ITaskParams {
   startupScript?: string
   executionTimeout?: string
   startTimeout?: string
-  processDefinitionCode?: number
+  workflowDefinitionCode?: number
   conditionResult?: {
     successNode?: number[]
     failedNode?: number[]
   }
-  udfs?: string
   connParams?: string
   targetJobName?: string
   cluster?: string
@@ -407,7 +431,6 @@ interface ITaskParams {
   zkPath?: string
   executeMode?: string
   useCustom?: boolean
-  scriptType?: string
   runMode?: string
   dvcTaskType?: string
   dvcRepository?: string
@@ -424,7 +447,7 @@ interface ITaskParams {
   scriptParams?: string
   pythonPath?: string
   isCreateEnvironment?: string
-  pythonCommand?: string
+  pythonLauncher?: string
   pythonEnvTool?: string
   requirements?: string
   condaPythonVersion?: string
@@ -442,7 +465,6 @@ interface ITaskParams {
   destinationLocationArn?: string
   sourceLocationArn?: string
   name?: string
-  alias?: string
   cloudWatchLogGroupArn?: string
   yamlContent?: string
   paramScript?: ILocalParam[]
@@ -460,24 +482,23 @@ interface ITaskParams {
 
 interface INodeData
   extends Omit<
-    ITaskParams,
-    | 'resourceList'
-    | 'mainJar'
-    | 'targetParams'
-    | 'sourceParams'
-    | 'dependence'
-    | 'sparkParameters'
-    | 'conditionResult'
-    | 'udfs'
-    | 'customConfig'
-  >,
-  ISqoopTargetData,
-  ISqoopSourceData,
-  IDependentParameters,
-  Omit<IRuleParameters, 'mapping_columns'> {
+      ITaskParams,
+      | 'resourceList'
+      | 'mainJar'
+      | 'targetParams'
+      | 'sourceParams'
+      | 'dependence'
+      | 'sparkParameters'
+      | 'conditionResult'
+      | 'customConfig'
+    >,
+    ISqoopTargetData,
+    ISqoopSourceData,
+    IDependentParameters,
+    Omit<IRuleParameters, 'mapping_columns'> {
   id?: string
   taskType?: ITaskType
-  processName?: number
+  workflowDefinitionName?: number
   delayTime?: number
   description?: string
   environmentCode?: number | null
@@ -486,7 +507,6 @@ interface INodeData
   cpuQuota?: number
   memoryMax?: number
   flag?: 'YES' | 'NO'
-  isCache?: boolean
   taskGroupId?: number
   taskGroupPriority?: number
   taskPriority?: string
@@ -496,7 +516,6 @@ interface INodeData
   workerGroup?: string
   code?: number
   name?: string
-  alias?: string
   preTasks?: number[]
   preTaskOptions?: []
   postTaskOptions?: []
@@ -510,21 +529,18 @@ interface INodeData
   definition?: object
   successBranch?: number
   failedBranch?: number
-  udfs?: string[]
   customConfig?: boolean
   mapping_columns?: object[]
   taskExecuteType?: TaskExecuteType
-  outputFields: string[]
 }
 
 interface ITaskData
   extends Omit<
     INodeData,
-    'isCache' | 'timeoutFlag' | 'taskPriority' | 'timeoutNotifyStrategy'
+    'timeoutFlag' | 'taskPriority' | 'timeoutNotifyStrategy'
   > {
   name?: string
   taskPriority?: string
-  isCache?: 'YES' | 'NO'
   timeoutFlag?: 'OPEN' | 'CLOSE'
   timeoutNotifyStrategy?: string | []
   taskParams?: ITaskParams

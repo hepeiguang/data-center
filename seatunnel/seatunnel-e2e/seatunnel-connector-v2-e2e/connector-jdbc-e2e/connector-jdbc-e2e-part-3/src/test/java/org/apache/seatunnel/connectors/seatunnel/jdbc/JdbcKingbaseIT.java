@@ -17,20 +17,21 @@ package org.apache.seatunnel.connectors.seatunnel.jdbc;
  */
 
 import org.apache.seatunnel.shade.com.google.common.collect.Lists;
+import org.apache.seatunnel.shade.org.apache.commons.lang3.tuple.Pair;
 
 import org.apache.seatunnel.api.table.type.SeaTunnelRow;
 import org.apache.seatunnel.common.exception.SeaTunnelRuntimeException;
 import org.apache.seatunnel.common.utils.ExceptionUtils;
 
-import org.apache.commons.lang3.tuple.Pair;
-
 import org.junit.jupiter.api.Disabled;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
+import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.utility.DockerLoggerFactory;
 
 import java.math.BigDecimal;
 import java.sql.Statement;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -50,7 +51,7 @@ import java.util.stream.Collectors;
  */
 @Disabled("Due to copyright reasons, you need to download the trial version km license yourself")
 public class JdbcKingbaseIT extends AbstractJdbcIT {
-    private static final String KINGBASE_IMAGE = "huzhihui/kingbase:v8r6";
+    private static final String KINGBASE_IMAGE = "seatunnelhub/kingbase:v8r6";
     private static final String KINGBASE_CONTAINER_HOST = "e2e_KINGBASEDb";
     private static final String KINGBASE_DATABASE = "test";
     private static final String KINGBASE_SCHEMA = "public";
@@ -120,11 +121,6 @@ public class JdbcKingbaseIT extends AbstractJdbcIT {
     }
 
     @Override
-    String driverUrl() {
-        return "https://repo1.maven.org/maven2/cn/com/kingbase/kingbase8/8.6.0/kingbase8-8.6.0.jar";
-    }
-
-    @Override
     Pair<String[], List<SeaTunnelRow>> initTestData() {
         String[] fieldNames =
                 new String[] {
@@ -168,11 +164,12 @@ public class JdbcKingbaseIT extends AbstractJdbcIT {
                         .withNetworkAliases(KINGBASE_CONTAINER_HOST)
                         .withEnv("KINGBASE_SYSTEM_PASSWORD", "123456")
                         .withFileSystemBind(KM_LICENSE_PATH, "/home/kingbase/license.dat")
+                        .waitingFor(
+                                Wait.forListeningPort().withStartupTimeout(Duration.ofMinutes(5)))
                         .withLogConsumer(
                                 new Slf4jLogConsumer(
                                         DockerLoggerFactory.getLogger(KINGBASE_IMAGE)));
-        container.setPortBindings(
-                Lists.newArrayList(String.format("%s:%s", KINGBASE_PORT, KINGBASE_PORT)));
+        container.addExposedPort(KINGBASE_PORT);
         return container;
     }
 

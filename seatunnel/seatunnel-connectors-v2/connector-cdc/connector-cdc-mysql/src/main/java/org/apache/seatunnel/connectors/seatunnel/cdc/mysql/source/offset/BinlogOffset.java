@@ -17,9 +17,9 @@
 
 package org.apache.seatunnel.connectors.seatunnel.cdc.mysql.source.offset;
 
-import org.apache.seatunnel.connectors.cdc.base.source.offset.Offset;
+import org.apache.seatunnel.shade.org.apache.commons.lang3.StringUtils;
 
-import org.apache.commons.lang3.StringUtils;
+import org.apache.seatunnel.connectors.cdc.base.source.offset.Offset;
 
 import io.debezium.connector.mysql.GtidSet;
 
@@ -81,6 +81,12 @@ public class BinlogOffset extends Offset {
         this.offset = offsetMap;
     }
 
+    public BinlogOffset(long timestamp) {
+        Map<String, String> offsetMap = new HashMap<>();
+        offsetMap.put(TIMESTAMP_KEY, String.valueOf(timestamp));
+        this.offset = offsetMap;
+    }
+
     public String getFilename() {
         return offset.get(BINLOG_FILENAME_OFFSET_KEY);
     }
@@ -105,8 +111,19 @@ public class BinlogOffset extends Offset {
         return longOffsetValue(offset, TIMESTAMP_KEY);
     }
 
+    public boolean isTimestampOffset() {
+        return offset.containsKey(TIMESTAMP_KEY)
+                && !offset.containsKey(BINLOG_FILENAME_OFFSET_KEY)
+                && !offset.containsKey(BINLOG_POSITION_OFFSET_KEY);
+    }
+
     public Long getServerId() {
         return longOffsetValue(offset, SERVER_ID_KEY);
+    }
+
+    @Override
+    public boolean isNeverStop() {
+        return NO_STOPPING_OFFSET.equals(this);
     }
 
     /**
@@ -135,9 +152,14 @@ public class BinlogOffset extends Offset {
                 GtidSet gtidSet = new GtidSet(gtidSetStr);
                 GtidSet targetGtidSet = new GtidSet(targetGtidSetStr);
                 if (gtidSet.equals(targetGtidSet)) {
-                    long restartSkipEvents = this.getRestartSkipEvents();
-                    long targetRestartSkipEvents = that.getRestartSkipEvents();
-                    return Long.compare(restartSkipEvents, targetRestartSkipEvents);
+                    // Same GTID set means both offsets are within the same transaction
+                    // boundary, so ordering must also consider per-event and per-row progress.
+                    int eventCompare =
+                            Long.compare(this.getRestartSkipEvents(), that.getRestartSkipEvents());
+                    if (eventCompare != 0) {
+                        return eventCompare;
+                    }
+                    return Long.compare(this.getRestartSkipRows(), that.getRestartSkipRows());
                 }
                 // The GTIDs are not an exact match, so figure out if this is a subset of the target
                 // offset
@@ -158,10 +180,19 @@ public class BinlogOffset extends Offset {
             // again we know that this offset not having GTIDs is before the target offset ...
             return -1;
         } else if (StringUtils.isNotEmpty(gtidSetStr)) {
-            // This offset has a GTID but the target offset does not, so per the previous paragraph
-            // we
-            // assume that previous
-            // is not at or before ...
+            // This offset has a GTID but the target offset does not, so we need to compare
+            // by binlog filename and position instead
+            String thisFilename = this.getFilename();
+            String thatFilename = that.getFilename();
+            if (StringUtils.isNotEmpty(thisFilename) && StringUtils.isNotEmpty(thatFilename)) {
+                int filenameCompare = thisFilename.compareToIgnoreCase(thatFilename);
+                if (filenameCompare != 0) {
+                    return filenameCompare;
+                }
+                // Same binlog file, compare by position
+                return Long.compare(this.getPosition(), that.getPosition());
+            }
+            // Cannot compare, assume this is newer
             return 1;
         }
 

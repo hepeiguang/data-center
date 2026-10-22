@@ -17,39 +17,66 @@
 
 package org.apache.seatunnel.connectors.seatunnel.redis.sink;
 
+import org.apache.seatunnel.shade.org.apache.commons.lang3.StringUtils;
+
+import org.apache.seatunnel.api.common.SeaTunnelAPIErrorCode;
 import org.apache.seatunnel.api.serialization.SerializationSchema;
 import org.apache.seatunnel.api.sink.SupportMultiTableSinkWriter;
+import org.apache.seatunnel.api.sink.SupportSchemaEvolutionSinkWriter;
+import org.apache.seatunnel.api.table.catalog.PhysicalColumn;
+import org.apache.seatunnel.api.table.catalog.TableSchema;
+import org.apache.seatunnel.api.table.schema.event.SchemaChangeEvent;
+import org.apache.seatunnel.api.table.schema.handler.TableSchemaChangeEventDispatcher;
 import org.apache.seatunnel.api.table.type.RowKind;
+import org.apache.seatunnel.api.table.type.SeaTunnelDataType;
 import org.apache.seatunnel.api.table.type.SeaTunnelRow;
 import org.apache.seatunnel.api.table.type.SeaTunnelRowType;
+import org.apache.seatunnel.common.constants.PluginType;
 import org.apache.seatunnel.common.exception.CommonErrorCode;
 import org.apache.seatunnel.common.utils.JsonUtils;
+import org.apache.seatunnel.common.utils.PlaceholderUtils;
 import org.apache.seatunnel.connectors.seatunnel.common.sink.AbstractSinkWriter;
 import org.apache.seatunnel.connectors.seatunnel.redis.client.RedisClient;
+import org.apache.seatunnel.connectors.seatunnel.redis.config.RedisBaseOptions;
 import org.apache.seatunnel.connectors.seatunnel.redis.config.RedisDataType;
 import org.apache.seatunnel.connectors.seatunnel.redis.config.RedisParameters;
 import org.apache.seatunnel.connectors.seatunnel.redis.exception.RedisConnectorException;
 import org.apache.seatunnel.format.json.JsonSerializationSchema;
+import org.apache.seatunnel.format.text.TextSerializationSchema;
 
-import org.apache.commons.lang3.StringUtils;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-public class RedisSinkWriter extends AbstractSinkWriter<SeaTunnelRow, Void>
-        implements SupportMultiTableSinkWriter<Void> {
-    private static final String REDIS_GROUP_DELIMITER = ":";
-    private static final String LEFT_PLACEHOLDER_MARKER = "{";
-    private static final String RIGHT_PLACEHOLDER_MARKER = "}";
-    private final SeaTunnelRowType seaTunnelRowType;
+@Slf4j
+public class RedisSinkWriter extends AbstractSinkWriter<SeaTunnelRow, TableSchema>
+        implements SupportMultiTableSinkWriter<Void>, SupportSchemaEvolutionSinkWriter {
+    private static final Pattern LEGACY_PLACEHOLDER_PATTERN =
+            Pattern.compile("(?<!\\$)\\{([^{}]+)\\}");
+    private static final Pattern PLACEHOLDER_PATTERN = Pattern.compile("\\$\\{([^}]+)\\}");
+
+    /** Authoritative schema saved in checkpoints and updated by ordered schema-change events. */
+    private TableSchema tableSchema;
+
+    /** Physical row type derived from {@link #tableSchema} for key and value field lookup. */
+    private SeaTunnelRowType seaTunnelRowType;
+
     private final RedisParameters redisParameters;
-    private final SerializationSchema serializationSchema;
+
+    /** Serializer derived from {@link #tableSchema} and refreshed together with the row type. */
+    private SerializationSchema serializationSchema;
+
     private final RedisClient redisClient;
+    private final TableSchemaChangeEventDispatcher schemaChangeEventDispatcher;
 
     private final int batchSize;
 
@@ -57,13 +84,25 @@ public class RedisSinkWriter extends AbstractSinkWriter<SeaTunnelRow, Void>
     private final List<String> keyBuffer;
     private final List<String> valueBuffer;
 
+    /**
+     * Creates a writer from a physical row type.
+     *
+     * @deprecated Use {@link #RedisSinkWriter(TableSchema, RedisParameters)} so schema evolution
+     *     and checkpoint recovery retain the complete table schema.
+     */
+    @Deprecated
     public RedisSinkWriter(SeaTunnelRowType seaTunnelRowType, RedisParameters redisParameters) {
-        this.seaTunnelRowType = seaTunnelRowType;
+        this(toTableSchema(seaTunnelRowType), redisParameters);
+    }
+
+    /** Creates a writer whose schema can be updated and restored from checkpoint state. */
+    public RedisSinkWriter(TableSchema tableSchema, RedisParameters redisParameters) {
+        this.tableSchema = normalizeTableSchema(tableSchema);
+        this.seaTunnelRowType = this.tableSchema.toPhysicalRowDataType();
         this.redisParameters = redisParameters;
-        // TODO according to format to initialize serializationSchema
-        // Now temporary using json serializationSchema
-        this.serializationSchema = new JsonSerializationSchema(seaTunnelRowType);
+        this.serializationSchema = createSerializationSchema(redisParameters, seaTunnelRowType);
         this.redisClient = redisParameters.buildRedisClient();
+        this.schemaChangeEventDispatcher = new TableSchemaChangeEventDispatcher();
         this.batchSize = redisParameters.getBatchSize();
         this.rowKinds = new ArrayList<>(batchSize);
         this.keyBuffer = new ArrayList<>(batchSize);
@@ -81,6 +120,42 @@ public class RedisSinkWriter extends AbstractSinkWriter<SeaTunnelRow, Void>
         if (keyBuffer.size() >= batchSize) {
             flush();
         }
+
+        log.debug("write redis key: {}, value: {}， rowKind: {}", key, value, element.getRowKind());
+    }
+
+    /**
+     * Flushes all rows serialized with the previous schema before refreshing the writer's
+     * schema-derived views. The engine orders this callback with row processing, so all three views
+     * are updated before any subsequent row is processed.
+     */
+    @Override
+    public void applySchemaChange(SchemaChangeEvent event) {
+        flush();
+        tableSchema = schemaChangeEventDispatcher.reset(tableSchema).apply(event);
+        seaTunnelRowType = tableSchema.toPhysicalRowDataType();
+        serializationSchema = createSerializationSchema(redisParameters, seaTunnelRowType);
+    }
+
+    private static TableSchema normalizeTableSchema(TableSchema tableSchema) {
+        if (tableSchema.getConstraintKeys() != null) {
+            return tableSchema;
+        }
+        return TableSchema.builder()
+                .columns(tableSchema.getColumns())
+                .primaryKey(tableSchema.getPrimaryKey())
+                .build();
+    }
+
+    private static TableSchema toTableSchema(SeaTunnelRowType seaTunnelRowType) {
+        TableSchema.Builder schemaBuilder = TableSchema.builder();
+        String[] fieldNames = seaTunnelRowType.getFieldNames();
+        SeaTunnelDataType<?>[] fieldTypes = seaTunnelRowType.getFieldTypes();
+        for (int i = 0; i < fieldNames.length; i++) {
+            schemaBuilder.column(
+                    PhysicalColumn.of(fieldNames[i], fieldTypes[i], 0L, true, null, null));
+        }
+        return schemaBuilder.build();
     }
 
     private String getKey(SeaTunnelRow element, List<String> fields) {
@@ -101,28 +176,40 @@ public class RedisSinkWriter extends AbstractSinkWriter<SeaTunnelRow, Void>
         }
     }
 
-    private String getCustomKey(SeaTunnelRow element, List<String> fields, String keyField) {
-        String[] keyFieldSegments = keyField.split(REDIS_GROUP_DELIMITER);
-        StringBuilder key = new StringBuilder();
-        for (int i = 0; i < keyFieldSegments.length; i++) {
-            String keyFieldSegment = keyFieldSegments[i];
-            if (keyFieldSegment.startsWith(LEFT_PLACEHOLDER_MARKER)
-                    && keyFieldSegment.endsWith(RIGHT_PLACEHOLDER_MARKER)) {
-                String realKeyField = keyFieldSegment.substring(1, keyFieldSegment.length() - 1);
-                if (fields.contains(realKeyField)) {
-                    Object realFieldValue = element.getField(fields.indexOf(realKeyField));
-                    key.append(realFieldValue == null ? "" : realFieldValue.toString());
-                } else {
-                    key.append(keyFieldSegment);
-                }
-            } else {
-                key.append(keyFieldSegment);
-            }
-            if (i != keyFieldSegments.length - 1) {
-                key.append(REDIS_GROUP_DELIMITER);
-            }
+    protected String getCustomKey(SeaTunnelRow element, List<String> fields, String keyField) {
+        // First, detect and convert the old format placeholders to the new format
+        String normalizedKeyField = normalizePlaceholders(keyField);
+
+        Matcher matcher = PLACEHOLDER_PATTERN.matcher(normalizedKeyField);
+
+        Map<String, String> placeholderValues = new HashMap<>();
+
+        while (matcher.find()) {
+            String fieldName = matcher.group(1);
+            String fieldValue = getFieldValue(element, fields, fieldName);
+            placeholderValues.put(fieldName, fieldValue);
         }
-        return key.toString();
+
+        return placeholderValues.keySet().stream()
+                .reduce(
+                        normalizedKeyField,
+                        (result, placeholderName) -> {
+                            return PlaceholderUtils.replacePlaceholders(
+                                    result,
+                                    placeholderName,
+                                    placeholderValues.get(placeholderName),
+                                    null);
+                        });
+    }
+
+    private String getFieldValue(SeaTunnelRow element, List<String> fields, String fieldName) {
+        if (fields.contains(fieldName)) {
+            Object fieldValue = element.getField(fields.indexOf(fieldName));
+            return fieldValue == null ? "" : fieldValue.toString();
+        } else {
+            // If the field does not exist, return the original field name
+            return fieldName;
+        }
     }
 
     private String getValue(SeaTunnelRow element, List<String> fields) {
@@ -219,6 +306,45 @@ public class RedisSinkWriter extends AbstractSinkWriter<SeaTunnelRow, Void>
                 "UnSupport redisDataType,only support string,list,hash,set,zset");
     }
 
+    private SerializationSchema createSerializationSchema(
+            RedisParameters redisParameters, SeaTunnelRowType rowType) {
+
+        RedisBaseOptions.Format format = redisParameters.getFormat();
+
+        switch (format) {
+            case JSON:
+                return new JsonSerializationSchema(rowType);
+            case TEXT:
+                String fieldDelimiter = redisParameters.getFieldDelimiter();
+                return TextSerializationSchema.builder()
+                        .seaTunnelRowType(rowType)
+                        .delimiter(fieldDelimiter)
+                        .build();
+            default:
+                throw new RedisConnectorException(
+                        SeaTunnelAPIErrorCode.CONFIG_VALIDATION_FAILED,
+                        String.format(
+                                "PluginName: %s, PluginType: %s, Message: %s",
+                                RedisBaseOptions.CONNECTOR_IDENTITY,
+                                PluginType.SINK,
+                                "Unsupported format: " + format));
+        }
+    }
+
+    private String normalizePlaceholders(String input) {
+        if (input == null) {
+            return input;
+        }
+
+        Matcher legacyMatcher = LEGACY_PLACEHOLDER_PATTERN.matcher(input);
+        if (legacyMatcher.find()) {
+            // Convert legacy format {fieldName} to ${fieldName}
+            return legacyMatcher.replaceAll("\\$\\{$1\\}");
+        }
+
+        return input;
+    }
+
     @Override
     public void close() throws IOException {
         flush();
@@ -228,6 +354,12 @@ public class RedisSinkWriter extends AbstractSinkWriter<SeaTunnelRow, Void>
     public Optional<Void> prepareCommit() {
         flush();
         return Optional.empty();
+    }
+
+    /** Returns an isolated copy of the latest schema for checkpoint and rescale recovery. */
+    @Override
+    public List<TableSchema> snapshotState(long checkpointId) {
+        return Collections.singletonList(tableSchema.copy());
     }
 
     private synchronized void flush() {

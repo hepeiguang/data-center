@@ -17,9 +17,10 @@
 
 package org.apache.seatunnel.e2e.common.container;
 
-import org.apache.seatunnel.e2e.common.util.ContainerUtil;
+import org.apache.seatunnel.shade.org.apache.commons.lang3.StringUtils;
 
-import org.apache.commons.lang3.StringUtils;
+import org.apache.seatunnel.e2e.common.util.ContainerUtil;
+import org.apache.seatunnel.e2e.common.util.MavenJarUtil;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,6 +29,7 @@ import org.testcontainers.containers.GenericContainer;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
@@ -43,6 +45,24 @@ public abstract class AbstractTestContainer implements TestContainer {
     protected static final String START_ROOT_MODULE_NAME = "seatunnel-core";
 
     public static final String SEATUNNEL_HOME = "/tmp/seatunnel/";
+
+    protected static final boolean isWindows =
+            System.getProperties().getProperty("os.name").toUpperCase().contains("WINDOWS");
+
+    protected static String hostName = System.getProperty("user.name");
+    protected Integer hostUid = Integer.parseInt(System.getProperty("user.id", "1000"));
+    protected Integer hostGid = Integer.parseInt(System.getProperty("user.gid", "1000"));
+
+    protected static final String CONTAINER_VOLUME_MOUNT_PATH = "/tmp/seatunnel_mnt";
+    protected static final Path CONTAINER_HADOOP_JAR_PATH =
+            Paths.get(
+                    SEATUNNEL_HOME, String.format("lib/%s", MavenJarUtil.getHadoop3UberJarName()));
+
+    public static final String HOST_VOLUME_MOUNT_PATH =
+            isWindows
+                    ? String.format("C:/Users/%s/tmp/seatunnel_mnt", hostName)
+                    : CONTAINER_VOLUME_MOUNT_PATH;
+
     protected final String startModuleName;
 
     protected final String startModuleFullPath;
@@ -84,7 +104,31 @@ public abstract class AbstractTestContainer implements TestContainer {
      */
     protected void executeExtraCommands(GenericContainer<?> container)
             throws IOException, InterruptedException {
-        // do nothing
+        // Set execute permissions for scripts to prevent "Permission denied" errors
+        setScriptExecutePermissions(container);
+    }
+
+    /** Set execute permissions for SeaTunnel scripts in the container. */
+    protected void setScriptExecutePermissions(GenericContainer<?> container) {
+        try {
+            LOG.info("Setting execute permissions for SeaTunnel scripts...");
+
+            // Set execute permissions for all shell scripts in the bin directory
+            container.execInContainer("sh", "-c", "chmod +x /tmp/seatunnel/bin/*.sh || true");
+
+            // Specifically ensure the starter script has execute permissions
+            String startShellName = getStartShellName();
+            if (startShellName != null && !startShellName.isEmpty()) {
+                container.execInContainer(
+                        "sh", "-c", "chmod +x /tmp/seatunnel/bin/" + startShellName + " || true");
+            }
+
+            LOG.info("Script execute permissions set successfully");
+
+        } catch (Exception e) {
+            LOG.warn("Warning: Failed to set script execute permissions: " + e.getMessage());
+            // Don't fail the test for permission issues, just log the warning
+        }
     }
 
     protected void copySeaTunnelStarterToContainer(GenericContainer<?> container) {
@@ -165,6 +209,55 @@ public abstract class AbstractTestContainer implements TestContainer {
     protected Container.ExecResult restoreJob(
             GenericContainer<?> container, String confFile, String jobId, List<String> variables)
             throws IOException, InterruptedException {
+        return restoreJob(container, confFile, jobId, variables, getRestoreCommand());
+    }
+
+    protected Container.ExecResult restoreJob(
+            GenericContainer<?> container,
+            String confFile,
+            String sourceJobId,
+            String restoreJobId,
+            List<String> variables,
+            String restoreCommand)
+            throws IOException, InterruptedException {
+        final String confInContainerPath = copyConfigFileToContainer(container, confFile);
+        copyConnectorJarToContainer(
+                container,
+                confFile,
+                getConnectorModulePath(),
+                getConnectorNamePrefix(),
+                getConnectorType(),
+                SEATUNNEL_HOME);
+        final List<String> command = new ArrayList<>();
+        String binPath = Paths.get(SEATUNNEL_HOME, "bin", getStartShellName()).toString();
+        command.add(adaptPathForWin(binPath));
+        command.add("--config");
+        command.add(adaptPathForWin(confInContainerPath));
+        command.add(restoreCommand);
+        command.add(sourceJobId);
+        if (StringUtils.isNoneEmpty(restoreJobId)) {
+            command.add("--set-job-id");
+            command.add(restoreJobId);
+        }
+        List<String> extraStartShellCommands = new ArrayList<>(getExtraStartShellCommands());
+        if (variables != null && !variables.isEmpty()) {
+            variables.forEach(
+                    v -> {
+                        extraStartShellCommands.add("-i");
+                        extraStartShellCommands.add(v);
+                    });
+        }
+        command.addAll(extraStartShellCommands);
+        return executeCommand(container, command);
+    }
+
+    protected Container.ExecResult restoreJob(
+            GenericContainer<?> container,
+            String confFile,
+            String jobId,
+            List<String> variables,
+            String restoreCommand)
+            throws IOException, InterruptedException {
         final String confInContainerPath = copyConfigFileToContainer(container, confFile);
         // copy connectors
         copyConnectorJarToContainer(
@@ -180,7 +273,7 @@ public abstract class AbstractTestContainer implements TestContainer {
         command.add(adaptPathForWin(binPath));
         command.add("--config");
         command.add(adaptPathForWin(confInContainerPath));
-        command.add(getRestoreCommand());
+        command.add(restoreCommand);
         command.add(jobId);
         List<String> extraStartShellCommands = new ArrayList<>(getExtraStartShellCommands());
         if (variables != null && !variables.isEmpty()) {

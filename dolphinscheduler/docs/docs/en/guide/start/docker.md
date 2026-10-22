@@ -11,6 +11,25 @@ There are three ways to start DolphinScheduler with Docker
 Need to install [Docker](https://docs.docker.com/engine/install/) 1.13.1+ and [Docker Compose](https://docs.docker.com/compose/) 1.28.0+
 before starting DolphinScheduler with Docker
 
+## Download Plugins Dependencies
+
+Starting from version 3.3.0, the binary package no longer provides plugin dependencies, and users need to download them by themselves. The plugin dependency package download address: [Plugin Dependency Package](https://repo.maven.apache.org/maven2/org/apache/dolphinscheduler)
+You can also execute the following command to install plugin dependencies:
+
+```shell
+bash ./bin/install-plugins.sh 3.3.0
+```
+
+Usually, you do not need all connector plugins, you can specify the plugins you need by configuring `conf/plugins_config`. For example, if you only need the `dolphinscheduler-task-shell` plugin, you can modify the configuration file as follows:
+
+```
+--task-plugins--
+dolphinscheduler-task-shell
+--end--
+```
+
+> **_Note:_** The plugin dependency package is usually not included in the binary package. If you encounter a `ClassNotFoundException` error when starting the service, please refer to the documentation of the relevant plugin type to check if the plugin dependency package is missing. For example, `dolphinscheduler-datasource-mysql` does not include `mysql-connector-java.jar`.
+
 ## Start Server
 
 ### Using standalone-server Docker Image
@@ -19,7 +38,7 @@ Start DolphinScheduler with standalone-server Docker images is the easiest way t
 you can learn DolphinScheduler's concepts and usage, with minimal cost.
 
 ```shell
-$ DOLPHINSCHEDULER_VERSION=3.2.2
+$ DOLPHINSCHEDULER_VERSION=<version>
 $ docker run --name dolphinscheduler-standalone-server -p 12345:12345 -p 25333:25333 -d apache/dolphinscheduler-standalone-server:"${DOLPHINSCHEDULER_VERSION}"
 ```
 
@@ -37,17 +56,15 @@ be stored on disks after you change docker-compose configuration, and it is robu
 DolphinScheduler in a long term. You have to install [docker-compose](https://docs.docker.com/compose/install/) before you
 start servers.
 
-After complete the installation, get the `docker-compose.yaml` file from [download page](https://dolphinscheduler.apache.org/en-us/download/3.2.2)
+After complete the installation, get the `docker-compose.yaml` file from [download page](https://dolphinscheduler.apache.org/en-us/download/<version>)
 form its source package, and make sure you get the right version. After download the package, you can run the commands as below.
 
 ```shell
-$ DOLPHINSCHEDULER_VERSION=3.2.2
+$ DOLPHINSCHEDULER_VERSION=<version>
 $ tar -zxf apache-dolphinscheduler-"${DOLPHINSCHEDULER_VERSION}"-src.tar.gz
 # Going to docker-compose's location
 # For Mac or Linux users
 $ cd apache-dolphinscheduler-"${DOLPHINSCHEDULER_VERSION}"-src/deploy/docker
-# For Windows users, you should run command `cd apache-dolphinscheduler-"${DOLPHINSCHEDULER_VERSION}"-src\deploy\docker`
-
 # Initialize the database, use profile schema
 $ docker-compose --profile schema up -d
 
@@ -68,7 +85,7 @@ $ docker-compose --profile all up -d
 container when it up. You could start DolphinScheduler server separately if you want to reuse your exists services.
 
 ```shell
-$ DOLPHINSCHEDULER_VERSION=3.2.2
+$ DOLPHINSCHEDULER_VERSION=<version>
 # Initialize the database, make sure database <DATABASE> already exists
 $ docker run -d --name dolphinscheduler-tools \
     -e DATABASE="postgresql" \
@@ -87,7 +104,7 @@ $ docker run -d --name dolphinscheduler-master \
     -e SPRING_JACKSON_TIME_ZONE="UTC" \
     -e REGISTRY_ZOOKEEPER_CONNECT_STRING="localhost:2181" \
     --net host \
-    -d apache/ds-master:"${DOLPHINSCHEDULER_VERSION}"
+    -d apache/dolphinscheduler-master:"${DOLPHINSCHEDULER_VERSION}"
 $ docker run -d --name dolphinscheduler-worker \
     -e DATABASE="postgresql" \
     -e SPRING_DATASOURCE_URL="jdbc:postgresql://localhost:5432/<DATABASE>" \
@@ -105,7 +122,7 @@ $ docker run -d --name dolphinscheduler-api \
     -e SPRING_JACKSON_TIME_ZONE="UTC" \
     -e REGISTRY_ZOOKEEPER_CONNECT_STRING="localhost:2181" \
     --net host \
-    -d apache/ds-api:"${DOLPHINSCHEDULER_VERSION}"
+    -d apache/dolphinscheduler-api:"${DOLPHINSCHEDULER_VERSION}"
 $ docker run -d --name dolphinscheduler-alert-server \
     -e DATABASE="postgresql" \
     -e SPRING_DATASOURCE_URL="jdbc:postgresql://localhost:5432/<DATABASE>" \
@@ -134,5 +151,5 @@ and use `admin` and `dolphinscheduler123` as default username and password in th
 
 You can modify some environment variables to change configurations when you are starting servers through Docker. We have
 an example in [using exists PostgreSQL ZooKeeper](#using-exists-postgresql-zookeeper) to change database and ZooKeeper configurations,
-and you could find all environment variables in [all environment variables](https://github.com/apache/dolphinscheduler/blob/3.2.2/script/env/dolphinscheduler_env.sh) <!-- markdown-link-check-disable-line -->
+and you could find all environment variables in [all environment variables](https://github.com/apache/dolphinscheduler/blob/<version>/script/env/dolphinscheduler_env.sh) <!-- markdown-link-check-disable-line -->
 and change them if you want.

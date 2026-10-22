@@ -17,30 +17,32 @@
 
 package org.apache.dolphinscheduler.plugin.datasource.oracle.param;
 
-import com.alibaba.druid.sql.ast.SQLStatement;
-import com.alibaba.druid.sql.dialect.oracle.parser.OracleStatementParser;
-import com.alibaba.druid.sql.parser.SQLParserUtils;
-import com.google.auto.service.AutoService;
-import org.apache.commons.collections4.MapUtils;
 import org.apache.dolphinscheduler.common.constants.Constants;
-import org.apache.dolphinscheduler.common.constants.DataSourceConstants;
 import org.apache.dolphinscheduler.common.utils.JSONUtils;
+import org.apache.dolphinscheduler.plugin.datasource.api.constants.DataSourceConstants;
 import org.apache.dolphinscheduler.plugin.datasource.api.datasource.AbstractDataSourceProcessor;
 import org.apache.dolphinscheduler.plugin.datasource.api.datasource.BaseDataSourceParamDTO;
 import org.apache.dolphinscheduler.plugin.datasource.api.datasource.DataSourceProcessor;
+import org.apache.dolphinscheduler.plugin.datasource.api.datasource.JdbcDriverConnectionProvider;
 import org.apache.dolphinscheduler.plugin.datasource.api.utils.PasswordUtils;
 import org.apache.dolphinscheduler.spi.datasource.BaseConnectionParam;
 import org.apache.dolphinscheduler.spi.datasource.ConnectionParam;
 import org.apache.dolphinscheduler.spi.enums.DbConnectType;
 import org.apache.dolphinscheduler.spi.enums.DbType;
 
+import org.apache.commons.collections4.MapUtils;
+
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import com.alibaba.druid.sql.ast.SQLStatement;
+import com.alibaba.druid.sql.dialect.oracle.parser.OracleStatementParser;
+import com.alibaba.druid.sql.parser.SQLParserUtils;
+import com.google.auto.service.AutoService;
 
 @AutoService(DataSourceProcessor.class)
 public class OracleDataSourceProcessor extends AbstractDataSourceProcessor {
@@ -97,8 +99,6 @@ public class OracleDataSourceProcessor extends AbstractDataSourceProcessor {
         oracleConnectionParam.setDriverClassName(getDatasourceDriver());
         oracleConnectionParam.setValidationQuery(getValidationQuery());
         oracleConnectionParam.setOther(oracleParam.getOther());
-        oracleConnectionParam.setHost(oracleParam.getHost());
-        oracleConnectionParam.setPort(oracleParam.getPort());
 
         return oracleConnectionParam;
     }
@@ -129,11 +129,15 @@ public class OracleDataSourceProcessor extends AbstractDataSourceProcessor {
     }
 
     @Override
-    public Connection getConnection(ConnectionParam connectionParam) throws ClassNotFoundException, SQLException {
+    public Connection getConnection(ConnectionParam connectionParam) throws SQLException {
         OracleConnectionParam oracleConnectionParam = (OracleConnectionParam) connectionParam;
-        Class.forName(getDatasourceDriver());
-        return DriverManager.getConnection(getJdbcUrl(connectionParam),
-                oracleConnectionParam.getUser(), PasswordUtils.decodePassword(oracleConnectionParam.getPassword()));
+        return JdbcDriverConnectionProvider.builder()
+                .jdbcDriverClassName(getDatasourceDriver())
+                .jdbcUrl(getJdbcUrl(oracleConnectionParam))
+                .username(oracleConnectionParam.getUser())
+                .password(PasswordUtils.decodePassword(oracleConnectionParam.getPassword()))
+                .build()
+                .getConnection();
     }
 
     @Override

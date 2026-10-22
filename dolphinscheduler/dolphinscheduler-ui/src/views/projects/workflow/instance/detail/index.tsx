@@ -15,15 +15,15 @@
  * limitations under the License.
  */
 
-import { defineComponent, onMounted, ref, defineAsyncComponent } from 'vue'
+import { defineComponent, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { useThemeStore } from '@/store/theme/theme'
 import { useI18n } from 'vue-i18n'
-// import Dag from '../../components/dag'
+import Dag from '../../components/dag'
 import {
-  queryProcessInstanceById,
-  updateProcessInstance
-} from '@/service/modules/process-instances'
+  queryWorkflowInstanceById,
+  updateWorkflowInstance
+} from '@/service/modules/workflow-instances'
 import {
   WorkflowDefinition,
   WorkflowInstance,
@@ -45,9 +45,6 @@ interface SaveData {
 export default defineComponent({
   name: 'WorkflowInstanceDetails',
   setup() {
-    const Dag = defineAsyncComponent(() => 
-      import('@/views/projects/workflow/components/dag')
-    )
     const theme = useThemeStore()
     const route = useRoute()
     const { t } = useI18n()
@@ -58,13 +55,10 @@ export default defineComponent({
     const instance = ref<WorkflowInstance>()
     const dagInstanceRef = ref()
 
-    const isLoading = ref(true)
-
     const refresh = () => {
-      isLoading.value = true
-      queryProcessInstanceById(id, projectCode).then((res: any) => {
+      queryWorkflowInstanceById(id, projectCode).then((res: any) => {
         instance.value = res
-        if (!res.dagData.processDefinition.locations) {
+        if (!res.dagData.workflowDefinition.locations) {
           setTimeout(() => {
             const graph = dagInstanceRef.value
             const { submit } = useGraphAutoLayout({ graph })
@@ -74,7 +68,6 @@ export default defineComponent({
         if (res.dagData) {
           definition.value = res.dagData
         }
-        isLoading.value = false
       })
     }
 
@@ -89,11 +82,11 @@ export default defineComponent({
           prop: p.key,
           value: p.value,
           direct: p.direct,
-          type: 'VARCHAR'
+          type: p.type
         }
       })
 
-      updateProcessInstance(
+      updateWorkflowInstance(
         {
           syncDefine: saveForm.sync,
           globalParams: JSON.stringify(globalParams),
@@ -122,16 +115,14 @@ export default defineComponent({
           theme.darkTheme ? Styles['dark'] : Styles['light']
         ]}
       >
-        {!isLoading.value && (
-          <Dag
-            ref={dagInstanceRef}
-            instance={instance.value}
-            definition={definition.value}
-            onRefresh={refresh}
-            projectCode={projectCode}
-            onSave={save}
-          />
-        )}
+        <Dag
+          ref={dagInstanceRef}
+          instance={instance.value}
+          definition={definition.value}
+          onRefresh={refresh}
+          projectCode={projectCode}
+          onSave={save}
+        />
       </div>
     )
   }

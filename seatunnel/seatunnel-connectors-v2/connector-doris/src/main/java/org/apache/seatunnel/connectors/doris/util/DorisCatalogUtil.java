@@ -17,6 +17,8 @@
 
 package org.apache.seatunnel.connectors.doris.util;
 
+import org.apache.seatunnel.shade.org.apache.commons.lang3.StringUtils;
+
 import org.apache.seatunnel.api.sink.SaveModePlaceHolder;
 import org.apache.seatunnel.api.table.catalog.CatalogTable;
 import org.apache.seatunnel.api.table.catalog.Column;
@@ -27,8 +29,6 @@ import org.apache.seatunnel.api.table.converter.TypeConverter;
 import org.apache.seatunnel.connectors.doris.config.DorisSinkOptions;
 import org.apache.seatunnel.connectors.seatunnel.common.sql.template.SqlTemplate;
 import org.apache.seatunnel.connectors.seatunnel.common.util.CreateTableParser;
-
-import org.apache.commons.lang3.StringUtils;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -100,6 +100,25 @@ public class DorisCatalogUtil {
 
     public static String getTruncateTableQuery(TablePath tablePath) {
         return "TRUNCATE TABLE " + tablePath.getFullName();
+    }
+
+    /** Builds a table-wide or partition-scoped Doris TRUNCATE TABLE statement. */
+    public static String getTruncateTableQuery(TablePath tablePath, List<String> partitions) {
+        String query = getTruncateTableQuery(tablePath);
+        if (partitions == null || partitions.isEmpty()) {
+            return query;
+        }
+        return query
+                + " PARTITION ("
+                + partitions.stream()
+                        .map(DorisCatalogUtil::quoteIdentifier)
+                        .collect(Collectors.joining(", "))
+                + ")";
+    }
+
+    /** Quotes a Doris identifier and escapes embedded backticks. */
+    private static String quoteIdentifier(String identifier) {
+        return "`" + identifier.replace("`", "``") + "`";
     }
 
     /**
@@ -258,13 +277,18 @@ public class DorisCatalogUtil {
         return template;
     }
 
-    private static String columnToDorisType(
-            Column column, TypeConverter<BasicTypeDefine> typeConverter) {
+    static String columnToDorisType(Column column, TypeConverter<BasicTypeDefine> typeConverter) {
         checkNotNull(column, "The column is required.");
+        String columnType;
+        if (column.getSinkType() != null) {
+            columnType = column.getSinkType();
+        } else {
+            columnType = typeConverter.reconvert(column).getColumnType();
+        }
         return String.format(
                 "`%s` %s %s %s",
                 column.getName(),
-                typeConverter.reconvert(column).getColumnType(),
+                columnType,
                 column.isNullable() ? "NULL" : "NOT NULL",
                 StringUtils.isEmpty(column.getComment())
                         ? ""

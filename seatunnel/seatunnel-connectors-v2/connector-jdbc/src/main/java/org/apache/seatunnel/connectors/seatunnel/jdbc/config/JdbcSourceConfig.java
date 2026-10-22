@@ -18,7 +18,10 @@
 package org.apache.seatunnel.connectors.seatunnel.jdbc.config;
 
 import org.apache.seatunnel.api.configuration.ReadonlyConfig;
+import org.apache.seatunnel.api.options.MultiTableCommonOptions;
+import org.apache.seatunnel.api.options.MultiTableFailurePolicy;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.source.StringSplitMode;
+import org.apache.seatunnel.connectors.seatunnel.jdbc.source.StringSplitStrategy;
 
 import lombok.Builder;
 import lombok.Data;
@@ -43,9 +46,20 @@ public class JdbcSourceConfig implements Serializable {
     private double splitEvenDistributionFactorLowerBound;
     private int splitSampleShardingThreshold;
     private int splitInverseSamplingRate;
+    private boolean splitSampleShardingAllow;
     private boolean decimalTypeNarrowing;
+    private boolean handleBlobAsString;
+    private MultiTableFailurePolicy multiTableFailurePolicy;
+
+    /**
+     * When false, the splitter skips split analysis and returns a single full-table split. Defaults
+     * to true to preserve existing behavior.
+     */
+    private boolean enableConcurrentRead;
 
     private StringSplitMode stringSplitMode;
+
+    private StringSplitStrategy stringSplitStrategy;
 
     private String stringSplitModeCollate;
 
@@ -53,15 +67,17 @@ public class JdbcSourceConfig implements Serializable {
         JdbcSourceConfig.Builder builder = JdbcSourceConfig.builder();
         builder.jdbcConnectionConfig(JdbcConnectionConfig.of(config));
         builder.tableConfigList(JdbcSourceTableConfig.of(config));
-        builder.fetchSize(config.get(JdbcOptions.FETCH_SIZE));
-        config.getOptional(JdbcOptions.COMPATIBLE_MODE).ifPresent(builder::compatibleMode);
+        builder.fetchSize(config.get(JdbcSourceOptions.FETCH_SIZE));
+        config.getOptional(JdbcSourceOptions.COMPATIBLE_MODE).ifPresent(builder::compatibleMode);
 
         boolean isOldVersion =
-                config.getOptional(JdbcOptions.QUERY).isPresent()
-                        && config.getOptional(JdbcOptions.PARTITION_COLUMN).isPresent();
+                config.getOptional(JdbcSourceOptions.QUERY).isPresent()
+                        && config.getOptional(JdbcSourceOptions.PARTITION_COLUMN).isPresent();
         builder.useDynamicSplitter(!isOldVersion);
-        builder.stringSplitMode(config.get(JdbcOptions.STRING_SPLIT_MODE));
-        builder.stringSplitModeCollate(config.get(JdbcOptions.STRING_SPLIT_MODE_COLLATE));
+        builder.stringSplitMode(config.get(JdbcSourceOptions.STRING_SPLIT_MODE));
+        config.getOptional(JdbcSourceOptions.STRING_SPLIT_STRATEGY)
+                .ifPresent(builder::stringSplitStrategy);
+        builder.stringSplitModeCollate(config.get(JdbcSourceOptions.STRING_SPLIT_MODE_COLLATE));
         builder.splitSize(config.get(JdbcSourceOptions.SPLIT_SIZE));
         builder.splitEvenDistributionFactorUpperBound(
                 config.get(JdbcSourceOptions.SPLIT_EVEN_DISTRIBUTION_FACTOR_UPPER_BOUND));
@@ -70,19 +86,16 @@ public class JdbcSourceConfig implements Serializable {
         builder.splitSampleShardingThreshold(
                 config.get(JdbcSourceOptions.SPLIT_SAMPLE_SHARDING_THRESHOLD));
         builder.splitInverseSamplingRate(config.get(JdbcSourceOptions.SPLIT_INVERSE_SAMPLING_RATE));
+        builder.splitSampleShardingAllow(config.get(JdbcSourceOptions.SPLIT_ALLOW_SAMPLING));
 
-        builder.decimalTypeNarrowing(config.get(JdbcOptions.DECIMAL_TYPE_NARROWING));
+        builder.decimalTypeNarrowing(config.get(JdbcSourceOptions.DECIMAL_TYPE_NARROWING));
+        builder.handleBlobAsString(config.get(JdbcSourceOptions.HANDLE_BLOB_AS_STRING));
+        builder.multiTableFailurePolicy(
+                config.get(MultiTableCommonOptions.MULTI_TABLE_FAILURE_POLICY));
+        builder.enableConcurrentRead(config.get(JdbcSourceOptions.ENABLE_CONCURRENT_READ));
 
         config.getOptional(JdbcSourceOptions.WHERE_CONDITION)
-                .ifPresent(
-                        whereConditionClause -> {
-                            if (!whereConditionClause.toLowerCase().startsWith("where")) {
-                                throw new IllegalArgumentException(
-                                        "The where condition clause must start with 'where'. value: "
-                                                + whereConditionClause);
-                            }
-                            builder.whereConditionClause(whereConditionClause);
-                        });
+                .ifPresent(builder::whereConditionClause);
 
         return builder.build();
     }

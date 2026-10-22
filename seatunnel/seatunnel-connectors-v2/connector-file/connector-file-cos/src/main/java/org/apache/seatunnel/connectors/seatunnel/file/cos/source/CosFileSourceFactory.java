@@ -20,15 +20,20 @@ package org.apache.seatunnel.connectors.seatunnel.file.cos.source;
 import org.apache.seatunnel.api.configuration.util.OptionRule;
 import org.apache.seatunnel.api.options.ConnectorCommonOptions;
 import org.apache.seatunnel.api.source.SeaTunnelSource;
+import org.apache.seatunnel.api.source.SourceSplit;
+import org.apache.seatunnel.api.table.connector.TableSource;
 import org.apache.seatunnel.api.table.factory.Factory;
 import org.apache.seatunnel.api.table.factory.TableSourceFactory;
-import org.apache.seatunnel.connectors.seatunnel.file.config.BaseSourceConfigOptions;
+import org.apache.seatunnel.api.table.factory.TableSourceFactoryContext;
+import org.apache.seatunnel.connectors.seatunnel.file.config.FileBaseOptions;
+import org.apache.seatunnel.connectors.seatunnel.file.config.FileBaseSourceOptions;
 import org.apache.seatunnel.connectors.seatunnel.file.config.FileFormat;
 import org.apache.seatunnel.connectors.seatunnel.file.config.FileSystemType;
-import org.apache.seatunnel.connectors.seatunnel.file.cos.config.CosConfigOptions;
+import org.apache.seatunnel.connectors.seatunnel.file.cos.config.CosFileSourceOptions;
 
 import com.google.auto.service.AutoService;
 
+import java.io.Serializable;
 import java.util.Arrays;
 
 @AutoService(Factory.class)
@@ -41,23 +46,29 @@ public class CosFileSourceFactory implements TableSourceFactory {
     @Override
     public OptionRule optionRule() {
         return OptionRule.builder()
-                .required(CosConfigOptions.FILE_PATH)
-                .required(CosConfigOptions.BUCKET)
-                .required(CosConfigOptions.SECRET_ID)
-                .required(CosConfigOptions.SECRET_KEY)
-                .required(CosConfigOptions.REGION)
-                .required(BaseSourceConfigOptions.FILE_FORMAT_TYPE)
+                .required(FileBaseOptions.FILE_PATH)
+                .required(CosFileSourceOptions.BUCKET)
+                .required(CosFileSourceOptions.SECRET_ID)
+                .required(CosFileSourceOptions.SECRET_KEY)
+                .required(CosFileSourceOptions.REGION)
+                .required(FileBaseSourceOptions.FILE_FORMAT_TYPE)
                 .conditional(
-                        BaseSourceConfigOptions.FILE_FORMAT_TYPE,
+                        FileBaseSourceOptions.FILE_FORMAT_TYPE,
                         FileFormat.TEXT,
-                        BaseSourceConfigOptions.FIELD_DELIMITER)
+                        FileBaseSourceOptions.ROW_DELIMITER,
+                        FileBaseSourceOptions.FIELD_DELIMITER,
+                        FileBaseSourceOptions.SKIP_HEADER_ROW_NUMBER)
                 .conditional(
-                        BaseSourceConfigOptions.FILE_FORMAT_TYPE,
+                        FileBaseSourceOptions.FILE_FORMAT_TYPE,
                         FileFormat.XML,
-                        BaseSourceConfigOptions.XML_ROW_TAG,
-                        BaseSourceConfigOptions.XML_USE_ATTR_FORMAT)
+                        FileBaseSourceOptions.XML_ROW_TAG,
+                        FileBaseSourceOptions.XML_USE_ATTR_FORMAT)
                 .conditional(
-                        BaseSourceConfigOptions.FILE_FORMAT_TYPE,
+                        FileBaseSourceOptions.FILE_FORMAT_TYPE,
+                        FileFormat.CSV,
+                        FileBaseSourceOptions.SKIP_HEADER_ROW_NUMBER)
+                .conditional(
+                        FileBaseSourceOptions.FILE_FORMAT_TYPE,
                         Arrays.asList(
                                 FileFormat.TEXT,
                                 FileFormat.JSON,
@@ -65,20 +76,47 @@ public class CosFileSourceFactory implements TableSourceFactory {
                                 FileFormat.CSV,
                                 FileFormat.XML),
                         ConnectorCommonOptions.SCHEMA)
-                .optional(BaseSourceConfigOptions.PARSE_PARTITION_FROM_PATH)
-                .optional(BaseSourceConfigOptions.DATE_FORMAT)
-                .optional(BaseSourceConfigOptions.DATETIME_FORMAT)
-                .optional(BaseSourceConfigOptions.TIME_FORMAT)
-                .optional(BaseSourceConfigOptions.FILE_FILTER_PATTERN)
-                .optional(BaseSourceConfigOptions.COMPRESS_CODEC)
-                .optional(BaseSourceConfigOptions.ARCHIVE_COMPRESS_CODEC)
-                .optional(BaseSourceConfigOptions.NULL_FORMAT)
-                .optional(BaseSourceConfigOptions.FILENAME_EXTENSION)
+                .conditional(
+                        FileBaseSourceOptions.FILE_FORMAT_TYPE,
+                        Arrays.asList(
+                                FileFormat.TEXT, FileFormat.JSON, FileFormat.CSV, FileFormat.XML),
+                        FileBaseSourceOptions.ENCODING)
+                .optional(FileBaseSourceOptions.PARSE_PARTITION_FROM_PATH)
+                .optional(FileBaseSourceOptions.DATE_FORMAT_LEGACY)
+                .optional(FileBaseSourceOptions.DATETIME_FORMAT_LEGACY)
+                .optional(FileBaseSourceOptions.TIME_FORMAT_LEGACY)
+                .optional(FileBaseSourceOptions.FILE_FILTER_PATTERN)
+                .optional(FileBaseSourceOptions.COMPRESS_CODEC)
+                .optional(FileBaseSourceOptions.ARCHIVE_COMPRESS_CODEC)
+                .optional(FileBaseSourceOptions.NULL_FORMAT)
+                .optional(FileBaseSourceOptions.FILENAME_EXTENSION)
+                .optional(FileBaseSourceOptions.READ_COLUMNS)
+                .optional(
+                        FileBaseSourceOptions.SHEET_NAME,
+                        FileBaseSourceOptions.EXCEL_ENGINE,
+                        FileBaseSourceOptions.POI_EXCEL_MAX_FILE_SIZE)
+                .conditional(
+                        FileBaseSourceOptions.FILE_FORMAT_TYPE,
+                        FileFormat.MARKDOWN,
+                        FileBaseSourceOptions.MARKDOWN_RAG_METADATA_ENABLED)
+                .conditional(
+                        FileBaseSourceOptions.FILE_FORMAT_TYPE,
+                        FileFormat.PDF,
+                        FileBaseSourceOptions.PDF_RAG_METADATA_ENABLED)
+                .optional(FileBaseSourceOptions.QUOTE_CHAR)
+                .optional(FileBaseSourceOptions.ESCAPE_CHAR)
+                .optional(FileBaseSourceOptions.RECURSIVE_FILE_SCAN)
                 .build();
     }
 
     @Override
     public Class<? extends SeaTunnelSource> getSourceClass() {
         return CosFileSource.class;
+    }
+
+    @Override
+    public <T, SplitT extends SourceSplit, StateT extends Serializable>
+            TableSource<T, SplitT, StateT> createSource(TableSourceFactoryContext context) {
+        return () -> (SeaTunnelSource<T, SplitT, StateT>) new CosFileSource(context.getOptions());
     }
 }

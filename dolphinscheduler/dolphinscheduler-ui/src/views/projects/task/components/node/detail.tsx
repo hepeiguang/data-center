@@ -45,7 +45,6 @@ const NodeDetail = defineComponent({
       readonly: false,
       from: 0
     }
-
     const { data, projectCode, from, readonly, definition } = unref(detailData)
 
     const { elementsRef, rulesRef, model } = useTask({
@@ -55,8 +54,6 @@ const NodeDetail = defineComponent({
       readonly,
       definition
     })
-
-    console.log(elementsRef)
     watch(
       () => model.taskType,
       async (taskType) => {

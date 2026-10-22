@@ -83,7 +83,7 @@ const Navbar = defineComponent({
           />
         </div>
         <div class={styles.settings}>
-          {/* <NButton quaternary onClick={this.handleUISettingClick}>
+          <NButton quaternary onClick={this.handleUISettingClick}>
             {{
               icon: () => (
                 <NIcon size='16'>
@@ -95,7 +95,7 @@ const Navbar = defineComponent({
           </NButton>
           <Theme />
           <Locales localesOptions={this.localesOptions} />
-          <Timezone timezoneOptions={this.timezoneOptions} /> */}
+          <Timezone timezoneOptions={this.timezoneOptions} />
           <User userDropdownOptions={this.userDropdownOptions} />
         </div>
       </div>

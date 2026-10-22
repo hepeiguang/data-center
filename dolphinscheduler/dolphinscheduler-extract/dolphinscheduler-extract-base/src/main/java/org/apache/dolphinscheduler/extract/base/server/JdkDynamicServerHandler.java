@@ -33,11 +33,15 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.RejectedExecutionException;
 
 import lombok.extern.slf4j.Slf4j;
+
+import com.google.common.collect.Lists;
+
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelConfig;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
 
 @Slf4j
@@ -99,6 +103,11 @@ class JdkDynamicServerHandler extends ChannelInboundHandlerAdapter {
                     if (standardRpcRequest.getArgs() == null || standardRpcRequest.getArgs().length == 0) {
                         args = null;
                     } else {
+                        if (!methodInvoker.isParameterTypeValidated(standardRpcRequest.getArgsTypes())) {
+                            throw new IllegalArgumentException(
+                                    "Parameter types: " + Lists.newArrayList(standardRpcRequest.getArgsTypes())
+                                            + " do not match the method signature.");
+                        }
                         args = new Object[standardRpcRequest.getArgs().length];
                         for (int i = 0; i < standardRpcRequest.getArgs().length; i++) {
                             args[i] = JsonSerializer.deserialize(standardRpcRequest.getArgs()[i],
@@ -160,7 +169,11 @@ class JdkDynamicServerHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
         if (evt instanceof IdleStateEvent) {
-            ctx.channel().close();
+            IdleStateEvent event = (IdleStateEvent) evt;
+            if (event.state() == IdleState.READER_IDLE) {
+                log.warn("Not receive heart beat from: {}, will close the channel", ctx.channel().remoteAddress());
+                ctx.close();
+            }
         } else {
             super.userEventTriggered(ctx, evt);
         }

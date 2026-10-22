@@ -34,8 +34,7 @@ export default {
     {
       path: '/projects/list',
       name: 'projects-list',
-      // component: components['projects-list'],
-      component: () => import('@/views/projects/list'),
+      component: components['projects-list'],
       meta: {
         title: '项目',
         activeMenu: 'projects',
@@ -46,8 +45,7 @@ export default {
     {
       path: '/projects/:projectCode',
       name: 'projects-overview',
-      // component: components['projects-overview'],
-      component: () => import('@/views/projects/overview'),
+      component: components['projects-overview'],
       meta: {
         title: '项目概览',
         activeMenu: 'projects',
@@ -58,8 +56,7 @@ export default {
     {
       path: '/projects/:projectCode/parameter',
       name: 'projects-parameter',
-      // component: components['projects-parameter'],
-      component: () => import('@/views/projects/parameter'),
+      component: components['projects-parameter'],
       meta: {
         title: '项目级参数',
         activeMenu: 'projects',
@@ -70,8 +67,7 @@ export default {
     {
       path: '/projects/:projectCode/preferences',
       name: 'projects-preference',
-      // component: components['projects-preference'],
-      component: () => import('@/views/projects/preference'),
+      component: components['projects-preference'],
       meta: {
         title: '项目偏好设置',
         activeMenu: 'projects',
@@ -82,8 +78,7 @@ export default {
     {
       path: '/projects/:projectCode/workflow/relation',
       name: 'workflow-relation',
-      // component: components['projects-workflow-relation'],
-      component: () => import('@/views/projects/workflow/relation'),
+      component: components['projects-workflow-relation'],
       meta: {
         title: '工作流关系',
         activeMenu: 'projects',
@@ -94,8 +89,7 @@ export default {
     {
       path: '/projects/:projectCode/workflow-definition',
       name: 'workflow-definition-list',
-      // component: components['projects-workflow-definition'],
-      component: () => import('@/views/projects/workflow/definition'),
+      component: components['projects-workflow-definition'],
       meta: {
         title: '工作流定义',
         activeMenu: 'projects',
@@ -106,8 +100,7 @@ export default {
     {
       path: '/projects/:projectCode/workflow-definition/timing/:definitionCode',
       name: 'workflow-definition-timing',
-      // component: components['projects-workflow-definition-timing'],
-      component: () => import('@/views/projects/workflow/definition/timing'),
+      component: components['projects-workflow-definition-timing'],
       meta: {
         title: '定时管理',
         activeMenu: 'projects',
@@ -119,8 +112,7 @@ export default {
     {
       path: '/projects/:projectCode/workflow/definitions/create',
       name: 'workflow-definition-create',
-      // component: components['projects-workflow-definition-create'],
-      component: () =>  import('@/views/projects/workflow/definition/create'),
+      component: components['projects-workflow-definition-create'],
       meta: {
         title: '创建工作流定义',
         activeMenu: 'projects',
@@ -132,8 +124,7 @@ export default {
     {
       path: '/projects/:projectCode/workflow/definitions/:code',
       name: 'workflow-definition-detail',
-      // component: components['projects-workflow-definition-detail'],
-      component: () =>  import('@/views/projects/workflow/definition/detail'),
+      component: components['projects-workflow-definition-detail'],
       meta: {
         title: '工作流定义详情',
         activeMenu: 'projects',
@@ -145,8 +136,7 @@ export default {
     {
       path: '/projects/:projectCode/workflow/timings',
       name: 'workflow-timing-list',
-      // component: components['projects-workflow-timing'],
-      component: () => import('@/views/projects/workflow/timing'),
+      component: components['projects-workflow-timing'],
       meta: {
         title: '工作流定时管理',
         activeMenu: 'projects',
@@ -157,8 +147,7 @@ export default {
     {
       path: '/projects/:projectCode/workflow/instances',
       name: 'workflow-instance-list',
-      // component: components['projects-workflow-instance'],
-      component: () => import('@/views/projects/workflow/instance'),
+      component: components['projects-workflow-instance'],
       meta: {
         title: '工作流实例',
         activeMenu: 'projects',
@@ -169,8 +158,7 @@ export default {
     {
       path: '/projects/:projectCode/workflow/instances/:id',
       name: 'workflow-instance-detail',
-      // component: components['projects-workflow-instance-detail'],
-      component: () => import('@/views/projects/workflow/instance/detail'),
+      component: components['projects-workflow-instance-detail'],
       meta: {
         title: '工作流实例详情',
         activeMenu: 'projects',
@@ -182,8 +170,7 @@ export default {
     {
       path: '/projects/:projectCode/workflow/instances/:id/gantt',
       name: 'workflow-instance-gantt',
-      // component: components['projects-workflow-instance-gantt'],
-      component: () => import('@/views/projects/workflow/instance/gantt'),
+      component: components['projects-workflow-instance-gantt'],
       meta: {
         title: '工作流实例甘特图',
         activeMenu: 'projects',
@@ -193,22 +180,9 @@ export default {
       }
     },
     {
-      path: '/projects/:projectCode/task/definitions',
-      name: 'task-definition',
-      // component: components['projects-task-definition'],
-      component: () => import('@/views/projects/task/definition'),
-      meta: {
-        title: '任务定义',
-        activeMenu: 'projects',
-        showSide: true,
-        auth: []
-      }
-    },
-    {
       path: '/projects/:projectCode/task/instances',
       name: 'task-instance',
-      // component: components['projects-task-instance'],
-      component: () => import('@/views/projects/task/instance'),
+      component: components['projects-task-instance'],
       meta: {
         title: '任务实例',
         activeMenu: 'projects',
@@ -219,8 +193,7 @@ export default {
     {
       path: '/projects/:projectCode/workflow-definition/tree/:definitionCode',
       name: 'workflow-definition-tree',
-      // component: components['projects-workflow-definition-tree'],
-      component: () => import('@/views/projects/workflow/definition/tree'),
+      component: components['projects-workflow-definition-tree'],
       meta: {
         title: '工作流定义树形图',
         activeMenu: 'projects',

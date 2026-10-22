@@ -34,7 +34,7 @@ import org.apache.commons.lang3.RandomUtils;
 
 import java.util.List;
 
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.RepeatedTest;
 import org.springframework.beans.factory.annotation.Autowired;
 
 class CommandDaoImplTest extends BaseDaoTest {
@@ -42,47 +42,49 @@ class CommandDaoImplTest extends BaseDaoTest {
     @Autowired
     private CommandDao commandDao;
 
-    @Test
+    @RepeatedTest(value = 10)
     void fetchCommandByIdSlot() {
-        int commandSize = RandomUtils.nextInt(1, 1000);
-        for (int i = 0; i < commandSize; i++) {
-            createCommand(CommandType.START_PROCESS, 0);
-        }
         int totalSlot = RandomUtils.nextInt(1, 10);
         int currentSlotIndex = RandomUtils.nextInt(0, totalSlot);
         int fetchSize = RandomUtils.nextInt(10, 100);
-        for (int i = 1; i < 5; i++) {
-            int idStep = i;
-            List<Command> commands = commandDao.queryCommandByIdSlot(currentSlotIndex, totalSlot, idStep, fetchSize);
-            assertThat(commands.size()).isGreaterThan(0);
-            assertThat(commands.size())
-                    .isEqualTo(commandDao.queryAll()
-                            .stream()
-                            .filter(command -> (command.getId() / idStep) % totalSlot == currentSlotIndex)
-                            .limit(fetchSize)
-                            .count());
-
+        int idStep = RandomUtils.nextInt(1, 5);
+        int commandSize = RandomUtils.nextInt(currentSlotIndex, 1000);
+        // Generate commandSize commands
+        int id = 1;
+        for (int j = 0; j < commandSize; j++) {
+            Command command = generateCommand(CommandType.START_PROCESS, 0);
+            command.setId(id);
+            commandDao.insert(command);
+            id += idStep;
         }
+
+        List<Command> commands = commandDao.queryCommandByIdSlot(currentSlotIndex, totalSlot, idStep, fetchSize);
+        assertThat(commands.size())
+                .isEqualTo(commandDao.queryAll()
+                        .stream()
+                        .filter(command -> (command.getId() / idStep) % totalSlot == currentSlotIndex)
+                        .limit(fetchSize)
+                        .count());
 
     }
 
-    private void createCommand(CommandType commandType, int processDefinitionCode) {
+    private Command generateCommand(CommandType commandType, int processDefinitionCode) {
         Command command = new Command();
         command.setCommandType(commandType);
-        command.setProcessDefinitionCode(processDefinitionCode);
-        command.setExecutorId("4");
+        command.setWorkflowDefinitionCode(processDefinitionCode);
+        command.setExecutorId(4);
         command.setCommandParam("test command param");
         command.setTaskDependType(TaskDependType.TASK_ONLY);
         command.setFailureStrategy(FailureStrategy.CONTINUE);
         command.setWarningType(WarningType.ALL);
         command.setWarningGroupId(1);
         command.setScheduleTime(DateUtils.stringToDate("2019-12-29 12:10:00"));
-        command.setProcessInstancePriority(Priority.MEDIUM);
+        command.setWorkflowInstancePriority(Priority.MEDIUM);
         command.setStartTime(DateUtils.stringToDate("2019-12-29 10:10:00"));
         command.setUpdateTime(DateUtils.stringToDate("2019-12-29 10:10:00"));
         command.setWorkerGroup(WorkerGroupUtils.getDefaultWorkerGroup());
-        command.setProcessInstanceId(0);
-        command.setProcessDefinitionVersion(0);
-        commandDao.insert(command);
+        command.setWorkflowInstanceId(0);
+        command.setWorkflowDefinitionVersion(0);
+        return command;
     }
 }

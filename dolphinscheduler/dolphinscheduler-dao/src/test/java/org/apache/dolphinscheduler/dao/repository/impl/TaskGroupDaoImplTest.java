@@ -107,7 +107,7 @@ class TaskGroupDaoImplTest extends BaseDaoTest {
                 .description("test")
                 .groupSize(groupSize)
                 .useSize(useSize)
-                .userId("1")
+                .userId(1)
                 .status(Flag.YES)
                 .createTime(new Date())
                 .updateTime(new Date())

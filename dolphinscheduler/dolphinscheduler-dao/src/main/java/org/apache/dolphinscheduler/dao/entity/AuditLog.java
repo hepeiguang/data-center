@@ -32,35 +32,17 @@ import com.baomidou.mybatisplus.annotation.TableName;
 @TableName("t_ds_audit_log")
 public class AuditLog {
 
-    /**
-     * id
-     */
     @TableId(value = "id", type = IdType.AUTO)
     private Integer id;
 
-    /**
-     * user id
-     */
-    private String userId;
+    private Integer userId;
 
-    /**
-     * model type
-     */
     private String modelType;
 
-    /**
-     * operation type
-     */
     private String operationType;
 
-    /**
-     * model id
-     */
     private Long modelId;
 
-    /**
-     * user name
-     */
     @TableField(exist = false)
     private String userName;
 
@@ -76,9 +58,6 @@ public class AuditLog {
     private String modelName;
 
     private long latency;
-
-    private String httpMethod;
-    private String httpUrl;
 
     public static AuditLog copyNewOne(AuditLog auditLog) {
         AuditLog auditLogNew = new AuditLog();

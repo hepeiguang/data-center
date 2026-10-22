@@ -55,14 +55,6 @@ const props = {
   resourceType: {
     type: String as PropType<ResourceType>,
     default: undefined
-  },
-  customResourceType: {
-    type: String as PropType<'HIVE' | 'SEATUNNEL' | 'FILE'>,
-    default: undefined
-  },
-  isShowMutiSelect:{
-    type: Boolean,
-    default: true
   }
 }
 
@@ -86,18 +78,12 @@ export default defineComponent({
     const userStore = useUserStore()
 
     variables.resourceType = props.resourceType
-    //传入 将父组件的默认值值交予variables
-    variables.customResourceType = props.customResourceType
-    //传入控制
-    variables.isShowMutiSelect = props.isShowMutiSelect
 
-    //点击某页
     const handleUpdatePage = (page: number) => {
       variables.pagination.page = page
       requestData()
     }
 
-    //更改页面列表容纳大小数字
     const handleUpdatePageSize = (pageSize: number) => {
       variables.pagination.page = 1
       variables.pagination.pageSize = pageSize
@@ -105,18 +91,13 @@ export default defineComponent({
     }
 
     const handleConditions = () => {
-      //该方法从useTable定义 从useTable创建store并调用getter setter
-      //接着从useFile里调用方法拿到分页的方法
-      //最后返回相关数据
       requestData()
     }
 
-    //此处方法存疑 点击创建文件夹
     const handleCreateFolder = () => {
       variables.folderShowRef = true
     }
 
-    //创建文件 或者 创建udf资源
     const handleUploadFile = () => {
       variables.isReupload = false
       variables.uploadShowRef = true
@@ -128,11 +109,8 @@ export default defineComponent({
     const detailPageStore = useDetailPageStore()
     const isDetailPageStore = useIsDetailPageStore()
 
-    //点击查询这段代码的作用是从详情页返回列表页时恢复之前的查询参数和页面状态。
     const handleDetailBackList = () => {
       if (isDetailPageStore.getIsDetailPage) {
-        //增加代码
-        variables.customResourceType = detailPageStore.getCustomResourceType
         variables.resourceType = detailPageStore.getResourceType
         variables.fullName = detailPageStore.getFullName
         variables.tenantCode = detailPageStore.getTenantCode
@@ -164,52 +142,27 @@ export default defineComponent({
       requestData()
     })
 
-    //getCurrentInstance() 获取当前组件实例
-    //appContext 是 Vue 应用上下文
-    //config.globalProperties 包含 Vue 应用级别的全局属性/方法
-    /*
-    * 使用场景
-    *
-    // 插件开发：通过 appContext 访问应用级配置
-    // 工具函数：全局注册的工具方法可通过上下文获取
-    // 依赖共享：跨组件共享状态或服务
-    * */
     const trim = getCurrentInstance()?.appContext.config.globalProperties.trim
 
-    //  这里没理解是什么功能 点击文件夹?
     const handleBread = (index: number) => {
       const breadName =
-        //variables.fullName：存储当前完整目录路径
-        //http://localhost:5173/
-        //resource/resource-manage?
-        //prefix=file:/dolphinscheduler/default/udfs/file文件夹/&tenantCode=default
-        //文件夹完整路径 /dolphinscheduler/default/udfs/file%E6%96%87%E4%BB%B6%E5%A4%B9/&tenantCode=default
         variables.fullName
-          //将完整路径按'/'分割成数组  “”  dolphinscheduler  default    udfs   file%E6%96%87%E4%BB%B6%E5%A4%B9   "&tenantCode=default"
           .split('/')
-          //取前index+3个元素    “”  dolphinscheduler  default
           .slice(0, index + 3)
-          //重新拼接成路径字符串     /dolphinscheduler/default   +     /    =>   /dolphinscheduler/default/
           .join('/') + '/'
       goBread(breadName)
     }
 
     const goBread = (fullName: string) => {
-      const { resourceType, tenantCode } = variables
-      const baseDir =
-        resourceType === 'UDF'
-          ? userStore.getBaseUdfDir
-          : userStore.getBaseResDir
+      const { tenantCode } = variables
+      const baseDir = userStore.getBaseResDir
       if (fullName === '' || !fullName.startsWith(baseDir)) {
         router.push({
-          name: resourceType === 'UDF' ? 'resource-manage' : 'file-manage'
+          name: 'file-manage'
         })
       } else {
         router.push({
-          name:
-            resourceType === 'UDF'
-              ? 'resource-sub-manage'
-              : 'resource-file-subdirectory',
+          name: 'resource-file-subdirectory',
           query: { prefix: fullName, tenantCode: tenantCode }
         })
       }
@@ -245,16 +198,13 @@ export default defineComponent({
       handleUploadFile,
       tableWidth
     } = this
-    const manageTitle =
-      this.resourceType === 'UDF'
-        ? t('resource.udf.udf_resources')
-        : t('resource.file.file_manage')
+    const manageTitle = t('resource.file.file_manage')
 
     return (
       <NSpace vertical>
         <Card>
           <NSpace justify='space-between'>
-            {/* <NButtonGroup size='small'>
+            <NButtonGroup size='small'>
               <NButton
                 type='primary'
                 onClick={handleCreateFolder}
@@ -262,17 +212,15 @@ export default defineComponent({
               >
                 {t('resource.file.create_folder')}
               </NButton>
-              {this.resourceType !== 'UDF' && (
+              {
                 <NButton onClick={handleCreateFile} class='btn-create-file'>
                   {t('resource.file.create_file')}
                 </NButton>
-              )}
+              }
               <NButton onClick={handleUploadFile} class='btn-upload-resource'>
-                {this.resourceType === 'UDF'
-                  ? t('resource.udf.upload_udf_resources')
-                  : t('resource.file.upload_files')}
+                {t('resource.file.upload_files')}
               </NButton>
-            </NButtonGroup> */}
+            </NButtonGroup>
             <NSpace>
               <Search
                 placeholder={t('resource.file.enter_keyword_tips')}
@@ -331,27 +279,6 @@ export default defineComponent({
                   />
                 </NSpace>
               </NSpace>
-            ),
-            'header-extra': () => (
-              <NButtonGroup size='small'>
-                <NButton
-                  type='primary'
-                  onClick={handleCreateFolder}
-                  class='btn-create-directory'
-                >
-                  {t('resource.file.create_folder')}
-                </NButton>
-                {this.resourceType !== 'UDF' && (
-                  <NButton onClick={handleCreateFile} class='btn-create-file'>
-                    {t('resource.file.create_file')}
-                  </NButton>
-                )}
-                <NButton onClick={handleUploadFile} class='btn-upload-resource'>
-                  {this.resourceType === 'UDF'
-                    ? t('resource.udf.upload_udf_resources')
-                    : t('resource.file.upload_files')}
-                </NButton>
-              </NButtonGroup>
             )
           }}
         </Card>
@@ -369,10 +296,7 @@ export default defineComponent({
           description={this.reuploadInfo.description}
           userName={this.reuploadInfo.user_name}
           onUpdateList={this.updateList}
-          v-model:customResourceType={ this.reuploadInfo.customType}
-          v-model:isShowMutiSelect={this.isShowMutiSelect}
         />
-
         <ResourceRenameModal
           v-model:show={this.renameShowRef}
           resourceType={this.resourceType}

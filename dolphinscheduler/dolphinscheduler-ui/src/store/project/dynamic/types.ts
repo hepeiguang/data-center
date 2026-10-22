@@ -14,18 +14,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Ref } from 'vue'
 
 interface DagStore {
-  tasks: Array<any>,
-  taskDefinitionList: Array<any>,
-  contrastStr: string,
-  graph: Ref<any>
+  tasks: Array<any>
 }
 
-interface DialogStore {
-  step: number,
-  canNextStep: Boolean,
-}
-
-export { DagStore, DialogStore }
+export { DagStore }

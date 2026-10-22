@@ -23,7 +23,7 @@
     <parent>
         <groupId>org.apache.dolphinscheduler</groupId>
         <artifactId>dolphinscheduler</artifactId>
-        <version>3.2.2</version>
+        <version>3.4.3</version>
     </parent>
 
     <artifactId>dolphinscheduler-extract</artifactId>
@@ -36,4 +36,15 @@
         <module>dolphinscheduler-extract-common</module>
     </modules>
 
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.apache.dolphinscheduler</groupId>
+                <artifactId>dolphinscheduler-bom</artifactId>
+                <version>${project.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 </project>

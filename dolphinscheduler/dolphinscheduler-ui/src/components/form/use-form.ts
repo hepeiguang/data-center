@@ -22,7 +22,6 @@ export function useForm() {
     formRef: ref()
   })
 
-  //校验参数和自定义方法选择
   const validate = async (...args: []) => {
     await state.formRef.validate(...args)
   }

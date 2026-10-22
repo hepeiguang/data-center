@@ -47,11 +47,20 @@ public class TransformCommonOptions {
                     .defaultValue(".*")
                     .withDescription("The regex to match the table path");
 
+    public static final Option<RuleMatchMode> RULE_MATCH_MODE =
+            Options.key("rule_match_mode")
+                    .enumType(RuleMatchMode.class)
+                    .defaultValue(RuleMatchMode.FIRST_MATCH)
+                    .withDescription("The rule match mode for table transform config");
+
     public static final Option<ErrorHandleWay> ROW_ERROR_HANDLE_WAY_OPTION =
             Options.key("row_error_handle_way")
                     .singleChoice(
                             ErrorHandleWay.class,
-                            Arrays.asList(ErrorHandleWay.FAIL, ErrorHandleWay.SKIP))
+                            Arrays.asList(
+                                    ErrorHandleWay.FAIL,
+                                    ErrorHandleWay.SKIP,
+                                    ErrorHandleWay.ROUTE_TO_TABLE))
                     .defaultValue(ErrorHandleWay.FAIL)
                     .withDescription(
                             "The processing method of data format error. The default value is fail, and the optional value is (fail, skip). "
@@ -66,4 +75,16 @@ public class TransformCommonOptions {
                                     + "When fail is selected, data format error will block and an exception will be thrown. "
                                     + "When skip is selected, data format error will skip this column data."
                                     + "When skip_row is selected, data format error will skip this line data.");
+
+    public static final Option<String> ERROR_TABLE_OPTION =
+            Options.key("row_error_handle_way.error_table")
+                    .stringType()
+                    .noDefaultValue()
+                    .withDescription(
+                            "Target table name for routing invalid data when error_handle_way is ROUTE_TO_TABLE");
+
+    public enum RuleMatchMode {
+        FIRST_MATCH,
+        ALL_MATCH
+    }
 }

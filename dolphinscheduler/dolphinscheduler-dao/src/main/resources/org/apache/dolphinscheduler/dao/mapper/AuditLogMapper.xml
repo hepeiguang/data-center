@@ -50,30 +50,14 @@
                 #{operation_type}
             </foreach>
         </if>
+        <if test="userId != null">
+            and log.user_id = #{userId}
+        </if>
         <if test="userName != null and userName != ''">
             and u.user_name like concat ('%', #{userName}, '%')
         </if>
         <if test="modelName != null and modelName != ''">
             and log.model_name like concat ('%', #{modelName}, '%')
-        </if>
-        order by log.create_time desc
-    </select>
-
-    <select id="queryAuditLogList" resultType="org.apache.dolphinscheduler.dao.entity.AuditLog">
-        select
-        <include refid="baseSqlV2">
-            <property name="alias" value="log"/>
-        </include>
-        ,
-        u.user_name as user_name
-        from t_ds_audit_log log
-        join t_ds_user u on log.user_id = u.id
-        where 1 = 1
-        <if test="startDate != null">
-            and log.create_time > #{startDate}
-        </if>
-        <if test="endDate != null">
-            and log.create_time <![CDATA[ <=]]> #{endDate}
         </if>
         order by log.create_time desc
     </select>

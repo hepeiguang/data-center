@@ -62,7 +62,7 @@ export function useTask({
       getElements()
     }
   }
-  console.log('useTask data: ', data);
+
   const { model, json } = nodes[data.taskType || 'SHELL'](params)
   jsonRef.value = json
   model.preTasks = taskStore.getPreTasks
@@ -71,7 +71,6 @@ export function useTask({
     TASK_TYPES_MAP[data.taskType || 'SHELL'].taskExecuteType || 'BATCH'
 
   const getElements = () => {
-    console.log(JSON.parse(JSON.stringify(jsonRef.value)),JSON.parse(JSON.stringify(model)))
     const { rules, elements } = getElementByJson(jsonRef.value, model)
     elementsRef.value = elements
     rulesRef.value = rules

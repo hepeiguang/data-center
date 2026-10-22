@@ -19,17 +19,14 @@ package org.apache.seatunnel.connectors.seatunnel.jdbc.catalog.tidb;
 
 import org.apache.seatunnel.api.configuration.ReadonlyConfig;
 import org.apache.seatunnel.api.configuration.util.OptionRule;
-import org.apache.seatunnel.api.configuration.util.OptionValidationException;
 import org.apache.seatunnel.api.table.catalog.Catalog;
 import org.apache.seatunnel.api.table.factory.CatalogFactory;
 import org.apache.seatunnel.api.table.factory.Factory;
 import org.apache.seatunnel.common.utils.JdbcUrlUtil;
-import org.apache.seatunnel.connectors.seatunnel.jdbc.catalog.JdbcCatalogOptions;
+import org.apache.seatunnel.connectors.seatunnel.jdbc.config.JdbcCommonOptions;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.dialect.DatabaseIdentifier;
 
 import com.google.auto.service.AutoService;
-
-import java.util.Optional;
 
 @AutoService(Factory.class)
 public class TiDBCatalogFactory implements CatalogFactory {
@@ -41,22 +38,18 @@ public class TiDBCatalogFactory implements CatalogFactory {
 
     @Override
     public Catalog createCatalog(String catalogName, ReadonlyConfig options) {
-        String urlWithDatabase = options.get(JdbcCatalogOptions.BASE_URL);
+        String urlWithDatabase = options.get(JdbcCommonOptions.URL);
         JdbcUrlUtil.UrlInfo urlInfo = JdbcUrlUtil.getUrlInfo(urlWithDatabase);
-        Optional<String> defaultDatabase = urlInfo.getDefaultDatabase();
-        if (!defaultDatabase.isPresent()) {
-            throw new OptionValidationException(JdbcCatalogOptions.BASE_URL);
-        }
         return new TiDBCatalog(
                 catalogName,
-                options.get(JdbcCatalogOptions.USERNAME),
-                options.get(JdbcCatalogOptions.PASSWORD),
+                options.get(JdbcCommonOptions.USERNAME),
+                options.get(JdbcCommonOptions.PASSWORD),
                 urlInfo,
-                options.get(JdbcCatalogOptions.DRIVER));
+                options.get(JdbcCommonOptions.DRIVER));
     }
 
     @Override
     public OptionRule optionRule() {
-        return JdbcCatalogOptions.BASE_RULE.build();
+        return JdbcCommonOptions.baseCatalogRule().build();
     }
 }

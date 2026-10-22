@@ -15,7 +15,12 @@
  * limitations under the License.
  */
 
-import axios, { AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios'
+import axios, {
+  AxiosRequestConfig,
+  AxiosResponse,
+  AxiosError,
+  InternalAxiosRequestConfig
+} from 'axios'
 import { useUserStore } from '@/store/user/user'
 import { useUISettingStore } from '@/store/ui-setting/ui-setting'
 import qs from 'qs'
@@ -24,8 +29,8 @@ import cookies from 'js-cookie'
 import router from '@/router'
 import utils from '@/utils'
 
-// const userStore = useUserStore()
-// const uiSettingStore = useUISettingStore()
+const userStore = useUserStore()
+const uiSettingStore = useUISettingStore()
 
 /**
  * @description Log and display errors
@@ -39,12 +44,13 @@ const handleError = (res: AxiosResponse<any, any>) => {
   }
   window.$message.error(res.data.msg)
 }
+
 const baseRequestConfig: AxiosRequestConfig = {
   baseURL:
     import.meta.env.MODE === 'development'
       ? '/dolphinscheduler'
       : import.meta.env.VITE_APP_PROD_WEB_URL + '/dolphinscheduler',
-  timeout: 50000,
+  timeout: uiSettingStore.getApiTimer ? uiSettingStore.getApiTimer : 20000,
   transformRequest: (params) => {
     if (_.isPlainObject(params)) {
       return qs.stringify(params, { arrayFormat: 'repeat' })
@@ -59,40 +65,27 @@ const baseRequestConfig: AxiosRequestConfig = {
 
 const service = axios.create(baseRequestConfig)
 
-const err = (err: AxiosError): Promise<AxiosError> => {
-  if (err.response?.status === 401 || err.response?.status === 504) {
-    if (window.APP_CONFIG.singleSignOnValue) {
-      window.location.href = window.APP_CONFIG.ssoConfig.url
-    }else if(!window.APP_CONFIG.singleSignOnValue && window.location.href.indexOf('token=') == -1) {
-      const userStore = useUserStore()
-      let logoutUrl = userStore.getLogoutUrl
-      userStore.clear()
-      cookies.remove('sessionId')
-      if(logoutUrl) {
-        window.location.href = logoutUrl
-      } else {
-        router.push({ path: '/login' })
-      }
-    } else {
-      router.push({ path: '/login' })
-    }
-    // userStore.setSessionId('')
-    // userStore.setSecurityConfigType('')
-    // userStore.setUserInfo({})
-    // userStore.setBaseResDir('')
-    // userStore.setBaseUdfDir('')
-    // router.push({ path: '/login' })
+const err = (error: unknown): Promise<never> => {
+  const axiosError = error as AxiosError
+
+  if (
+    axiosError.response?.status === 401 ||
+    axiosError.response?.status === 504
+  ) {
+    userStore.setSessionId('')
+    userStore.setSecurityConfigType('')
+    userStore.setUserInfo({})
+    userStore.setBaseResDir('')
+    router.push({ path: '/login' })
   }
 
-  return Promise.reject(err)
+  return Promise.reject(error)
 }
 
-service.interceptors.request.use((config: AxiosRequestConfig<any>) => {
-  const userStore = useUserStore()
-  config.headers = config.headers || {}
-  config.headers.sessionId = userStore.getSessionId
+service.interceptors.request.use((config: InternalAxiosRequestConfig) => {
+  config.headers.set('sessionId', userStore.getSessionId)
   const language = cookies.get('language')
-  if (language) config.headers.language = language
+  if (language) config.headers.set('language', language)
 
   return config
 }, err)
@@ -107,13 +100,8 @@ service.interceptors.response.use((res: AxiosResponse) => {
   switch (res.data.code) {
     case 0:
       return res.data.data
-    case 200:
-      return res.data
     default:
       handleError(res)
-      if (res && res.data && res.data.data && res.data.data.logoutUrl) {
-        window.location.href = res.data.data.logoutUrl
-      }
       throw new Error()
   }
 }, err)

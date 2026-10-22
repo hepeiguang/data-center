@@ -22,7 +22,6 @@ import static org.apache.dolphinscheduler.api.enums.Status.DELETE_TASK_TYPE_ERRO
 import static org.apache.dolphinscheduler.api.enums.Status.LIST_TASK_TYPE_ERROR;
 
 import org.apache.dolphinscheduler.api.dto.FavTaskDto;
-import org.apache.dolphinscheduler.api.dto.taskType.TaskConfig;
 import org.apache.dolphinscheduler.api.enums.Status;
 import org.apache.dolphinscheduler.api.exceptions.ApiException;
 import org.apache.dolphinscheduler.api.service.FavTaskService;
@@ -70,7 +69,7 @@ public class FavTaskController extends BaseController {
     @ResponseStatus(HttpStatus.OK)
     @ApiException(LIST_TASK_TYPE_ERROR)
     public Result listTaskType(@Parameter(hidden = true) @RequestAttribute(value = Constants.SESSION_USER) User loginUser) {
-        List<TaskConfig> favTaskList = favTaskService.getFavTaskList(loginUser);
+        List<FavTaskDto> favTaskList = favTaskService.getFavTaskList(loginUser);
         return success(Status.SUCCESS.getMsg(), favTaskList);
     }
 

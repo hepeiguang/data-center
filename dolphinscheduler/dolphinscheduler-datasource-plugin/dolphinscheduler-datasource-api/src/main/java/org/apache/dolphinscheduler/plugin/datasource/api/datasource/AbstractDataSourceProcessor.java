@@ -28,7 +28,6 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.sql.Connection;
 import java.text.MessageFormat;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -137,10 +136,5 @@ public abstract class AbstractDataSourceProcessor implements DataSourceProcessor
     public List<String> splitAndRemoveComment(String sql) {
         String cleanSQL = SQLParserUtils.removeComment(sql, com.alibaba.druid.DbType.other);
         return SQLParserUtils.split(cleanSQL, com.alibaba.druid.DbType.other);
-    }
-
-    @Override
-    public List<String> getItems(ConnectionParam connectionParam) {
-        return new ArrayList<>();
     }
 }

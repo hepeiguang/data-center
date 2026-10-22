@@ -27,7 +27,6 @@ export function useFileState(
   setPagination: ISetPagination = {} as ISetPagination
 ) {
   const getResourceListState: IResourceListState = (
-    customType: 'HIVE' | 'SEATUNNEL',
     type: ResourceType,
     fullName = '',
     tenantCode = '',
@@ -39,8 +38,6 @@ export function useFileState(
       queryResourceListPaging({
         fullName,
         tenantCode,
-        //增加自定义返回字段
-        customType: customType,
         type: type,
         searchVal,
         pageNo,
@@ -55,8 +52,6 @@ export function useFileState(
             alias: item.alias,
             fullName: item.fullName,
             type: item.type,
-            //增加自定义返回字段
-            customType: item.customType,
             user_name: item.userName,
             directory: item.directory,
             file_name: item.fileName,
@@ -77,7 +72,7 @@ export function useFileState(
   const getResourceView = (fullName: string, tenantCode: string) => {
     const params = {
       skipLineNum: 0,
-      limit: 3000,
+      limit: -1,
       fullName: fullName,
       tenantCode: tenantCode
     }

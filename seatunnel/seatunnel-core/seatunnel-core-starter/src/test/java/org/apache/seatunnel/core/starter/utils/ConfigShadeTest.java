@@ -41,6 +41,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -80,6 +81,38 @@ public class ConfigShadeTest {
                 config.getConfigList("source").get(0).getString("access_key"), ACCESS_KEY);
         Assertions.assertEquals(
                 config.getConfigList("source").get(0).getString("secret_key"), SECRET_KEY);
+    }
+
+    @Test
+    public void testLogOnlySensitiveOptionsDoNotChangeDefaultDecryptOptions() {
+        String jaasConfig =
+                "org.apache.kafka.common.security.scram.ScramLoginModule required "
+                        + "username=\"alice\" password=\"plain\";";
+
+        Map<String, Object> env = new LinkedHashMap<>();
+        env.put("shade.identifier", "base64");
+
+        Map<String, Object> source = new LinkedHashMap<>();
+        source.put("plugin_name", "FakeSource");
+        source.put(
+                "username",
+                Base64.getEncoder().encodeToString(USERNAME.getBytes(StandardCharsets.UTF_8)));
+        source.put("sasl.jaas.config", jaasConfig);
+
+        Map<String, Object> sink = new LinkedHashMap<>();
+        sink.put("plugin_name", "Console");
+
+        Map<String, Object> configMap = new LinkedHashMap<>();
+        configMap.put("env", env);
+        configMap.put("source", Arrays.asList(source));
+        configMap.put("sink", Arrays.asList(sink));
+
+        Config config = ConfigShadeUtils.decryptConfig(ConfigFactory.parseMap(configMap));
+
+        Assertions.assertEquals(
+                USERNAME, config.getConfigList("source").get(0).getString("username"));
+        Assertions.assertEquals(
+                jaasConfig, config.getConfigList("source").get(0).getString("sasl.jaas.config"));
     }
 
     @Test
@@ -284,6 +317,55 @@ public class ConfigShadeTest {
     }
 
     @Test
+    public void testTableListPlaceholderReplacement() throws URISyntaxException {
+        String incOffsetDays = "7";
+        String testValue = "replaced_value";
+
+        List<String> variables = new ArrayList<>();
+        variables.add("inc_offset_days=" + incOffsetDays);
+        variables.add("test_placeholder=" + testValue);
+
+        URL resource = ConfigShadeTest.class.getResource("/config_table_list_variables.conf");
+        Assertions.assertNotNull(resource);
+        Config config = ConfigBuilder.of(Paths.get(resource.toURI()), variables);
+
+        List<? extends ConfigObject> sourceConfigs = config.getObjectList("source");
+        for (ConfigObject configObject : sourceConfigs) {
+            Config sourceConfig = configObject.toConfig();
+
+            // Test 1: Verify table_list placeholder replacement (List<Map>)
+            if (sourceConfig.hasPath("table_list")) {
+                List<? extends ConfigObject> tableList = sourceConfig.getObjectList("table_list");
+                for (ConfigObject tableObject : tableList) {
+                    Config tableConfig = tableObject.toConfig();
+                    String query = tableConfig.getString("query");
+                    // Verify that placeholders are replaced correctly
+                    Assertions.assertTrue(
+                            query.contains("sysdate-" + incOffsetDays),
+                            "Query should contain replaced placeholder value: " + query);
+                    Assertions.assertFalse(
+                            query.contains("${inc_offset_days}"),
+                            "Query should not contain unreplaced placeholder: " + query);
+                }
+            }
+
+            // Test 2: Verify nested List placeholder replacement (List<List<String>>)
+            if (sourceConfig.hasPath("nested_list")) {
+                List<List<String>> nestedList =
+                        (List<List<String>>) sourceConfig.getAnyRef("nested_list");
+
+                // Verify nested list placeholders
+                Assertions.assertTrue(
+                        nestedList.get(0).contains(testValue),
+                        "Nested list should contain replaced placeholder");
+                Assertions.assertFalse(
+                        nestedList.get(0).contains("${test_placeholder}"),
+                        "Nested list should not contain unreplaced placeholder");
+            }
+        }
+    }
+
+    @Test
     public void testDecryptAndEncrypt() {
         String encryptUsername = ConfigShadeUtils.encryptOption("base64", USERNAME);
         String decryptUsername = ConfigShadeUtils.decryptOption("base64", encryptUsername);
@@ -316,6 +398,42 @@ public class ConfigShadeTest {
         Assertions.assertEquals(
                 rawPassword + suffix,
                 encryptedConfig.getConfigList("source").get(0).getString("password"));
+    }
+
+    @Test
+    public void testDecryptWithTransform() throws URISyntaxException {
+        URL resource = ConfigShadeTest.class.getResource("/config.shade_with_transform.json");
+        Assertions.assertNotNull(resource);
+        Config decryptedProps = ConfigBuilder.of(Paths.get(resource.toURI()), Lists.newArrayList());
+
+        Assertions.assertEquals(
+                "access_key",
+                decryptedProps.getConfigList("source").get(0).getString("access_key"));
+        Assertions.assertEquals(
+                "secret_key",
+                decryptedProps.getConfigList("source").get(0).getString("secret_key"));
+        Assertions.assertEquals(
+                "api_key", decryptedProps.getConfigList("transform").get(0).getString("api_key"));
+        Assertions.assertEquals(
+                "api_key", decryptedProps.getConfigList("transform").get(1).getString("api_key"));
+        Assertions.assertEquals(
+                "token", decryptedProps.getConfigList("sink").get(0).getString("token"));
+
+        String accessKey = ConfigShadeUtils.encryptOption("base64", "access_key");
+        String secretKey = ConfigShadeUtils.encryptOption("base64", "secret_key");
+        String apiKey = ConfigShadeUtils.encryptOption("base64", "api_key");
+        String token = ConfigShadeUtils.encryptOption("base64", "token");
+        Config encryptedConfig = ConfigShadeUtils.encryptConfig(decryptedProps);
+        Assertions.assertEquals(
+                accessKey, encryptedConfig.getConfigList("source").get(0).getString("access_key"));
+        Assertions.assertEquals(
+                secretKey, encryptedConfig.getConfigList("source").get(0).getString("secret_key"));
+        Assertions.assertEquals(
+                apiKey, encryptedConfig.getConfigList("transform").get(0).getString("api_key"));
+        Assertions.assertEquals(
+                apiKey, encryptedConfig.getConfigList("transform").get(1).getString("api_key"));
+        Assertions.assertEquals(
+                token, encryptedConfig.getConfigList("sink").get(0).getString("token"));
     }
 
     public static class ConfigShadeWithProps implements ConfigShade {

@@ -18,19 +18,20 @@
 package org.apache.seatunnel.connectors.seatunnel.jdbc;
 
 import org.apache.seatunnel.shade.com.google.common.collect.Lists;
+import org.apache.seatunnel.shade.org.apache.commons.lang3.tuple.Pair;
 
 import org.apache.seatunnel.api.table.type.SeaTunnelRow;
 import org.apache.seatunnel.common.exception.SeaTunnelRuntimeException;
 
-import org.apache.commons.lang3.tuple.Pair;
-
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
+import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.utility.DockerImageName;
 import org.testcontainers.utility.DockerLoggerFactory;
 
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -39,7 +40,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class JdbcPhoenixIT extends AbstractJdbcIT {
-    private static final String PHOENIX_IMAGE = "iteblog/hbase-phoenix-docker:1.0";
+    private static final String PHOENIX_IMAGE = "seatunnelhub/hbase-phoenix-docker:1.0";
     private static final String PHOENIX_CONTAINER_HOST = "seatunnel_e2e_phoenix";
     private static final String PHOENIX_DATABASE = "test";
 
@@ -122,11 +123,6 @@ public class JdbcPhoenixIT extends AbstractJdbcIT {
     }
 
     @Override
-    String driverUrl() {
-        return "https://repo1.maven.org/maven2/com/aliyun/phoenix/ali-phoenix-shaded-thin-client/5.2.5-HBase-2.x/ali-phoenix-shaded-thin-client-5.2.5-HBase-2.x.jar";
-    }
-
-    @Override
     Pair<String[], List<SeaTunnelRow>> initTestData() {
         String[] fieldNames =
                 new String[] {
@@ -154,11 +150,11 @@ public class JdbcPhoenixIT extends AbstractJdbcIT {
                 new GenericContainer<>(imageName)
                         .withNetwork(NETWORK)
                         .withNetworkAliases(PHOENIX_CONTAINER_HOST)
+                        .waitingFor(
+                                Wait.forListeningPort().withStartupTimeout(Duration.ofMinutes(5)))
                         .withLogConsumer(
                                 new Slf4jLogConsumer(DockerLoggerFactory.getLogger(PHOENIX_IMAGE)));
-        container.setPortBindings(
-                Lists.newArrayList(
-                        String.format("%s:%s", PHOENIX_CONTAINER_PORT, PHOENIX_CONTAINER_PORT)));
+        container.addExposedPort(PHOENIX_CONTAINER_PORT);
         return container;
     }
 

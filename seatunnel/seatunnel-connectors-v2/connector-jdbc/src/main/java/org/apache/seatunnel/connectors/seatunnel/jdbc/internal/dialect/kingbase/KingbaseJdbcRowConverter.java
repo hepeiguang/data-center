@@ -39,6 +39,7 @@ import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.OffsetDateTime;
 import java.util.Optional;
 
 public class KingbaseJdbcRowConverter extends AbstractJdbcRowConverter {
@@ -100,6 +101,9 @@ public class KingbaseJdbcRowConverter extends AbstractJdbcRowConverter {
                             Optional.ofNullable(sqlTimestamp)
                                     .map(Timestamp::toLocalDateTime)
                                     .orElse(null);
+                    break;
+                case TIMESTAMP_TZ:
+                    fields[fieldIndex] = JdbcFieldTypeUtils.getOffsetDateTime(rs, resultSetIndex);
                     break;
                 case BYTES:
                     fields[fieldIndex] = JdbcFieldTypeUtils.getBytes(rs, resultSetIndex);
@@ -174,8 +178,19 @@ public class KingbaseJdbcRowConverter extends AbstractJdbcRowConverter {
                     break;
                 case TIMESTAMP:
                     LocalDateTime localDateTime = (LocalDateTime) row.getField(fieldIndex);
-                    statement.setTimestamp(
-                            statementIndex, java.sql.Timestamp.valueOf(localDateTime));
+                    statement.setTimestamp(statementIndex, Timestamp.valueOf(localDateTime));
+                    break;
+                case TIMESTAMP_TZ:
+                    OffsetDateTime offsetDateTime = (OffsetDateTime) row.getField(fieldIndex);
+                    try {
+                        statement.setObject(statementIndex, offsetDateTime);
+                    } catch (SQLException e) {
+                        statement.setTimestamp(
+                                statementIndex,
+                                Timestamp.from(offsetDateTime.toInstant()),
+                                java.util.Calendar.getInstance(
+                                        java.util.TimeZone.getTimeZone("UTC")));
+                    }
                     break;
                 case BYTES:
                     statement.setBytes(statementIndex, (byte[]) row.getField(fieldIndex));

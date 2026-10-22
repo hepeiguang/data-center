@@ -48,6 +48,8 @@ public class SourceUdpPlugin implements TaskTypeFactory {
                 pluginValue = mapper.readValue(jsonString, SourceUdpDTO.class);
                 convertSchema(pluginValue);
                 resolveUdfCodecPath(pluginValue);
+                // WRITE_ONLY 已避免写出；仍清空，避免后续逻辑误用
+                pluginValue.setUdfName(null);
             } catch (JsonProcessingException e) {
                 throw new RuntimeException(e);
             }

@@ -18,6 +18,7 @@
 package org.apache.seatunnel.connectors.seatunnel.jdbc.catalog.oceanbase;
 
 import org.apache.seatunnel.shade.com.google.common.base.Preconditions;
+import org.apache.seatunnel.shade.org.apache.commons.lang3.StringUtils;
 
 import org.apache.seatunnel.api.table.catalog.CatalogTable;
 import org.apache.seatunnel.api.table.catalog.Column;
@@ -32,8 +33,6 @@ import org.apache.seatunnel.common.utils.JdbcUrlUtil;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.catalog.AbstractJdbcCatalog;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.dialect.oceanbase.OceanBaseMySqlTypeConverter;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.dialect.oceanbase.OceanBaseMysqlType;
-
-import org.apache.commons.lang.StringUtils;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -147,6 +146,11 @@ public class OceanBaseMySqlCatalog extends AbstractJdbcCatalog {
         String comment = resultSet.getString("COLUMN_COMMENT");
         Object defaultValue = resultSet.getObject("COLUMN_DEFAULT");
         String isNullableStr = resultSet.getString("IS_NULLABLE");
+
+        if (dataType.toUpperCase().startsWith("VECTOR")) {
+            dataType = "VECTOR";
+        }
+
         boolean isNullable = isNullableStr.equals("YES");
         // e.g. `decimal(10, 2)` is 10
         long numberPrecision = resultSet.getInt("NUMERIC_PRECISION");

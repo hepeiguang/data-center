@@ -31,6 +31,8 @@ export function useDropDown() {
       useLogout()
     } else if (key === 'password') {
       router.push({ path: '/password' })
+    } else if (key === 'about') {
+      router.push({ path: '/about' })
     } else if (key === 'profile') {
       router.push({ path: '/profile' })
     }
@@ -42,21 +44,9 @@ export function useDropDown() {
       userStore.setSecurityConfigType('')
       userStore.setUserInfo({})
       userStore.setBaseResDir('')
-      userStore.setBaseUdfDir('')
       cookies.remove('sessionId')
 
-      //判断是否有token传递过来
-      // if(window.location.href.indexOf('token1') != -1) {
-      //   router.push({ path: '/home' })
-      // } else {
-      let logoutUrl = userStore.getLogoutUrl
-      if(logoutUrl) {
-        window.location.href = logoutUrl
-      } else {
-        router.push({ path: '/login' })
-      }
-      // }
-      // router.push({ path: '/login' })
+      router.push({ path: '/login' })
     })
   }
 

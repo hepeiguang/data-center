@@ -42,7 +42,7 @@ export function useForm(
   fullName: string,
   name: string,
   description: string,
-  user_name: string,
+  user_name: string
 ) {
   const { t } = useI18n()
   const resetForm = () => {
@@ -59,7 +59,7 @@ export function useForm(
       fullName,
       name,
       description,
-      user_name,
+      user_name
     ),
     saving: false,
     rules: {
@@ -70,11 +70,6 @@ export function useForm(
           if (state.renameForm.name === '') {
             return new Error(t('resource.file.enter_name_tips'))
           }
-          if(state.renameForm.type === 'UDF' && state.renameForm.fullName.endsWith('.jar')) {
-            if (!state.renameForm.name.endsWith('.jar'))
-            return new Error(t('resource.file.resource_file_must_endwith_jar'))
-          }
-
         }
       }
     } as FormRules

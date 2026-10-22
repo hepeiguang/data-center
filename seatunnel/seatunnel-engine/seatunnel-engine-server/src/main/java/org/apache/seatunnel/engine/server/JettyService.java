@@ -27,15 +27,22 @@ import org.apache.seatunnel.shade.org.eclipse.jetty.util.ssl.SslContextFactory;
 
 import org.apache.seatunnel.engine.common.config.SeaTunnelConfig;
 import org.apache.seatunnel.engine.common.config.server.HttpConfig;
+import org.apache.seatunnel.engine.server.rest.filter.BasicAuthFilter;
 import org.apache.seatunnel.engine.server.rest.filter.ExceptionHandlingFilter;
 import org.apache.seatunnel.engine.server.rest.servlet.AllLogNameServlet;
 import org.apache.seatunnel.engine.server.rest.servlet.AllNodeLogServlet;
+import org.apache.seatunnel.engine.server.rest.servlet.CheckpointHistoryServlet;
+import org.apache.seatunnel.engine.server.rest.servlet.CheckpointOverviewServlet;
 import org.apache.seatunnel.engine.server.rest.servlet.CurrentNodeLogServlet;
 import org.apache.seatunnel.engine.server.rest.servlet.EncryptConfigServlet;
 import org.apache.seatunnel.engine.server.rest.servlet.FinishedJobsServlet;
 import org.apache.seatunnel.engine.server.rest.servlet.JobInfoServlet;
+import org.apache.seatunnel.engine.server.rest.servlet.LoggersServlet;
 import org.apache.seatunnel.engine.server.rest.servlet.MetricsServlet;
+import org.apache.seatunnel.engine.server.rest.servlet.OptionRulesServlet;
 import org.apache.seatunnel.engine.server.rest.servlet.OverviewServlet;
+import org.apache.seatunnel.engine.server.rest.servlet.PendingJobsServlet;
+import org.apache.seatunnel.engine.server.rest.servlet.RealtimeMetricsServlet;
 import org.apache.seatunnel.engine.server.rest.servlet.RunningJobsServlet;
 import org.apache.seatunnel.engine.server.rest.servlet.RunningThreadsServlet;
 import org.apache.seatunnel.engine.server.rest.servlet.StopJobServlet;
@@ -46,6 +53,7 @@ import org.apache.seatunnel.engine.server.rest.servlet.SubmitJobsServlet;
 import org.apache.seatunnel.engine.server.rest.servlet.SystemMonitoringServlet;
 import org.apache.seatunnel.engine.server.rest.servlet.ThreadDumpServlet;
 import org.apache.seatunnel.engine.server.rest.servlet.UpdateTagsServlet;
+import org.apache.seatunnel.engine.server.rest.servlet.WorkerResourceServlet;
 
 import com.hazelcast.spi.impl.NodeEngineImpl;
 import lombok.extern.slf4j.Slf4j;
@@ -60,17 +68,24 @@ import java.net.ServerSocket;
 import java.net.URL;
 import java.util.EnumSet;
 
+import static org.apache.seatunnel.engine.server.rest.RestConstant.REST_URL_CHECKPOINT_HISTORY;
+import static org.apache.seatunnel.engine.server.rest.RestConstant.REST_URL_CHECKPOINT_OVERVIEW;
 import static org.apache.seatunnel.engine.server.rest.RestConstant.REST_URL_ENCRYPT_CONFIG;
 import static org.apache.seatunnel.engine.server.rest.RestConstant.REST_URL_FINISHED_JOBS;
 import static org.apache.seatunnel.engine.server.rest.RestConstant.REST_URL_GET_ALL_LOG_NAME;
 import static org.apache.seatunnel.engine.server.rest.RestConstant.REST_URL_JOB_INFO;
 import static org.apache.seatunnel.engine.server.rest.RestConstant.REST_URL_LOG;
+import static org.apache.seatunnel.engine.server.rest.RestConstant.REST_URL_LOGGERS;
 import static org.apache.seatunnel.engine.server.rest.RestConstant.REST_URL_LOGS;
 import static org.apache.seatunnel.engine.server.rest.RestConstant.REST_URL_METRICS;
 import static org.apache.seatunnel.engine.server.rest.RestConstant.REST_URL_OPEN_METRICS;
+import static org.apache.seatunnel.engine.server.rest.RestConstant.REST_URL_OPTION_RULES;
 import static org.apache.seatunnel.engine.server.rest.RestConstant.REST_URL_OVERVIEW;
+import static org.apache.seatunnel.engine.server.rest.RestConstant.REST_URL_PENDING_JOBS;
+import static org.apache.seatunnel.engine.server.rest.RestConstant.REST_URL_REALTIME_METRICS;
 import static org.apache.seatunnel.engine.server.rest.RestConstant.REST_URL_RUNNING_JOB;
 import static org.apache.seatunnel.engine.server.rest.RestConstant.REST_URL_RUNNING_JOBS;
+import static org.apache.seatunnel.engine.server.rest.RestConstant.REST_URL_RUNNING_JOBS_SUMMARY;
 import static org.apache.seatunnel.engine.server.rest.RestConstant.REST_URL_RUNNING_THREADS;
 import static org.apache.seatunnel.engine.server.rest.RestConstant.REST_URL_STOP_JOB;
 import static org.apache.seatunnel.engine.server.rest.RestConstant.REST_URL_STOP_JOBS;
@@ -80,6 +95,7 @@ import static org.apache.seatunnel.engine.server.rest.RestConstant.REST_URL_SUBM
 import static org.apache.seatunnel.engine.server.rest.RestConstant.REST_URL_SYSTEM_MONITORING_INFORMATION;
 import static org.apache.seatunnel.engine.server.rest.RestConstant.REST_URL_THREAD_DUMP;
 import static org.apache.seatunnel.engine.server.rest.RestConstant.REST_URL_UPDATE_TAGS;
+import static org.apache.seatunnel.engine.server.rest.RestConstant.REST_URL_WORKER_RESOURCES;
 
 /** The Jetty service for SeaTunnel engine server. */
 @Slf4j
@@ -144,13 +160,28 @@ public class JettyService {
         log.info("SeaTunnel REST service will start on https port {}", httpsPort);
     }
 
+    private static long toBytes(int megabytes) {
+        // Jetty reads a negative limit as unlimited, which is what this server did before the
+        // limit became configurable. Keep that available instead of scaling it into bytes.
+        return megabytes <= 0 ? -1L : megabytes * 1024L * 1024L;
+    }
+
     public void createJettyServer() {
 
         ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
         context.setContextPath(seaTunnelConfig.getEngineConfig().getHttpConfig().getContextPath());
 
-        FilterHolder filterHolder = new FilterHolder(new ExceptionHandlingFilter());
-        context.addFilter(filterHolder, "/*", EnumSet.of(DispatcherType.REQUEST));
+        // Add exception handling filter
+        FilterHolder exceptionFilterHolder = new FilterHolder(new ExceptionHandlingFilter());
+        context.addFilter(exceptionFilterHolder, "/*", EnumSet.of(DispatcherType.REQUEST));
+
+        // Add basic authentication filter if enabled
+        HttpConfig httpConfig = seaTunnelConfig.getEngineConfig().getHttpConfig();
+        if (httpConfig.isEnableBasicAuth()) {
+            log.info("Basic authentication is enabled for web UI");
+            FilterHolder basicAuthFilterHolder = new FilterHolder(new BasicAuthFilter(httpConfig));
+            context.addFilter(basicAuthFilterHolder, "/*", EnumSet.of(DispatcherType.REQUEST));
+        }
 
         ServletHolder defaultServlet = new ServletHolder("default", DefaultServlet.class);
         URL uiResource = JettyService.class.getClassLoader().getResource("ui");
@@ -164,9 +195,12 @@ public class JettyService {
 
         ServletHolder overviewHolder = new ServletHolder(new OverviewServlet(nodeEngine));
         ServletHolder runningJobsHolder = new ServletHolder(new RunningJobsServlet(nodeEngine));
+        ServletHolder pendingJobsHolder = new ServletHolder(new PendingJobsServlet(nodeEngine));
         ServletHolder finishedJobsHolder = new ServletHolder(new FinishedJobsServlet(nodeEngine));
         ServletHolder systemMonitoringHolder =
                 new ServletHolder(new SystemMonitoringServlet(nodeEngine));
+        ServletHolder workerResourceHolder =
+                new ServletHolder(new WorkerResourceServlet(nodeEngine));
         ServletHolder jobInfoHolder = new ServletHolder(new JobInfoServlet(nodeEngine));
         ServletHolder threadDumpHolder = new ServletHolder(new ThreadDumpServlet(nodeEngine));
 
@@ -188,18 +222,34 @@ public class JettyService {
         ServletHolder currentNodeLogServlet =
                 new ServletHolder(new CurrentNodeLogServlet(nodeEngine));
         ServletHolder allLogNameServlet = new ServletHolder(new AllLogNameServlet(nodeEngine));
+        ServletHolder loggersServlet = new ServletHolder(new LoggersServlet(nodeEngine));
 
         ServletHolder metricsServlet = new ServletHolder(new MetricsServlet(nodeEngine));
+        ServletHolder realtimeMetricsServlet =
+                new ServletHolder(new RealtimeMetricsServlet(nodeEngine));
+        ServletHolder optionRulesHolder = new ServletHolder(new OptionRulesServlet(nodeEngine));
+        ServletHolder checkpointOverviewHolder =
+                new ServletHolder(new CheckpointOverviewServlet(nodeEngine));
+        ServletHolder checkpointHistoryHolder =
+                new ServletHolder(new CheckpointHistoryServlet(nodeEngine));
 
         context.addServlet(overviewHolder, convertUrlToPath(REST_URL_OVERVIEW));
         context.addServlet(runningJobsHolder, convertUrlToPath(REST_URL_RUNNING_JOBS));
+        context.addServlet(runningJobsHolder, convertUrlToPath(REST_URL_RUNNING_JOBS_SUMMARY));
+        context.addServlet(pendingJobsHolder, convertUrlToPath(REST_URL_PENDING_JOBS));
         context.addServlet(finishedJobsHolder, convertUrlToPath(REST_URL_FINISHED_JOBS));
         context.addServlet(
                 systemMonitoringHolder, convertUrlToPath(REST_URL_SYSTEM_MONITORING_INFORMATION));
+        context.addServlet(workerResourceHolder, convertUrlToPath(REST_URL_WORKER_RESOURCES));
         context.addServlet(jobInfoHolder, convertUrlToPath(REST_URL_JOB_INFO));
         context.addServlet(jobInfoHolder, convertUrlToPath(REST_URL_RUNNING_JOB));
         context.addServlet(threadDumpHolder, convertUrlToPath(REST_URL_THREAD_DUMP));
-        MultipartConfigElement multipartConfigElement = new MultipartConfigElement("");
+        // Bound the upload: the whole part is buffered by Jetty and then read into a String, so an
+        // unbounded body lets a single request fill the temp directory and exhaust the master heap.
+        long maxFileSize = toBytes(httpConfig.getUploadMaxFileSizeMb());
+        long maxRequestSize = toBytes(httpConfig.getUploadMaxRequestSizeMb());
+        MultipartConfigElement multipartConfigElement =
+                new MultipartConfigElement("", maxFileSize, maxRequestSize, 0);
         submitJobByUploadFileHolder.getRegistration().setMultipartConfig(multipartConfigElement);
         context.addServlet(
                 submitJobByUploadFileHolder, convertUrlToPath(REST_URL_SUBMIT_JOB_BY_UPLOAD_FILE));
@@ -215,8 +265,14 @@ public class JettyService {
         context.addServlet(allNodeLogServletHolder, convertUrlToPath(REST_URL_LOGS));
         context.addServlet(currentNodeLogServlet, convertUrlToPath(REST_URL_LOG));
         context.addServlet(allLogNameServlet, convertUrlToPath(REST_URL_GET_ALL_LOG_NAME));
+        context.addServlet(loggersServlet, convertUrlToPath(REST_URL_LOGGERS));
         context.addServlet(metricsServlet, convertUrlToPath(REST_URL_METRICS));
         context.addServlet(metricsServlet, convertUrlToPath(REST_URL_OPEN_METRICS));
+        context.addServlet(realtimeMetricsServlet, convertUrlToPath(REST_URL_REALTIME_METRICS));
+        context.addServlet(optionRulesHolder, convertUrlToPath(REST_URL_OPTION_RULES));
+        context.addServlet(
+                checkpointOverviewHolder, convertUrlToPath(REST_URL_CHECKPOINT_OVERVIEW));
+        context.addServlet(checkpointHistoryHolder, convertUrlToPath(REST_URL_CHECKPOINT_HISTORY));
 
         server.setHandler(context);
 

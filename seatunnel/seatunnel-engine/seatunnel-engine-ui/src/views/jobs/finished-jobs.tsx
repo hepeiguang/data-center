@@ -30,10 +30,15 @@ export default defineComponent({
     const { t } = useI18n()
 
     const jobs = ref([] as Job[])
+    const page = ref(1)
+    const pageSize = ref(10)
+    const total = ref(0)
 
     let timer: NodeJS.Timeout
     const fetch = async () => {
-      jobs.value = await JobsService.getFinishedJobs()
+      const res = await JobsService.getFinishedJobs(page.value, pageSize.value)
+      jobs.value = res.data
+      total.value = res.total
       timer = setTimeout(fetch, 5000)
     }
     onUnmounted(() => clearTimeout(timer))
@@ -53,24 +58,32 @@ export default defineComponent({
         },
         {
           title: 'Id',
-          key: 'jobId'
+          key: 'jobId',
+          sorter: 'default'
         },
         {
           title: 'Name',
-          key: 'jobName'
+          key: 'jobName',
+          sorter: 'default'
         },
         {
           title: 'Create Time',
-          key: 'createTime'
+          key: 'createTime',
+          sorter: 'default'
+        },
+        {
+          title: 'Finish Time',
+          key: 'finishTime',
+          sorter: 'default'
         },
         {
           title: 'Status',
           key: 'jobStatus',
           render(row) {
             return (
-              <NTag bordered={false} color={getColorFromStatus(row.jobStatus)}>
-                {row.jobStatus}
-              </NTag>
+                <NTag bordered={false} color={getColorFromStatus(row.jobStatus)}>
+                  {row.jobStatus}
+                </NTag>
             )
           }
         },
@@ -79,14 +92,14 @@ export default defineComponent({
           key: 'actions',
           render(row) {
             return h(
-              NButton,
-              {
-                strong: true,
-                tertiary: true,
-                size: 'small',
-                onClick: () => view(row)
-              },
-              { default: () => 'View' }
+                NButton,
+                {
+                  strong: true,
+                  tertiary: true,
+                  size: 'small',
+                  onClick: () => view(row)
+                },
+                { default: () => 'View' }
             )
           }
         }
@@ -95,10 +108,26 @@ export default defineComponent({
 
     const columns = createColumns()
     return () => (
-      <div class="w-full bg-white p-6 border border-gray-100 rounded-xl">
-        <h2 class="font-bold text-2xl pb-6">{t('jobs.finishedJobs')}</h2>
-        <NDataTable columns={columns} data={jobs.value} pagination={false} bordered={false} />
-      </div>
+        <div class="w-full bg-white p-6 border border-gray-100 rounded-xl">
+          <h2 class="font-bold text-2xl pb-6">{t('jobs.finishedJobs')}</h2>
+          <NDataTable columns={columns} data={jobs.value} remote={true} pagination={{
+            page: page.value,
+            pageSize: pageSize.value,
+            itemCount: total.value,
+            showSizePicker: true,
+            pageSizes: [10, 20, 50, 100, 500],
+            showQuickJumper: true,
+            onUpdatePage: (newPage: number) => {
+              page.value = newPage
+              fetch()
+            },
+            onUpdatePageSize: (newPageSize: number) => {
+              pageSize.value = newPageSize
+              page.value = 1
+              fetch()
+            }
+          }} bordered={false} />
+        </div>
     )
   }
 })

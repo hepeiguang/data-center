@@ -22,12 +22,12 @@ import org.apache.seatunnel.common.utils.RetryUtils;
 import org.apache.seatunnel.engine.client.SeaTunnelHazelcastClient;
 import org.apache.seatunnel.engine.common.Constant;
 import org.apache.seatunnel.engine.common.exception.SeaTunnelEngineException;
+import org.apache.seatunnel.engine.common.job.JobResult;
+import org.apache.seatunnel.engine.common.job.JobStatus;
 import org.apache.seatunnel.engine.common.utils.ExceptionUtil;
 import org.apache.seatunnel.engine.common.utils.PassiveCompletableFuture;
 import org.apache.seatunnel.engine.core.job.Job;
 import org.apache.seatunnel.engine.core.job.JobImmutableInformation;
-import org.apache.seatunnel.engine.core.job.JobResult;
-import org.apache.seatunnel.engine.core.job.JobStatus;
 import org.apache.seatunnel.engine.core.protocol.codec.SeaTunnelCancelJobCodec;
 import org.apache.seatunnel.engine.core.protocol.codec.SeaTunnelGetJobStatusCodec;
 import org.apache.seatunnel.engine.core.protocol.codec.SeaTunnelSubmitJobCodec;
@@ -140,7 +140,7 @@ public class ClientJobProxy implements Job {
     public void cancelJob() {
         PassiveCompletableFuture<Void> cancelFuture =
                 seaTunnelHazelcastClient.requestOnMasterAndGetCompletableFuture(
-                        SeaTunnelCancelJobCodec.encodeRequest(jobId));
+                        SeaTunnelCancelJobCodec.encodeRequest(jobId, false));
 
         cancelFuture.join();
     }

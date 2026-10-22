@@ -18,7 +18,7 @@
 export default {
   tenant: {
     tenant_manage: '租户管理',
-    create_tenant: '添加', // '创建租户',
+    create_tenant: '创建租户',
     search_tips: '请输入关键词',
     tenant_code: '操作系统租户',
     description: '描述',
@@ -26,7 +26,7 @@ export default {
     create_time: '创建时间',
     update_time: '更新时间',
     actions: '操作',
-    edit_tenant: '编辑', // '编辑租户',
+    edit_tenant: '编辑租户',
     tenant_code_tips: '请输入操作系统租户',
     tenant_code_invalid_tips: '操作系统租户名称含有非法字符',
     queue_name_tips: '请选择队列',
@@ -36,8 +36,8 @@ export default {
     delete: '删除'
   },
   alarm_group: {
-    create_alarm_group: '添加', // '创建告警组',
-    edit_alarm_group: '编辑', // '编辑告警组',
+    create_alarm_group: '创建告警组',
+    edit_alarm_group: '编辑告警组',
     search_tips: '请输入关键词',
     alert_group_name_tips: '请输入告警组名称',
     alarm_plugin_instance: '告警组实例',
@@ -53,8 +53,8 @@ export default {
     delete: '删除'
   },
   worker_group: {
-    create_worker_group: '添加', // '创建Worker分组',
-    edit_worker_group: '编辑', // '编辑Worker分组',
+    create_worker_group: '创建Worker分组',
+    edit_worker_group: '编辑Worker分组',
     search_tips: '请输入关键词',
     operation: '操作',
     delete_confirm: '确定删除吗?',
@@ -64,12 +64,13 @@ export default {
     group_name_tips: '请输入分组名称',
     worker_addresses: 'Worker地址',
     worker_addresses_tips: '请选择Worker地址',
+    source: '来源',
     create_time: '创建时间',
     update_time: '更新时间'
   },
   yarn_queue: {
-    create_queue: '添加', // '创建队列',
-    edit_queue: '编辑', // '编辑队列',
+    create_queue: '创建队列',
+    edit_queue: '编辑队列',
     search_tips: '请输入关键词',
     queue_name: '队列名',
     queue_value: '队列值',
@@ -83,8 +84,8 @@ export default {
     queue_value_tips: '请输入队列值'
   },
   environment: {
-    create_environment: '添加', // '创建环境',
-    edit_environment: '编辑', // '编辑环境',
+    create_environment: '创建环境',
+    edit_environment: '编辑环境',
     search_tips: '请输入关键词',
     edit: '编辑',
     delete: '删除',
@@ -102,8 +103,8 @@ export default {
     worker_group_tips: '请选择Worker分组'
   },
   cluster: {
-    create_cluster: '添加', // '创建集群',
-    edit_cluster: '编辑', // '编辑集群',
+    create_cluster: '创建集群',
+    edit_cluster: '编辑集群',
     search_tips: '请输入关键词',
     edit: '编辑',
     delete: '删除',
@@ -122,8 +123,8 @@ export default {
     cluster_description_tips: '请输入集群描述'
   },
   token: {
-    create_token: '添加', // '创建令牌',
-    edit_token: '编辑', // '编辑令牌',
+    create_token: '创建令牌',
+    edit_token: '编辑令牌',
     search_tips: '请输入关键词',
     user: '用户',
     user_tips: '请选择用户',
@@ -140,26 +141,22 @@ export default {
   },
   user: {
     user_manage: '用户管理',
-    create_user: '添加', // '创建用户',
-    edit_user: '编辑', // '编辑用户',
+    create_user: '创建用户',
+    edit_user: '编辑用户',
     delete_user: '删除用户',
     delete_confirm: '确定删除吗?',
     reset_password: '重新设置密码',
     project: '项目',
     resource: '资源',
     file_resource: '文件资源',
-    udf_resource: 'UDF资源',
     datasource: '数据源',
-    udf: 'UDF函数',
     namespace: '命名空间',
     revoke_auth: '撤销权限',
     grant_read: '授予读权限',
     grant_all: '授予所有权限',
     authorize_project: '项目授权',
-    authorize_resource: '资源授权',
     authorize_namespace: '命名空间授权',
     authorize_datasource: '数据源授权',
-    authorize_udf: 'UDF函数授权',
     username: '用户名',
     username_exists: '用户名已存在',
     username_tips: '请输入用户名',
@@ -201,8 +198,6 @@ export default {
     alarm_instance_name: '告警实例名称',
     alarm_instance_name_tips: '请输入告警实例名称',
     alarm_plugin_name: '告警插件名称',
-    alarm_instance_type: '告警实例类型',
-    is_global_instance: '是否全局告警实例',
     create_time: '创建时间',
     update_time: '更新时间',
     operation: '操作',
@@ -212,9 +207,9 @@ export default {
     delete_confirm: '删除？',
     confirm: '确定',
     cancel: '取消',
-    submit: '确定',
+    submit: '提交',
     test_send: '测试发送',
-    create_alarm_instance: '添加', // '创建告警实例',
+    create_alarm_instance: '创建告警实例',
     select_plugin: '选择插件',
     select_plugin_tips: '请选择告警插件',
     instance_parameter_exception: '实例参数异常',
@@ -246,7 +241,7 @@ export default {
     requestType: '请求方式',
     headerParams: '请求头',
     bodyParams: '请求体',
-    contentField: '内容字段',
+    contentType: 'Content Type',
     timeout: '超时时间（秒）',
     Keyword: '关键词',
     userParams: '自定义参数',
@@ -268,7 +263,7 @@ export default {
     // eslint-disable-next-line quotes
     AtMobiles: "被{'@'}人的手机号",
     // eslint-disable-next-line quotes
-    AtUserIds: "被{'@'}人的用户ID",
+    AtDingtalkIds: "被{'@'}人的用户ID",
     MsgType: '消息类型',
     // eslint-disable-next-line quotes
     IsAtAll: "{'@'}所有人",
@@ -282,8 +277,8 @@ export default {
     generatorURL: '生成地址'
   },
   k8s_namespace: {
-    create_namespace: '添加', // '创建命名空间',
-    edit_namespace: '编辑', // '编辑命名空间',
+    create_namespace: '创建命名空间',
+    edit_namespace: '编辑命名空间',
     search_tips: '请输入关键词',
     k8s_namespace: 'K8S命名空间',
     k8s_namespace_tips: '请输入k8s命名空间',

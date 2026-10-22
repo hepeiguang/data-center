@@ -28,8 +28,7 @@ import java.util.List;
 import java.util.Map;
 
 import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 import org.aspectj.lang.JoinPoint;
@@ -76,10 +75,8 @@ public class OperatorLogAspect {
         AuditType auditType = operatorLog.auditType();
 
         try {
-            // 获取HTTP请求方法
-            String httpMethod = OperatorUtils.getHttpMethod(method);
             AuditOperator operator = SpringApplicationContext.getBean(operatorLog.auditType().getOperatorClass());
-            List<AuditLog> auditLogList = OperatorUtils.buildAuditLogList(operation.description(), auditType, user,httpMethod);
+            List<AuditLog> auditLogList = OperatorUtils.buildAuditLogList(operation.description(), auditType, user);
             operator.setRequestParam(auditType, auditLogList, paramsMap);
             AuditContext auditContext =
                     new AuditContext(auditLogList, paramsMap, operatorLog, System.currentTimeMillis(), operator);
@@ -109,8 +106,7 @@ public class OperatorLogAspect {
         auditThreadLocal.remove();
     }
 
-    @Getter
-    @Setter
+    @Data
     @AllArgsConstructor
     public static class AuditContext {
 

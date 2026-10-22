@@ -17,17 +17,19 @@
 
 package org.apache.seatunnel.connectors.seatunnel.paimon.config;
 
-import org.apache.seatunnel.api.configuration.Option;
-import org.apache.seatunnel.api.configuration.Options;
 import org.apache.seatunnel.api.configuration.ReadonlyConfig;
+import org.apache.seatunnel.api.options.SinkConnectorCommonOptions;
 import org.apache.seatunnel.api.sink.DataSaveMode;
 import org.apache.seatunnel.api.sink.SchemaSaveMode;
+import org.apache.seatunnel.connectors.seatunnel.paimon.exception.PaimonConnectorErrorCode;
+import org.apache.seatunnel.connectors.seatunnel.paimon.exception.PaimonConnectorException;
 
 import org.apache.paimon.CoreOptions;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,55 +39,47 @@ import java.util.stream.Stream;
 @Slf4j
 public class PaimonSinkConfig extends PaimonConfig {
 
-    public static final String CHANGELOG_TMP_PATH = "changelog-tmp-path";
-
-    public static final Option<SchemaSaveMode> SCHEMA_SAVE_MODE =
-            Options.key("schema_save_mode")
-                    .enumType(SchemaSaveMode.class)
-                    .defaultValue(SchemaSaveMode.CREATE_SCHEMA_WHEN_NOT_EXIST)
-                    .withDescription("schema_save_mode");
-
-    public static final Option<DataSaveMode> DATA_SAVE_MODE =
-            Options.key("data_save_mode")
-                    .enumType(DataSaveMode.class)
-                    .defaultValue(DataSaveMode.APPEND_DATA)
-                    .withDescription("data_save_mode");
-    public static final Option<String> PRIMARY_KEYS =
-            Options.key("paimon.table.primary-keys")
-                    .stringType()
-                    .noDefaultValue()
-                    .withDescription(
-                            "Default comma-separated list of columns that identify a row in tables (primary key)");
-
-    public static final Option<String> PARTITION_KEYS =
-            Options.key("paimon.table.partition-keys")
-                    .stringType()
-                    .noDefaultValue()
-                    .withDescription(
-                            "Default comma-separated list of partition fields to use when creating tables.");
-
-    public static final Option<Map<String, String>> WRITE_PROPS =
-            Options.key("paimon.table.write-props")
-                    .mapType()
-                    .defaultValue(new HashMap<>())
-                    .withDescription(
-                            "Properties passed through to paimon table initialization, such as 'file.format', 'bucket'(org.apache.paimon.CoreOptions)");
-
     private final SchemaSaveMode schemaSaveMode;
     private final DataSaveMode dataSaveMode;
     private final CoreOptions.ChangelogProducer changelogProducer;
     private final String changelogTmpPath;
+    private final String branch;
+    private final Boolean nonPrimaryKey;
     private final List<String> primaryKeys;
     private final List<String> partitionKeys;
+    /** Runtime writer properties from {@code paimon.table.write-props} only. */
     private final Map<String, String> writeProps;
+    /**
+     * SaveMode auto-create options from {@code table_options}. Applied only when building the
+     * Paimon schema for table creation; not merged into runtime {@link #writeProps}.
+     */
+    private final Map<String, String> tableOptions;
 
     public PaimonSinkConfig(ReadonlyConfig readonlyConfig) {
         super(readonlyConfig);
-        this.schemaSaveMode = readonlyConfig.get(SCHEMA_SAVE_MODE);
-        this.dataSaveMode = readonlyConfig.get(DATA_SAVE_MODE);
-        this.primaryKeys = stringToList(readonlyConfig.get(PRIMARY_KEYS), ",");
-        this.partitionKeys = stringToList(readonlyConfig.get(PARTITION_KEYS), ",");
-        this.writeProps = readonlyConfig.get(WRITE_PROPS);
+        this.schemaSaveMode = readonlyConfig.get(PaimonSinkOptions.SCHEMA_SAVE_MODE);
+        this.dataSaveMode = readonlyConfig.get(PaimonSinkOptions.DATA_SAVE_MODE);
+        this.nonPrimaryKey = readonlyConfig.get(PaimonSinkOptions.NON_PRIMARY_KEY);
+        this.primaryKeys = stringToList(readonlyConfig.get(PaimonSinkOptions.PRIMARY_KEYS), ",");
+        if (this.nonPrimaryKey && !this.primaryKeys.isEmpty()) {
+            String message =
+                    String.format(
+                            " `%s` will is empty when `%s`is true, but is %s",
+                            PaimonSinkOptions.PRIMARY_KEYS.key(),
+                            PaimonSinkOptions.NON_PRIMARY_KEY.key(),
+                            this.primaryKeys);
+            throw new PaimonConnectorException(
+                    PaimonConnectorErrorCode.NON_PRIMARY_KEY_CHECK_ERROR, message);
+        }
+        this.partitionKeys =
+                stringToList(readonlyConfig.get(PaimonSinkOptions.PARTITION_KEYS), ",");
+        this.tableOptions =
+                new HashMap<>(
+                        readonlyConfig
+                                .getOptional(SinkConnectorCommonOptions.TABLE_OPTIONS)
+                                .orElse(Collections.emptyMap()));
+        // Keep write-props as the runtime writer config only; do not merge table_options here.
+        this.writeProps = new HashMap<>(readonlyConfig.get(PaimonSinkOptions.WRITE_PROPS));
         this.changelogProducer =
                 Stream.of(CoreOptions.ChangelogProducer.values())
                         .filter(
@@ -99,13 +93,27 @@ public class PaimonSinkConfig extends PaimonConfig {
                         .findFirst()
                         .orElse(null);
         this.changelogTmpPath =
-                writeProps.getOrDefault(CHANGELOG_TMP_PATH, System.getProperty("java.io.tmpdir"));
-        checkConfig();
+                writeProps.getOrDefault(
+                        PaimonSinkOptions.CHANGELOG_TMP_PATH, System.getProperty("java.io.tmpdir"));
+        this.branch = readonlyConfig.get(PaimonSinkOptions.BRANCH);
     }
 
-    private void checkConfig() {
-        if (this.primaryKeys.isEmpty() && "-1".equals(this.writeProps.get("bucket"))) {
-            log.warn("Append only table currently do not support dynamic bucket");
+    /**
+     * Merge options for SaveMode schema/table creation. {@code writeProps} wins on key conflict.
+     *
+     * @param tableOptions sink {@code table_options}
+     * @param writeProps sink {@code paimon.table.write-props}
+     * @return a new mutable map suitable for {@code Schema.Builder#options}
+     */
+    public static Map<String, String> mergeSchemaCreationOptions(
+            Map<String, String> tableOptions, Map<String, String> writeProps) {
+        Map<String, String> merged = new HashMap<>();
+        if (tableOptions != null && !tableOptions.isEmpty()) {
+            merged.putAll(tableOptions);
         }
+        if (writeProps != null && !writeProps.isEmpty()) {
+            merged.putAll(writeProps);
+        }
+        return merged;
     }
 }

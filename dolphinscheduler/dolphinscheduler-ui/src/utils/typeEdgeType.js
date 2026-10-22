@@ -1,6 +1,0 @@
-// 单点登录配置信息
-const types = {
-  DATADISTINCT_TRANSFORM: ['JDBC_SOURCE', 'MYSQL_SOURCE', 'GAUSSDB_SOURCE', 'POSTGRESQL_SOURCE', 'DAMENG_SOURCE', 'DORIS_SOURCE'],
-};
-
-export { types };

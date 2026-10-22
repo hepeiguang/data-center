@@ -29,8 +29,8 @@ hazelcast:
       tcp-ip:
         enabled: true
         member-list:
-          - seatunnel-master:5801
-          - seatunnel-worker:5801
+          - localhost:5801
+          - localhost:5802
     port:
       auto-increment: false
       port: 5801
@@ -45,4 +45,4 @@ hazelcast:
     hazelcast.heartbeat.phiaccrual.failuredetector.threshold: 10
     hazelcast.heartbeat.phiaccrual.failuredetector.sample.size: 200
     hazelcast.heartbeat.phiaccrual.failuredetector.min.std.dev.millis: 100
-    hazelcast.network.io.worker.count: 10
+

@@ -13,19 +13,19 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.apache.seatunnel</groupId>
         <artifactId>seatunnel-connector-v2-e2e</artifactId>
-        <version>${revision}</version>
+        <version>3.0.0</version>
     </parent>
 
     <artifactId>connector-paimon-e2e</artifactId>
     <name>SeaTunnel : E2E : Connector V2 : Paimon</name>
 
     <properties>
+        <libfb303.version>0.9.0</libfb303.version>
         <testcontainer.version>1.19.1</testcontainer.version>
         <minio.version>8.5.6</minio.version>
     </properties>
@@ -59,16 +59,11 @@
 
         <dependency>
             <groupId>org.apache.seatunnel</groupId>
-            <artifactId>seatunnel-hadoop3-3.1.4-uber</artifactId>
-            <classifier>optional</classifier>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.seatunnel</groupId>
             <artifactId>connector-fake</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
+        <!-- To ensure the SemaphoredDelegatingExecutor class in paimon-s3-impl.jar is loaded first, place the connector-paimon dependency before seatunnel-shade-hadoop3-uber-${seatunnel.shade.hadoop.version}-${seatunnel.shade.version} -->
         <dependency>
             <groupId>org.apache.seatunnel</groupId>
             <artifactId>connector-paimon</artifactId>
@@ -98,17 +93,71 @@
         </dependency>
 
         <dependency>
+            <groupId>org.apache.seatunnel</groupId>
+            <artifactId>seatunnel-shade-hadoop3-uber</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
             <groupId>org.testcontainers</groupId>
             <artifactId>mysql</artifactId>
             <version>${testcontainer.version}</version>
         </dependency>
 
         <dependency>
-            <groupId>mysql</groupId>
-            <artifactId>mysql-connector-java</artifactId>
+            <groupId>com.mysql</groupId>
+            <artifactId>mysql-connector-j</artifactId>
             <scope>test</scope>
         </dependency>
-
     </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>copy-paimon-e2e-dependencies</id>
+                        <goals>
+                            <goal>copy</goal>
+                        </goals>
+                        <phase>process-test-resources</phase>
+                        <configuration>
+                            <skip>false</skip>
+                            <overWriteReleases>true</overWriteReleases>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>com.amazonaws</groupId>
+                                    <artifactId>aws-java-sdk-bundle</artifactId>
+                                    <version>${aws-java-sdk.version}</version>
+                                    <destFileName>aws-java-sdk-bundle.jar</destFileName>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.apache.hadoop</groupId>
+                                    <artifactId>hadoop-aws</artifactId>
+                                    <version>${hadoop-aws.version}</version>
+                                    <destFileName>hadoop-aws.jar</destFileName>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.apache.hive</groupId>
+                                    <artifactId>hive-exec</artifactId>
+                                    <version>${hive.exec.version}</version>
+                                    <destFileName>hive-exec.jar</destFileName>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.apache.thrift</groupId>
+                                    <artifactId>libfb303</artifactId>
+                                    <version>${libfb303.version}</version>
+                                    <destFileName>libfb303.jar</destFileName>
+                                </artifactItem>
+                            </artifactItems>
+                            <outputDirectory>${project.build.testOutputDirectory}/e2e-dependencies</outputDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 
 </project>

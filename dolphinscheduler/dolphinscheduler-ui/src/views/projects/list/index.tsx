@@ -30,6 +30,7 @@ import Card from '@/components/card'
 import Search from '@/components/input-search'
 import ProjectModal from './components/project-modal'
 import WorkerGroupModal from '@/views/projects/list/components/worker-group-modal'
+import totalCount from '@/utils/tableTotalCount'
 
 const list = defineComponent({
   name: 'list',
@@ -118,14 +119,14 @@ const list = defineComponent({
       <NSpace vertical>
         <Card>
           <NSpace justify='space-between'>
-            {/* <NButton
+            <NButton
               size='small'
               onClick={this.handleModalChange}
               type='primary'
               class='btn-create-project'
             >
               {t('project.list.create_project')}
-            </NButton> */}
+            </NButton>
             <NSpace>
               <Search
                 v-model:value={this.searchVal}
@@ -143,41 +144,28 @@ const list = defineComponent({
           </NSpace>
         </Card>
         <Card title={t('project.list.project_list')}>
-          {{
-            default: () => (
-              <NSpace vertical>
-                <NDataTable
-                  loading={loadingRef}
-                  columns={this.columns}
-                  data={this.tableData}
-                  scrollX={this.tableWidth}
-                  row-class-name='items'
-                />
-                <NSpace justify='center'>
-                  <NPagination
-                    v-model:page={this.page}
-                    v-model:page-size={this.pageSize}
-                    page-count={this.totalPage}
-                    show-size-picker
-                    page-sizes={[10, 30, 50]}
-                    show-quick-jumper
-                    onUpdatePage={this.requestData}
-                    onUpdatePageSize={this.handleChangePageSize}
-                  />
-                </NSpace>
-              </NSpace>
-            ),
-            'header-extra': () => (
-              <NButton
-                size='small'
-                onClick={this.handleModalChange}
-                type='primary'
-                class='btn-create-project'
-              >
-                {t('project.list.create_project')}
-              </NButton>
-            )
-          }}
+          <NSpace vertical>
+            <NDataTable
+              loading={loadingRef}
+              columns={this.columns}
+              data={this.tableData}
+              scrollX={this.tableWidth}
+              row-class-name='items'
+            />
+            <NSpace justify='center'>
+              <NPagination
+                v-model:page={this.page}
+                v-model:page-size={this.pageSize}
+                show-size-picker
+                page-sizes={[10, 30, 50]}
+                show-quick-jumper
+                onUpdatePage={this.requestData}
+                onUpdatePageSize={this.handleChangePageSize}
+                itemCount={this.totalCount}
+                prefix={totalCount}
+              />
+            </NSpace>
+          </NSpace>
         </Card>
         <ProjectModal
           showModalRef={this.showModalRef}

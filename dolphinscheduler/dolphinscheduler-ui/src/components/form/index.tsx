@@ -16,23 +16,11 @@
  */
 
 import { defineComponent, PropType, toRefs, h, unref } from 'vue'
-import { NSpin, NGrid, NGi, NForm, NFormItemGi, FormRules, NTooltip, NIcon, NGridItem, type FormProps } from 'naive-ui'
-import { QuestionCircleOutlined } from '@vicons/antd'
+import { NSpin, NGrid, NForm, NFormItemGi, FormRules } from 'naive-ui'
 import { useForm } from './use-form'
-import { GridProps, IFormItem, IMeta } from './types'
+import type { GridProps, IMeta } from './types'
 
 const props = {
-  /*
-meta表单元数据，包含所有字段配置
-layout	GridProps	否	-	网格布局参数，传递给 NGrid
-loading	boolean	否	false	控制是否显示加载动画
-* interface IMeta extends Omit<FormProps, 'model' | 'rules'> {
-  elements?: IFormItem[]
-  model: object
-  rules: IFormRules
-  hint?: string
-}
-* */
   meta: {
     type: Object as PropType<IMeta>,
     default: {},
@@ -64,9 +52,8 @@ const Form = defineComponent({
       <NSpin show={loading}>
         <NForm {...restFormProps} rules={meta.rules as FormRules} ref='formRef'>
           <NGrid {...layout}>
-            {<NGridItem span={24} style="margin-bottom: 20px;"><div v-html={ meta.hint } ></div></NGridItem>}
             {elements.map((element) => {
-              const { span = 24, path, widget, label, showTooltip, tooltip, ...formItemProps } = element
+              const { span = 24, path, widget, ...formItemProps } = element
 
               return (
                 <NFormItemGi
@@ -75,24 +62,7 @@ const Form = defineComponent({
                   path={path}
                   key={path || String(Date.now() + Math.random())}
                 >
-                  {{
-                    label: () => (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <span style={{ lineHeight: '100%' }}>{label}</span>
-                        {showTooltip && <NTooltip trigger="hover" v-slots={{
-                          trigger: () => (
-                            <NIcon>
-                              <QuestionCircleOutlined />
-                            </NIcon>
-                          )
-                        }}>
-                          {/* {tooltip} */}
-                          <div style={{ whiteSpace: 'pre-wrap' }}>{tooltip}</div>
-                        </NTooltip>}
-                      </div>
-                    ),
-                    default: () => (h(widget))
-                  }}
+                  {h(widget)}
                 </NFormItemGi>
               )
             })}

@@ -18,13 +18,12 @@
   ~ under the License.
   ~
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.apache.seatunnel</groupId>
         <artifactId>imap-storage-plugins</artifactId>
-        <version>${revision}</version>
+        <version>3.0.0</version>
     </parent>
 
     <artifactId>imap-storage-file</artifactId>
@@ -34,7 +33,6 @@
         <!-- Imap storage dependency package  -->
         <hadoop-aliyun.version>3.0.0</hadoop-aliyun.version>
         <json-smart.version>2.4.7</json-smart.version>
-        <hadoop-aws.version>3.1.4</hadoop-aws.version>
         <netty-buffer.version>4.1.60.Final</netty-buffer.version>
     </properties>
 
@@ -47,9 +45,7 @@
         <!-- hadoop jar -->
         <dependency>
             <groupId>org.apache.seatunnel</groupId>
-            <artifactId>seatunnel-hadoop3-3.1.4-uber</artifactId>
-            <version>${project.version}</version>
-            <classifier>optional</classifier>
+            <artifactId>seatunnel-shade-hadoop3-uber</artifactId>
             <scope>provided</scope>
             <exclusions>
                 <exclusion>
@@ -59,8 +55,8 @@
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-lang3</artifactId>
+            <groupId>org.apache.seatunnel</groupId>
+            <artifactId>seatunnel-shade-commons-lang3</artifactId>
         </dependency>
         <!-- https://mvnrepository.com/artifact/com.lmax/disruptor -->
         <dependency>

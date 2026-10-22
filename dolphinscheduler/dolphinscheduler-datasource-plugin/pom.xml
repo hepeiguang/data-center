@@ -20,7 +20,7 @@
     <parent>
         <groupId>org.apache.dolphinscheduler</groupId>
         <artifactId>dolphinscheduler</artifactId>
-        <version>3.2.2</version>
+        <version>3.4.3</version>
     </parent>
     <artifactId>dolphinscheduler-datasource-plugin</artifactId>
     <packaging>pom</packaging>
@@ -53,19 +53,10 @@
         <module>dolphinscheduler-datasource-vertica</module>
         <module>dolphinscheduler-datasource-doris</module>
         <module>dolphinscheduler-datasource-sagemaker</module>
+        <module>dolphinscheduler-datasource-k8s</module>
         <module>dolphinscheduler-datasource-hana</module>
-        <module>dolphinscheduler-datasource-kafka</module>
-        <module>dolphinscheduler-datasource-http-server</module>
-        <module>dolphinscheduler-datasource-socket-server</module>
-        <module>dolphinscheduler-datasource-udp-multicast</module>
-        <module>dolphinscheduler-datasource-hdfs</module>
-        <module>dolphinscheduler-datasource-minio</module>
-        <module>dolphinscheduler-datasource-ftp</module>
-        <module>dolphinscheduler-datasource-sftp</module>
-        <module>dolphinscheduler-datasource-opengauss</module>
-        <module>dolphinscheduler-datasource-rabbitmq</module>
-        <module>dolphinscheduler-datasource-yunhezi</module>
-        <module>dolphinscheduler-datasource-mqtt</module>
+        <module>dolphinscheduler-datasource-aliyunserverlessspark</module>
+        <module>dolphinscheduler-datasource-dolphindb</module>
     </modules>
 
     <dependencyManagement>
@@ -79,11 +70,4 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
-
-    <dependencies>
-        <dependency>
-            <groupId>org.apache.dolphinscheduler</groupId>
-            <artifactId>dolphinscheduler-common</artifactId>
-        </dependency>
-    </dependencies>
 </project>

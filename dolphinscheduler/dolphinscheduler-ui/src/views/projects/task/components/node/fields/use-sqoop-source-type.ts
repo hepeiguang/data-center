@@ -300,7 +300,7 @@ export function useSourceType(
       }
     },
     {
-      type: 'mirror',
+      type: 'editor',
       field: 'sourceMysqlSrcQuerySql',
       name: t('project.node.sql_statement'),
       span: editorSpan,
@@ -312,9 +312,6 @@ export function useSourceType(
             return new Error(t('project.node.sql_statement_tips'))
           }
         }
-      },
-      props: {
-        language: 'sql'
       }
     },
     ...useCustomParams({

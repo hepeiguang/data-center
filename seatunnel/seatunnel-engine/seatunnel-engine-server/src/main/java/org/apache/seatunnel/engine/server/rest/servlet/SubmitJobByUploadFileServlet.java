@@ -22,11 +22,15 @@ import org.apache.seatunnel.shade.com.typesafe.config.ConfigFactory;
 import org.apache.seatunnel.shade.com.typesafe.config.ConfigParseOptions;
 import org.apache.seatunnel.shade.com.typesafe.config.ConfigSyntax;
 
+import org.apache.seatunnel.config.sql.SqlConfigBuilder;
+import org.apache.seatunnel.core.starter.utils.ConfigShadeUtils;
+import org.apache.seatunnel.engine.server.rest.ConfigFormat;
 import org.apache.seatunnel.engine.server.rest.service.JobInfoService;
 
 import org.apache.commons.io.IOUtils;
 
 import com.hazelcast.spi.impl.NodeEngineImpl;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -36,6 +40,7 @@ import javax.servlet.http.Part;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
+@Slf4j
 public class SubmitJobByUploadFileServlet extends BaseServlet {
     private final JobInfoService jobInfoService;
 
@@ -52,13 +57,41 @@ public class SubmitJobByUploadFileServlet extends BaseServlet {
         String submittedFileName = filePart.getSubmittedFileName();
         String content = IOUtils.toString(filePart.getInputStream(), StandardCharsets.UTF_8);
         Config config;
-        if (submittedFileName.endsWith(".json")) {
-            config =
-                    ConfigFactory.parseString(
-                            content, ConfigParseOptions.defaults().setSyntax(ConfigSyntax.JSON));
-        } else {
-            config = ConfigFactory.parseString(content);
+
+        log.info("Processing uploaded config file: {}", submittedFileName);
+        ConfigFormat configFormat = detectConfigFormat(submittedFileName);
+        switch (configFormat) {
+            case JSON:
+                config =
+                        ConfigFactory.parseString(
+                                content,
+                                ConfigParseOptions.defaults().setSyntax(ConfigSyntax.JSON));
+                break;
+            case SQL:
+                config = SqlConfigBuilder.of(content);
+                break;
+            case HOCON:
+            default:
+                config = ConfigFactory.parseString(content);
+                break;
         }
+
+        config = ConfigShadeUtils.decryptConfig(config);
+
         writeJson(resp, jobInfoService.submitJob(getParameterMap(req), config));
+    }
+
+    private ConfigFormat detectConfigFormat(String fileName) {
+        if (fileName == null) {
+            return ConfigFormat.JSON;
+        }
+
+        if (fileName.endsWith(".json")) {
+            return ConfigFormat.JSON;
+        } else if (fileName.endsWith(".sql")) {
+            return ConfigFormat.SQL;
+        } else {
+            return ConfigFormat.HOCON;
+        }
     }
 }

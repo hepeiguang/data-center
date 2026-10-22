@@ -19,20 +19,24 @@
 package org.apache.seatunnel.connectors.seatunnel.jdbc;
 
 import org.apache.seatunnel.shade.com.google.common.collect.Lists;
+import org.apache.seatunnel.shade.org.apache.commons.lang3.tuple.Pair;
 
 import org.apache.seatunnel.api.table.type.SeaTunnelRow;
 
-import org.apache.commons.lang3.tuple.Pair;
-
+import org.junit.jupiter.api.Disabled;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
+import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.utility.DockerLoggerFactory;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Disabled(
+        "Disabled until Vertica image is available, please follow https://github.com/vertica/vertica-containers/issues/64")
 public class JdbcVerticaIT extends AbstractJdbcIT {
 
     private static final String VERTICA_IMAGE = "vertica/vertica-ce:latest";
@@ -91,11 +95,6 @@ public class JdbcVerticaIT extends AbstractJdbcIT {
     }
 
     @Override
-    String driverUrl() {
-        return "https://repo1.maven.org/maven2/com/vertica/jdbc/vertica-jdbc/12.0.3-0/vertica-jdbc-12.0.3-0.jar";
-    }
-
-    @Override
     Pair<String[], List<SeaTunnelRow>> initTestData() {
         String[] fieldNames = new String[] {"id", "name", "age"};
 
@@ -120,10 +119,11 @@ public class JdbcVerticaIT extends AbstractJdbcIT {
                 new GenericContainer<>(VERTICA_IMAGE)
                         .withNetwork(NETWORK)
                         .withNetworkAliases(VERTICA_CONTAINER_HOST)
+                        .waitingFor(
+                                Wait.forListeningPort().withStartupTimeout(Duration.ofMinutes(5)))
                         .withLogConsumer(
                                 new Slf4jLogConsumer(DockerLoggerFactory.getLogger(VERTICA_IMAGE)));
-        container.setPortBindings(
-                Lists.newArrayList(String.format("%s:%s", VERTICA_PORT, VERTICA_PORT)));
+        container.addExposedPort(VERTICA_PORT);
 
         return container;
     }

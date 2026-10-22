@@ -26,7 +26,6 @@ import org.apache.dolphinscheduler.dao.repository.SessionDao;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
@@ -57,14 +56,9 @@ public class SessionServiceImpl extends BaseServiceImpl implements SessionServic
 
     @Override
     @Transactional
-    public Session createSessionIfAbsent(User user, String sessionId) {
+    public Session createSessionIfAbsent(User user) {
         Session session;
-        List<Session> sessionList;
-        if (sessionId == null) {
-            sessionList = sessionDao.queryByUserId(user.getId());
-        } else {
-            sessionList = sessionDao.queryByIds(Arrays.asList(sessionId));
-        }
+        List<Session> sessionList = sessionDao.queryByUserId(user.getId());
         // todo: this can be remove after the old session data is cleared
         if (CollectionUtils.isNotEmpty(sessionList)) {
             // is session list greater 1 ， delete other ，get one
@@ -85,7 +79,7 @@ public class SessionServiceImpl extends BaseServiceImpl implements SessionServic
 
         // assign new session
         Session newSession = Session.builder()
-                .id(sessionId == null ? UUID.randomUUID().toString() : sessionId)
+                .id(UUID.randomUUID().toString())
                 .userId(user.getId())
                 .lastLoginTime(new Date())
                 .build();
@@ -94,13 +88,13 @@ public class SessionServiceImpl extends BaseServiceImpl implements SessionServic
     }
 
     @Override
-    public void expireSession(String userId) {
+    public void expireSession(Integer userId) {
         sessionDao.deleteByUserId(userId);
     }
 
     @Override
     public boolean isSessionExpire(Session session) {
-        return System.currentTimeMillis() - session.getLastLoginTime().getTime() <= Constants.SESSION_TIME_OUT * 1000;
+        return System.currentTimeMillis() - session.getLastLoginTime().getTime() >= Constants.SESSION_TIME_OUT * 1000;
     }
 
 }

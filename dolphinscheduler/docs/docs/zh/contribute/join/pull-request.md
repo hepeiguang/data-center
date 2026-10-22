@@ -33,7 +33,7 @@ waste time。
         <tr>
             <td style="text-align: center;">Bug</td>
             <td style="text-align: center;">Fix</td>
-            <td style="text-align: center;">[Fix-3333][server] Fix xxx</td>
+            <td style="text-align: center;">[Fix-3333][ui] Fix xxx</td>
         </tr>
         <tr>
             <td style="text-align: center;">Improvement</td>
@@ -46,9 +46,23 @@ waste time。
             <td style="text-align: center;">[Test-3333][api] Add the e2e test of xxx</td>
         </tr>
         <tr>
-            <td style="text-align: center;">Sub-Task</td>
-            <td style="text-align: center;">Sub-Task 对应的父类型</td>
-            <td style="text-align: center;">[Feature-3333][server] Implement xxx</td>
+            <td style="text-align: center;">Doc</td>
+            <td style="text-align: center;">Doc</td>
+            <td style="text-align: center;">[Doc-3333] Improve xxx</td>
+        <tr>
+            <td style="text-align: center;">E2E</td>
+            <td style="text-align: center;">E2E</td>
+            <td style="text-align: center;">[E2E-3333] Implement xxx</td>
+        </tr>
+        <tr>
+            <td style="text-align: center;">CI</td>
+            <td style="text-align: center;">CI</td>
+            <td style="text-align: center;">[CI] Improve xxx</td>
+        </tr>
+        <tr>
+            <td style="text-align: center;">Chore</td>
+            <td style="text-align: center;">Chore</td>
+            <td style="text-align: center;">[Chore] Improve xxx</td>
         </tr>
     </tbody>
 </table>
@@ -69,7 +83,10 @@ waste time。
 [//]: # (DolphinScheduler使用`Spotless`为您自动修复代码风格和格式问题，)
 [//]: # (详情见[开发手册]&#40;../development-environment-setup.md#代码风格&#41;`代码风格`一栏。)
 
-DolphinScheduler使用`Spotless`为您自动修复代码风格和格式问题，
+DolphinScheduler 使用 `Spotless` 来统一代码风格和格式，覆盖范围包括 Java 源文件、`pom.xml` 以及本目录下的 Markdown 文档。
+
+**提交 Pull Request 前，必须先在本地执行 `./mvnw spotless:apply` 并提交格式化结果。** CI 会运行 `./mvnw spotless:check`，任何文件未格式化都会导致 PR 失败。
+
 详情见[开发手册](../development-environment-setup.md)`代码风格`一栏。
 
 ### 相关问题

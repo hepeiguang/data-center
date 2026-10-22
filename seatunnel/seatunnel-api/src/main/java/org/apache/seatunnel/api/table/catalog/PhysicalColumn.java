@@ -39,6 +39,30 @@ public class PhysicalColumn extends Column {
         super(name, dataType, columnLength, scale);
     }
 
+    public PhysicalColumn(
+            String name,
+            SeaTunnelDataType<?> dataType,
+            Long columnLength,
+            Integer scale,
+            boolean nullable,
+            Object defaultValue,
+            String comment,
+            String sinkType,
+            String sourceType,
+            Map<String, Object> options) {
+        super(
+                name,
+                dataType,
+                columnLength,
+                scale,
+                nullable,
+                defaultValue,
+                comment,
+                sinkType,
+                sourceType,
+                options);
+    }
+
     protected PhysicalColumn(
             String name,
             SeaTunnelDataType<?> dataType,
@@ -163,6 +187,7 @@ public class PhysicalColumn extends Column {
             Object defaultValue,
             String comment,
             String sourceType,
+            String sinkType,
             Map<String, Object> options,
             boolean isUnsigned,
             boolean isZeroFill,
@@ -177,6 +202,7 @@ public class PhysicalColumn extends Column {
                 defaultValue,
                 comment,
                 sourceType,
+                sinkType,
                 options,
                 isUnsigned,
                 isZeroFill,
@@ -241,6 +267,29 @@ public class PhysicalColumn extends Column {
                 options);
     }
 
+    public static PhysicalColumn of(
+            String name,
+            SeaTunnelDataType<?> dataType,
+            Long columnLength,
+            Integer scale,
+            boolean nullable,
+            Object defaultValue,
+            String comment,
+            String sinkType,
+            String sourceType) {
+        return new PhysicalColumn(
+                name,
+                dataType,
+                columnLength,
+                scale,
+                nullable,
+                defaultValue,
+                comment,
+                sinkType,
+                sourceType,
+                null);
+    }
+
     @Deprecated
     public static PhysicalColumn of(
             String name,
@@ -297,6 +346,7 @@ public class PhysicalColumn extends Column {
                 defaultValue,
                 comment,
                 sourceType,
+                sinkType,
                 options,
                 isUnsigned,
                 isZeroFill,
@@ -315,6 +365,7 @@ public class PhysicalColumn extends Column {
                 defaultValue,
                 comment,
                 sourceType,
+                sinkType,
                 options,
                 isUnsigned,
                 isZeroFill,
@@ -333,6 +384,7 @@ public class PhysicalColumn extends Column {
                 defaultValue,
                 comment,
                 sourceType,
+                sinkType,
                 options,
                 isUnsigned,
                 isZeroFill,
@@ -351,6 +403,26 @@ public class PhysicalColumn extends Column {
                 defaultValue,
                 comment,
                 newSourceType,
+                sinkType,
+                options,
+                isUnsigned,
+                isZeroFill,
+                bitLen,
+                longColumnLength);
+    }
+
+    @Override
+    public Column copyWithComment(String newComment) {
+        return new PhysicalColumn(
+                name,
+                dataType,
+                columnLength,
+                scale,
+                nullable,
+                defaultValue,
+                newComment,
+                sourceType,
+                sinkType,
                 options,
                 isUnsigned,
                 isZeroFill,

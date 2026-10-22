@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { computed, ref, watch } from 'vue'
+import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useDeployMode, useResources, useCustomParams } from '.'
 import type { IJsonItem } from '../types'
@@ -22,29 +22,14 @@ import type { IJsonItem } from '../types'
 export function useSeaTunnel(model: { [field: string]: any }): IJsonItem[] {
   const { t } = useI18n()
 
-  const configRadioSpan = computed(() => (model.useCustom ? 24 : 0))
-  const configEditorSpan = computed(() => (model.useCustom && model.scriptType == 'custom' ? 24 : 0))
-  const customSpan = computed(() => (model.useCustom && model.scriptType == 'custom' ? 0 : 24))
-  // const resourceEditorSpan = computed(() => (model.scriptType == 'mode3' ? 24 : 0))
-  watch(customSpan, (newValue, oldValue) => {
-    if (newValue) {
-      model.localParams = [
-        { prop: 'parallelism', value: '2', direct: "IN", type: "VARCHAR" },
-        { prop: 'job.mode', value: 'BATCH', direct: "IN", type: "VARCHAR" },
-        { prop: 'checkpoint.interval', value: '10000', direct: "IN", type: "VARCHAR" }
-      ]
-    } else {
-      model.localParams = []
-    }
-
-  }, { deep: true })
-
+  const configEditorSpan = computed(() => (model.useCustom ? 24 : 0))
+  const resourceEditorSpan = computed(() => (model.useCustom ? 0 : 24))
   const flinkSpan = computed(() =>
     model.startupScript.includes('flink') ? 24 : 0
   )
   const deployModeSpan = computed(() =>
     model.startupScript.includes('spark') ||
-      model.startupScript === 'seatunnel.sh'
+    model.startupScript === 'seatunnel.sh'
       ? 24
       : 0
   )
@@ -55,8 +40,8 @@ export function useSeaTunnel(model: { [field: string]: any }): IJsonItem[] {
   )
   const masterUrlSpan = computed(() =>
     model.startupScript.includes('spark') &&
-      model.deployMode !== 'local' &&
-      (model.master === 'SPARK' || model.master === 'MESOS')
+    model.deployMode !== 'local' &&
+    (model.master === 'SPARK' || model.master === 'MESOS')
       ? 12
       : 0
   )
@@ -64,20 +49,11 @@ export function useSeaTunnel(model: { [field: string]: any }): IJsonItem[] {
   const showLocal = computed(() => model.startupScript === 'seatunnel.sh')
   const othersSpan = computed(() =>
     model.startupScript.includes('flink') ||
-      model.startupScript === 'seatunnel.sh'
+    model.startupScript === 'seatunnel.sh'
       ? 24
       : 0
   )
-  const options = [
-    {
-      label: t('project.node.custom_mode_drag'),
-      value: 'visualize'
-    },
-    {
-      label: t('project.node.custom_mode_script'),
-      value: 'custom'
-    }
-  ]
+
   return [
     {
       type: 'select',
@@ -156,14 +132,12 @@ export function useSeaTunnel(model: { [field: string]: any }): IJsonItem[] {
 
     // SeaTunnel config parameter
     {
-      type: 'radio',
-      field: 'scriptType',
-      span: configRadioSpan,
-      name: t('project.node.script_type'),
-      options: options
+      type: 'switch',
+      field: 'useCustom',
+      name: t('project.node.custom_config')
     },
     {
-      type: 'mirror',
+      type: 'editor',
       field: 'rawScript',
       name: t('project.node.script'),
       span: configEditorSpan,
@@ -175,13 +149,9 @@ export function useSeaTunnel(model: { [field: string]: any }): IJsonItem[] {
             return new Error(t('project.node.script_tips'))
           }
         }
-      },
-      props: {
-        language: 'sql'
       }
     },
-    // llxl 资源为空
-    // useResources(resourceEditorSpan, true, 1),
+    useResources(resourceEditorSpan, true, 1),
     ...useCustomParams({ model, field: 'localParams', isSimple: true })
   ]
 }

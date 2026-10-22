@@ -15,9 +15,7 @@
  * limitations under the License.
  */
 
-export type ResourceType = 'FILE' | 'UDF'
-//定义自定义类型的限定资源类型
-export type CustomResourceType = 'HIVE' | 'SEATUNNEL' | 'FILE'
+export type ResourceType = 'FILE'
 
 export interface ResourceFileTableData {
   name: string
@@ -30,9 +28,6 @@ export interface ResourceFileTableData {
   size: number
   type: ResourceType
   update_time: string
-
-  //自定义字段
-  customType: CustomResourceType
 }
 
 export interface IEmit {
@@ -40,8 +35,7 @@ export interface IEmit {
 }
 
 export interface IReuploadResource {
-  (name: string, description: string, fullName: string, user_name: string,
-   customType:CustomResourceType): void
+  (name: string, description: string, fullName: string, user_name: string): void
 }
 
 export interface IRenameResource {
@@ -54,7 +48,6 @@ export interface IRtDisb {
 
 export interface IResourceListState {
   (
-    customType: 'HIVE' | 'SEATUNNEL',
     type: ResourceType,
     searchVal?: string,
     fullName?: string,
@@ -140,9 +133,6 @@ export interface IUploadDefaultValue {
     name: string
     file: string
     type: ResourceType
-    pid: number
     currentDir: string
-    //自定义字段
-    customType: CustomResourceType
   }
 }

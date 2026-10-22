@@ -36,9 +36,12 @@ public class JobMetricExports extends AbstractCollector {
     @Override
     public List<MetricFamilySamples> collect() {
         List<MetricFamilySamples> mfs = new ArrayList();
-        // Only the master can get job metrics
-        if (isMaster()) {
-            CoordinatorService coordinatorService = getCoordinatorService();
+        // Report metrics only when the local node is ACTIVE and the master is available.
+        if (isMaster() && isCoordinatorReady()) {
+            CoordinatorService coordinatorService = getReadyCoordinatorService();
+            if (coordinatorService == null) {
+                return mfs;
+            }
             JobCounter jobCountMetrics = coordinatorService.getJobCountMetrics();
 
             GaugeMetricFamily metricFamily =
@@ -51,6 +54,7 @@ public class JobMetricExports extends AbstractCollector {
             metricFamily.addMetric(
                     labelValues("cancelling"), jobCountMetrics.getCancellingJobCount());
             metricFamily.addMetric(labelValues("created"), jobCountMetrics.getCreatedJobCount());
+            metricFamily.addMetric(labelValues("pending"), jobCountMetrics.getPendingJobCount());
             metricFamily.addMetric(labelValues("failed"), jobCountMetrics.getFailedJobCount());
             metricFamily.addMetric(labelValues("failing"), jobCountMetrics.getFailingJobCount());
             metricFamily.addMetric(labelValues("finished"), jobCountMetrics.getFinishedJobCount());

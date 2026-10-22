@@ -17,6 +17,8 @@
 
 package org.apache.seatunnel.connectors.seatunnel.jdbc.catalog.psql;
 
+import org.apache.seatunnel.shade.org.apache.commons.lang3.StringUtils;
+
 import org.apache.seatunnel.api.table.catalog.CatalogTable;
 import org.apache.seatunnel.api.table.catalog.Column;
 import org.apache.seatunnel.api.table.catalog.ConstraintKey;
@@ -27,7 +29,6 @@ import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.dialect.DatabaseI
 import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.dialect.psql.PostgresTypeConverter;
 
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -43,6 +44,8 @@ public class PostgresCreateTableSqlBuilder {
     private PrimaryKey primaryKey;
     private String sourceCatalogName;
     private String fieldIde;
+    private String tablespace;
+    private String fillfactor;
     private List<ConstraintKey> constraintKeys;
     public Boolean isHaveConstraintKey = false;
 
@@ -54,6 +57,8 @@ public class PostgresCreateTableSqlBuilder {
         this.primaryKey = catalogTable.getTableSchema().getPrimaryKey();
         this.sourceCatalogName = catalogTable.getCatalogName();
         this.fieldIde = catalogTable.getOptions().get("fieldIde");
+        this.tablespace = catalogTable.getOptions().get(PostgresCatalog.TABLE_OPTION_TABLESPACE);
+        this.fillfactor = catalogTable.getOptions().get(PostgresCatalog.TABLE_OPTION_FILLFACTOR);
         this.constraintKeys = catalogTable.getTableSchema().getConstraintKeys();
         this.createIndex = createIndex;
     }
@@ -105,7 +110,17 @@ public class PostgresCreateTableSqlBuilder {
         }
 
         createTableSql.append(String.join(",\n", columnSqls));
-        createTableSql.append("\n);");
+        createTableSql.append("\n)");
+        if (StringUtils.isNotBlank(fillfactor)) {
+            // Value is validated as 10-100 by PostgresDialect.validateTableOptions.
+            createTableSql.append("\nWITH (fillfactor=").append(fillfactor.trim()).append(")");
+        }
+        if (StringUtils.isNotBlank(tablespace)) {
+            // Tablespace is a storage object name: quote literally, do NOT apply fieldIde
+            // case rewriting (that policy is only for table/column identifiers).
+            createTableSql.append("\nTABLESPACE \"").append(tablespace.trim()).append("\"");
+        }
+        createTableSql.append(";");
 
         List<String> commentSqls =
                 columns.stream()
@@ -124,18 +139,17 @@ public class PostgresCreateTableSqlBuilder {
         return createTableSql.toString();
     }
 
-    private String buildColumnSql(Column column) {
+    String buildColumnSql(Column column) {
         StringBuilder columnSql = new StringBuilder();
         columnSql.append("\"").append(column.getName()).append("\" ");
 
         // For simplicity, assume the column type in SeaTunnelDataType is the same as in PostgreSQL
-//        String columnType =
-//                StringUtils.equalsIgnoreCase(DatabaseIdentifier.POSTGRESQL, sourceCatalogName)
-//                        ? column.getSourceType()
-//                        : buildColumnType(column);
         String columnType;
-        if (StringUtils.equalsIgnoreCase(DatabaseIdentifier.POSTGRESQL, sourceCatalogName)) {
-            columnType = column.getSourceType() != null ? column.getSourceType() : buildColumnType(column);
+        if (column.getSinkType() != null) {
+            columnType = column.getSinkType();
+        } else if (StringUtils.equalsIgnoreCase(DatabaseIdentifier.POSTGRESQL, sourceCatalogName)
+                && StringUtils.isNotBlank(column.getSourceType())) {
+            columnType = column.getSourceType();
         } else {
             columnType = buildColumnType(column);
         }

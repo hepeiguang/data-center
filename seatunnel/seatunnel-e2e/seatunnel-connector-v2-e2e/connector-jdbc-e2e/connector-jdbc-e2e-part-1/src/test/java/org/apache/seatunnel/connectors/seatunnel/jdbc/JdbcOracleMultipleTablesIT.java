@@ -18,7 +18,7 @@
 
 package org.apache.seatunnel.connectors.seatunnel.jdbc;
 
-import org.apache.seatunnel.shade.com.google.common.collect.Lists;
+import org.apache.seatunnel.shade.org.apache.commons.lang3.tuple.Pair;
 
 import org.apache.seatunnel.api.table.type.SeaTunnelRow;
 import org.apache.seatunnel.e2e.common.TestResource;
@@ -26,8 +26,7 @@ import org.apache.seatunnel.e2e.common.TestSuiteBase;
 import org.apache.seatunnel.e2e.common.container.ContainerExtendedFactory;
 import org.apache.seatunnel.e2e.common.container.TestContainer;
 import org.apache.seatunnel.e2e.common.junit.TestContainerExtension;
-
-import org.apache.commons.lang3.tuple.Pair;
+import org.apache.seatunnel.e2e.common.util.DependencyJar;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
@@ -109,13 +108,12 @@ public class JdbcOracleMultipleTablesIT extends TestSuiteBase implements TestRes
     @TestContainerExtension
     protected final ContainerExtendedFactory extendedFactory =
             container -> {
-                Container.ExecResult extraCommands =
-                        container.execInContainer(
-                                "bash",
-                                "-c",
-                                "mkdir -p /tmp/seatunnel/plugins/Jdbc/lib && cd /tmp/seatunnel/plugins/Jdbc/lib && wget "
-                                        + "https://repo1.maven.org/maven2/com/oracle/database/jdbc/ojdbc8/12.2.0.1/ojdbc8-12.2.0.1.jar && wget https://repo1.maven.org/maven2/com/oracle/database/xml/xdb6/12.2.0.1/xdb6-12.2.0.1.jar && wget https://repo1.maven.org/maven2/com/oracle/database/xml/xmlparserv2/12.2.0.1/xmlparserv2-12.2.0.1.jar");
-                Assertions.assertEquals(0, extraCommands.getExitCode(), extraCommands.getStderr());
+                DependencyJar.ofClassName("oracle.jdbc.OracleDriver")
+                        .copyTo(container, "/tmp/seatunnel/plugins/Jdbc/lib");
+                DependencyJar.ofClassName("oracle.xdb.XMLType")
+                        .copyTo(container, "/tmp/seatunnel/plugins/Jdbc/lib");
+                DependencyJar.ofClassName("oracle.xml.parser.v2.XMLParser")
+                        .copyTo(container, "/tmp/seatunnel/plugins/Jdbc/lib");
             };
 
     @BeforeAll
@@ -137,9 +135,6 @@ public class JdbcOracleMultipleTablesIT extends TestSuiteBase implements TestRes
                         .withLogConsumer(
                                 new Slf4jLogConsumer(DockerLoggerFactory.getLogger(ORACLE_IMAGE)));
 
-        oracleContainer.setPortBindings(
-                Lists.newArrayList(String.format("%s:%s", ORACLE_PORT, ORACLE_PORT)));
-
         Startables.deepStart(Stream.of(oracleContainer)).join();
 
         connection = oracleContainer.createConnection("");
@@ -155,6 +150,35 @@ public class JdbcOracleMultipleTablesIT extends TestSuiteBase implements TestRes
 
         Container.ExecResult execResult =
                 container.executeJob("/jdbc_oracle_source_with_multiple_tables_to_sink.conf");
+        Assertions.assertEquals(0, execResult.getExitCode(), execResult.getStderr());
+
+        List<Executable> asserts =
+                TABLES.stream()
+                        .map(
+                                (Function<String, Executable>)
+                                        table ->
+                                                () ->
+                                                        Assertions.assertIterableEquals(
+                                                                query(
+                                                                        String.format(
+                                                                                "SELECT * FROM %s.%s order by INTEGER_COL asc",
+                                                                                SCHEMA, table)),
+                                                                query(
+                                                                        String.format(
+                                                                                "SELECT * FROM %s.%s order by INTEGER_COL asc",
+                                                                                SCHEMA,
+                                                                                "SINK_" + table))))
+                        .collect(Collectors.toList());
+        Assertions.assertAll(asserts);
+    }
+
+    @TestTemplate
+    public void testOracleJdbcRegexPatternE2e(TestContainer container)
+            throws IOException, InterruptedException, SQLException {
+        clearSinkTables();
+
+        Container.ExecResult execResult =
+                container.executeJob("/jdbc_oracle_source_with_pattern_tables_to_sink.conf");
         Assertions.assertEquals(0, execResult.getExitCode(), execResult.getStderr());
 
         List<Executable> asserts =

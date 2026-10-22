@@ -17,6 +17,8 @@
 
 package org.apache.seatunnel.connectors.seatunnel.jdbc.catalog.oceanbase;
 
+import org.apache.seatunnel.shade.org.apache.commons.lang3.StringUtils;
+
 import org.apache.seatunnel.api.table.catalog.CatalogTable;
 import org.apache.seatunnel.api.table.catalog.Column;
 import org.apache.seatunnel.api.table.catalog.ConstraintKey;
@@ -25,13 +27,13 @@ import org.apache.seatunnel.api.table.catalog.TablePath;
 import org.apache.seatunnel.api.table.catalog.TableSchema;
 import org.apache.seatunnel.api.table.converter.BasicTypeDefine;
 import org.apache.seatunnel.api.table.type.SqlType;
+import org.apache.seatunnel.connectors.seatunnel.jdbc.catalog.mysql.MySqlCatalog;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.catalog.utils.CatalogUtils;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.dialect.DatabaseIdentifier;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.dialect.oceanbase.OceanBaseMySqlTypeConverter;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.dialect.oceanbase.OceanBaseMysqlType;
 
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -84,9 +86,9 @@ public class OceanBaseMysqlCreateTableSqlBuilder {
         return new OceanBaseMysqlCreateTableSqlBuilder(
                         tablePath.getTableName(), typeConverter, createIndex)
                 .comment(catalogTable.getComment())
-                // todo: set charset and collate
-                .engine(null)
-                .charset(null)
+                .engine(catalogTable.getOptions().get(MySqlCatalog.TABLE_OPTION_ENGINE))
+                .charset(catalogTable.getOptions().get(MySqlCatalog.TABLE_OPTION_CHARSET))
+                .collate(catalogTable.getOptions().get(MySqlCatalog.TABLE_OPTION_COLLATE))
                 .primaryKey(tableSchema.getPrimaryKey())
                 .constraintKeys(tableSchema.getConstraintKeys())
                 .addColumn(tableSchema.getColumns())
@@ -184,7 +186,9 @@ public class OceanBaseMysqlCreateTableSqlBuilder {
         final List<String> columnSqls = new ArrayList<>();
         columnSqls.add(CatalogUtils.quoteIdentifier(column.getName(), fieldIde, "`"));
         String type;
-        if ((SqlType.TIME.equals(column.getDataType().getSqlType())
+        if (column.getSinkType() != null) {
+            type = column.getSinkType();
+        } else if ((SqlType.TIME.equals(column.getDataType().getSqlType())
                         || SqlType.TIMESTAMP.equals(column.getDataType().getSqlType()))
                 && column.getScale() != null) {
             BasicTypeDefine<OceanBaseMysqlType> typeDefine = typeConverter.reconvert(column);
@@ -265,6 +269,12 @@ public class OceanBaseMysqlCreateTableSqlBuilder {
                 keyName = "FOREIGN KEY";
                 // todo:
                 break;
+            case VECTOR_INDEX_KEY:
+                keyName = "VECTOR INDEX";
+                return String.format(
+                                "%s `%s` (%s)",
+                                keyName, constraintKey.getConstraintName(), indexColumns)
+                        + " WITH (distance=L2, type=hnsw)";
             default:
                 throw new UnsupportedOperationException(
                         "Unsupported constraint type: " + constraintType);

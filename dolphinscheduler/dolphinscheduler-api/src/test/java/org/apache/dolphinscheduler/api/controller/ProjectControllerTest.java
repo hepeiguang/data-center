@@ -24,7 +24,7 @@ import org.apache.dolphinscheduler.api.utils.Result;
 import org.apache.dolphinscheduler.common.enums.UserType;
 import org.apache.dolphinscheduler.dao.entity.Project;
 import org.apache.dolphinscheduler.dao.entity.User;
-import org.apache.dolphinscheduler.dao.mapper.ProjectMapper;
+import org.apache.dolphinscheduler.dao.repository.ProjectDao;
 
 import java.text.MessageFormat;
 
@@ -39,9 +39,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
-/**
- * project controller test
- */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class ProjectControllerTest {
@@ -55,12 +52,12 @@ public class ProjectControllerTest {
     private ProjectServiceImpl projectService;
 
     @Mock
-    private ProjectMapper projectMapper;
+    private ProjectDao projectDao;
 
     @BeforeEach
     public void before() {
         User loginUser = new User();
-        loginUser.setId("1");
+        loginUser.setId(1);
         loginUser.setUserType(UserType.GENERAL_USER);
         loginUser.setUserName("admin");
         user = loginUser;
@@ -84,7 +81,7 @@ public class ProjectControllerTest {
         Result result = new Result();
         putMsg(result, Status.SUCCESS);
         long projectCode = 1L;
-        Mockito.when(projectMapper.queryByCode(projectCode)).thenReturn(getProject());
+        Mockito.when(projectDao.queryByCode(projectCode)).thenReturn(getProject());
         Mockito.when(projectService.queryByCode(user, projectCode)).thenReturn(result);
         Result response = projectController.queryProjectByCode(user, projectCode);
         Assertions.assertEquals(Status.SUCCESS.getCode(), response.getCode().intValue());
@@ -108,8 +105,8 @@ public class ProjectControllerTest {
     public void testQueryUnauthorizedProject() {
         Result result = new Result();
         putMsg(result, Status.SUCCESS);
-        Mockito.when(projectService.queryUnauthorizedProject(user, "2")).thenReturn(result);
-        Result response = projectController.queryUnauthorizedProject(user, "2");
+        Mockito.when(projectService.queryUnauthorizedProject(user, 2)).thenReturn(result);
+        Result response = projectController.queryUnauthorizedProject(user, 2);
         Assertions.assertEquals(Status.SUCCESS.getCode(), response.getCode().intValue());
     }
 
@@ -117,8 +114,8 @@ public class ProjectControllerTest {
     public void testQueryAuthorizedProject() {
         Result result = new Result();
         putMsg(result, Status.SUCCESS);
-        Mockito.when(projectService.queryAuthorizedProject(user, "2")).thenReturn(result);
-        Result response = projectController.queryAuthorizedProject(user, "2");
+        Mockito.when(projectService.queryAuthorizedProject(user, 2)).thenReturn(result);
+        Result response = projectController.queryAuthorizedProject(user, 2);
         Assertions.assertEquals(Status.SUCCESS.getCode(), response.getCode().intValue());
     }
 
@@ -135,7 +132,7 @@ public class ProjectControllerTest {
     @Test
     public void testQueryAllProjectList() {
         User user = new User();
-        user.setId("");
+        user.setId(0);
         Result result = new Result();
         putMsg(result, Status.SUCCESS);
         Mockito.when(projectService.queryAllProjectList(user)).thenReturn(result);
@@ -145,7 +142,7 @@ public class ProjectControllerTest {
     @Test
     public void testQueryAllProjectListForDependent() {
         User user = new User();
-        user.setId("");
+        user.setId(0);
         Result result = new Result();
         putMsg(result, Status.SUCCESS);
         Mockito.when(projectService.queryAllProjectListForDependent()).thenReturn(result);
@@ -157,7 +154,7 @@ public class ProjectControllerTest {
         project.setCode(1L);
         project.setId(1);
         project.setName("test");
-        project.setUserId("1");
+        project.setUserId(1);
         return project;
     }
 

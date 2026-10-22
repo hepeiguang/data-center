@@ -11,6 +11,7 @@ import static org.apache.seatunnel.connectors.seatunnel.udp.config.UdpOptions.FO
 import static org.apache.seatunnel.connectors.seatunnel.udp.config.UdpOptions.HOST;
 import static org.apache.seatunnel.connectors.seatunnel.udp.config.UdpOptions.OFFSET_TABLE;
 import static org.apache.seatunnel.connectors.seatunnel.udp.config.UdpOptions.OFFSET_TABLE_PATH;
+import static org.apache.seatunnel.connectors.seatunnel.udp.config.UdpOptions.PARSE_ERROR_HANDLE_WAY;
 import static org.apache.seatunnel.connectors.seatunnel.udp.config.UdpOptions.PARSE_MODE;
 import static org.apache.seatunnel.connectors.seatunnel.udp.config.UdpOptions.PORT;
 import static org.apache.seatunnel.connectors.seatunnel.udp.config.UdpOptions.REPLY_ENABLED;
@@ -30,6 +31,7 @@ public class UdpSourceConfig implements Serializable {
     private String replyMessage;
     private UdpOptions.Format format;
     private UdpOptions.ParseMode parseMode;
+    private UdpOptions.ParseErrorHandleWay parseErrorHandleWay;
     private String scriptPath;
     private String scriptContent;
     private String offsetTable;
@@ -44,6 +46,7 @@ public class UdpSourceConfig implements Serializable {
         this.replyMessage = config.get(REPLY_MESSAGE);
         this.format = config.get(FORMAT);
         this.parseMode = config.get(PARSE_MODE);
+        this.parseErrorHandleWay = config.get(PARSE_ERROR_HANDLE_WAY);
         this.scriptPath = config.getOptional(SCRIPT_PATH).orElse(null);
         this.scriptContent = config.getOptional(SCRIPT_CONTENT).orElse(null);
         this.offsetTable = config.getOptional(OFFSET_TABLE).orElse(null);

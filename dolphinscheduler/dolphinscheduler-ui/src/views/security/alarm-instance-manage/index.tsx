@@ -117,11 +117,11 @@ const AlarmInstanceManage = defineComponent({
           {{
             default: () => (
               <NSpace justify='space-between'>
-                {/* {IS_ADMIN && (
+                {IS_ADMIN && (
                   <NButton onClick={onCreate} type='primary' size='small'>
                     {t('security.alarm_instance.create_alarm_instance')}
                   </NButton>
-                )} */}
+                )}
                 <NSpace justify='end' wrap={false}>
                   <Search
                     v-model:value={this.searchVal}
@@ -141,37 +141,24 @@ const AlarmInstanceManage = defineComponent({
           }}
         </Card>
         <Card title={t('menu.alarm_instance_manage')}>
-          {{
-            default: () => (
-              <NSpace vertical>
-                <NDataTable
-                  columns={columns}
-                  data={list}
-                  loading={loading}
-                  striped
-                />
-                <NSpace justify='center'>
-                  <NPagination
-                    page={page}
-                    page-size={pageSize}
-                    item-count={itemCount}
-                    show-quick-jumper
-                    on-update:page={changePage}
-                    on-update:page-size={changePageSize}
-                  />
-                </NSpace>
-              </NSpace>
-            ),
-            'header-extra': () => (
-              <div>
-                {IS_ADMIN && (
-                  <NButton onClick={onCreate} type='primary' size='small'>
-                    {t('security.alarm_instance.create_alarm_instance')}
-                  </NButton>
-                )}
-              </div>
-            )
-          }}
+          <NSpace vertical>
+            <NDataTable
+              columns={columns}
+              data={list}
+              loading={loading}
+              striped
+            />
+            <NSpace justify='center'>
+              <NPagination
+                page={page}
+                page-size={pageSize}
+                item-count={itemCount}
+                show-quick-jumper
+                on-update:page={changePage}
+                on-update:page-size={changePageSize}
+              />
+            </NSpace>
+          </NSpace>
         </Card>
         {IS_ADMIN && (
           <DetailModal

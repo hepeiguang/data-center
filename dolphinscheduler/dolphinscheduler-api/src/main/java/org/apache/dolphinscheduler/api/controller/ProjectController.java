@@ -58,9 +58,6 @@ import io.swagger.v3.oas.annotations.Parameters;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
-/**
- * project controller
- */
 @Tag(name = "PROJECT_TAG")
 @RestController
 @RequestMapping("projects")
@@ -190,7 +187,7 @@ public class ProjectController extends BaseController {
     @ResponseStatus(HttpStatus.OK)
     @ApiException(LOGIN_USER_QUERY_PROJECT_LIST_PAGING_ERROR)
     public Result queryProjectWithAuthorizedLevelListPaging(@Parameter(hidden = true) @RequestAttribute(value = Constants.SESSION_USER) User loginUser,
-                                                            @RequestParam("userId") String userId,
+                                                            @RequestParam("userId") Integer userId,
                                                             @RequestParam(value = "searchVal", required = false) String searchVal,
                                                             @RequestParam("pageSize") Integer pageSize,
                                                             @RequestParam("pageNo") Integer pageNo) {
@@ -236,7 +233,7 @@ public class ProjectController extends BaseController {
     @ResponseStatus(HttpStatus.OK)
     @ApiException(QUERY_UNAUTHORIZED_PROJECT_ERROR)
     public Result queryUnauthorizedProject(@Parameter(hidden = true) @RequestAttribute(value = Constants.SESSION_USER) User loginUser,
-                                           @RequestParam("userId") String userId) {
+                                           @RequestParam("userId") Integer userId) {
         return projectService.queryUnauthorizedProject(loginUser, userId);
     }
 
@@ -255,7 +252,7 @@ public class ProjectController extends BaseController {
     @ResponseStatus(HttpStatus.OK)
     @ApiException(QUERY_AUTHORIZED_PROJECT)
     public Result queryAuthorizedProject(@Parameter(hidden = true) @RequestAttribute(value = Constants.SESSION_USER) User loginUser,
-                                         @RequestParam("userId") String userId) {
+                                         @RequestParam("userId") Integer userId) {
         return projectService.queryAuthorizedProject(loginUser, userId);
     }
 
@@ -274,7 +271,7 @@ public class ProjectController extends BaseController {
     @ResponseStatus(HttpStatus.OK)
     @ApiException(QUERY_AUTHORIZED_PROJECT)
     public Result queryProjectWithAuthorizedLevel(@Parameter(hidden = true) @RequestAttribute(value = Constants.SESSION_USER) User loginUser,
-                                                  @RequestParam("userId") String userId) {
+                                                  @RequestParam("userId") Integer userId) {
         return projectService.queryProjectWithAuthorizedLevel(loginUser, userId);
     }
 

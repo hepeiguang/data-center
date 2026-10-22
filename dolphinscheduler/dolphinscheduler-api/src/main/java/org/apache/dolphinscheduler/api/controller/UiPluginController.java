@@ -17,17 +17,19 @@
 
 package org.apache.dolphinscheduler.api.controller;
 
+import static org.apache.dolphinscheduler.api.enums.Status.QUERY_PLUGINS_ERROR;
+import static org.apache.dolphinscheduler.api.enums.Status.VERSION_INFO_STATE_ERROR;
+
+import org.apache.dolphinscheduler.api.dto.ProductInfoDto;
 import org.apache.dolphinscheduler.api.exceptions.ApiException;
 import org.apache.dolphinscheduler.api.service.UiPluginService;
-import org.apache.dolphinscheduler.api.service.YunheziService;
 import org.apache.dolphinscheduler.api.utils.Result;
-import org.apache.dolphinscheduler.api.vo.DbTypeVo;
 import org.apache.dolphinscheduler.common.constants.Constants;
 import org.apache.dolphinscheduler.common.enums.PluginType;
+import org.apache.dolphinscheduler.dao.entity.PluginDefine;
 import org.apache.dolphinscheduler.dao.entity.User;
 
 import java.util.List;
-import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -45,8 +47,6 @@ import io.swagger.v3.oas.annotations.Parameters;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
-import static org.apache.dolphinscheduler.api.enums.Status.*;
-
 /**
  * ui plugin controller
  * Some plugins (such as alert plugin) need to provide UI interfaces to users.
@@ -60,8 +60,6 @@ public class UiPluginController extends BaseController {
 
     @Autowired
     UiPluginService uiPluginService;
-    @Autowired
-    YunheziService yunheziService;
 
     @Operation(summary = "queryUiPluginsByType", description = "QUERY_UI_PLUGINS_BY_TYPE")
     @Parameters({
@@ -70,11 +68,10 @@ public class UiPluginController extends BaseController {
     @GetMapping(value = "/query-by-type")
     @ResponseStatus(HttpStatus.CREATED)
     @ApiException(QUERY_PLUGINS_ERROR)
-    public Result queryUiPluginsByType(@Parameter(hidden = true) @RequestAttribute(value = Constants.SESSION_USER) User loginUser,
-                                       @RequestParam(value = "pluginType") PluginType pluginType) {
-
-        Map<String, Object> result = uiPluginService.queryUiPluginsByType(pluginType);
-        return returnDataList(result);
+    public Result<List<PluginDefine>> queryUiPluginsByType(@Parameter(hidden = true) @RequestAttribute(value = Constants.SESSION_USER) User loginUser,
+                                                           @RequestParam(value = "pluginType") PluginType pluginType) {
+        List<PluginDefine> pluginDefines = uiPluginService.queryUiPluginsByType(pluginType);
+        return Result.success(pluginDefines);
     }
 
     @Operation(summary = "queryUiPluginDetailById", description = "QUERY_UI_PLUGIN_DETAIL_BY_ID")
@@ -84,25 +81,18 @@ public class UiPluginController extends BaseController {
     @GetMapping(value = "/{id}")
     @ResponseStatus(HttpStatus.CREATED)
     @ApiException(QUERY_PLUGINS_ERROR)
-    public Result queryUiPluginDetailById(@Parameter(hidden = true) @RequestAttribute(value = Constants.SESSION_USER) User loginUser,
-                                          @PathVariable("id") Integer pluginId) {
-
-        Map<String, Object> result = uiPluginService.queryUiPluginDetailById(pluginId);
-        return returnDataList(result);
+    public Result<PluginDefine> queryUiPluginDetailById(@Parameter(hidden = true) @RequestAttribute(value = Constants.SESSION_USER) User loginUser,
+                                                        @PathVariable("id") Integer pluginId) {
+        PluginDefine pluginDefine = uiPluginService.queryUiPluginDetailById(pluginId);
+        return Result.success(pluginDefine);
     }
 
-    @GetMapping(value = "/yunhezi/versionTypes")
+    @Operation(summary = "queryProductInfo", description = "QUERY_PRODUCT_INFO")
+    @GetMapping(value = "/query-product-info")
     @ResponseStatus(HttpStatus.OK)
-    @ApiException(GET_YUNHEZI_VERSION_TYPE_ERROR)
-    public Result getVersionTypes() {
-        List<String> versionTypeMap = yunheziService.getVersionTypeList();
-        return Result.success(versionTypeMap);
-    }
-
-    @GetMapping(value = "/yunhezi/rootDir")
-    @ResponseStatus(HttpStatus.OK)
-    @ApiException(GET_YUNHEZI_ROOT_ERROR)
-    public Result getRootDir(@RequestParam(value = "version") String version) {
-        return Result.success(yunheziService.getParmeterMap(version));
+    @ApiException(VERSION_INFO_STATE_ERROR)
+    public Result<ProductInfoDto> queryProductInfo() {
+        ProductInfoDto result = uiPluginService.queryProductInfo();
+        return Result.success(result);
     }
 }

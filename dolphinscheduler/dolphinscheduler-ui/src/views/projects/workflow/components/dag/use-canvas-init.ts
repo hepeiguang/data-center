@@ -22,7 +22,6 @@ import { NODE, EDGE, X6_NODE_NAME, X6_EDGE_NAME } from './dag-config'
 import { debounce } from 'lodash'
 import { useResizeObserver } from '@vueuse/core'
 import ContextMenuTool from './dag-context-menu'
-import { types } from '@/utils/typeEdgeType.js'
 
 interface Options {
   readonly: Ref<boolean>
@@ -63,7 +62,6 @@ export function useCanvasInit(options: Options) {
         min: 0.2,
         max: 2
       },
-      resizing: true,
       mousewheel: {
         enabled: true,
         modifiers: ['ctrl', 'meta']
@@ -72,24 +70,6 @@ export function useCanvasInit(options: Options) {
       grid: {
         size: 10,
         visible: true
-      },
-      embedding: {
-        enabled: true,
-        findParent({ node }) {
-          if (node && node.data && node.data.taskType && (node.data.taskType.indexOf('_SOURCE') > 0 || node.data.taskType.indexOf('_SINK') > 0 || node.data.taskType.indexOf('_TRANSFORM') > 0)) {
-            const bbox = node.getBBox()
-            return this.getNodes().filter((node) => {
-              const data = node.getData()
-              if (data && data.parent) {
-                const targetBBox = node.getBBox()
-                return bbox.isIntersectWithRect(targetBBox)
-              }
-              return false
-            })
-
-          }
-          return false
-        }
       },
       snapline: true,
       minimap: {
@@ -156,7 +136,7 @@ export function useCanvasInit(options: Options) {
             line: {
               strokeDasharray:
                 sourceData.taskExecuteType === 'STREAM' ||
-                  targetData.taskExecuteType === 'STREAM'
+                targetData.taskExecuteType === 'STREAM'
                   ? '5 5'
                   : 'none'
             }
@@ -190,17 +170,7 @@ export function useCanvasInit(options: Options) {
   onMounted(() => {
     graph.value = graphInit()
     // Make sure the edge starts with node, not port
-    // llxl
     graph.value.on('edge:connected', ({ isNew, edge }) => {
-      const rightNode = graph.value?.getCellById(edge.target?.cell)
-      if (rightNode && rightNode.data && rightNode.data.taskType && types[rightNode.data.taskType]) {
-        const leftNode = graph.value?.getCellById(edge.source?.cell)
-        if (!types[rightNode.data.taskType].includes(leftNode.data.taskType)) {
-          graph.value?.removeCells([edge])
-          window.$message.error(`${rightNode.data.taskName}算子左侧不支持${leftNode?.data.taskName}算子`)
-          return
-        }
-      }
       if (isNew) {
         const sourceNode = edge.getSourceNode() as Node
         edge.setSource(sourceNode)
@@ -238,107 +208,6 @@ export function useCanvasInit(options: Options) {
     graph.value.on('node:mouseleave', ({ node }) => {
       node.removeTool('button')
     })
-
-    let ctrlPressed = false
-    const embedPadding = 20
-
-    graph.value.on('node:embedding', ({ e }: { e: JQuery.MouseMoveEvent }) => {
-      ctrlPressed = e.metaKey || e.ctrlKey
-    })
-
-    graph.value.on('node:embedded', () => {
-      ctrlPressed = false
-    })
-
-    graph.value.on('node:change:size', ({ node, options }) => {
-      if (options.skipParentHandler) {
-        return
-      }
-
-      const children = node.getChildren()
-      if (children && children.length) {
-        node.prop('originSize', node.getSize())
-      }
-    })
-
-    graph.value.on('node:change:position', ({ node, options }) => {
-      if (options.skipParentHandler || ctrlPressed) {
-        return
-      }
-
-      const children = node.getChildren()
-      if (children && children.length) {
-        node.prop('originPosition', node.getPosition())
-      }
-
-      const parent = node.getParent()
-      if (parent && parent.isNode()) {
-        let originSize = parent.prop('originSize')
-        if (originSize == null) {
-          originSize = parent.getSize()
-          parent.prop('originSize', originSize)
-        }
-
-        let originPosition = parent.prop('originPosition')
-        if (originPosition == null) {
-          originPosition = parent.getPosition()
-          parent.prop('originPosition', originPosition)
-        }
-
-        let x = originPosition.x
-        let y = originPosition.y
-        let cornerX = originPosition.x + originSize.width
-        let cornerY = originPosition.y + originSize.height
-        let hasChange = false
-
-        const children = parent.getChildren()
-        if (children) {
-          children.forEach((child) => {
-            const bbox = child.getBBox().inflate(embedPadding)
-            const corner = bbox.getCorner()
-
-            if (bbox.x < x) {
-              x = bbox.x
-              hasChange = true
-            }
-
-            if (bbox.y < y) {
-              y = bbox.y
-              hasChange = true
-            }
-
-            if (corner.x > cornerX) {
-              cornerX = corner.x
-              hasChange = true
-            }
-
-            if (corner.y > cornerY) {
-              cornerY = corner.y
-              hasChange = true
-            }
-          })
-        }
-
-        if (hasChange) {
-          parent.prop(
-            {
-              position: { x, y },
-              size: { width: cornerX - x, height: cornerY - y },
-            },
-            { skipParentHandler: true },
-          )
-        }
-      }
-    })
-
-    graph.value.on('node:change:parent', ({ node, current, previous, options }) => {
-      console.log('节点父级变化:', {
-        node: node.id,           // 当前节点
-        currentParent: current ? current.id : null,  // 新的父节点（群组）
-        previousParent: previous ? previous.id : null, // 之前的父节点
-        options                 // 操作选项
-      });
-    });
   })
 
   /**

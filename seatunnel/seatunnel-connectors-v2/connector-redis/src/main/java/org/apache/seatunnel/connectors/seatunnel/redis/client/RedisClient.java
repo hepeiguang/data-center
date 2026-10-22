@@ -20,6 +20,7 @@ package org.apache.seatunnel.connectors.seatunnel.redis.client;
 import org.apache.seatunnel.api.table.type.RowKind;
 import org.apache.seatunnel.connectors.seatunnel.redis.config.RedisDataType;
 import org.apache.seatunnel.connectors.seatunnel.redis.config.RedisParameters;
+import org.apache.seatunnel.connectors.seatunnel.redis.config.RedisTableConfig;
 
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.params.ScanParams;
@@ -30,7 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public abstract class RedisClient extends Jedis {
+public abstract class RedisClient {
 
     protected final RedisParameters redisParameters;
 
@@ -62,14 +63,14 @@ public abstract class RedisClient extends Jedis {
         if (redisVersion <= REDIS_5) {
             return scanOnRedis5(cursor, scanParams, type);
         } else {
-            return jedis.scan(cursor, scanParams, type.name());
+            return scanKeyResult(cursor, scanParams, type);
         }
     }
 
     // When the version is earlier than redis5, scan command does not support type
     private ScanResult<String> scanOnRedis5(
             String cursor, ScanParams scanParams, RedisDataType type) {
-        ScanResult<String> scanResult = jedis.scan(cursor, scanParams);
+        ScanResult<String> scanResult = scanKeyResult(cursor, scanParams, null);
         String resultCursor = scanResult.getCursor();
         List<String> keys = scanResult.getResult();
         List<String> typeKeys = new ArrayList<>(keys.size());
@@ -82,13 +83,23 @@ public abstract class RedisClient extends Jedis {
         return new ScanResult<>(resultCursor, typeKeys);
     }
 
+    public void close() {
+        if (jedis != null) {
+            jedis.close();
+        }
+    }
+
+    public abstract ScanResult<String> scanKeyResult(
+            String cursor, ScanParams scanParams, RedisDataType type);
+
     public abstract List<String> batchGetString(List<String> keys);
 
     public abstract List<List<String>> batchGetList(List<String> keys);
 
     public abstract List<Set<String>> batchGetSet(List<String> keys);
 
-    public abstract List<Map<String, String>> batchGetHash(List<String> keys);
+    public abstract List<Map<String, String>> batchGetHash(
+            List<String> keys, RedisTableConfig tableConfig);
 
     public abstract List<List<String>> batchGetZset(List<String> keys);
 

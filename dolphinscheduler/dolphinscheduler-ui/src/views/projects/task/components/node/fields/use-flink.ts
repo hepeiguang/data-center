@@ -151,7 +151,7 @@ export function useFlink(model: { [field: string]: any }): IJsonItem[] {
       span: 24
     },
     {
-      type: 'mirror',
+      type: 'editor',
       field: 'initScript',
       span: scriptSpan,
       name: t('project.node.init_script'),
@@ -159,13 +159,10 @@ export function useFlink(model: { [field: string]: any }): IJsonItem[] {
         trigger: ['input', 'trigger'],
         required: false,
         message: t('project.node.init_script_tips')
-      },
-      props: {
-        language: 'sql',
       }
     },
     {
-      type: 'mirror',
+      type: 'editor',
       field: 'rawScript',
       span: scriptSpan,
       name: t('project.node.script'),
@@ -213,7 +210,7 @@ export function useFlink(model: { [field: string]: any }): IJsonItem[] {
           if (!Number.isInteger(parseInt(value))) {
             return new Error(
               t('project.node.job_manager_memory_tips') +
-              t('project.node.positive_integer_tips')
+                t('project.node.positive_integer_tips')
             )
           }
         }
@@ -236,7 +233,7 @@ export function useFlink(model: { [field: string]: any }): IJsonItem[] {
           if (!Number.isInteger(parseInt(value))) {
             return new Error(
               t('project.node.task_manager_memory') +
-              t('project.node.positive_integer_tips')
+                t('project.node.positive_integer_tips')
             )
           }
         }

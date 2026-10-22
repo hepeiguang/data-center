@@ -17,8 +17,18 @@
 
 package org.apache.seatunnel.e2e.connector.paimon;
 
+import org.apache.seatunnel.connectors.seatunnel.paimon.config.PaimonBaseOptions;
 import org.apache.seatunnel.e2e.common.container.seatunnel.SeaTunnelContainer;
-import org.apache.seatunnel.e2e.common.util.ContainerUtil;
+
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.paimon.catalog.CatalogContext;
+import org.apache.paimon.catalog.CatalogFactory;
+import org.apache.paimon.catalog.Identifier;
+import org.apache.paimon.fs.FileIO;
+import org.apache.paimon.fs.ResolvingFileIO;
+import org.apache.paimon.privilege.FileBasedPrivilegeManagerLoader;
+import org.apache.paimon.privilege.PrivilegeType;
+import org.apache.paimon.privilege.PrivilegedCatalog;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
@@ -26,41 +36,124 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.testcontainers.containers.Container;
+import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.MinIOContainer;
+import org.testcontainers.utility.DockerImageName;
 
 import io.minio.BucketExistsArgs;
 import io.minio.MakeBucketArgs;
 import io.minio.MinioClient;
 
-import java.nio.file.Paths;
-import java.util.Map;
+import java.io.IOException;
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class PaimonWithS3IT extends SeaTunnelContainer {
 
-    private static final String MINIO_DOCKER_IMAGE = "minio/minio:RELEASE.2024-06-13T22-53-53Z";
+    // Docker Hub's minio/minio repository no longer serves anonymous/unauthenticated pulls
+    // ("pull access denied ... repository does not exist or may require 'docker login'"); quay.io
+    // is
+    // MinIO's own registry and mirrors the same tags publicly.
+    private static final String MINIO_DOCKER_IMAGE =
+            "quay.io/minio/minio:RELEASE.2024-06-13T22-53-53Z";
     private static final String HOST = "minio";
     private static final int MINIO_PORT = 9000;
     private static final String MINIO_USER_NAME = "minio";
     private static final String MINIO_USER_PASSWORD = "miniominio";
 
     private static final String BUCKET = "test";
+    private static final String PRIVILEGE_BUCKET = "privilegetest";
 
     private MinIOContainer container;
     private MinioClient minioClient;
 
-    private Map<String, Object> PAIMON_SINK_PROPERTIES;
+    private String warehouse = "s3a://privilegetest/";
+    private String rootUser = "root";
+    private String rootPassword = "123456";
+    private String paimonUser = "paimon";
+    private String paimonUserPassword = "123456";
 
-    protected static final String AWS_SDK_DOWNLOAD =
-            "https://repo1.maven.org/maven2/com/amazonaws/aws-java-sdk-bundle/1.11.271/aws-java-sdk-bundle-1.11.271.jar";
-    protected static final String HADOOP_AWS_DOWNLOAD =
-            "https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-aws/3.1.4/hadoop-aws-3.1.4.jar";
+    private PrivilegedCatalog privilegedCatalog;
+    private final String DATABASE_NAME = "seatunnel_namespace11";
+    private final String TABLE_NAME = "st_test";
+
+    /**
+     * Upper bound for a single {@link #executeJob(String)} call in this class.
+     *
+     * <p>Sized off measured behaviour, not guessed: a green run of this class completes all four
+     * tests — eight job submissions — in about 120 seconds, so a single submission normally costs
+     * roughly 15 seconds. Five minutes leaves an order of magnitude of headroom for a slow or
+     * contended runner while still bounding a hang.
+     */
+    private static final Duration JOB_EXECUTION_TIMEOUT = Duration.ofMinutes(5);
+
+    /**
+     * Bounds every job submission in this class so a job that never returns fails the test in
+     * minutes instead of stalling until the workflow's 180-minute limit.
+     *
+     * <p>This is containment, not a fix. A job cancelled by Paimon's privilege check can leave the
+     * {@code seatunnel.sh} client blocked forever (#11679); when that happens the JUnit thread
+     * parks inside the container exec and the whole {@code paimon-connector-it} job burns a full
+     * runner slot with no {@code Tests run:} line ever printed, which is both expensive and hard to
+     * read. Bounding it converts that into an ordinary, diagnosable test failure — and makes #11679
+     * tractable, since measuring how often the hang reproduces is only affordable once a recurrence
+     * costs minutes.
+     *
+     * <p>Overriding rather than wrapping the eight call sites keeps the bound a property of the
+     * class: a job submission added later is bounded without anyone having to remember to wrap it.
+     *
+     * <p>Three consequences of the timeout path, all confined to the already-abnormal case:
+     *
+     * <ol>
+     *   <li><b>The worker thread stays parked.</b> {@code assertTimeoutPreemptively} does call
+     *       {@code ExecutorService#shutdownNow()}, which interrupts the worker — but the worker is
+     *       blocked in a container exec, i.e. a blocking socket read against the Docker daemon,
+     *       which does not respond to interruption. So the thread survives until the JVM exits.
+     *       That is acceptable: the point is to free the test run and the runner slot, not the
+     *       thread. It also does not hold the JVM open — JUnit's {@code junit-timeout-thread-N} is
+     *       non-daemon, but the Failsafe forked JVM terminates through {@code ForkedBooter}'s
+     *       explicit {@code System.exit}/{@code Runtime.halt}, so a lingering worker cannot stall
+     *       shutdown.
+     *   <li><b>The inherited thread-leak check goes quiet for the rest of the class.</b> {@link
+     *       SeaTunnelContainer} increments a shared {@code runningCount} before the exec and only
+     *       runs its post-job thread-leak assertion when the matching decrement reaches zero. An
+     *       abandoned worker never reaches that decrement, and because this class is {@link
+     *       TestInstance.Lifecycle#PER_CLASS} the counter is shared, so every later submission in
+     *       the run sees a non-zero count and skips the check. This is not a regression — today a
+     *       hang means the later tests never execute at all — but a maintainer chasing a stale
+     *       thread report on this class after a timeout should know the signal was suppressed.
+     *   <li><b>Teardown races the abandoned exec.</b> {@code @AfterAll} closes the same container
+     *       the parked thread is still reading from, which can produce noisy teardown logging.
+     * </ol>
+     */
+    @Override
+    public Container.ExecResult executeJob(String confFile)
+            throws IOException, InterruptedException {
+        return Assertions.assertTimeoutPreemptively(
+                JOB_EXECUTION_TIMEOUT,
+                () -> super.executeJob(confFile),
+                () ->
+                        "Job "
+                                + confFile
+                                + " did not return within "
+                                + JOB_EXECUTION_TIMEOUT.toMinutes()
+                                + " minutes. The cluster may have reached a terminal state without"
+                                + " the seatunnel.sh client observing it - see"
+                                + " https://github.com/apache/seatunnel/issues/11679");
+    }
 
     @Override
     @BeforeAll
     public void startUp() throws Exception {
         container =
-                new MinIOContainer(MINIO_DOCKER_IMAGE)
+                // MinIOContainer validates its image name is a recognized substitute for
+                // "minio/minio"; the quay.io mirror needs an explicit compatibility declaration
+                // or Testcontainers rejects it with IllegalStateException at startup.
+                new MinIOContainer(
+                                DockerImageName.parse(MINIO_DOCKER_IMAGE)
+                                        .asCompatibleSubstituteFor("minio/minio"))
                         .withNetwork(NETWORK)
                         .withNetworkAliases(HOST)
                         .withUserName(MINIO_USER_NAME)
@@ -79,10 +172,24 @@ public class PaimonWithS3IT extends SeaTunnelContainer {
 
         // create bucket
         minioClient.makeBucket(MakeBucketArgs.builder().bucket(BUCKET).build());
+        minioClient.makeBucket(MakeBucketArgs.builder().bucket(PRIVILEGE_BUCKET).build());
 
         BucketExistsArgs existsArgs = BucketExistsArgs.builder().bucket(BUCKET).build();
         Assertions.assertTrue(minioClient.bucketExists(existsArgs));
+        BucketExistsArgs privExistsArgs =
+                BucketExistsArgs.builder().bucket(PRIVILEGE_BUCKET).build();
+        Assertions.assertTrue(minioClient.bucketExists(privExistsArgs));
+
+        initPrivilege();
+
         super.startUp();
+    }
+
+    @Override
+    protected void executeExtraCommands(GenericContainer<?> server)
+            throws IOException, InterruptedException {
+        super.executeExtraCommands(server);
+        PaimonDependencies.addS3To(server, SEATUNNEL_HOME + "lib");
     }
 
     @Override
@@ -92,26 +199,6 @@ public class PaimonWithS3IT extends SeaTunnelContainer {
         if (container != null) {
             container.close();
         }
-    }
-
-    @Override
-    protected String[] buildStartCommand() {
-        return new String[] {
-            "bash",
-            "-c",
-            "wget -P "
-                    + SEATUNNEL_HOME
-                    + "lib "
-                    + AWS_SDK_DOWNLOAD
-                    + " &&"
-                    + "wget -P "
-                    + SEATUNNEL_HOME
-                    + "lib "
-                    + HADOOP_AWS_DOWNLOAD
-                    + " &&"
-                    + ContainerUtil.adaptPathForWin(
-                            Paths.get(SEATUNNEL_HOME, "bin", SERVER_SHELL).toString())
-        };
     }
 
     @Override
@@ -138,5 +225,100 @@ public class PaimonWithS3IT extends SeaTunnelContainer {
 
         Container.ExecResult readResult = executeJob("/fake_2_paimon_with_s3_to_assert.conf");
         Assertions.assertEquals(0, readResult.getExitCode());
+    }
+
+    private void initPrivilege() {
+        org.apache.paimon.options.Options catalogOptions = new org.apache.paimon.options.Options();
+        catalogOptions.set(PaimonBaseOptions.WAREHOUSE.key(), warehouse);
+        catalogOptions.set("fs.s3a.endpoint", container.getS3URL());
+        catalogOptions.set("fs.s3a.access-key", MINIO_USER_NAME);
+        catalogOptions.set("fs.s3a.secret-key", MINIO_USER_PASSWORD);
+        catalogOptions.set("fs.s3a.buffer.dir", "/tmp/s3abuffer");
+        catalogOptions.set("fs.s3a.change.detection.mode", "NONE");
+        catalogOptions.set("fs.s3a.change.detection.version.required", "false");
+        catalogOptions.set("fs.s3a.path.style.access", "true");
+        catalogOptions.set(
+                "fs.s3a.aws.credentials.provider",
+                "org.apache.hadoop.fs.s3a.SimpleAWSCredentialsProvider");
+        final CatalogContext catalogContext = CatalogContext.create(catalogOptions);
+
+        FileIO fileIO = new ResolvingFileIO();
+        fileIO.configure(catalogContext);
+
+        privilegedCatalog =
+                new PrivilegedCatalog(
+                        CatalogFactory.createCatalog(catalogContext),
+                        new FileBasedPrivilegeManagerLoader(
+                                warehouse, fileIO, rootUser, rootPassword));
+        if (!privilegedCatalog.privilegeManager().privilegeEnabled()) {
+            privilegedCatalog.privilegeManager().initializePrivilege(rootPassword);
+        }
+
+        // create user and grant privilege on table
+        privilegedCatalog.privilegeManager().createUser(paimonUser, paimonUserPassword);
+        String fullTableName = Identifier.create(DATABASE_NAME, TABLE_NAME).getFullName();
+        privilegedCatalog.privilegeManager().grant(paimonUser, "", PrivilegeType.CREATE_DATABASE);
+        privilegedCatalog
+                .privilegeManager()
+                .grant(paimonUser, DATABASE_NAME, PrivilegeType.DROP_DATABASE);
+        privilegedCatalog
+                .privilegeManager()
+                .grant(paimonUser, fullTableName, PrivilegeType.DROP_TABLE);
+        privilegedCatalog
+                .privilegeManager()
+                .grant(paimonUser, DATABASE_NAME, PrivilegeType.CREATE_TABLE);
+    }
+
+    private void grantPrivilege(List<PrivilegeType> privilegeTypes) {
+        String fullTableName = Identifier.create(DATABASE_NAME, TABLE_NAME).getFullName();
+        if (!CollectionUtils.isEmpty(privilegeTypes)) {
+            for (PrivilegeType type : privilegeTypes) {
+                privilegedCatalog.privilegeManager().grant(paimonUser, fullTableName, type);
+            }
+        }
+    }
+
+    private void revokePrivilege(List<PrivilegeType> privilegeTypes) {
+        String fullTableName = Identifier.create(DATABASE_NAME, TABLE_NAME).getFullName();
+        if (!CollectionUtils.isEmpty(privilegeTypes)) {
+            for (PrivilegeType type : privilegeTypes) {
+                privilegedCatalog.privilegeManager().revoke(paimonUser, fullTableName, type);
+            }
+        }
+    }
+
+    /** User not grant read privilege read data test cases for the Paimon table. */
+    @Test
+    public void privilegeEnabledPaimonSourceAuthorized() throws Exception {
+        List<PrivilegeType> privilegeTypes = new ArrayList<>();
+        privilegeTypes.add(PrivilegeType.SELECT);
+        privilegeTypes.add(PrivilegeType.INSERT);
+        grantPrivilege(privilegeTypes);
+        // fake to paimon
+        Container.ExecResult execResult = executeJob("/fake_to_paimon_with_s3_with_privilege.conf");
+        Assertions.assertEquals(0, execResult.getExitCode());
+
+        // paimon to paimon
+        Container.ExecResult execResult1 =
+                executeJob("/paimon_to_paimon_with_s3_with_privilege.conf");
+        Assertions.assertEquals(0, execResult1.getExitCode());
+        revokePrivilege(privilegeTypes);
+    }
+
+    /** User not grant read privilege read data test cases for the Paimon table. */
+    @Test
+    public void privilegeEnabledPaimonSourceUnAuthorized() throws Exception {
+        List<PrivilegeType> privilegeTypes = new ArrayList<>();
+        privilegeTypes.add(PrivilegeType.INSERT);
+        grantPrivilege(privilegeTypes);
+        // fake to paimon
+        Container.ExecResult execResult = executeJob("/fake_to_paimon_with_s3_with_privilege.conf");
+        Assertions.assertEquals(0, execResult.getExitCode());
+
+        // paimon to paimon
+        Container.ExecResult execResult1 =
+                executeJob("/paimon_to_paimon_with_s3_with_privilege.conf");
+        Assertions.assertEquals(1, execResult1.getExitCode());
+        revokePrivilege(privilegeTypes);
     }
 }

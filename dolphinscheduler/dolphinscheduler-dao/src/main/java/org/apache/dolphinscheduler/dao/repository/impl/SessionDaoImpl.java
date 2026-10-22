@@ -37,12 +37,12 @@ public class SessionDaoImpl extends BaseDao<Session, SessionMapper> implements S
         super(sessionMapper);
     }
 
-    public void deleteByUserId(String userId) {
+    public void deleteByUserId(Integer userId) {
         mybatisMapper.delete(new QueryWrapper<>(Session.builder().userId(userId).build()));
     }
 
     @Override
-    public List<Session> queryByUserId(String userId) {
+    public List<Session> queryByUserId(Integer userId) {
         return mybatisMapper.selectList(new QueryWrapper<>(Session.builder().userId(userId).build()));
     }
 

@@ -33,22 +33,12 @@ export function useUpload(state: any) {
 
     if (state.saving) return
     state.saving = true
-
     try {
       const formData = new FormData()
       formData.append('file', state.uploadForm.file)
       formData.append('type', state.uploadForm.type)
       formData.append('name', state.uploadForm.name)
       formData.append('description', state.uploadForm.description)
-
-      //增加一个参数，用于显示具体的类型
-      if (state.uploadForm.type === 'UDF'){
-        formData.append('customType', state.uploadForm.customType)
-      }
-      if (state.uploadForm.type === 'FILE') {
-        formData.append('customType', 'FILE')
-      }
-
 
       if (state.uploadForm.isReupload) {
         formData.append('user_name', state.uploadForm.user_name)

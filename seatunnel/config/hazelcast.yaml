@@ -29,7 +29,7 @@ hazelcast:
       tcp-ip:
         enabled: true
         member-list:
-          - seatunnel-master:5801
+          - localhost
     port:
       auto-increment: false
       port: 5801

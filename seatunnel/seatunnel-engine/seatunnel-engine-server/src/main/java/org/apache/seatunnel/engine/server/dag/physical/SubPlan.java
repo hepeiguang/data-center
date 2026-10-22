@@ -17,6 +17,7 @@
 
 package org.apache.seatunnel.engine.server.dag.physical;
 
+import org.apache.seatunnel.api.common.multitable.MultiTableFailureHelper;
 import org.apache.seatunnel.api.options.EnvCommonOptions;
 import org.apache.seatunnel.common.utils.ExceptionUtils;
 import org.apache.seatunnel.common.utils.RetryUtils;
@@ -98,7 +99,7 @@ public class SubPlan {
 
     private PassiveCompletableFuture<Void> reSchedulerPipelineFuture;
 
-    private Integer pipelineRestoreNum;
+    private AtomicInteger pipelineRestoreNum;
 
     private final Object restoreLock = new Object();
 
@@ -125,7 +126,7 @@ public class SubPlan {
         this.pipelineFuture = new CompletableFuture<>();
         this.physicalVertexList = physicalVertexList;
         this.coordinatorVertexList = coordinatorVertexList;
-        pipelineRestoreNum = 0;
+        pipelineRestoreNum = new AtomicInteger();
         pipelineMaxRestoreNum =
                 Integer.parseInt(
                         jobImmutableInformation
@@ -289,7 +290,9 @@ public class SubPlan {
     }
 
     private boolean checkNeedRestore(PipelineStatus pipelineStatus) {
-        return canRestorePipeline() && !PipelineStatus.FINISHED.equals(pipelineStatus);
+        return canRestorePipeline()
+                && !PipelineStatus.FINISHED.equals(pipelineStatus)
+                && !MultiTableFailureHelper.isIsolatedFailure(errorByPhysicalVertex.get());
     }
 
     /** only call when the pipeline will never restart */
@@ -307,6 +310,8 @@ public class SubPlan {
         try {
             RetryUtils.retryWithException(
                     () -> {
+                        jobMaster.enqueuePipelineCleanupIfNeeded(
+                                getPipelineLocation(), pipelineStatus);
                         jobMaster.savePipelineMetricsToHistory(getPipelineLocation());
                         try {
                             jobMaster.removeMetricsContext(getPipelineLocation(), pipelineStatus);
@@ -340,6 +345,13 @@ public class SubPlan {
     public synchronized void updatePipelineState(@NonNull PipelineStatus targetState) {
         try {
             PipelineStatus current = (PipelineStatus) runningJobStateIMap.get(pipelineLocation);
+            if (current == null) {
+                log.warn(
+                        "{} current state is null, skip transition to {}",
+                        pipelineFullName,
+                        targetState);
+                return;
+            }
             log.debug(
                     String.format(
                             "Try to update the %s state from %s to %s",
@@ -367,7 +379,9 @@ public class SubPlan {
             RetryUtils.retryWithException(
                     () -> {
                         updateStateTimestamps(finalTargetState);
-                        runningJobStateIMap.set(pipelineLocation, finalTargetState);
+                        if (runningJobStateIMap.get(pipelineLocation) != null) {
+                            runningJobStateIMap.set(pipelineLocation, finalTargetState);
+                        }
                         return null;
                     },
                     new RetryUtils.RetryMaterial(
@@ -396,6 +410,12 @@ public class SubPlan {
         }
     }
 
+    public void forceStopPipeline() {
+        jobMaster.neverNeedRestore();
+        coordinatorVertexList.forEach(PhysicalVertex::forceStop);
+        physicalVertexList.forEach(PhysicalVertex::forceStop);
+    }
+
     private void cancelCheckpointCoordinator() {
         if (jobMaster.getCheckpointManager() != null) {
             jobMaster.getCheckpointManager().cancelCheckpoint(pipelineId).join();
@@ -418,6 +438,13 @@ public class SubPlan {
         // we must update runningJobStateTimestampsIMap first and then can update
         // runningJobStateIMap
         Long[] stateTimestamps = runningJobStateTimestampsIMap.get(pipelineLocation);
+        if (stateTimestamps == null) {
+            log.warn(
+                    "{} state timestamps have already been cleaned, skip persisting transition to {}",
+                    pipelineFullName,
+                    targetState);
+            return;
+        }
         stateTimestamps[targetState.ordinal()] = System.currentTimeMillis();
         runningJobStateTimestampsIMap.set(pipelineLocation, stateTimestamps);
     }
@@ -462,7 +489,7 @@ public class SubPlan {
     private boolean prepareRestorePipeline() {
         synchronized (restoreLock) {
             try {
-                pipelineRestoreNum++;
+                pipelineRestoreNum.getAndIncrement();
                 log.info(
                         String.format(
                                 "Restore time %s, pipeline %s",
@@ -500,6 +527,22 @@ public class SubPlan {
                     e);
             makePipelineFailing(e);
             startSubPlanStateProcess();
+        }
+    }
+
+    public void stopPipelineWithCheckpointFallback() {
+        if (jobMaster.getCheckpointManager() == null) {
+            forceStopPipeline();
+            return;
+        }
+        if (jobMaster.getCheckpointManager().isCompletedPipeline(pipelineId)) {
+            forcePipelineFinish();
+        } else {
+            log.warn(
+                    "Failed to stop the pipeline gracefully. Falling back to forced stop: {}",
+                    pipelineFullName);
+            cancelCheckpointCoordinator();
+            forceStopPipeline();
         }
     }
 
@@ -590,7 +633,7 @@ public class SubPlan {
     }
 
     public int getPipelineRestoreNum() {
-        return pipelineRestoreNum;
+        return pipelineRestoreNum.get();
     }
 
     public void handleCheckpointError() {
@@ -625,11 +668,33 @@ public class SubPlan {
                 break;
             case SCHEDULED:
                 try {
-                    ResourceUtils.applyResourceForPipeline(jobMaster, this);
+                    Map<TaskGroupLocation, SlotProfile> slotProfiles =
+                            ResourceUtils.applyResourceForPipeline(jobMaster, this);
                     log.debug(
                             "slotProfiles: {}, PipelineLocation: {}",
                             slotProfiles,
                             this.getPipelineLocation());
+
+                    // Log task execution locations for the entire pipeline
+                    if (slotProfiles != null && !slotProfiles.isEmpty()) {
+                        log.info(
+                                "Resource allocation for pipeline {} completed. Task execution locations:",
+                                getPipelineFullName());
+                        slotProfiles.forEach(
+                                (taskLocation, slotProfile) -> {
+                                    if (slotProfile != null) {
+                                        log.info(
+                                                "  Task [{}] will be executed on worker [{}], slotID [{}], resourceProfile [{}], sequence [{}], assigned [{}]",
+                                                taskLocation,
+                                                slotProfile.getWorker(),
+                                                slotProfile.getSlotID(),
+                                                slotProfile.getResourceProfile(),
+                                                slotProfile.getSequence(),
+                                                slotProfile.getOwnerJobID());
+                                    }
+                                });
+                    }
+
                     updatePipelineState(PipelineStatus.DEPLOYING);
                 } catch (Exception e) {
                     makePipelineFailing(e);

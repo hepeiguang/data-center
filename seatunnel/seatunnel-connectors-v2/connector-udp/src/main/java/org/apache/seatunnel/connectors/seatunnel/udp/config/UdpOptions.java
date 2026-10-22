@@ -27,7 +27,7 @@ public class UdpOptions {
             Options.key("charset")
                     .stringType()
                     .defaultValue("UTF-8")
-                    .withDescription("udp server port.");
+                    .withDescription("charset for text format / reply payload");
     public static final Option<Boolean> REPLY_ENABLED =
             Options.key("replyEnabled")
                     .booleanType()
@@ -50,6 +50,13 @@ public class UdpOptions {
                     .enumType(UdpOptions.ParseMode.class)
                     .defaultValue(UdpOptions.ParseMode.none)
                     .withDescription("none | js | offset_table");
+
+    public static final Option<UdpOptions.ParseErrorHandleWay> PARSE_ERROR_HANDLE_WAY =
+            Options.key("parseErrorHandleWay")
+                    .enumType(UdpOptions.ParseErrorHandleWay.class)
+                    .defaultValue(UdpOptions.ParseErrorHandleWay.skip)
+                    .withDescription(
+                            "When codec parse fails: skip packet (default) or fail the job.");
 
     public static final Option<String> SCRIPT_PATH =
             Options.key("scriptPath")
@@ -76,12 +83,12 @@ public class UdpOptions {
                     .withDescription("Offset table JSON file path");
 
     public static final Option<Integer> MAX_RETRIES =
-            Options.key("maxNumRetries")
+            Options.key("maxRetries")
                     .intType()
                     .defaultValue(3)
                     .withDescription("发送消息最大尝试次数");
     public static final Option<Integer> TIMEOUT_MS =
-            Options.key("replyMessage")
+            Options.key("timeoutMs")
                     .intType()
                     .defaultValue(1000)
                     .withDescription("发送消息超时时间");
@@ -137,5 +144,12 @@ public class UdpOptions {
         none,
         js,
         offset_table
+    }
+
+    public enum ParseErrorHandleWay {
+        /** Log and drop the bad packet; keep receiving. */
+        skip,
+        /** Rethrow and fail the source reader / job. */
+        fail
     }
 }

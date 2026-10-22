@@ -21,7 +21,7 @@ import org.apache.dolphinscheduler.common.enums.AuthorizationType;
 import org.apache.dolphinscheduler.common.enums.UserType;
 import org.apache.dolphinscheduler.dao.entity.K8sNamespace;
 import org.apache.dolphinscheduler.dao.entity.User;
-import org.apache.dolphinscheduler.dao.mapper.K8sNamespaceMapper;
+import org.apache.dolphinscheduler.dao.repository.K8sNamespaceDao;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -47,7 +47,7 @@ public class K8sNamespaceResourcePermissionCheckTest {
     private ResourcePermissionCheckServiceImpl.K8sNamespaceResourcePermissionCheck k8sNamespaceResourcePermissionCheck;
 
     @Mock
-    private K8sNamespaceMapper k8sNamespaceMapper;
+    private K8sNamespaceDao k8sNamespaceDao;
 
     @Test
     public void testPermissionCheck() {
@@ -69,7 +69,7 @@ public class K8sNamespaceResourcePermissionCheckTest {
         ids.add(k8sNamespace.getId());
         List<K8sNamespace> k8sNamespaces = Arrays.asList(k8sNamespace);
 
-        Mockito.when(k8sNamespaceMapper.queryAuthedNamespaceListByUserId(user.getId())).thenReturn(k8sNamespaces);
+        Mockito.when(k8sNamespaceDao.queryAuthedNamespaceListByUserId(user.getId())).thenReturn(k8sNamespaces);
 
         Assertions.assertEquals(ids,
                 k8sNamespaceResourcePermissionCheck.listAuthorizedResourceIds(user.getId(), logger));
@@ -79,7 +79,7 @@ public class K8sNamespaceResourcePermissionCheckTest {
         User loginUser = new User();
         loginUser.setUserType(UserType.GENERAL_USER);
         loginUser.setUserName("test");
-        loginUser.setId("1");
+        loginUser.setId(1);
         return loginUser;
     }
 }

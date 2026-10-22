@@ -21,6 +21,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -46,9 +47,6 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
-/**
- * alert plugin instance controller test
- */
 public class AlertPluginInstanceControllerTest extends AbstractControllerTest {
 
     private static AlertPluginInstance alertPluginInstance = new AlertPluginInstance();
@@ -80,7 +78,7 @@ public class AlertPluginInstanceControllerTest extends AbstractControllerTest {
         paramsMap.add("pluginInstanceParams", pluginInstanceParams);
 
         when(alertPluginInstanceService.create(any(User.class), eq(pluginDefineId), eq(instanceName),
-                eq(pluginInstanceType), eq(warningType), eq(pluginInstanceParams))).thenReturn(alertPluginInstance);
+                eq(pluginInstanceParams))).thenReturn(alertPluginInstance);
 
         // When
         final MvcResult mvcResult = mockMvc.perform(post("/alert-plugin-instances")
@@ -104,7 +102,8 @@ public class AlertPluginInstanceControllerTest extends AbstractControllerTest {
         paramsMap.add("pluginDefineId", String.valueOf(pluginDefineId));
         paramsMap.add("pluginInstanceParams", pluginInstanceParams);
 
-        doNothing().when(alertPluginInstanceService).testSend(eq(pluginDefineId), eq(pluginInstanceParams));
+        doNothing().when(alertPluginInstanceService).testSend(any(User.class), eq(pluginDefineId),
+                eq(pluginInstanceParams));
 
         // When
         final MvcResult mvcResult = mockMvc.perform(post("/alert-plugin-instances/test-send")
@@ -119,6 +118,7 @@ public class AlertPluginInstanceControllerTest extends AbstractControllerTest {
                 JSONUtils.parseObject(mvcResult.getResponse().getContentAsString(), Result.class);
         assertThat(actualResponseContent.getMsg()).isEqualTo(expectResponseContent.getMsg());
         assertThat(actualResponseContent.getCode()).isEqualTo(expectResponseContent.getCode());
+        verify(alertPluginInstanceService).testSend(any(User.class), eq(pluginDefineId), eq(pluginInstanceParams));
     }
 
     @Test
@@ -131,7 +131,7 @@ public class AlertPluginInstanceControllerTest extends AbstractControllerTest {
         paramsMap.add("pluginInstanceParams", pluginInstanceParams);
 
         when(alertPluginInstanceService.updateById(any(User.class), eq(pluginDefineId), eq(instanceName),
-                eq(warningType), eq(pluginInstanceParams))).thenReturn(alertPluginInstance);
+                eq(pluginInstanceParams))).thenReturn(alertPluginInstance);
 
         // When
         final MvcResult mvcResult = mockMvc.perform(put("/alert-plugin-instances/{id}", pluginDefineId)
@@ -199,7 +199,7 @@ public class AlertPluginInstanceControllerTest extends AbstractControllerTest {
     @Test
     public void testGetAlertPluginInstanceList() throws Exception {
         // Given
-        when(alertPluginInstanceService.queryAll()).thenReturn(null);
+        when(alertPluginInstanceService.queryAll(any(User.class))).thenReturn(null);
 
         // When
         final MvcResult mvcResult = mockMvc.perform(get("/alert-plugin-instances/list")
@@ -222,7 +222,7 @@ public class AlertPluginInstanceControllerTest extends AbstractControllerTest {
         paramsMap.add("pluginDefineId", String.valueOf(pluginDefineId));
         paramsMap.add("alertInstanceName", instanceName);
 
-        when(alertPluginInstanceService.checkExistPluginInstanceName(eq(instanceName)))
+        when(alertPluginInstanceService.checkExistPluginInstanceName(any(User.class), eq(instanceName)))
                 .thenReturn(false);
 
         Result expectResponseContent = JSONUtils.parseObject(
@@ -250,7 +250,7 @@ public class AlertPluginInstanceControllerTest extends AbstractControllerTest {
         paramsMap.add("pluginDefineId", String.valueOf(pluginDefineId));
         paramsMap.add("alertInstanceName", instanceName);
 
-        when(alertPluginInstanceService.checkExistPluginInstanceName(eq(instanceName)))
+        when(alertPluginInstanceService.checkExistPluginInstanceName(any(User.class), eq(instanceName)))
                 .thenReturn(true);
 
         Result expectResponseContent = JSONUtils.parseObject(

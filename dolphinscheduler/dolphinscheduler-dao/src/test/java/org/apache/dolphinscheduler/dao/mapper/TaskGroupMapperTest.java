@@ -42,7 +42,7 @@ public class TaskGroupMapperTest extends BaseDaoTest {
         TaskGroup taskGroup = new TaskGroup();
         taskGroup.setName("task group");
         taskGroup.setId(1);
-        taskGroup.setUserId("1");
+        taskGroup.setUserId(1);
         taskGroup.setStatus(Flag.YES);
         taskGroup.setGroupSize(10);
         taskGroup.setDescription("this is a task group");

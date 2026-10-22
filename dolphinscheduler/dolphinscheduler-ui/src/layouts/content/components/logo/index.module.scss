@@ -16,13 +16,9 @@
  */
 
 .logo {
-  display: flex;
-  width: 265px;
+  width: 180px;
   height: 100%;
-  align-items: center;
   margin-left: 12px;
-  font-size: 24px;
-  font-weight: 700;
 }
 
 .logo-dark {
@@ -30,6 +26,5 @@
 }
 
 .logo-light {
-  background: url('../../../../assets/images/logo1.png') 100% no-repeat;
-  // background: url('../../../../assets/images/logo-light.svg') 100% no-repeat;
+  background: url('../../../../assets/images/logo-light.svg') 100% no-repeat;
 }

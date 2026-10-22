@@ -24,10 +24,10 @@
         resources_id
         from t_ds_relation_resources_user rel
         where 1 = 1
-        <if test="userId != null and userId != '' and perm != 0">
+        <if test="userId != 0 and perm != 0">
             and rel.user_id=#{userId} and rel.perm=#{perm}
         </if>
-        <if test="userId != null and userId != '' and perm == 0">
+        <if test="userId != 0 and perm == 0">
             and rel.user_id=#{userId}
         </if>
     </select>
@@ -36,7 +36,7 @@
         delete
         from t_ds_relation_resources_user
         where 1 = 1
-        <if test="userId != null and userId != ''">
+        <if test="userId != 0">
             and user_id = #{userId}
         </if>
         <if test="resourceId != 0">
@@ -48,7 +48,7 @@
         delete
         from t_ds_relation_resources_user
         where 1 = 1
-        <if test="userId != null and userId != ''">
+        <if test="userId != 0">
             and user_id = #{userId}
         </if>
         <if test="resIds != null and resIds.length != 0">

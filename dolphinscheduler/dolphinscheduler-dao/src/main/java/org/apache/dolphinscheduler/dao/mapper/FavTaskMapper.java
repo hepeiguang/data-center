@@ -30,7 +30,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
  */
 public interface FavTaskMapper extends BaseMapper<FavTask> {
 
-    Set<String> getUserFavTaskTypes(@Param("userId") String userId);
+    Set<String> getUserFavTaskTypes(@Param("userId") int userId);
 
-    boolean deleteUserFavTask(@Param("userId") String userId, @Param("taskType") String taskType);
+    boolean deleteUserFavTask(@Param("userId") int userId, @Param("taskType") String taskType);
 }

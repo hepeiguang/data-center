@@ -21,28 +21,19 @@ import {
   getCurrentInstance,
   watch
 } from 'vue'
-import { NButton, NForm, NFormItem, NInput, NUpload ,NRadioGroup ,NRadio} from 'naive-ui'
+import { NButton, NForm, NFormItem, NInput, NUpload } from 'naive-ui'
 
 import { useI18n } from 'vue-i18n'
 import Modal from '@/components/modal'
 import { useForm } from './use-form'
 import { useUpload } from './use-upload'
-import { CustomResourceType, ResourceType } from '@/views/resource/components/resource/types'
+import { ResourceType } from '@/views/resource/components/resource/types'
 
 const props = {
   show: {
     type: Boolean as PropType<boolean>,
     default: false
   },
-  customResourceType: {
-    type: String as PropType<CustomResourceType>,
-    default: undefined
-  },
-  isShowMutiSelect: {
-    type: Boolean as PropType<boolean>,
-    default: false
-  },
-
   resourceType: {
     type: String as PropType<ResourceType>,
     default: undefined
@@ -72,7 +63,7 @@ const props = {
 export default defineComponent({
   name: 'ResourceFileUpload',
   props,
-  emits: ['updateList', 'update:show','update:customResourceType'],
+  emits: ['updateList', 'update:show'],
   setup(props, ctx) {
     const { state, resetForm } = useForm()
     const { handleUploadFile } = useUpload(state)
@@ -80,8 +71,6 @@ export default defineComponent({
     const hideModal = () => {
       resetForm()
       ctx.emit('update:show')
-      //修改自定义类型值为默认
-      ctx.emit('update:customResourceType')
     }
 
     const customRequest = ({ file }: any) => {
@@ -104,17 +93,12 @@ export default defineComponent({
     watch(
       () => props.show,
       () => {
-        //单向绑定 故需要监听
         state.uploadForm.type = props.resourceType!
-        //通过判断tableAction的类型row中的值 获取到当前自定义类型值
         state.uploadForm.isReupload = props.isReupload
-        if (props.isReupload && props.show ) {
+        if (props.isReupload && props.show) {
           state.uploadForm.fullName = props.fullName
           state.uploadForm.name = props.name
           state.uploadForm.user_name = props.userName
-        }
-        if (props.isReupload && props.customResourceType ) {
-          state.uploadForm.customType = props.customResourceType
         }
       }
     )
@@ -140,22 +124,7 @@ export default defineComponent({
         cancelClassName='btn-cancel'
         confirmLoading={this.saving}
       >
-        { this.isShowMutiSelect && (
-          <NFormItem label={t('resource.function.type')} path='customType'
-                     ref='uploadFormCustomTypeRef'>
-            {/* 接受isReupload 判断自定义类型选项是否需要启用 */}
-            <NRadioGroup name='udf-type' class='radio-function-type'
-                         v-model={[this.uploadForm.customType , 'value']}
-                         disabled={this.uploadForm.isReupload}>
-              <NRadio value='HIVE' > HIVE UDF </NRadio>
-              <NRadio value='SEATUNNEL'> SEATUNNEL UDF</NRadio>
-            </NRadioGroup>
-          </NFormItem>
-        ) }
         <NForm rules={this.rules} ref='uploadFormRef'>
-
-
-
           <NFormItem
             label={t('resource.file.file_name')}
             path='name'

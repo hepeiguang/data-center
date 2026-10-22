@@ -48,7 +48,7 @@ public class ProjectPreference {
     private String preferences;
 
     @TableField("user_id")
-    private String userId;
+    private Integer userId;
 
     @TableField("state")
     private int state;

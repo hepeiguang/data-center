@@ -70,14 +70,14 @@ const UsersManage = defineComponent({
       <NSpace vertical>
         <Card>
           <NSpace justify='space-between'>
-            {/* <NButton
+            <NButton
               onClick={this.onAddUser}
               type='primary'
               class='btn-create-user'
               size='small'
             >
               {this.t('security.user.create_user')}
-            </NButton> */}
+            </NButton>
             <NSpace>
               <Search
                 v-model:value={this.searchVal}
@@ -92,41 +92,27 @@ const UsersManage = defineComponent({
           </NSpace>
         </Card>
         <Card title={this.t('menu.user_manage')}>
-          {{
-            default: () => (
-              <NSpace vertical>
-                <NDataTable
-                  row-class-name='items'
-                  columns={this.columnsRef.columns}
-                  data={this.list}
-                  loading={this.loading}
-                  scrollX={this.columnsRef.tableWidth}
-                />
-                <NSpace justify='center'>
-                  <NPagination
-                    v-model:page={this.page}
-                    v-model:page-size={this.pageSize}
-                    item-count={this.itemCount}
-                    show-size-picker
-                    page-sizes={[10, 30, 50]}
-                    show-quick-jumper
-                    on-update:page={this.changePage}
-                    on-update:page-size={this.changePageSize}
-                  />
-                </NSpace>
-              </NSpace>
-            ),
-            'header-extra': () => (
-              <NButton
-              onClick={this.onAddUser}
-              type='primary'
-              class='btn-create-user'
-              size='small'
-            >
-              {this.t('security.user.create_user')}
-            </NButton>
-            )
-          }}
+          <NSpace vertical>
+            <NDataTable
+              row-class-name='items'
+              columns={this.columnsRef.columns}
+              data={this.list}
+              loading={this.loading}
+              scrollX={this.columnsRef.tableWidth}
+            />
+            <NSpace justify='center'>
+              <NPagination
+                v-model:page={this.page}
+                v-model:page-size={this.pageSize}
+                item-count={this.itemCount}
+                show-size-picker
+                page-sizes={[10, 30, 50]}
+                show-quick-jumper
+                on-update:page={this.changePage}
+                on-update:page-size={this.changePageSize}
+              />
+            </NSpace>
+          </NSpace>
         </Card>
         <UserDetailModal
           show={this.detailModalShow}

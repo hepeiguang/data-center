@@ -35,10 +35,10 @@ public class TaskDefinitionLogMapperTest extends BaseDaoTest {
     private TaskDefinitionLogMapper taskDefinitionLogMapper;
 
     public TaskDefinitionLog insertOne() {
-        return insertOne("99");
+        return insertOne(99);
     }
 
-    public TaskDefinitionLog insertOne(String userId) {
+    public TaskDefinitionLog insertOne(int userId) {
         TaskDefinitionLog taskDefinition = new TaskDefinitionLog();
         taskDefinition.setCode(888888L);
         taskDefinition.setName("unit-test");
@@ -83,7 +83,7 @@ public class TaskDefinitionLogMapperTest extends BaseDaoTest {
         taskDefinition.setName("unit-test");
         taskDefinition.setProjectCode(1L);
         taskDefinition.setTaskType("SHELL");
-        taskDefinition.setUserId("1");
+        taskDefinition.setUserId(1);
         taskDefinition.setResourceIds("1");
         taskDefinition.setVersion(1);
         ArrayList<TaskDefinition> taskDefinitions = new ArrayList<>();

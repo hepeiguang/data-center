@@ -38,6 +38,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.Duration;
 import java.util.Arrays;
@@ -53,12 +54,22 @@ public class TDengineIT extends TestSuiteBase implements TestResource {
     private static final String NETWORK_ALIASES1 = "flink_e2e_tdengine_src";
     private static final String NETWORK_ALIASES2 = "flink_e2e_tdengine_sink";
     private static final int PORT = 6041;
+    /**
+     * Keeps the test database within the vnode budget that small CI machines can provide.
+     *
+     * <p>This is purely a CI resource workaround. The STABLE-backed source and sink queries in this
+     * suite do not assert per-vgroup parallelism, so a single vgroup is expected to behave the same
+     * as the default multi-vgroup layout for the exercised SQL paths.
+     */
+    private static final String SINGLE_VGROUP_DATABASE_OPTIONS = " KEEP 3650 VGROUPS 1";
 
     private GenericContainer<?> tdengineServer1;
     private GenericContainer<?> tdengineServer2;
     private Connection connection1;
     private Connection connection2;
     private int testDataCount;
+    private final int testDataCountMulti_Table1 = 5;
+    private final int testDataCountMulti_Table2 = 7;
 
     @BeforeAll
     @Override
@@ -88,17 +99,7 @@ public class TDengineIT extends TestSuiteBase implements TestResource {
         log.info("TDengine container started");
         connection1 = createConnect(tdengineServer1);
         connection2 = createConnect(tdengineServer2);
-        // wait for TDengine fully start
-        given().ignoreExceptions()
-                .await()
-                .atLeast(100, TimeUnit.MILLISECONDS)
-                .pollInterval(1, TimeUnit.SECONDS)
-                .atMost(120, TimeUnit.SECONDS)
-                .untilAsserted(
-                        () ->
-                                Assertions.assertEquals(
-                                        Boolean.TRUE,
-                                        connection1.isValid(100) & connection2.isValid(100)));
+        waitForTDengineReady();
         testDataCount = generateTestDataSet();
         log.info("tdengine testDataCount=" + testDataCount); // rowCount=8
     }
@@ -107,7 +108,7 @@ public class TDengineIT extends TestSuiteBase implements TestResource {
     private int generateTestDataSet() {
         int rowCount;
         try (Statement stmt = connection1.createStatement()) {
-            stmt.execute("CREATE DATABASE power KEEP 3650");
+            stmt.execute("CREATE DATABASE power" + SINGLE_VGROUP_DATABASE_OPTIONS);
             stmt.execute(
                     "CREATE STABLE power.meters (ts TIMESTAMP, current FLOAT, voltage INT, phase FLOAT, off BOOL, nc NCHAR(10)) "
                             + "TAGS (location BINARY(64), groupId INT)");
@@ -115,9 +116,27 @@ public class TDengineIT extends TestSuiteBase implements TestResource {
             rowCount = stmt.executeUpdate(sql);
         }
         try (Statement stmt = connection2.createStatement()) {
-            stmt.execute("CREATE DATABASE power2 KEEP 3650");
+            stmt.execute("CREATE DATABASE power2" + SINGLE_VGROUP_DATABASE_OPTIONS);
             stmt.execute(
                     "CREATE STABLE power2.meters2 (ts TIMESTAMP, current FLOAT, voltage INT, phase FLOAT, off BOOL, nc NCHAR(10)) "
+                            + "TAGS (location BINARY(64), groupId INT)");
+        }
+        // create power2.meter3 for multi write test
+        try (Statement stmt = connection2.createStatement()) {
+            stmt.execute(
+                    "CREATE STABLE power2.meters3 (ts TIMESTAMP, current FLOAT, voltage INT, phase FLOAT, off BOOL, nc NCHAR(10)) "
+                            + "TAGS (location BINARY(64), groupId INT)");
+        }
+        // create power2.meter4 for multi write test
+        try (Statement stmt = connection2.createStatement()) {
+            stmt.execute(
+                    "CREATE STABLE power2.meters4 (ts TIMESTAMP, current FLOAT, voltage INT, phase FLOAT, off BOOL, nc NCHAR(10)) "
+                            + "TAGS (location BINARY(64), groupId INT)");
+        }
+        try (Statement stmt = connection2.createStatement()) {
+            stmt.execute("CREATE DATABASE power3" + SINGLE_VGROUP_DATABASE_OPTIONS);
+            stmt.execute(
+                    "CREATE STABLE power3.meters5 (ts TIMESTAMP, current FLOAT, voltage INT, phase FLOAT, off BOOL, nc NCHAR(10)) "
                             + "TAGS (location BINARY(64), groupId INT)");
         }
         return rowCount;
@@ -129,15 +148,44 @@ public class TDengineIT extends TestSuiteBase implements TestResource {
                 container.executeJob("/tdengine/tdengine_source_to_sink.conf");
         Assertions.assertEquals(0, execResult.getExitCode());
 
-        long rowCountInserted = readSinkDataset();
+        long rowCountInserted = readSinkDataset("power2", "meters2");
         Assertions.assertEquals(rowCountInserted, testDataCount);
     }
 
+    @TestTemplate
+    public void testTDengineMultiWrite(TestContainer container) throws Exception {
+        Container.ExecResult execResult =
+                container.executeJob("/tdengine/tdengine_fake_to_sink_multitable.conf");
+        Assertions.assertEquals(0, execResult.getExitCode());
+
+        long rowCountInserted = readSinkDataset("power2", "meters3");
+        long rowCountInserted2 = readSinkDataset("power2", "meters4");
+        Assertions.assertEquals(rowCountInserted, testDataCountMulti_Table1);
+        Assertions.assertEquals(rowCountInserted2, testDataCountMulti_Table2);
+    }
+
+    @TestTemplate
+    public void testTDEngineSourceToSinkFilterByFieldName(TestContainer container)
+            throws Exception {
+        Container.ExecResult execResult =
+                container.executeJob("/tdengine/tdengine_source_to_sink_filter_by_fieldNames.conf");
+        Assertions.assertEquals(0, execResult.getExitCode());
+
+        long rowCountInserted = readSinkDataset("power3", "meters5");
+        Assertions.assertEquals(4, rowCountInserted);
+    }
+
     @SneakyThrows
-    private long readSinkDataset() {
+    private long readSinkDataset(String database, String stableName) {
+        // Validate table name
+        if (stableName == null || !stableName.matches("^[a-zA-Z0-9_]+$")) {
+            throw new IllegalArgumentException("Invalid table name provided: " + stableName);
+        }
+
         long rowCount;
+        String sql = String.format("SELECT COUNT(1) FROM %s.%s;", database, stableName);
         try (Statement stmt = connection2.createStatement();
-                ResultSet resultSet = stmt.executeQuery("select count(1) from power2.meters2;"); ) {
+                ResultSet resultSet = stmt.executeQuery(sql); ) {
             resultSet.next();
             rowCount = resultSet.getLong(1);
         }
@@ -155,6 +203,41 @@ public class TDengineIT extends TestSuiteBase implements TestResource {
         Connection conn = DriverManager.getConnection(jdbcUrl);
         log.info("TDengine Connected! " + jdbcUrl);
         return conn;
+    }
+
+    /**
+     * Waits until TDengine accepts JDBC traffic and can allocate vgroups for new databases.
+     *
+     * <p>Port readiness alone does not prove that TDengine can create the test databases.
+     */
+    private void waitForTDengineReady() {
+        given().ignoreExceptions()
+                .await()
+                .pollInterval(1, TimeUnit.SECONDS)
+                .atMost(120, TimeUnit.SECONDS)
+                .untilAsserted(
+                        () -> {
+                            Assertions.assertTrue(connection1.isValid(100));
+                            Assertions.assertTrue(connection2.isValid(100));
+                            verifyDatabaseCanBeCreated(connection1, "seatunnel_ready_src");
+                            verifyDatabaseCanBeCreated(connection2, "seatunnel_ready_sink");
+                        });
+    }
+
+    /**
+     * TDengine can report a healthy socket before the storage node is ready to create databases.
+     *
+     * <p>The probe database is intentionally kept until the container stops. Reusing the same probe
+     * avoids repeated create/drop churn while the service is still becoming ready.
+     */
+    private void verifyDatabaseCanBeCreated(Connection connection, String databaseName)
+            throws SQLException {
+        try (Statement statement = connection.createStatement()) {
+            statement.execute(
+                    "CREATE DATABASE IF NOT EXISTS "
+                            + databaseName
+                            + SINGLE_VGROUP_DATABASE_OPTIONS);
+        }
     }
 
     @AfterAll

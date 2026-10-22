@@ -38,16 +38,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-/**
- * session service test
- */
 @ExtendWith(MockitoExtension.class)
 public class SessionServiceTest {
-
-    private static final Logger logger = LoggerFactory.getLogger(SessionServiceTest.class);
 
     @InjectMocks
     private SessionServiceImpl sessionService;
@@ -83,9 +76,9 @@ public class SessionServiceTest {
         String ip = "127.0.0.1";
         User user = new User();
         user.setUserType(UserType.GENERAL_USER);
-        user.setId("1");
-        Mockito.when(sessionDao.queryByUserId("1")).thenReturn(getSessions());
-        Session session = sessionService.createSessionIfAbsent(user, null);
+        user.setId(1);
+        Mockito.when(sessionDao.queryByUserId(1)).thenReturn(getSessions());
+        Session session = sessionService.createSessionIfAbsent(user);
         Assertions.assertNotNull(session);
         Assertions.assertNotNull(session.getId());
     }
@@ -96,7 +89,7 @@ public class SessionServiceTest {
      */
     @Test
     public void testExpireSession() {
-        String userId = "88888888";
+        int userId = 88888888;
         String ip = "127.0.0.1";
         User user = new User();
         user.setId(userId);
@@ -112,7 +105,7 @@ public class SessionServiceTest {
         session.setId(sessionId);
         session.setIp("127.0.0.1");
         session.setLastLoginTime(DateUtils.add(new Date(), Calendar.DAY_OF_MONTH, 40));
-        session.setUserId("1");
+        session.setUserId(1);
         return session;
     }
 

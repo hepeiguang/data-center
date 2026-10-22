@@ -29,7 +29,6 @@ export function useDatasource(
     typeField?: string
     sourceField?: string
     span?: Ref | number
-    testFlag?: Ref | number
   } = {}
 ): IJsonItem[] {
   const { t } = useI18n()
@@ -157,54 +156,16 @@ export function useDatasource(
       id: 25,
       code: 'SAGEMAKER',
       disabled: false
-    }
-    // llxl 增加数据源类型
-    ,
-    {
-      id: 26,
-      code: 'KAFKA',
-      disabled: false
     },
     {
       id: 27,
-      code: 'SOCKET_SERVER',
+      code: 'ALIYUN_SERVERLESS_SPARK',
       disabled: false
     },
     {
       id: 28,
-      code: 'HTTP_SERVER',
+      code: 'DOLPHINDB',
       disabled: false
-    },
-    {
-      id: 29,
-      code: 'UDP_MULTICAST',
-      disabled: false
-    },
-    {
-      id: 30,
-      code: 'HDFS_FILE',
-      disabled: false
-    },
-    {
-      id: 31,
-      code: 'MINIO',
-      disabled: false
-    },
-    {
-      id: 32,
-      code: 'FTP',
-      disabled: false
-    },
-    {
-      id: 33,
-      code: 'SFTP',
-      disabled: false
-    },
-    {
-      id: 34,
-      code: 'OPENGAUSS',
-      disabled: false
-
     }
   ]
 
@@ -224,8 +185,7 @@ export function useDatasource(
 
   const refreshOptions = async () => {
     const parameters = {
-      type: model[params.typeField || 'type'],
-      testFlag: 0
+      type: model[params.typeField || 'type']
     } as TypeReq
     const res = await queryDataSourceList(parameters)
     datasourceOptions.value = res.map((item: any) => ({

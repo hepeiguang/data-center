@@ -17,6 +17,7 @@
 
 package org.apache.seatunnel.connectors.seatunnel.iceberg.data;
 
+import org.apache.seatunnel.api.table.catalog.Column;
 import org.apache.seatunnel.api.table.type.ArrayType;
 import org.apache.seatunnel.api.table.type.BasicType;
 import org.apache.seatunnel.api.table.type.DecimalType;
@@ -54,6 +55,12 @@ public class IcebergTypeMapper {
             case TIME:
                 return LocalTimeType.LOCAL_TIME_TYPE;
             case TIMESTAMP:
+                Types.TimestampType timestampType = (Types.TimestampType) icebergType;
+                if (timestampType.shouldAdjustToUTC()) {
+                    // withZone() → LTZ → TIMESTAMP_TZ
+                    return LocalTimeType.OFFSET_DATE_TIME_TYPE;
+                }
+                // withoutZone() → NTZ → TIMESTAMP
                 return LocalTimeType.LOCAL_DATE_TIME_TYPE;
             case STRING:
                 return BasicType.STRING_TYPE;
@@ -115,6 +122,13 @@ public class IcebergTypeMapper {
         return toIcebergType(dataType, new AtomicInteger(1));
     }
 
+    public static Type toIcebergType(Column column, AtomicInteger nextId) {
+        if (column.getSinkType() != null) {
+            return Types.fromPrimitiveString(column.getSinkType());
+        }
+        return toIcebergType(column.getDataType(), nextId);
+    }
+
     public static Type toIcebergType(SeaTunnelDataType dataType, AtomicInteger nextId) {
         switch (dataType.getSqlType()) {
             case BOOLEAN:
@@ -165,6 +179,10 @@ public class IcebergTypeMapper {
             case TIME:
                 return Types.TimeType.get();
             case TIMESTAMP:
+                // NTZ → Iceberg withoutZone()
+                return Types.TimestampType.withoutZone();
+            case TIMESTAMP_TZ:
+                // LTZ → Iceberg withZone()
                 return Types.TimestampType.withZone();
             case STRING:
             default:

@@ -28,7 +28,7 @@ public class WorkflowDefinitionCountDto {
 
     private String userName;
 
-    private String userId;
+    private Integer userId;
 
     private int count;
 }

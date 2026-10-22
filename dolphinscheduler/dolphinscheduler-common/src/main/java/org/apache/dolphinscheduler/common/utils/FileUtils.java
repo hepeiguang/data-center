@@ -22,9 +22,9 @@ import static org.apache.dolphinscheduler.common.constants.Constants.FOLDER_SEPA
 import static org.apache.dolphinscheduler.common.constants.Constants.FORMAT_S_S;
 import static org.apache.dolphinscheduler.common.constants.Constants.RESOURCE_VIEW_SUFFIXES;
 import static org.apache.dolphinscheduler.common.constants.Constants.RESOURCE_VIEW_SUFFIXES_DEFAULT_VALUE;
-import static org.apache.dolphinscheduler.common.constants.DateConstants.YYYYMMDDHHMMSS;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
 
 import java.io.ByteArrayOutputStream;
@@ -37,6 +37,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.Set;
@@ -44,6 +45,7 @@ import java.util.zip.CRC32;
 import java.util.zip.CheckedInputStream;
 
 import lombok.NonNull;
+import lombok.SneakyThrows;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
@@ -57,7 +59,9 @@ public class FileUtils {
 
     public static final String KUBE_CONFIG_FILE = "config";
 
-    private static final Set<PosixFilePermission> PERMISSION_755 = PosixFilePermissions.fromString("rwxr-xr-x");
+    public static final Set<PosixFilePermission> PERMISSION_755 = PosixFilePermissions.fromString("rwxr-xr-x");
+
+    public static final Set<PosixFilePermission> PERMISSION_775 = PosixFilePermissions.fromString("rwxrwxr-x");
 
     /**
      * get download file absolute path and name
@@ -66,60 +70,24 @@ public class FileUtils {
      * @return download file name
      */
     public static String getDownloadFilename(String filename) {
-        String fileName =
-                String.format("%s/download/%s/%s", DATA_BASEDIR, DateUtils.getCurrentTime(YYYYMMDDHHMMSS), filename);
-
-        File file = new File(fileName);
-        if (!file.getParentFile().exists()) {
-            file.getParentFile().mkdirs();
-        }
-
-        return fileName;
+        return Paths.get(DATA_BASEDIR, "tmp", CodeGenerateUtils.genCode() + "-" + filename).toString();
     }
 
     /**
-     * get upload file absolute path and name
-     *
-     * @param tenantCode tenant code
-     * @param filename file name
-     * @return local file path
+     * Generate a local tmp absolute path of the uploaded file
      */
-    public static String getUploadFilename(String tenantCode, String filename) {
-        String fileName = String.format("%s/%s/resources/%s", DATA_BASEDIR, tenantCode, filename);
-        File file = new File(fileName);
-        if (!file.getParentFile().exists()) {
-            file.getParentFile().mkdirs();
-        }
-
-        return fileName;
+    public static String getUploadFileLocalTmpAbsolutePath() {
+        return Paths.get(DATA_BASEDIR, "tmp", String.valueOf(CodeGenerateUtils.genCode())).toString();
     }
 
     /**
      * directory of process execution
      *
-     * @param tenant               tenant
-     * @param projectCode          project code
-     * @param processDefineCode    process definition Code
-     * @param processDefineVersion process definition version
-     * @param processInstanceId    process instance id
      * @param taskInstanceId       task instance id
      * @return directory of process execution
      */
-    public static String getTaskInstanceWorkingDirectory(String tenant,
-                                                         long projectCode,
-                                                         long processDefineCode,
-                                                         int processDefineVersion,
-                                                         int processInstanceId,
-                                                         int taskInstanceId) {
-        return String.format(
-                "%s/exec/process/%s/%d/%d_%d/%d/%d",
-                DATA_BASEDIR,
-                tenant,
-                projectCode,
-                processDefineCode,
-                processDefineVersion,
-                processInstanceId,
-                taskInstanceId);
+    public static String getTaskInstanceWorkingDirectory(int taskInstanceId) {
+        return String.format("%s/exec/process/%d", DATA_BASEDIR, taskInstanceId);
     }
 
     /**
@@ -135,7 +103,7 @@ public class FileUtils {
     /**
      * absolute path of appInfo file
      *
-     * @param execPath  directory of process execution
+     * @param execPath directory of process execution
      * @return
      */
     public static String getAppInfoPath(String execPath) {
@@ -152,7 +120,7 @@ public class FileUtils {
     /**
      * write content to file ,if parent path not exists, it will do one's utmost to mkdir
      *
-     * @param content content
+     * @param content  content
      * @param filePath target file path
      * @return true if write success
      */
@@ -160,7 +128,8 @@ public class FileUtils {
         FileOutputStream fos = null;
         try {
             File distFile = new File(filePath);
-            if (!distFile.getParentFile().exists() && !distFile.getParentFile().mkdirs()) {
+            File parentFile = distFile.getParentFile();
+            if (parentFile != null && !parentFile.exists() && !parentFile.mkdirs()) {
                 log.error("mkdir parent failed");
                 return false;
             }
@@ -226,8 +195,6 @@ public class FileUtils {
         }
         File file = new File(filename);
         try {
-            //getCanonicalFile()：获取去除了 . 和 .. 的规范路径（会解析符号链接）。
-            //getAbsoluteFile()：获取当前 JVM 视角下的绝对路径（不会解析符号链接）。
             File canonical = file.getCanonicalFile();
             File absolute = file.getAbsoluteFile();
             return !canonical.equals(absolute);
@@ -238,6 +205,7 @@ public class FileUtils {
 
     /**
      * Calculate file checksum with CRC32 algorithm
+     *
      * @param pathName
      * @return checksum of file/dir
      */
@@ -269,34 +237,15 @@ public class FileUtils {
     }
 
     public static void createFileWith755(@NonNull Path path) throws IOException {
+        final Path parent = path.getParent();
+        if (!parent.toFile().exists()) {
+            createDirectoryWithPermission(parent, PERMISSION_755);
+        }
         if (SystemUtils.IS_OS_WINDOWS) {
             Files.createFile(path);
         } else {
             Files.createFile(path);
             Files.setPosixFilePermissions(path, PERMISSION_755);
-        }
-    }
-
-    public static void createDirectoryWith755(@NonNull Path path) throws IOException {
-        if (path.toFile().exists()) {
-            return;
-        }
-        if (OSUtils.isWindows()) {
-            Files.createDirectories(path);
-        } else {
-            Path parent = path.getParent();
-            if (parent != null && !parent.toFile().exists()) {
-                createDirectoryWith755(parent);
-            }
-
-            try {
-                Files.createDirectory(path);
-                Files.setPosixFilePermissions(path, PERMISSION_755);
-            } catch (FileAlreadyExistsException fileAlreadyExistsException) {
-                // Catch the FileAlreadyExistsException here to avoid create the same parent directory in parallel
-                log.debug("The directory: {} already exists", path);
-            }
-
         }
     }
 
@@ -317,4 +266,61 @@ public class FileUtils {
         }
     }
 
+    public static void createDirectoryWithPermission(@NonNull Path path,
+                                                     @NonNull Set<PosixFilePermission> permissions) throws IOException {
+        if (path.toFile().exists()) {
+            return;
+        }
+
+        if (OSUtils.isWindows()) {
+            Files.createDirectories(path);
+        } else {
+            Path parent = path.getParent();
+            if (parent != null && !parent.toFile().exists()) {
+                createDirectoryWithPermission(parent, permissions);
+            }
+
+            try {
+                Files.createDirectory(path);
+                Files.setPosixFilePermissions(path, permissions);
+            } catch (FileAlreadyExistsException fileAlreadyExistsException) {
+                log.error("The directory: {} already exists", path);
+            }
+        }
+    }
+
+    public static String concatFilePath(String... paths) {
+        if (paths.length == 0) {
+            throw new IllegalArgumentException("At least one path should be provided");
+        }
+        StringBuilder finalPath = new StringBuilder(paths[0]);
+        if (StringUtils.isEmpty(finalPath)) {
+            throw new IllegalArgumentException("The path should not be empty");
+        }
+        String separator = File.separator;
+        for (int i = 1; i < paths.length; i++) {
+            String path = paths[i];
+            if (StringUtils.isEmpty(path)) {
+                throw new IllegalArgumentException("The path should not be empty");
+            }
+            if (finalPath.toString().endsWith(separator) && path.startsWith(separator)) {
+                finalPath.append(path.substring(separator.length()));
+                continue;
+            }
+            if (!finalPath.toString().endsWith(separator) && !path.startsWith(separator)) {
+                finalPath.append(separator).append(path);
+                continue;
+            }
+            finalPath.append(path);
+        }
+        return finalPath.toString();
+    }
+
+    /**
+     * copy input stream to file, if the file already exists, will append the content to the beginning of the file, otherwise will create a new file.
+     */
+    @SneakyThrows
+    public static void copyInputStreamToFile(InputStream inputStream, String destFilename) {
+        org.apache.commons.io.FileUtils.copyInputStreamToFile(inputStream, new File(destFilename));
+    }
 }

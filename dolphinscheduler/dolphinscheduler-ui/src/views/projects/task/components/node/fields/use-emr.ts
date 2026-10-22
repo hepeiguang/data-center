@@ -42,12 +42,12 @@ export function useEmr(model: { [field: string]: any }): IJsonItem[] {
       }
     },
     {
-      type: 'mirror',
+      type: 'editor',
       field: 'jobFlowDefineJson',
       span: jobFlowDefineJsonSpan,
       name: t('project.node.emr_flow_define_json'),
       props: {
-        language: 'sql'
+        language: 'json'
       },
       validate: {
         trigger: ['input', 'trigger'],
@@ -56,12 +56,12 @@ export function useEmr(model: { [field: string]: any }): IJsonItem[] {
       }
     },
     {
-      type: 'mirror',
+      type: 'editor',
       field: 'stepsDefineJson',
       span: stepsDefineJsonSpan,
       name: t('project.node.emr_steps_define_json'),
       props: {
-        language: 'sql'
+        language: 'json'
       },
       validate: {
         trigger: ['input', 'trigger'],

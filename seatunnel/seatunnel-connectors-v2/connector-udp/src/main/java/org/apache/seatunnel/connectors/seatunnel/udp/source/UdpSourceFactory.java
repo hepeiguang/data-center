@@ -18,8 +18,11 @@ import static org.apache.seatunnel.connectors.seatunnel.udp.config.UdpOptions.HO
 import static org.apache.seatunnel.connectors.seatunnel.udp.config.UdpOptions.IDENTIFIER;
 import static org.apache.seatunnel.connectors.seatunnel.udp.config.UdpOptions.OFFSET_TABLE;
 import static org.apache.seatunnel.connectors.seatunnel.udp.config.UdpOptions.OFFSET_TABLE_PATH;
+import static org.apache.seatunnel.connectors.seatunnel.udp.config.UdpOptions.PARSE_ERROR_HANDLE_WAY;
 import static org.apache.seatunnel.connectors.seatunnel.udp.config.UdpOptions.PARSE_MODE;
 import static org.apache.seatunnel.connectors.seatunnel.udp.config.UdpOptions.PORT;
+import static org.apache.seatunnel.connectors.seatunnel.udp.config.UdpOptions.REPLY_ENABLED;
+import static org.apache.seatunnel.connectors.seatunnel.udp.config.UdpOptions.REPLY_MESSAGE;
 import static org.apache.seatunnel.connectors.seatunnel.udp.config.UdpOptions.SCRIPT_CONTENT;
 import static org.apache.seatunnel.connectors.seatunnel.udp.config.UdpOptions.SCRIPT_PATH;
 
@@ -61,10 +64,13 @@ public class UdpSourceFactory implements TableSourceFactory {
                         CHARSET,
                         FORMAT,
                         PARSE_MODE,
+                        PARSE_ERROR_HANDLE_WAY,
                         SCRIPT_PATH,
                         SCRIPT_CONTENT,
                         OFFSET_TABLE,
-                        OFFSET_TABLE_PATH)
+                        OFFSET_TABLE_PATH,
+                        REPLY_ENABLED,
+                        REPLY_MESSAGE)
                 .build();
     }
 

@@ -107,9 +107,9 @@ const k8sNamespaceManage = defineComponent({
       <NSpace vertical>
         <Card>
           <NSpace justify='space-between'>
-            {/* <NButton size='small' type='primary' onClick={handleModalChange}>
+            <NButton size='small' type='primary' onClick={handleModalChange}>
               {t('security.k8s_namespace.create_namespace')}
-            </NButton> */}
+            </NButton>
             <NSpace>
               <Search
                 v-model:value={this.searchVal}
@@ -125,35 +125,26 @@ const k8sNamespaceManage = defineComponent({
           </NSpace>
         </Card>
         <Card title={t('menu.k8s_namespace_manage')}>
-          {{
-            default: () => (
-              <NSpace vertical>
-                <NDataTable
-                  loading={loadingRef}
-                  columns={this.columns}
-                  data={this.tableData}
-                  scrollX={this.tableWidth}
-                />
-                <NSpace justify='center'>
-                  <NPagination
-                    v-model:page={this.page}
-                    v-model:page-size={this.pageSize}
-                    page-count={this.totalPage}
-                    show-size-picker
-                    page-sizes={[10, 30, 50]}
-                    show-quick-jumper
-                    onUpdatePage={requestData}
-                    onUpdatePageSize={onUpdatePageSize}
-                  />
-                </NSpace>
-              </NSpace>
-            ),
-            'header-extra': () => (
-              <NButton size='small' type='primary' onClick={handleModalChange}>
-                {t('security.k8s_namespace.create_namespace')}
-              </NButton>
-            )
-          }}
+          <NSpace vertical>
+            <NDataTable
+              loading={loadingRef}
+              columns={this.columns}
+              data={this.tableData}
+              scrollX={this.tableWidth}
+            />
+            <NSpace justify='center'>
+              <NPagination
+                v-model:page={this.page}
+                v-model:page-size={this.pageSize}
+                page-count={this.totalPage}
+                show-size-picker
+                page-sizes={[10, 30, 50]}
+                show-quick-jumper
+                onUpdatePage={requestData}
+                onUpdatePageSize={onUpdatePageSize}
+              />
+            </NSpace>
+          </NSpace>
         </Card>
         <K8sNamespaceModal
           showModalRef={this.showModalRef}

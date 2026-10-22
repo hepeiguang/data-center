@@ -52,27 +52,6 @@ export function useCellUpdate(options: Options) {
   }
 
   /**
- * Set node mode by id
- * @param {string} id
- * @param {string} mode
- */
-  function setNodeMode(id: string, mode: string) {
-    console.log('mode: ', mode);
-    const node = graph.value?.getCellById(id)
-    if (node) {
-      if (mode !== 'visualize') {
-        node.resize(220, 48);
-        node.setZIndex(1);
-        node.setData({ parent: false })
-      } else {
-        node.resize(550, 180);
-        node.setZIndex(-1);
-        node.setData({ parent: true })
-      }
-    }
-  }
-
-  /**
    * Set the node's fill color by id
    * @param {string} id
    * @param {string} color
@@ -99,67 +78,10 @@ export function useCellUpdate(options: Options) {
     coordinate: Coordinate = { x: 100, y: 100 }
   ) {
     if (!TASK_TYPES_MAP[type as TaskType]) {
-      return null
-    }
-    const isSeaTunnelChild = type.indexOf('_SOURCE') > 0 || type.indexOf('_SINK') > 0 || type.indexOf('_TRANSFORM') > 0
-    let parentNode = null
-    // llxl 注入分组
-    if (isSeaTunnelChild) {
-      let addChildFlag = false
-      const nodes = graph.value?.getNodes() || []
-      console.log('nodes: ', nodes);
-      if (nodes && nodes.length) {
-        nodes.forEach((item: any) => {
-          if (!addChildFlag && item.data && item.data.taskType == 'SEATUNNEL' && (item.data.useCustom || item.data.parent)) {
-            let { x, y } = item.getPosition()
-            let { width, height } = item.getSize()
-            if (coordinate.x > x - 60 && coordinate.x < x + width && coordinate.y > y && coordinate.y < y + height) {
-              // node.parent = item
-              // if (!item.children) {
-              //   item.children = []
-              // }
-              // item.children.push(node)
-              // item.addChild(child)
-              let flag = false
-              if (coordinate.x + 220 > x + width) {
-                width += 220
-                flag = true
-              }
-              if (coordinate.y + 48 > y + height) {
-                height += 48
-                flag = true
-              }
-              if (coordinate.x - 180 < x) {
-                x -= 180
-                width += 180
-                flag = true
-              }
-              // if (coordinate.y - 48 < y) {
-              //   y -= 48
-              //   flag = true
-              // }
-              if (flag) {
-                item.setPosition({x, y})
-                item.setSize({width, height})
-              }
-              console.log('注入分组')
-              parentNode = item
-              addChildFlag = true
-            }
-          }
-        })
-      }
-      if (!parentNode) {
-        window.$message.error('请把seaTunnel的子算子，拖入seaTunnel分组')
-        return null
-      }
+      return
     }
     const node = buildNode(id, type, name, flag, coordinate)
-    const child = graph.value?.addNode(node)
-    if (isSeaTunnelChild && parentNode) {
-      parentNode.addChild(child)
-    }
-    return child
+    graph.value?.addNode(node)
   }
 
   function removeNode(id: string) {
@@ -215,7 +137,6 @@ export function useCellUpdate(options: Options) {
 
   return {
     setNodeName,
-    setNodeMode,
     setNodeFillColor,
     setNodeEdge,
     addNode,

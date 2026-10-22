@@ -17,66 +17,48 @@
 
 package org.apache.dolphinscheduler.api.service.impl;
 
-import cn.hutool.core.collection.CollUtil;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.dolphinscheduler.api.dto.taskType.TaskConfig;
+import org.apache.dolphinscheduler.api.configuration.TaskTypeConfiguration;
+import org.apache.dolphinscheduler.api.dto.FavTaskDto;
 import org.apache.dolphinscheduler.api.service.FavTaskService;
-import org.apache.dolphinscheduler.api.utils.AdvancedTaskYamlParser;
-import org.apache.dolphinscheduler.common.utils.JSONUtils;
 import org.apache.dolphinscheduler.dao.entity.FavTask;
 import org.apache.dolphinscheduler.dao.entity.User;
 import org.apache.dolphinscheduler.dao.mapper.FavTaskMapper;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ResourceLoader;
-import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
 
-import javax.annotation.Resource;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import javax.annotation.Resource;
+
+import org.springframework.stereotype.Service;
+
 @Service
-@Slf4j
 public class FavTaskServiceImpl extends BaseServiceImpl implements FavTaskService {
 
-    //    @Resource
-//    private TaskTypeConfiguration taskTypeConfiguration;
+    @Resource
+    private TaskTypeConfiguration taskTypeConfiguration;
     @Resource
     private FavTaskMapper favMapper;
 
-    private AdvancedTaskYamlParser advancedTaskYamlParser = new AdvancedTaskYamlParser();
-
-    private List<TaskConfig> taskConfigs = new ArrayList<>();
-
-    @Autowired
-    private ResourceLoader resourceLoader;
-
     @Override
-    public List<TaskConfig> getFavTaskList(User loginUser) {
-        if (!CollectionUtils.isEmpty(taskConfigs)) {
-            return taskConfigs;
-        }
+    public List<FavTaskDto> getFavTaskList(User loginUser) {
         Set<String> userFavTaskTypes = favMapper.getUserFavTaskTypes(loginUser.getId());
-        org.springframework.core.io.Resource resource = resourceLoader.getResource("classpath:task-type-config.yaml");
-        try (InputStream inputStream = resource.getInputStream()) {
-            List<TaskConfig> defaultTaskTypes = advancedTaskYamlParser.parseYaml(inputStream);
-            // clone default list and modify fav task type flag
-            log.info("defaultTaskTypes: {}", JSONUtils.toJsonString(defaultTaskTypes));
-            defaultTaskTypes.forEach(e -> {
-                e.getChildren().forEach(child -> {
-                    if (userFavTaskTypes.contains(child.getTaskType())) {
-                        child.setCollection(true);
-                    }
-                });
-                taskConfigs.add(e);
-            });
-        } catch (IOException ex) {
-            log.error("Failed to parse to file", ex);
-        }
-        return taskConfigs;
+
+        List<FavTaskDto> defaultTaskTypes = taskTypeConfiguration.getDefaultTaskTypes();
+        List<FavTaskDto> result = new ArrayList<>();
+        // clone default list and modify fav task type flag
+        defaultTaskTypes.forEach(e -> {
+            try {
+                FavTaskDto clone = (FavTaskDto) e.clone();
+                if (userFavTaskTypes.contains(clone.getTaskType())) {
+                    clone.setCollection(true);
+                }
+                result.add(clone);
+            } catch (CloneNotSupportedException ex) {
+                throw new RuntimeException(ex);
+            }
+        });
+        return result;
     }
 
     @Override

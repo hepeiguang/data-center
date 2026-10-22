@@ -19,7 +19,7 @@ package org.apache.dolphinscheduler.api.audit.operator.impl;
 
 import org.apache.dolphinscheduler.api.audit.operator.BaseAuditOperator;
 import org.apache.dolphinscheduler.dao.entity.TaskInstance;
-import org.apache.dolphinscheduler.dao.mapper.TaskInstanceMapper;
+import org.apache.dolphinscheduler.dao.repository.TaskInstanceDao;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -28,16 +28,16 @@ import org.springframework.stereotype.Service;
 public class TaskInstancesAuditOperatorImpl extends BaseAuditOperator {
 
     @Autowired
-    private TaskInstanceMapper taskInstanceMapper;
+    private TaskInstanceDao taskInstanceDao;
 
     @Override
-    protected String getObjectNameFromReturnIdentity(Object identity) {
+    protected String getObjectNameFromIdentity(Object identity) {
         Long objId = toLong(identity);
         if (objId == -1) {
             return "";
         }
 
-        TaskInstance obj = taskInstanceMapper.selectById(objId);
+        TaskInstance obj = taskInstanceDao.queryById(objId);
         return obj == null ? "" : obj.getName();
     }
 }

@@ -8,6 +8,15 @@
 | `js` | JavaScript：`parse(payload, meta)`，支持文件热加载 |
 | `offset_table` | 偏移表 DSL（游标解析，支持循环/控制字/分支） |
 
+## parseErrorHandleWay
+
+| 值 | 说明 |
+|----|------|
+| `skip`（默认） | 单包解析失败只打日志并丢弃该包，继续收包 |
+| `fail` | 单包解析失败抛错，作业失败 |
+
+截断包、越界 `offset`/`length`、非法 `loop.count`、`assert` 失败均走该策略。
+
 ## JS 契约
 
 ```js
@@ -79,4 +88,9 @@ function parse(payload, meta) {
 
 `uint8` `int8` `uint16` `int16` `uint32` `int32` `int64` `float32` `float64` `bytes` `string` `hex`
 
+- `bytes`：输出 **Base64 字符串**（便于 JSON / schema）
+- `hex`：输出大写十六进制文本
+
 `byteOrder`: `BIG_ENDIAN`（默认）| `LITTLE_ENDIAN`
+
+读字段 / skip / loop 会校验 remaining 与非负长度；`loop.count`/`countFrom` 上限 `1000000`。

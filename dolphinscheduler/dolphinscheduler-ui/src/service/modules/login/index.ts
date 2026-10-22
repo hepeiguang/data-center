@@ -16,7 +16,7 @@
  */
 
 import { axios } from '@/service/service'
-import { LoginReq, SessionIdRes } from './types'
+import { LoginReq } from './types'
 
 export function login(data: LoginReq): any {
   return axios({
@@ -40,28 +40,16 @@ export function getOauth2Provider(): any {
   })
 }
 
+export function getOidcProviders(): any {
+  return axios({
+    url: '/oidc-providers',
+    method: 'get'
+  })
+}
+
 export function clearCookie(): any {
   return axios({
     url: '/cookies',
     method: 'delete'
   })
 }
-
-//免登录接口
-// export function logintoken(data: SessionIdRes): any {
-//   return axios({
-//     url:  `/token/validation?token=${data}`,
-//     method: 'get',
-//     data
-//   })
-// }
-
-
-export function basicSso(token: string) {
-  return axios({
-    url: `/sso/token/validation?token=${token}`,
-    method: 'get'
-  })
-}
-
-

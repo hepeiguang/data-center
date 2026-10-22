@@ -25,14 +25,21 @@ import org.apache.dolphinscheduler.plugin.task.api.parameters.resource.DataSourc
 import org.apache.dolphinscheduler.plugin.task.api.parameters.resource.ResourceParametersHelper;
 import org.apache.dolphinscheduler.spi.enums.Flag;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
+
+import lombok.Data;
+
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 /**
  * DataX parameter
  */
+@Data
 public class DataxParameters extends AbstractParameters {
 
     /**
@@ -65,24 +72,12 @@ public class DataxParameters extends AbstractParameters {
      */
     private int dataTarget;
 
-    /**
-     * sql
-     */
     private String sql;
 
-    /**
-     * target table
-     */
     private String targetTable;
 
-    /**
-     * Pre Statements
-     */
     private List<String> preStatements;
 
-    /**
-     * Post Statements
-     */
     private List<String> postStatements;
 
     /**
@@ -96,6 +91,11 @@ public class DataxParameters extends AbstractParameters {
     private int jobSpeedRecord;
 
     /**
+     * datax channel
+     */
+    private int jobChannel;
+
+    /**
      * Xms memory
      */
     private int xms;
@@ -106,129 +106,11 @@ public class DataxParameters extends AbstractParameters {
     private int xmx;
 
     /**
-     * resource list
+     * writer batch size for DataX
      */
+    private int batchSize;
+
     private List<ResourceInfo> resourceList;
-
-    public int getCustomConfig() {
-        return customConfig;
-    }
-
-    public void setCustomConfig(int customConfig) {
-        this.customConfig = customConfig;
-    }
-
-    public String getJson() {
-        return json;
-    }
-
-    public void setJson(String json) {
-        this.json = json;
-    }
-
-    public String getDsType() {
-        return dsType;
-    }
-
-    public void setDsType(String dsType) {
-        this.dsType = dsType;
-    }
-
-    public int getDataSource() {
-        return dataSource;
-    }
-
-    public void setDataSource(int dataSource) {
-        this.dataSource = dataSource;
-    }
-
-    public String getDtType() {
-        return dtType;
-    }
-
-    public void setDtType(String dtType) {
-        this.dtType = dtType;
-    }
-
-    public int getDataTarget() {
-        return dataTarget;
-    }
-
-    public void setDataTarget(int dataTarget) {
-        this.dataTarget = dataTarget;
-    }
-
-    public String getSql() {
-        return sql;
-    }
-
-    public void setSql(String sql) {
-        this.sql = sql;
-    }
-
-    public String getTargetTable() {
-        return targetTable;
-    }
-
-    public void setTargetTable(String targetTable) {
-        this.targetTable = targetTable;
-    }
-
-    public List<String> getPreStatements() {
-        return preStatements;
-    }
-
-    public void setPreStatements(List<String> preStatements) {
-        this.preStatements = preStatements;
-    }
-
-    public List<String> getPostStatements() {
-        return postStatements;
-    }
-
-    public void setPostStatements(List<String> postStatements) {
-        this.postStatements = postStatements;
-    }
-
-    public int getJobSpeedByte() {
-        return jobSpeedByte;
-    }
-
-    public void setJobSpeedByte(int jobSpeedByte) {
-        this.jobSpeedByte = jobSpeedByte;
-    }
-
-    public int getJobSpeedRecord() {
-        return jobSpeedRecord;
-    }
-
-    public void setJobSpeedRecord(int jobSpeedRecord) {
-        this.jobSpeedRecord = jobSpeedRecord;
-    }
-
-    public int getXms() {
-        return xms;
-    }
-
-    public void setXms(int xms) {
-        this.xms = xms;
-    }
-
-    public int getXmx() {
-        return xmx;
-    }
-
-    public void setXmx(int xmx) {
-        this.xmx = xmx;
-    }
-
-    public List<ResourceInfo> getResourceList() {
-        return resourceList;
-    }
-
-    public void setResourceList(List<ResourceInfo> resourceList) {
-        this.resourceList = resourceList;
-    }
 
     @Override
     public boolean checkParameters() {
@@ -238,7 +120,50 @@ public class DataxParameters extends AbstractParameters {
                     && StringUtils.isNotEmpty(sql)
                     && StringUtils.isNotEmpty(targetTable);
         } else {
-            return StringUtils.isNotEmpty(json);
+            // Custom config is valid with either inline json or an attached resource file that
+            // unambiguously carries the job definition, identified as the single .json resource
+            // (issue #18389). resourceList is multi-select and also holds auxiliary files, so a
+            // non-empty list on its own is not enough.
+            return !isInlineJsonAbsent() || getJobDefinitionResource() != null;
+        }
+    }
+
+    /**
+     * When the inline json is absent the job definition must come from an attached resource file.
+     * resourceList is multi-select and also carries auxiliary files such as Kerberos keytabs and
+     * xml configs, so the job definition is identified as the single resource whose name ends with
+     * {@code .json} rather than the first entry in the list (issue #18389). Returns that resource,
+     * or {@code null} when there is not exactly one json resource, which the caller treats as a
+     * missing or ambiguous job definition.
+     */
+    public ResourceInfo getJobDefinitionResource() {
+        if (CollectionUtils.isEmpty(resourceList)) {
+            return null;
+        }
+        List<ResourceInfo> jsonResources = resourceList.stream()
+                .filter(Objects::nonNull)
+                .filter(resource -> StringUtils.endsWithIgnoreCase(resource.getResourceName(), ".json"))
+                .collect(Collectors.toList());
+        return jsonResources.size() == 1 ? jsonResources.get(0) : null;
+    }
+
+    /**
+     * Returns true when the json field carries no usable inline job definition. The UI
+     * historically stored an empty object placeholder in the json field, so a blank value
+     * and any semantically empty JSON object (for example {@code {}}, {@code { }} or a
+     * formatted multi-line empty object) are all treated as absent (issue #18389).
+     */
+    public boolean isInlineJsonAbsent() {
+        if (StringUtils.isBlank(json)) {
+            return true;
+        }
+        try {
+            ObjectNode node = JSONUtils.parseObject(json);
+            return node == null || node.isEmpty();
+        } catch (Exception e) {
+            // not parseable as a JSON object, so there is inline content: downstream
+            // validation reports the malformed definition
+            return false;
         }
     }
 
@@ -249,23 +174,25 @@ public class DataxParameters extends AbstractParameters {
 
     @Override
     public String toString() {
-        return "DataxParameters{"
-                + "customConfig=" + customConfig
-                + ", json='" + json + '\''
-                + ", dsType='" + dsType + '\''
-                + ", dataSource=" + dataSource
-                + ", dtType='" + dtType + '\''
-                + ", dataTarget=" + dataTarget
-                + ", sql='" + sql + '\''
-                + ", targetTable='" + targetTable + '\''
-                + ", preStatements=" + preStatements
-                + ", postStatements=" + postStatements
-                + ", jobSpeedByte=" + jobSpeedByte
-                + ", jobSpeedRecord=" + jobSpeedRecord
-                + ", xms=" + xms
-                + ", xmx=" + xmx
-                + ", resourceList=" + JSONUtils.toJsonString(resourceList)
-                + '}';
+        return "DataxParameters{" +
+                "customConfig=" + customConfig +
+                ", json='" + json + '\'' +
+                ", dsType='" + dsType + '\'' +
+                ", dataSource=" + dataSource +
+                ", dtType='" + dtType + '\'' +
+                ", dataTarget=" + dataTarget +
+                ", sql='" + sql + '\'' +
+                ", targetTable='" + targetTable + '\'' +
+                ", preStatements=" + preStatements +
+                ", postStatements=" + postStatements +
+                ", jobSpeedByte=" + jobSpeedByte +
+                ", jobSpeedRecord=" + jobSpeedRecord +
+                ", jobChannel=" + jobChannel +
+                ", xms=" + xms +
+                ", xmx=" + xmx +
+                ", batchSize=" + batchSize +
+                ", resourceList=" + JSONUtils.toJsonString(resourceList) +
+                '}';
     }
 
     @Override

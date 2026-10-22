@@ -55,31 +55,6 @@ export default {
   compatible_mode: 'Compatible Mode',
   compatible_mode_tips: 'Please enter compatible mode',
   jdbc_connect_parameters: 'jdbc connect parameters',
-  kafka_connect_parameters: 'kafka connect parameters',
-  hdfs_kbs_parameters: 'hdfs kerberos parameters',
-  udp_multicast_connect_parameters: 'UDP multicast connect parameters',
-  udp_multicast_connect_source_tip:
-    'Options: ' +
-    'ttl: Time-to-live for multicast packets (1=local network, 32=site, 255=unrestricted);' +
-    'maxPacketSize: Maximum size of a single UDP packet in bytes;' +
-    'reuseAddress: Whether to reuse the socket address;' +
-    'replyEnabled: Whether to send reply messages back to sender;' +
-    'replyMessage: The reply message to send when replyEnabled is true;' +
-    'charsetName: Character encoding for message serialization',
-  udp_multicast_connect_sink_tip:
-    'Options：' +
-    'maxRetries: Maximum number of send attempts for a message; ' +
-    'retryIntervalMs: Interval between send retries in milliseconds;' +
-    'waitForReply: Whether to wait for a reply after sending;' +
-    'replyTimeoutMs: Timeout for waiting reply in milliseconds;' +
-    'batchIntervalMs: Maximum time interval between batch sends in milliseconds;' +
-    'batchQueueSize: Maximum number of messages in the batch queue;' +
-    'asyncEnabled: Whether to use asynchronous sending;' +
-    'asyncThreads: Number of threads in async sender thread pool;' +
-    'asyncQueueSize: Maximum number of messages in async send queue;' +
-    'maxPacketSize: Maximum size of a single UDP packet in bytes;' +
-    'charsetName: Character encoding for message serialization',
-  socket_server_connect_parameters: 'socket server connect parameters',
   principal_tips: 'Please enter Principal',
   krb5_conf_tips:
     'Please enter the kerberos authentication parameter java.security.krb5.conf',
@@ -102,9 +77,6 @@ export default {
   validation: 'Validation',
   mode_tips: 'Please select a mode',
   jdbc_format_tips: 'jdbc connection parameters is not a correct JSON format',
-  kafka_format_tips: 'kafka connection parameters is not a correct JSON format',
-  host: 'Host',
-  host_tips: 'Please enter Host',
   database_username: 'Database Username',
   database_password: 'Database Password',
   Azure_AD_username: 'Azure AD username',
@@ -113,7 +85,7 @@ export default {
   clientId: 'ClientId',
   clientSecret: 'ClientSecret',
   OAuth_token_endpoint: 'OAuth 2.0 token endpoint',
-  endpoint_tips: 'Please enter OAuth Token',
+  OAuth_token_endpoint_tips: 'Please enter OAuth Token',
   AccessKeyID: 'AccessKeyID',
   AccessKeyID_tips: 'Please input AccessKeyID',
   SecretAccessKey: 'SecretAccessKey',
@@ -126,31 +98,12 @@ export default {
   kubeConfig_tips: 'Please input KubeConfig',
   namespace: 'namespace',
   namespace_tips: 'Please input namespace',
-  http_endpoint: 'endpoint',
-  http_endpoint_tips: 'Please input Endpoint',
-  http_method: 'method',
-  http_method_tips: 'Please input Http Method(GET、POST)',
-  http_auth_config: 'request authentication parameter',
-  http_auth_config_tips: 'Please input Http authorization parameter',
-  http_auth_type: 'request authentication type',
-  http_auth_type_tips: 'Please input authentication type',
-  basic_tip: 'basic parameter',
-  bearer_tip: 'Bearer parameter',
-  api_key_tip: 'API_KEY parameter',
-  none_tip: 'none parameter',
-  connect_timeout: 'connectTimeout',
-  connect_timeout_tips: 'Please input connectTimeout',
-  socket_timeout: 'SocketTimeout',
-  max_connections: 'MaxConnections',
-  socket_timeout_tips: 'Please input socketTimeout',
-  max_connections_tips: 'Please input maxConnections',
-  buffer_size: 'bufferSize',
-  buffer_size_tips: 'Please input bufferSize',
-  multicast_address: 'Multicast address',
-  multicast_address_tips: 'Please input multicast address tips',
-  hdfs_remote_user: 'Hdfs remote user',
-  hdfs_remote_user_tips: 'Please input Hdfs remote user tips',
-  hdfs_site_path: 'Hdfs site path',
-  hdfs_site_path_tips: 'Please input hdfs site path',
-  minio_datasource_secure: 'Flag to indicate to use secure (TLS) connection to S3 service or not.'
+  access_key_id: 'Access Key Id',
+  access_key_id_tips: 'Please enter access key id',
+  access_key_secret: 'Access Key Secret',
+  access_key_secret_tips: 'Please enter access key secret',
+  region_id: 'Region Id',
+  region_id_tips: 'Please enter Region Id',
+  endpoint: 'Endpoint',
+  endpoint_tips: 'Please enter endpoint'
 }

@@ -22,7 +22,7 @@ import viteCompression from 'vite-plugin-compression'
 import path from 'path'
 
 export default defineConfig({
-  base: process.env.NODE_ENV === 'production' ? '/ds/' : '/',
+  base: process.env.NODE_ENV === 'production' ? '/dolphinscheduler/ui/' : '/',
   plugins: [
     vue(),
     vueJsx(),
@@ -42,85 +42,11 @@ export default defineConfig({
     }
   },
   server: {
-    host: '0.0.0.0', // 监听所有地址
-    hmr: {
-      overlay: false
-    },
     proxy: {
-      '/dolphinscheduler/yg': {
-        // target: loadEnv('development', './').VITE_APP_DEV_WEB_URL,
-        target: loadEnv('development', './').VITE_APP_YG_WEB_URL,
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/dolphinscheduler\/yg/, '/yg')
-      },
       '/dolphinscheduler': {
         target: loadEnv('development', './').VITE_APP_DEV_WEB_URL,
         changeOrigin: true
       }
     }
-  },
-  //  build: {
-  //   sourcemap: false,
-  //   target: ['es2015'],
-  //   minify: 'terser',
-  //   terserOptions: {
-  //     compress: {
-  //       drop_console: true,
-  //       drop_debugger: true
-  //     }
-  //   },
-  //   rollupOptions: {
-  //     output: {
-  //       manualChunks(id) {
-  //         if (id.includes('node_modules')) {
-  //           // 将大依赖单独拆包
-  //           if (id.includes('lodash')) return 'vendor-lodash'
-  //           if (id.includes('axios')) return 'vendor-axios'
-  //           if (id.includes('naive-ui')) return 'vendor-naive'
-  //           if (id.includes('echarts')) return 'vendor-echarts'
-            
-  //           // 其余依赖分组打包
-  //           return 'vendor'
-  //         }
-  //       }
-  //     }
-  //   }
-  // },
-  // optimizeDeps: {
-  //   include: ['vue', 'vue-router', 'pinia', 'axios'],
-  //   // exclude: ['your-lightweight-package']
-  // }
+  }
 })
-  //  build: {
-  //   sourcemap: false,
-  //   target: ['es2015'],
-  //   minify: 'terser',
-  //   terserOptions: {
-  //     compress: {
-  //       drop_console: true,
-  //       drop_debugger: true
-  //     }
-  //   },
-  //   rollupOptions: {
-  //     output: {
-  //       manualChunks(id) {
-  //         if (id.includes('node_modules')) {
-  //           // 将大依赖单独拆包
-  //           if (id.includes('lodash')) return 'vendor-lodash'
-  //           if (id.includes('axios')) return 'vendor-axios'
-  //           if (id.includes('naive-ui')) return 'vendor-naive'
-  //           if (id.includes('echarts')) return 'vendor-echarts'
-            
-  //           // 其余依赖分组打包
-  //           return 'vendor'
-  //         }
-  //       }
-
-  //     }
-  //   }
-  // },
-  // optimizeDeps: {
-    // include: ['vue', 'vue-router', 'pinia', 'axios'],
-    // exclude: ['your-lightweight-package']
-  // }
-// })

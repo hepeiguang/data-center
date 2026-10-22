@@ -39,16 +39,3 @@ dt {
   margin: 0;
   padding: 0;
 }
-
-
-.n-menu.n-menu--horizontal .n-menu-item-content::before {
-  display: block !important;
-}
-
-.n-data-table .n-data-table-tbody .n-data-table-tr.empty-row td {
-  background-color: #e98b8b7f !important;
-}
-
-.n-data-table .n-data-table-tbody .n-data-table-tr.lack-row td {
-  background-color: #f5d599ff !important;
-}

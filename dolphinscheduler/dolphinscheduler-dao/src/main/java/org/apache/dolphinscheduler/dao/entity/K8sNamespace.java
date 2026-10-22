@@ -48,29 +48,17 @@ public class K8sNamespace {
      * owner
      */
     @TableField(value = "user_id")
-    private String userId;
+    private int userId;
 
-    /**
-     * user name
-     */
     @TableField(exist = false)
     private String userName;
 
-    /**
-     * create_time
-     */
     @TableField("create_time")
     private Date createTime;
 
-    /**
-     * update_time
-     */
     @TableField("update_time")
     private Date updateTime;
 
-    /**
-     * cluster code
-     */
     @TableField("cluster_code")
     private Long clusterCode;
 

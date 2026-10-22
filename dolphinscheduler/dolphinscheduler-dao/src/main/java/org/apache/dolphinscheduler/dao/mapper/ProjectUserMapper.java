@@ -23,9 +23,6 @@ import org.apache.ibatis.annotations.Param;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 
-/**
- * project user mapper interface
- */
 public interface ProjectUserMapper extends BaseMapper<ProjectUser> {
 
     /**
@@ -36,7 +33,7 @@ public interface ProjectUserMapper extends BaseMapper<ProjectUser> {
      * @return delete result
      */
     int deleteProjectRelation(@Param("projectId") int projectId,
-                              @Param("userId") String userId);
+                              @Param("userId") int userId);
 
     /**
      * query project relation
@@ -46,5 +43,5 @@ public interface ProjectUserMapper extends BaseMapper<ProjectUser> {
      * @return project user relation
      */
     ProjectUser queryProjectRelation(@Param("projectId") int projectId,
-                                     @Param("userId") String userId);
+                                     @Param("userId") int userId);
 }

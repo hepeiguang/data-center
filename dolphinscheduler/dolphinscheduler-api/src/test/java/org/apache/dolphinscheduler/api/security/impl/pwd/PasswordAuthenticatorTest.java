@@ -69,13 +69,13 @@ public class PasswordAuthenticatorTest extends AbstractControllerTest {
         mockUser.setUserName("test");
         mockUser.setEmail("test@test.com");
         mockUser.setUserPassword("test");
-        mockUser.setId("1");;
+        mockUser.setId(1);
         mockUser.setState(1);
 
         mockSession = new Session();
         mockSession.setId(UUID.randomUUID().toString());
         mockSession.setIp("127.0.0.1");
-        mockSession.setUserId("1");
+        mockSession.setUserId(1);
         mockSession.setLastLoginTime(new Date());
     }
 
@@ -89,14 +89,14 @@ public class PasswordAuthenticatorTest extends AbstractControllerTest {
     @Test
     public void testAuthenticate() {
         when(usersService.queryUser("test", "test")).thenReturn(mockUser);
-        when(sessionService.createSessionIfAbsent(mockUser, null)).thenReturn(mockSession);
+        when(sessionService.createSessionIfAbsent(mockUser)).thenReturn(mockSession);
         Result result = authenticator.authenticate("test", "test", "127.0.0.1");
         Assertions.assertEquals(Status.SUCCESS.getCode(), (int) result.getCode());
         logger.info(result.toString());
 
         mockUser.setState(0);
         when(usersService.queryUser("test", "test")).thenReturn(mockUser);
-        when(sessionService.createSessionIfAbsent(mockUser, null)).thenReturn(mockSession);
+        when(sessionService.createSessionIfAbsent(mockUser)).thenReturn(mockSession);
         Result result1 = authenticator.authenticate("test", "test", "127.0.0.1");
         Assertions.assertEquals(Status.USER_DISABLED.getCode(), (int) result1.getCode());
         logger.info(result1.toString());

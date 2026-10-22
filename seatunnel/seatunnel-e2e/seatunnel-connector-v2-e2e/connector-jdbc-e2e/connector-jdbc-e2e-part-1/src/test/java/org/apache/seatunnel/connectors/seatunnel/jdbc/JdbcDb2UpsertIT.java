@@ -56,7 +56,8 @@ public class JdbcDb2UpsertIT extends JdbcDb2IT {
                     + "    C_BINARY           BINARY(1),\n"
                     + "    C_VARBINARY        VARBINARY(2048),\n"
                     + "    C_DATE             DATE,\n"
-                    + "    C_UPDATED_AT       TIMESTAMP DEFAULT CURRENT_TIMESTAMP\n"
+                    + "    C_UPDATED_AT       TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n"
+                    + "    \"c_int_2\"             INTEGER\n"
                     + ");\n";
 
     // create a trigger to update the timestamp when the row is updated.
@@ -93,7 +94,9 @@ public class JdbcDb2UpsertIT extends JdbcDb2IT {
             List<List<Object>> updatedAtTimestampsBeforeUpdate =
                     query(
                             String.format(
-                                    "SELECT C_UPDATED_AT  FROM %s",
+                                    // Keep row order stable so repeated reads compare the same
+                                    // records.
+                                    "SELECT C_UPDATED_AT FROM %s ORDER BY C_INT",
                                     buildTableInfoWithSchema(DB2_DATABASE, DB2_SINK)));
             // step 2: run the job to update the data in the sink.
             // expected: timestamps should not be updated as the data is not changed.
@@ -102,7 +105,7 @@ public class JdbcDb2UpsertIT extends JdbcDb2IT {
             List<List<Object>> updatedAtTimestampsAfterUpdate =
                     query(
                             String.format(
-                                    "SELECT C_UPDATED_AT  FROM %s",
+                                    "SELECT C_UPDATED_AT FROM %s ORDER BY C_INT",
                                     buildTableInfoWithSchema(DB2_DATABASE, DB2_SINK)));
             Assertions.assertIterableEquals(
                     updatedAtTimestampsBeforeUpdate, updatedAtTimestampsAfterUpdate);

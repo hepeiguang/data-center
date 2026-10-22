@@ -812,7 +812,7 @@ CREATE UNIQUE INDEX unique_func_name on t_ds_udfs (func_name);
 
 DROP TABLE IF EXISTS t_ds_user;
 CREATE TABLE t_ds_user (
-                           id varchar(32) NOT NULL  ,
+                           id int NOT NULL  ,
                            user_name varchar(64) DEFAULT NULL ,
                            user_password varchar(64) DEFAULT NULL ,
                            user_type int DEFAULT NULL ,

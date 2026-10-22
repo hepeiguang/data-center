@@ -20,7 +20,7 @@
     <parent>
         <groupId>org.apache.dolphinscheduler</groupId>
         <artifactId>dolphinscheduler</artifactId>
-        <version>3.2.2</version>
+        <version>3.4.3</version>
     </parent>
 
     <artifactId>dolphinscheduler-dao-plugin</artifactId>
@@ -45,5 +45,4 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
-
 </project>

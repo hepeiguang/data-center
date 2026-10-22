@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-import { defineComponent, computed, ref, nextTick, provide, toRefs } from 'vue'
+import { defineComponent, computed, ref, nextTick, provide } from 'vue'
 import {
   zhCN,
   enUS,
@@ -29,14 +29,12 @@ import {
 import { useThemeStore } from '@/store/theme/theme'
 import { useLocalesStore } from '@/store/locales/locales'
 import themeList from '@/themes'
-// 是不是为第三方的子应用集成
-import { useParentAppProps } from '@/store/parentAppProps/parentAppProps'
+
 const App = defineComponent({
   name: 'App',
   setup() {
     const isRouterAlive = ref(true)
     const themeStore = useThemeStore()
-    const parentAppProps = useParentAppProps()
     const currentTheme = computed(() =>
       themeStore.darkTheme ? darkTheme : undefined
     )
@@ -50,16 +48,12 @@ const App = defineComponent({
     }
 
     provide('reload', reload)
-    parentAppProps.setLayoutStyles(window.$wujie && window.$wujie.props && window.$wujie.props.layoutStyles)
-    parentAppProps.setIsAside(window.$wujie && window.$wujie.props && window.$wujie.props.isAside || false)
-    parentAppProps.setfilterMenu(window.$wujie && window.$wujie.props && window.$wujie.props.filterMenu || false)
-    const { layoutHeight } = toRefs(window.$wujie && window.$wujie.props && window.$wujie.props.layoutStyles || {})
+
     return {
       reload,
       isRouterAlive,
       currentTheme,
-      localesStore,
-      layoutHeight
+      localesStore
     }
   },
   render() {
@@ -70,7 +64,7 @@ const App = defineComponent({
       <NConfigProvider
         theme={this.currentTheme}
         theme-overrides={themeOverrides}
-        style={{ width: '100%', height: this.layoutHeight ? this.layoutHeight : '100vh' }}
+        style={{ width: '100%', height: '100vh' }}
         date-locale={
           String(this.localesStore.getLocales) === 'zh_CN' ? dateZhCN : dateEnUS
         }

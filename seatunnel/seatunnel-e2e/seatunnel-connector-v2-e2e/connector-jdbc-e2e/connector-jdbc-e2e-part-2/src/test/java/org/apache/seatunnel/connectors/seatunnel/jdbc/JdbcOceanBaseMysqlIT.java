@@ -18,6 +18,7 @@
 package org.apache.seatunnel.connectors.seatunnel.jdbc;
 
 import org.apache.seatunnel.shade.com.google.common.collect.Lists;
+import org.apache.seatunnel.shade.org.apache.commons.lang3.tuple.Pair;
 
 import org.apache.seatunnel.api.table.type.SeaTunnelRow;
 import org.apache.seatunnel.common.exception.SeaTunnelRuntimeException;
@@ -25,11 +26,8 @@ import org.apache.seatunnel.common.utils.JdbcUrlUtil;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.catalog.oceanbase.OceanBaseMySqlCatalog;
 import org.apache.seatunnel.e2e.common.container.ContainerExtendedFactory;
 import org.apache.seatunnel.e2e.common.junit.TestContainerExtension;
+import org.apache.seatunnel.e2e.common.util.DependencyJar;
 
-import org.apache.commons.lang3.tuple.Pair;
-
-import org.junit.jupiter.api.Assertions;
-import org.testcontainers.containers.Container;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.images.PullPolicy;
@@ -60,15 +58,9 @@ public class JdbcOceanBaseMysqlIT extends JdbcOceanBaseITBase {
 
     @TestContainerExtension
     protected final ContainerExtendedFactory extendedFactory =
-            container -> {
-                Container.ExecResult extraCommands =
-                        container.execInContainer(
-                                "bash",
-                                "-c",
-                                "mkdir -p /tmp/seatunnel/plugins/Jdbc/lib && cd /tmp/seatunnel/plugins/Jdbc/lib && wget "
-                                        + driverUrl());
-                Assertions.assertEquals(0, extraCommands.getExitCode(), extraCommands.getStderr());
-            };
+            container ->
+                    DependencyJar.ofClassName(OCEANBASE_DRIVER_CLASS)
+                            .copyTo(container, "/tmp/seatunnel/plugins/Jdbc/lib");
 
     @Override
     List<String> configFile() {

@@ -52,7 +52,7 @@ public class Environment {
     /**
      * operator user id
      */
-    private String operator;
+    private Integer operator;
 
     private Date createTime;
 

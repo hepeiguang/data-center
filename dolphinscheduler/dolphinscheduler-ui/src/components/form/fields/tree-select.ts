@@ -15,9 +15,8 @@
  * limitations under the License.
  */
 
-import { h, unref, ref } from 'vue'
+import { h, unref } from 'vue'
 import { NTreeSelect } from 'naive-ui'
-import type { TreeSelectOverrideNodeClickBehavior } from 'naive-ui'
 import { isFunction } from 'lodash'
 import type { IJsonItem } from '../types'
 
@@ -26,18 +25,10 @@ export function renderTreeSelect(
   fields: { [field: string]: any }
 ) {
   const { props = {}, field, options = [] } = isFunction(item) ? item() : item
-  const override: TreeSelectOverrideNodeClickBehavior = ({ option }) => {
-    if (option.children) {
-      return 'toggleExpand'
-    }
-    return 'default'
-  }
-
   return h(NTreeSelect, {
     ...props,
     value: fields[field],
     onUpdateValue: (value: []) => void (fields[field] = value),
-    options: unref(options),
-    'override-default-node-click-behavior': props?.overrideDefaultNodeClickBehavior ? override : false,
+    options: unref(options)
   })
 }

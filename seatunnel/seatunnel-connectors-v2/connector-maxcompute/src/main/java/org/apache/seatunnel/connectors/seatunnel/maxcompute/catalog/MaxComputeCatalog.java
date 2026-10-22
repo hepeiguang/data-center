@@ -18,6 +18,7 @@
 package org.apache.seatunnel.connectors.seatunnel.maxcompute.catalog;
 
 import org.apache.seatunnel.shade.com.google.common.collect.Lists;
+import org.apache.seatunnel.shade.org.apache.commons.lang3.StringUtils;
 
 import org.apache.seatunnel.api.configuration.ReadonlyConfig;
 import org.apache.seatunnel.api.table.catalog.Catalog;
@@ -33,10 +34,10 @@ import org.apache.seatunnel.api.table.catalog.exception.DatabaseNotExistExceptio
 import org.apache.seatunnel.api.table.catalog.exception.TableAlreadyExistException;
 import org.apache.seatunnel.api.table.catalog.exception.TableNotExistException;
 import org.apache.seatunnel.api.table.converter.BasicTypeDefine;
+import org.apache.seatunnel.connectors.seatunnel.maxcompute.config.MaxcomputeBaseOptions;
+import org.apache.seatunnel.connectors.seatunnel.maxcompute.config.MaxcomputeSinkOptions;
 import org.apache.seatunnel.connectors.seatunnel.maxcompute.datatype.MaxComputeTypeConverter;
 import org.apache.seatunnel.connectors.seatunnel.maxcompute.util.MaxcomputeUtil;
-
-import org.apache.commons.lang3.StringUtils;
 
 import com.aliyun.odps.Odps;
 import com.aliyun.odps.OdpsException;
@@ -45,7 +46,6 @@ import com.aliyun.odps.Projects;
 import com.aliyun.odps.Table;
 import com.aliyun.odps.Tables;
 import com.aliyun.odps.account.Account;
-import com.aliyun.odps.account.AliyunAccount;
 import com.aliyun.odps.task.SQLTask;
 import com.aliyun.odps.type.TypeInfo;
 import lombok.extern.slf4j.Slf4j;
@@ -55,12 +55,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import static org.apache.seatunnel.connectors.seatunnel.maxcompute.config.MaxcomputeConfig.ACCESS_ID;
-import static org.apache.seatunnel.connectors.seatunnel.maxcompute.config.MaxcomputeConfig.ACCESS_KEY;
-import static org.apache.seatunnel.connectors.seatunnel.maxcompute.config.MaxcomputeConfig.ENDPOINT;
-import static org.apache.seatunnel.connectors.seatunnel.maxcompute.config.MaxcomputeConfig.PARTITION_SPEC;
-import static org.apache.seatunnel.connectors.seatunnel.maxcompute.config.MaxcomputeConfig.PROJECT;
-import static org.apache.seatunnel.connectors.seatunnel.maxcompute.config.MaxcomputeConfig.SAVE_MODE_CREATE_TEMPLATE;
 import static org.apache.seatunnel.shade.com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
@@ -78,7 +72,7 @@ public class MaxComputeCatalog implements Catalog {
 
     @Override
     public void open() throws CatalogException {
-        account = new AliyunAccount(readonlyConfig.get(ACCESS_ID), readonlyConfig.get(ACCESS_KEY));
+        account = MaxcomputeUtil.getAccount(readonlyConfig);
     }
 
     @Override
@@ -91,13 +85,13 @@ public class MaxComputeCatalog implements Catalog {
 
     @Override
     public String getDefaultDatabase() throws CatalogException {
-        return readonlyConfig.get(PROJECT);
+        return readonlyConfig.get(MaxcomputeBaseOptions.PROJECT);
     }
 
     @Override
     public boolean databaseExists(String databaseName) throws CatalogException {
         try {
-            Odps odps = getOdps(readonlyConfig.get(PROJECT));
+            Odps odps = getOdps(readonlyConfig.get(MaxcomputeBaseOptions.PROJECT));
             Projects projects = odps.projects();
             return projects.exists(databaseName);
         } catch (OdpsException e) {
@@ -109,7 +103,7 @@ public class MaxComputeCatalog implements Catalog {
     public List<String> listDatabases() throws CatalogException {
         try {
             // todo: how to get all projects
-            String project = readonlyConfig.get(PROJECT);
+            String project = readonlyConfig.get(MaxcomputeBaseOptions.PROJECT);
             if (databaseExists(project)) {
                 return Lists.newArrayList(project);
             }
@@ -136,7 +130,7 @@ public class MaxComputeCatalog implements Catalog {
     @Override
     public boolean tableExists(TablePath tablePath) throws CatalogException {
         try {
-            Odps odps = getOdps(tablePath.getDatabaseName());
+            Odps odps = getOdps(tablePath.getDatabaseName(), tablePath.getSchemaName());
             com.aliyun.odps.Tables tables = odps.tables();
             return tables.exists(tablePath.getTableName());
         } catch (OdpsException e) {
@@ -159,7 +153,7 @@ public class MaxComputeCatalog implements Catalog {
         Table odpsTable;
         com.aliyun.odps.TableSchema odpsSchema;
         try {
-            Odps odps = getOdps(tablePath.getDatabaseName());
+            Odps odps = getOdps(tablePath.getDatabaseName(), tablePath.getSchemaName());
             odpsTable =
                     MaxcomputeUtil.parseTable(
                             odps, tablePath.getDatabaseName(), tablePath.getTableName());
@@ -206,11 +200,12 @@ public class MaxComputeCatalog implements Catalog {
     public void createTable(TablePath tablePath, CatalogTable table, boolean ignoreIfExists)
             throws TableAlreadyExistException, DatabaseNotExistException, CatalogException {
         try {
-            Odps odps = getOdps(tablePath.getDatabaseName());
+            Odps odps = getOdps(tablePath.getDatabaseName(), tablePath.getSchemaName());
             SQLTask.run(
                             odps,
                             MaxComputeCatalogUtil.getCreateTableStatement(
-                                    readonlyConfig.get(SAVE_MODE_CREATE_TEMPLATE),
+                                    readonlyConfig.get(
+                                            MaxcomputeSinkOptions.SAVE_MODE_CREATE_TEMPLATE),
                                     tablePath,
                                     table))
                     .waitForSuccess();
@@ -223,7 +218,7 @@ public class MaxComputeCatalog implements Catalog {
     public void dropTable(TablePath tablePath, boolean ignoreIfNotExists)
             throws TableNotExistException, CatalogException {
         try {
-            Odps odps = getOdps(tablePath.getDatabaseName());
+            Odps odps = getOdps(tablePath.getDatabaseName(), tablePath.getSchemaName());
             SQLTask.run(odps, MaxComputeCatalogUtil.getDropTableQuery(tablePath, ignoreIfNotExists))
                     .waitForSuccess();
         } catch (OdpsException e) {
@@ -247,11 +242,13 @@ public class MaxComputeCatalog implements Catalog {
     public void truncateTable(TablePath tablePath, boolean ignoreIfNotExists)
             throws TableNotExistException, CatalogException {
         try {
-            Odps odps = getOdps(tablePath.getDatabaseName());
+            Odps odps = getOdps(tablePath.getDatabaseName(), tablePath.getSchemaName());
             Table odpsTable = odps.tables().get(tablePath.getTableName());
             if (odpsTable.isPartitioned()
-                    && StringUtils.isNotEmpty(readonlyConfig.get(PARTITION_SPEC))) {
-                PartitionSpec partitionSpec = new PartitionSpec(readonlyConfig.get(PARTITION_SPEC));
+                    && StringUtils.isNotEmpty(
+                            readonlyConfig.get(MaxcomputeBaseOptions.PARTITION_SPEC))) {
+                PartitionSpec partitionSpec =
+                        new PartitionSpec(readonlyConfig.get(MaxcomputeBaseOptions.PARTITION_SPEC));
                 odpsTable.deletePartition(partitionSpec, ignoreIfNotExists);
                 odpsTable.createPartition(partitionSpec, true);
             } else {
@@ -264,7 +261,7 @@ public class MaxComputeCatalog implements Catalog {
 
     public void createPartition(TablePath tablePath, PartitionSpec partitionSpec) {
         try {
-            Odps odps = getOdps(tablePath.getDatabaseName());
+            Odps odps = getOdps(tablePath.getDatabaseName(), tablePath.getSchemaName());
             Table odpsTable = odps.tables().get(tablePath.getTableName());
             odpsTable.createPartition(partitionSpec, true);
         } catch (Exception e) {
@@ -274,7 +271,7 @@ public class MaxComputeCatalog implements Catalog {
 
     public void truncatePartition(TablePath tablePath, PartitionSpec partitionSpec) {
         try {
-            Odps odps = getOdps(tablePath.getDatabaseName());
+            Odps odps = getOdps(tablePath.getDatabaseName(), tablePath.getSchemaName());
             Table odpsTable = odps.tables().get(tablePath.getTableName());
             odpsTable.deletePartition(partitionSpec, true);
             odpsTable.createPartition(partitionSpec, true);
@@ -291,7 +288,7 @@ public class MaxComputeCatalog implements Catalog {
     @Override
     public void executeSql(TablePath tablePath, String sql) {
         try {
-            Odps odps = getOdps(tablePath.getDatabaseName());
+            Odps odps = getOdps(tablePath.getDatabaseName(), tablePath.getSchemaName());
             String[] sqls = sql.split(";");
             for (String s : sqls) {
                 if (!s.trim().isEmpty()) {
@@ -313,7 +310,7 @@ public class MaxComputeCatalog implements Catalog {
             checkArgument(catalogTable.isPresent(), "CatalogTable cannot be null");
             return new SQLPreviewResult(
                     MaxComputeCatalogUtil.getCreateTableStatement(
-                            readonlyConfig.get(SAVE_MODE_CREATE_TEMPLATE),
+                            readonlyConfig.get(MaxcomputeSinkOptions.SAVE_MODE_CREATE_TEMPLATE),
                             tablePath,
                             catalogTable.get()));
         } else if (actionType == ActionType.DROP_TABLE) {
@@ -323,10 +320,22 @@ public class MaxComputeCatalog implements Catalog {
         }
     }
 
+    /**
+     * Creates an ODPS client for the given project. When {@code schemaName} is non-blank, sets it
+     * as the current schema so that subsequent ODPS API calls resolve tables within that MaxCompute
+     * Schema namespace.
+     */
     private Odps getOdps(String project) {
+        return getOdps(project, null);
+    }
+
+    private Odps getOdps(String project, String schemaName) {
         Odps odps = new Odps(account);
-        odps.setEndpoint(readonlyConfig.get(ENDPOINT));
+        odps.setEndpoint(readonlyConfig.get(MaxcomputeBaseOptions.ENDPOINT));
         odps.setDefaultProject(project);
+        if (StringUtils.isNotEmpty(schemaName)) {
+            odps.setCurrentSchema(schemaName);
+        }
         return odps;
     }
 

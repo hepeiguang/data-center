@@ -72,19 +72,20 @@ export function useOpenmldb(model: { [field: string]: any }): IJsonItem[] {
       options: options
     },
     {
-      type: 'mirror',
+      type: 'editor',
       field: 'sql',
       name: t('project.node.sql_statement'),
       validate: {
         trigger: ['input', 'trigger'],
         required: true,
         message: t('project.node.sql_empty_tips')
-      },
-      props: {
-        language: 'sql',
       }
     },
     useResources(),
-    ...useCustomParams({ model, field: 'localParams', isSimple: false })
+    ...useCustomParams({
+      model,
+      field: 'localParams',
+      isSimple: model.readonly
+    })
   ]
 }

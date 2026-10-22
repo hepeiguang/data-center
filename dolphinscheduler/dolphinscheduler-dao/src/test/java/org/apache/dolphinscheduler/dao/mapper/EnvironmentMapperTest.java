@@ -47,7 +47,7 @@ public class EnvironmentMapperTest extends BaseDaoTest {
         Environment environment = new Environment();
         environment.setName("testEnv");
         environment.setCode(1L);
-        environment.setOperator("1");
+        environment.setOperator(1);
         environment.setConfig(getConfig());
         environment.setDescription(getDesc());
         environment.setCreateTime(new Date());

@@ -52,7 +52,7 @@ public class ProjectMapperTest extends BaseDaoTest {
         // insertOne
         Project project = new Project();
         project.setName("ut project");
-        project.setUserId("111");
+        project.setUserId(111);
         project.setCode(1L);
         project.setCreateTime(new Date());
         project.setUpdateTime(new Date());
@@ -189,7 +189,7 @@ public class ProjectMapperTest extends BaseDaoTest {
         Project project = insertOne();
 
         List<Project> projects = projectMapper.queryProjectExceptUserId(
-                "100000");
+                100000);
 
         Assertions.assertNotEquals(0, projects.size());
     }
@@ -216,7 +216,7 @@ public class ProjectMapperTest extends BaseDaoTest {
         Assertions.assertNotEquals(0, allProject.size());
     }
 
-    private Project insertProject(long projectCode, String projectName, String userId) {
+    private Project insertProject(long projectCode, String projectName, int userId) {
         Project project = new Project();
         project.setName(projectName);
         project.setUserId(userId);

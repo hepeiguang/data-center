@@ -25,10 +25,14 @@ import org.apache.seatunnel.api.table.factory.TableSinkFactory;
 import org.apache.seatunnel.api.table.factory.TableSinkFactoryContext;
 import org.apache.seatunnel.connectors.seatunnel.udp.config.UdpSinkConfig;
 
+import static org.apache.seatunnel.connectors.seatunnel.udp.config.UdpOptions.ASYNC_ENABLED;
+import static org.apache.seatunnel.connectors.seatunnel.udp.config.UdpOptions.ASYNC_THREADS;
+import static org.apache.seatunnel.connectors.seatunnel.udp.config.UdpOptions.ENABLE_MESSAGE_REPLY;
 import static org.apache.seatunnel.connectors.seatunnel.udp.config.UdpOptions.HOST;
 import static org.apache.seatunnel.connectors.seatunnel.udp.config.UdpOptions.IDENTIFIER;
 import static org.apache.seatunnel.connectors.seatunnel.udp.config.UdpOptions.MAX_RETRIES;
 import static org.apache.seatunnel.connectors.seatunnel.udp.config.UdpOptions.PORT;
+import static org.apache.seatunnel.connectors.seatunnel.udp.config.UdpOptions.RETRY_INTERVAL_MS;
 import static org.apache.seatunnel.connectors.seatunnel.udp.config.UdpOptions.TIMEOUT_MS;
 
 @AutoService(Factory.class)
@@ -40,7 +44,16 @@ public class UdpSinkFactory implements TableSinkFactory {
 
     @Override
     public OptionRule optionRule() {
-        return OptionRule.builder().required(HOST, PORT).optional(MAX_RETRIES, TIMEOUT_MS).build();
+        return OptionRule.builder()
+                .required(HOST, PORT)
+                .optional(
+                        MAX_RETRIES,
+                        TIMEOUT_MS,
+                        RETRY_INTERVAL_MS,
+                        ENABLE_MESSAGE_REPLY,
+                        ASYNC_ENABLED,
+                        ASYNC_THREADS)
+                .build();
     }
 
     @Override

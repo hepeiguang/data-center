@@ -21,7 +21,7 @@ import org.apache.dolphinscheduler.common.enums.AuthorizationType;
 import org.apache.dolphinscheduler.common.enums.UserType;
 import org.apache.dolphinscheduler.dao.entity.Project;
 import org.apache.dolphinscheduler.dao.entity.User;
-import org.apache.dolphinscheduler.dao.mapper.ProjectMapper;
+import org.apache.dolphinscheduler.dao.repository.ProjectDao;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -47,7 +47,7 @@ public class ProjectsResourcePermissionCheckTest {
     private ResourcePermissionCheckServiceImpl.ProjectsResourcePermissionCheck projectsResourcePermissionCheck;
 
     @Mock
-    private ProjectMapper projectMapper;
+    private ProjectDao projectDao;
 
     @Test
     public void testPermissionCheck() {
@@ -69,7 +69,7 @@ public class ProjectsResourcePermissionCheckTest {
         ids.add(project.getId());
         List<Project> projects = Arrays.asList(project);
 
-        Mockito.when(projectMapper.listAuthorizedProjects(user.getId(), null)).thenReturn(projects);
+        Mockito.when(projectDao.listAuthorizedProjects(user.getId(), null)).thenReturn(projects);
 
         Assertions.assertEquals(ids, projectsResourcePermissionCheck.listAuthorizedResourceIds(user.getId(), logger));
     }
@@ -78,7 +78,7 @@ public class ProjectsResourcePermissionCheckTest {
         User loginUser = new User();
         loginUser.setUserType(UserType.GENERAL_USER);
         loginUser.setUserName("test");
-        loginUser.setId("1");
+        loginUser.setId(1);
         return loginUser;
     }
 
@@ -87,7 +87,7 @@ public class ProjectsResourcePermissionCheckTest {
         project.setCode(1L);
         project.setId(1);
         project.setName("projectName");
-        project.setUserId("1");
+        project.setUserId(1);
         return project;
     }
 }

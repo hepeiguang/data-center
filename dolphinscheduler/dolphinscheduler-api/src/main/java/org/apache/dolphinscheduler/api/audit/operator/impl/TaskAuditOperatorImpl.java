@@ -24,7 +24,7 @@ import org.apache.dolphinscheduler.api.audit.operator.BaseAuditOperator;
 import org.apache.dolphinscheduler.common.enums.AuditOperationType;
 import org.apache.dolphinscheduler.dao.entity.AuditLog;
 import org.apache.dolphinscheduler.dao.entity.TaskDefinition;
-import org.apache.dolphinscheduler.dao.mapper.TaskDefinitionMapper;
+import org.apache.dolphinscheduler.dao.repository.TaskDefinitionDao;
 
 import java.util.List;
 import java.util.Map;
@@ -36,7 +36,7 @@ import org.springframework.stereotype.Service;
 public class TaskAuditOperatorImpl extends BaseAuditOperator {
 
     @Autowired
-    private TaskDefinitionMapper taskDefinitionMapper;
+    private TaskDefinitionDao taskDefinitionDao;
 
     @Override
     public void modifyAuditOperationType(AuditType auditType, Map<String, Object> paramsMap,
@@ -46,23 +46,23 @@ public class TaskAuditOperatorImpl extends BaseAuditOperator {
     }
 
     @Override
-    protected void setObjectByParma(String[] paramNameArr, Map<String, Object> paramsMap,
+    protected void setObjectByParam(String[] paramNameArr, Map<String, Object> paramsMap,
                                     List<AuditLog> auditLogList) {
 
-        super.setObjectByParma(paramNameArr, paramsMap, auditLogList);
+        super.setObjectByParam(paramNameArr, paramsMap, auditLogList);
         if (paramsMap.containsKey(AuditLogConstants.VERSION)) {
             auditLogList.get(0).setDetail(paramsMap.get(AuditLogConstants.VERSION).toString());
         }
     }
 
     @Override
-    protected String getObjectNameFromReturnIdentity(Object identity) {
+    protected String getObjectNameFromIdentity(Object identity) {
         Long objId = toLong(identity);
         if (objId == -1) {
             return "";
         }
 
-        TaskDefinition obj = taskDefinitionMapper.queryByCode(objId);
+        TaskDefinition obj = taskDefinitionDao.queryByCode(objId);
         return obj == null ? "" : obj.getName();
     }
 }

@@ -46,9 +46,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
 
-/**
- * abstract controller test
- */
 @SpringBootTest(classes = {ApiApplicationServer.class, DaoConfiguration.class, RegistryServer.class})
 @AutoConfigureMockMvc
 @DirtiesContext
@@ -71,7 +68,7 @@ public abstract class AbstractControllerTest {
 
     @BeforeEach
     public void setUp() {
-        user = usersService.queryUser("1");
+        user = usersService.queryUser(1);
         createSession(user);
     }
 
@@ -86,7 +83,7 @@ public abstract class AbstractControllerTest {
 
         user = loginUser;
 
-        Session session = sessionService.createSessionIfAbsent(loginUser, null);
+        Session session = sessionService.createSessionIfAbsent(loginUser);
         Assertions.assertNotNull(session);
 
         sessionId = session.getId();

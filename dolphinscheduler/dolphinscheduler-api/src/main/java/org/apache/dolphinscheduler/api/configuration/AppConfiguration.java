@@ -46,7 +46,6 @@ public class AppConfiguration implements WebMvcConfigurer {
     public static final String LOGIN_INTERCEPTOR_PATH_PATTERN = "/**/*";
     public static final String LOGIN_PATH_PATTERN = "/login/**";
     public static final String REGISTER_PATH_PATTERN = "/users/register";
-    public static final String TOKEN_VALID_PATTERN = "/sso/token/validation";
     public static final String PATH_PATTERN = "/**";
     public static final String LOCALE_LANGUAGE_COOKIE = "language";
 
@@ -71,7 +70,6 @@ public class AppConfiguration implements WebMvcConfigurer {
 
     /**
      * Cookie
-     *
      * @return local resolver
      */
     @Bean(name = "localeResolver")
@@ -79,7 +77,7 @@ public class AppConfiguration implements WebMvcConfigurer {
         CookieLocaleResolver localeResolver = new CookieLocaleResolver();
         localeResolver.setCookieName(LOCALE_LANGUAGE_COOKIE);
         // set default locale
-        localeResolver.setDefaultLocale(Locale.SIMPLIFIED_CHINESE);
+        localeResolver.setDefaultLocale(Locale.US);
         // set language tag compliant
         localeResolver.setLanguageTagCompliant(false);
         return localeResolver;
@@ -105,10 +103,11 @@ public class AppConfiguration implements WebMvcConfigurer {
         }
         registry.addInterceptor(loginInterceptor())
                 .addPathPatterns(LOGIN_INTERCEPTOR_PATH_PATTERN)
-                .excludePathPatterns(LOGIN_PATH_PATTERN, REGISTER_PATH_PATTERN, TOKEN_VALID_PATTERN,
+                .excludePathPatterns(LOGIN_PATH_PATTERN, REGISTER_PATH_PATTERN,
                         "/swagger-resources/**", "/webjars/**", "/v3/api-docs/**", "/api-docs/**", "/swagger-ui.html",
                         "/doc.html", "/swagger-ui/**", "*.html", "/ui/**", "/error", "/oauth2-provider",
-                        "/redirect/login/oauth2", "/cookies");
+                        "/redirect/login/oauth2", "/cookies", "/oidc-providers", "/oauth2/authorization/**",
+                        "/login/oauth2/code/**");
     }
 
     @Override

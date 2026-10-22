@@ -15,91 +15,46 @@
  * limitations under the License.
  */
 
-import { defineComponent, onMounted, ref,getCurrentInstance,  toRefs, watch } from 'vue'
+import { defineComponent, onMounted, ref, toRefs, watch } from 'vue'
 import { NGrid, NGi } from 'naive-ui'
 import { startOfToday, getTime } from 'date-fns'
 import { useI18n } from 'vue-i18n'
 import { useTaskState } from './use-task-state'
-import { useProcessState } from './use-process-state'
+import { useWorkflowState } from './use-workflow-state'
 import StateCard from './components/state-card'
 import DefinitionCard from './components/definition-card'
-
-// import { useUserStore } from '@/store/user/user'
-// import cookies from 'js-cookie'
-// import { logintoken } from '@/service/modules/login'
-// import router from '@/router'
-// import { getUserInfo } from '@/service/modules/users'
-// import type { UserInfoRes } from '@/service/modules/users/types'
 
 export default defineComponent({
   name: 'home',
   setup() {
-    // let {ctx:that, proxy} = getCurrentInstance() as any
-    // const userStore = useUserStore()
-    // var token:any
-    // const isShow = ref(false)
-
-    // //跳转后进入此页面
-    // if(window.location.href.indexOf('token1') != -1) {
-    //   token = window.location.href.slice(window.location.href.indexOf('=')+1)
-    //   logintoken(token).then((res:any)=> {
-    //     console.log('logintoken', res)
-    //     if(res) {
-    //       if(res.logoutUrl) {
-    //         userStore.setLogoutUrl(res.logoutUrl)
-    //       } else {
-    //         userStore.setLogoutUrl('')
-    //       }
-    //       userStore.setSessionId(res.sessionId)
-    //       cookies.set('sessionId', res.sessionId)
-    //       isShow.value = true;
-    //       that.$forceUpdate()
-    //       getUserInfo().then((res:any)=> {
-    //         const userInfoRes: UserInfoRes = res
-    //         userStore.setUserInfo(userInfoRes)
-    //       })
-    //       router.push({ path: '/home' })
-    //     } else {
-    //       router.push({ path: '/login' })
-    //     }
-    //   })
-    // } else if (document.cookie.indexOf('sessionId') == -1) {
-    //   router.push({ path: '/login' })
-    //   //避免登录页和首页之间的反复切换问题
-    //   cookies.remove('sessionId')
-    // }
     const { t, locale } = useI18n()
     const dateRef = ref([getTime(startOfToday()), Date.now()])
     const taskStateRef = ref()
-    const processStateRef = ref()
+    const workflowStateRef = ref()
     const { getTaskState, taskVariables } = useTaskState()
-    const { getProcessState, processVariables } = useProcessState()
+    const { getWorkflowState, workflowVariables: workflowVariables } =
+      useWorkflowState()
 
     const initData = () => {
       taskStateRef.value = getTaskState(dateRef.value) || taskStateRef.value
-      processStateRef.value =
-        getProcessState(dateRef.value) || processStateRef.value
+      workflowStateRef.value =
+        getWorkflowState(dateRef.value) || workflowStateRef.value
     }
 
     const handleTaskDate = (val: any) => {
       taskStateRef.value = getTaskState(val)
     }
 
-    const handleProcessDate = (val: any) => {
-      processStateRef.value = getProcessState(val)
+    const handleWorkflowDate = (val: any) => {
+      workflowStateRef.value = getWorkflowState(val)
     }
 
     onMounted(() => {
-      // const userMsg = localStorage.getItem('user')
-      // if(userMsg && JSON.parse(userMsg)?.sessionId){
-      //     isShow.value = true;
-      //     that.$forceUpdate()
-      // }
       initData()
     })
 
     watch(
-      [locale],
+      () => locale.value,
       () => initData()
     )
 
@@ -107,11 +62,11 @@ export default defineComponent({
       t,
       dateRef,
       handleTaskDate,
-      handleProcessDate,
+      handleWorkflowDate: handleWorkflowDate,
       taskStateRef,
-      processStateRef,
+      workflowStateRef: workflowStateRef,
       ...toRefs(taskVariables),
-      ...toRefs(processVariables)
+      ...toRefs(workflowVariables)
     }
   },
   render() {
@@ -119,9 +74,9 @@ export default defineComponent({
       t,
       dateRef,
       handleTaskDate,
-      handleProcessDate,
+      handleWorkflowDate,
       taskLoadingRef,
-      processLoadingRef
+      workflowLoadingRef
     } = this
 
     return (
@@ -139,18 +94,18 @@ export default defineComponent({
           </NGi>
           <NGi>
             <StateCard
-              title={t('home.process_state_statistics')}
+              title={t('home.workflow_state_statistics')}
               date={dateRef}
-              tableData={this.processStateRef?.value.table}
-              chartData={this.processStateRef?.value.chart}
-              onUpdateDatePickerValue={handleProcessDate}
-              loadingRef={processLoadingRef}
+              tableData={this.workflowStateRef?.value.table}
+              chartData={this.workflowStateRef?.value.chart}
+              onUpdateDatePickerValue={handleWorkflowDate}
+              loadingRef={workflowLoadingRef}
             />
           </NGi>
         </NGrid>
         <NGrid cols={1} style='margin-top: 12px;'>
           <NGi>
-            <DefinitionCard title={t('home.process_definition_statistics')} />
+            <DefinitionCard title={t('home.workflow_definition_statistics')} />
           </NGi>
         </NGrid>
       </div>

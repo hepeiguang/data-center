@@ -15,10 +15,9 @@
  * limitations under the License.
  */
 
-import { defineComponent, ref, PropType, computed } from 'vue'
+import { defineComponent, ref, PropType } from 'vue'
 import { NLayoutSider, NMenu } from 'naive-ui'
 import { useMenuClick } from './use-menuClick'
-import { useParentAppProps } from '@/store/parentAppProps/parentAppProps'
 
 const Sidebar = defineComponent({
   name: 'Sidebar',
@@ -32,31 +31,19 @@ const Sidebar = defineComponent({
       default: ''
     }
   },
-  setup(props) {
-    const parentAppProps = useParentAppProps()
+  setup() {
     const collapsedRef = ref(false)
     const defaultExpandedKeys = [
       'workflow',
       'task',
-      'udf-manage',
       'service-manage',
       'statistical-manage',
       'task-group-manage'
     ]
+
     const { handleMenuClick } = useMenuClick()
-    const filteredTaskMenuOptions = computed(() => {
-      return props.sideMenuOptions.filter((item: any) => item.label !== '任务')
-    })
-    const finalFilteredMenuOptions = computed(() => {
-      if (parentAppProps.filterMenu) {
-        return filteredTaskMenuOptions.value.map((item: any) => ({
-          ...item,
-          children: item.children.filter((ele: any) => ele.label === '项目概览'||ele.label === '工作流定义'||ele.label === '工作流实例')
-        }))
-      }
-      return props.sideMenuOptions
-    })
-    return { collapsedRef, defaultExpandedKeys, handleMenuClick,parentAppProps,finalFilteredMenuOptions }
+
+    return { collapsedRef, defaultExpandedKeys, handleMenuClick }
   },
   render() {
     return (
@@ -72,7 +59,7 @@ const Sidebar = defineComponent({
         <NMenu
           class='tab-vertical'
           value={this.sideKey}
-          options={this.finalFilteredMenuOptions}
+          options={this.sideMenuOptions}
           defaultExpandedKeys={this.defaultExpandedKeys}
           onUpdateValue={this.handleMenuClick}
         />

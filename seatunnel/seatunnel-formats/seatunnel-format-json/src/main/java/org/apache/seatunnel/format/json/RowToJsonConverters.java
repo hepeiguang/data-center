@@ -37,6 +37,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.function.Function;
@@ -44,12 +45,23 @@ import java.util.function.IntFunction;
 
 import static java.time.format.DateTimeFormatter.ISO_LOCAL_DATE;
 import static java.time.format.DateTimeFormatter.ISO_LOCAL_DATE_TIME;
+import static java.time.format.DateTimeFormatter.ISO_OFFSET_DATE_TIME;
 
 public class RowToJsonConverters implements Serializable {
 
     private static final long serialVersionUID = 6988876688930916940L;
 
     private String nullValue;
+
+    private final boolean serializeTimestampTzAsLocal;
+
+    public RowToJsonConverters() {
+        this.serializeTimestampTzAsLocal = false;
+    }
+
+    public RowToJsonConverters(boolean serializeTimestampTzAsLocal) {
+        this.serializeTimestampTzAsLocal = serializeTimestampTzAsLocal;
+    }
 
     public RowToJsonConverter createConverter(SeaTunnelDataType<?> type) {
         return wrapIntoNullableConverter(createNotNullConverter(type));
@@ -181,6 +193,25 @@ public class RowToJsonConverters implements Serializable {
                     public JsonNode convert(ObjectMapper mapper, JsonNode reuse, Object value) {
                         return mapper.getNodeFactory()
                                 .textNode(ISO_LOCAL_DATE_TIME.format((LocalDateTime) value));
+                    }
+                };
+            case TIMESTAMP_TZ:
+                if (serializeTimestampTzAsLocal) {
+                    return new RowToJsonConverter() {
+                        @Override
+                        public JsonNode convert(ObjectMapper mapper, JsonNode reuse, Object value) {
+                            return mapper.getNodeFactory()
+                                    .textNode(
+                                            ISO_LOCAL_DATE_TIME.format(
+                                                    ((OffsetDateTime) value).toLocalDateTime()));
+                        }
+                    };
+                }
+                return new RowToJsonConverter() {
+                    @Override
+                    public JsonNode convert(ObjectMapper mapper, JsonNode reuse, Object value) {
+                        return mapper.getNodeFactory()
+                                .textNode(ISO_OFFSET_DATE_TIME.format((OffsetDateTime) value));
                     }
                 };
             case ARRAY:

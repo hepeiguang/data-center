@@ -99,4 +99,42 @@ public class OffsetTableParserTest {
         Assertions.assertEquals(9, ((Number) row.get("ctrl")).intValue());
         Assertions.assertFalse(row.containsKey("x"));
     }
+
+    @Test
+    public void testTruncatedPacketRejected() {
+        String dsl =
+                "{\"steps\":[{\"op\":\"read\",\"name\":\"x\",\"type\":\"int32\"}]}";
+        Assertions.assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                        new OffsetTableParser(dsl)
+                                .decode(new byte[] {1, 2}, new PacketMeta("h", 1, 2, 0)));
+    }
+
+    @Test
+    public void testBytesEmittedAsBase64() throws Exception {
+        String dsl =
+                "{\"steps\":[{\"op\":\"read\",\"name\":\"raw\",\"type\":\"bytes\",\"length\":3}]}";
+        Map<String, Object> row =
+                new OffsetTableParser(dsl)
+                        .decode(new byte[] {0x01, 0x02, 0x03}, new PacketMeta("h", 1, 3, 0))
+                        .get(0);
+        Assertions.assertEquals("AQID", row.get("raw"));
+    }
+
+    @Test
+    public void testNegativeLoopCountRejected() {
+        ByteBuffer buf = ByteBuffer.allocate(1).order(ByteOrder.BIG_ENDIAN);
+        buf.put((byte) -1);
+        String dsl =
+                "{\"steps\":["
+                        + "{\"op\":\"read\",\"name\":\"n\",\"type\":\"int8\"},"
+                        + "{\"op\":\"loop\",\"countFrom\":\"n\",\"as\":\"items\",\"steps\":["
+                        + "{\"op\":\"read\",\"name\":\"x\",\"type\":\"uint8\"}]}]}";
+        Assertions.assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                        new OffsetTableParser(dsl)
+                                .decode(buf.array(), new PacketMeta("h", 1, 1, 0)));
+    }
 }

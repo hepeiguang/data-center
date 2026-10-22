@@ -19,6 +19,7 @@ import { Graph, Cell } from '@antv/x6'
 import { useDagStore } from '@/store/project/dynamic/dag'
 
 export function useAddDagShape(graph: Graph) {
-  const cells: Array<Cell> = useDagStore().getDagTasks;
-  (graph as Graph).addNode(cells.at(-1) as any)
+  const cells: Array<Cell> = useDagStore().getDagTasks
+
+  ;(graph as Graph).addNode(cells.at(-1) as any)
 }

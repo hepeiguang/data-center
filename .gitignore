@@ -8,3 +8,7 @@
 **/META-INF/
 **/downloads/
 .DS_Store
+
+dolphinscheduler-pre343-mixed/
+*.nested.yaml.bak
+

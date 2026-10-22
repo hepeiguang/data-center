@@ -40,7 +40,7 @@ Click `Add New Webhook to Workspace` and select a group to post messages.
 ### Acquire Incoming Webhooks Address
 
 Copy the `Incoming Webhooks` address to DolphinScheduler, check the image below:
-The default format of the `Incoming Webhooks`: `https://hooks.example.com/services/PLACEHOLDER`
+The default format of the `Incoming Webhooks`: `https://hooks.slack.com/services/<team-id>/<channel-id>/<token>`
 
 ![alert-slack-webhook](../../../../img/new_ui/dev/alert/alert_slack_webhook_addr.png)
 

@@ -32,7 +32,9 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nullable;
 
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -53,20 +55,23 @@ public class FlinkSourceEnumerator<SplitT extends SourceSplit, EnumStateT>
 
     private final SourceSplitEnumerator.Context<SplitT> context;
     private final int parallelism;
+    private final Set<Integer> noMoreSplitsSignaledReaders;
 
     private final Object lock = new Object();
+    private final Set<Integer> registeredReaderIds = new HashSet<>();
 
     private volatile boolean isRun = false;
-
-    private volatile int currentRegisterReaders = 0;
+    private volatile boolean isRunning = false;
 
     public FlinkSourceEnumerator(
             SourceSplitEnumerator<SplitT, EnumStateT> enumerator,
-            SplitEnumeratorContext<SplitWrapper<SplitT>> enumContext) {
+            SplitEnumeratorContext<SplitWrapper<SplitT>> enumContext,
+            Set<Integer> noMoreSplitsSignaledReaders) {
         this.sourceSplitEnumerator = enumerator;
         this.enumeratorContext = enumContext;
         this.context = new FlinkSourceSplitEnumeratorContext<>(enumeratorContext);
         this.parallelism = enumeratorContext.currentParallelism();
+        this.noMoreSplitsSignaledReaders = noMoreSplitsSignaledReaders;
     }
 
     @Override
@@ -82,30 +87,53 @@ public class FlinkSourceEnumerator<SplitT extends SourceSplit, EnumStateT>
 
     @Override
     public void addSplitsBack(List<SplitWrapper<SplitT>> splits, int subtaskId) {
-        sourceSplitEnumerator.addSplitsBack(
-                splits.stream().map(SplitWrapper::getSourceSplit).collect(Collectors.toList()),
-                subtaskId);
+        synchronized (lock) {
+            sourceSplitEnumerator.addSplitsBack(
+                    splits.stream().map(SplitWrapper::getSourceSplit).collect(Collectors.toList()),
+                    subtaskId);
+        }
     }
 
     @Override
     public void addReader(int subtaskId) {
-        sourceSplitEnumerator.registerReader(subtaskId);
+        boolean needResignalNoMoreSplits;
+        boolean shouldRun = false;
         synchronized (lock) {
-            currentRegisterReaders++;
-            if (!isRun && currentRegisterReaders == parallelism) {
-                try {
-                    sourceSplitEnumerator.run();
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
-                isRun = true;
+            sourceSplitEnumerator.registerReader(subtaskId);
+            registeredReaderIds.add(subtaskId);
+            needResignalNoMoreSplits = noMoreSplitsSignaledReaders.contains(subtaskId);
+            if (!isRun && !isRunning && registeredReaderIds.size() == parallelism) {
+                shouldRun = true;
+                isRunning = true;
             }
+        }
+        if (shouldRun) {
+            try {
+                sourceSplitEnumerator.run();
+                synchronized (lock) {
+                    isRun = true;
+                    isRunning = false;
+                }
+            } catch (Exception e) {
+                synchronized (lock) {
+                    isRunning = false;
+                }
+                throw new RuntimeException(e);
+            }
+        }
+        if (needResignalNoMoreSplits) {
+            LOGGER.info(
+                    "Reader [{}] re-registered after failover. Re-signaling NoMoreSplitsEvent.",
+                    subtaskId);
+            enumeratorContext.signalNoMoreSplits(subtaskId);
         }
     }
 
     @Override
     public EnumStateT snapshotState(long checkpointId) throws Exception {
-        return sourceSplitEnumerator.snapshotState(checkpointId);
+        synchronized (lock) {
+            return sourceSplitEnumerator.snapshotState(checkpointId);
+        }
     }
 
     @Override

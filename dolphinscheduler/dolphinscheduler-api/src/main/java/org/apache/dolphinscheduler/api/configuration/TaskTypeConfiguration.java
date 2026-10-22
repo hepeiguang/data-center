@@ -17,42 +17,37 @@
 
 package org.apache.dolphinscheduler.api.configuration;
 
-import lombok.Getter;
-import lombok.Setter;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.dolphinscheduler.api.dto.FavTaskDto;
 import org.apache.dolphinscheduler.common.config.YamlPropertySourceFactory;
 import org.apache.dolphinscheduler.common.constants.Constants;
+
+import org.apache.commons.collections4.CollectionUtils;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.List;
-
 @Component
 @EnableConfigurationProperties
 @PropertySource(value = {"classpath:task-type-config.yaml"}, factory = YamlPropertySourceFactory.class)
 @ConfigurationProperties(prefix = "task")
-@Getter
-@Setter
+@Data
 @Slf4j
 public class TaskTypeConfiguration {
 
-    private List<TaskItem> universal;
-    private List<TaskItem> cloud;
-    private List<TaskItem> logic;
-    private List<TaskItem> dataIntegration;
-    private List<TaskItem> dataQuality;
-    private List<TaskItem> other;
-    private List<TaskItem> machineLearning;
-    private List<TaskItem> seatunnel;
-    private List<SourceItem> source;
-    private List<TaskItem> sink;
-    private List<TaskItem> transform;
-    private List<TaskItem> metadata;
+    private List<String> universal;
+    private List<String> cloud;
+    private List<String> logic;
+    private List<String> dataIntegration;
+    private List<String> other;
+    private List<String> machineLearning;
 
     private static final List<FavTaskDto> defaultTaskTypes = new ArrayList<>();
 
@@ -61,20 +56,14 @@ public class TaskTypeConfiguration {
             return defaultTaskTypes;
         }
         printDefaultTypes();
-        universal.forEach(task -> defaultTaskTypes.add(new FavTaskDto(task.getTaskType(), false, Constants.TYPE_UNIVERSAL, null)));
-        cloud.forEach(task -> defaultTaskTypes.add(new FavTaskDto(task.getTaskType(), false, Constants.TYPE_CLOUD, null)));
-        logic.forEach(task -> defaultTaskTypes.add(new FavTaskDto(task.getTaskType(), false, Constants.TYPE_LOGIC, null)));
+        universal.forEach(task -> defaultTaskTypes.add(new FavTaskDto(task, false, Constants.TYPE_UNIVERSAL)));
+        cloud.forEach(task -> defaultTaskTypes.add(new FavTaskDto(task, false, Constants.TYPE_CLOUD)));
+        logic.forEach(task -> defaultTaskTypes.add(new FavTaskDto(task, false, Constants.TYPE_LOGIC)));
         dataIntegration
-                .forEach(task -> defaultTaskTypes.add(new FavTaskDto(task.getTaskType(), false, Constants.TYPE_DATA_INTEGRATION, null)));
-        dataQuality.forEach(task -> defaultTaskTypes.add(new FavTaskDto(task.getTaskType(), false, Constants.TYPE_DATA_QUALITY, null)));
+                .forEach(task -> defaultTaskTypes.add(new FavTaskDto(task, false, Constants.TYPE_DATA_INTEGRATION)));
         machineLearning
-                .forEach(task -> defaultTaskTypes.add(new FavTaskDto(task.getTaskType(), false, Constants.TYPE_MACHINE_LEARNING, null)));
-        other.forEach(task -> defaultTaskTypes.add(new FavTaskDto(task.getTaskType(), false, Constants.TYPE_OTHER, null)));
-        seatunnel.forEach(task -> defaultTaskTypes.add(new FavTaskDto(task.getTaskType(), false, Constants.TYPE_SEATUNNEL, null)));
-        source.forEach(task -> defaultTaskTypes.add(new FavTaskDto(task.getTaskType(), false, Constants.TYPE_SOURCE, task.getJobMode())));
-        sink.forEach(task -> defaultTaskTypes.add(new FavTaskDto(task.getTaskType(), false, Constants.TYPE_SINK, null)));
-        transform.forEach(task -> defaultTaskTypes.add(new FavTaskDto(task.getTaskType(), false, Constants.TYPE_TRANSFORM, null)));
-        metadata.forEach(task -> defaultTaskTypes.add(new FavTaskDto(task.getTaskType(), false, Constants.TYPE_METADATA, null)));
+                .forEach(task -> defaultTaskTypes.add(new FavTaskDto(task, false, Constants.TYPE_MACHINE_LEARNING)));
+        other.forEach(task -> defaultTaskTypes.add(new FavTaskDto(task, false, Constants.TYPE_OTHER)));
         return defaultTaskTypes;
     }
 
@@ -83,38 +72,7 @@ public class TaskTypeConfiguration {
         log.info("support default cloud task types: {}", cloud);
         log.info("support default logic task types: {}", logic);
         log.info("support default dataIntegration task types: {}", dataIntegration);
-        log.info("support default dataQuality task types: {}", dataQuality);
         log.info("support default machineLearning task types: {}", machineLearning);
-        log.info("support default seatunnel task types: {}", seatunnel);
-        log.info("support default sink task types: {}", sink);
-        log.info("support default transform task types: {}", transform);
-        log.info("support default source task types: {}", source);
-        log.info("support default metadata task types: {}", metadata);
-    }
-
-    // 通用任务项
-    public static class TaskItem {
-        private String taskType;
-
-        public String getTaskType() {
-            return taskType;
-        }
-
-        public void setTaskType(String taskType) {
-            this.taskType = taskType;
-        }
-    }
-
-    // 特殊任务项（如 Source）
-    public static class SourceItem extends TaskItem {
-        private String jobMode;
-
-        public String getJobMode() {
-            return jobMode;
-        }
-
-        public void setJobMode(String jobMode) {
-            this.jobMode = jobMode;
-        }
+        log.info("support default other task types: {}", other);
     }
 }

@@ -116,7 +116,6 @@ const Modal = defineComponent({
           class={styles['modal-card']}
           contentStyle={{ overflowY: 'auto' }}
         >
-          {/* 插槽的写法 */}
           {{
             default: () => renderSlot($slots, 'default'),
             'header-extra': () => (
@@ -173,8 +172,5 @@ const Modal = defineComponent({
     )
   }
 })
-
-
-
 
 export default Modal

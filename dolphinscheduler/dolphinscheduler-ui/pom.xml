@@ -20,7 +20,7 @@
     <parent>
         <groupId>org.apache.dolphinscheduler</groupId>
         <artifactId>dolphinscheduler</artifactId>
-        <version>3.2.2</version>
+        <version>3.4.3</version>
     </parent>
 
     <artifactId>dolphinscheduler-ui</artifactId>
@@ -28,60 +28,62 @@
     <name>${project.artifactId}</name>
 
     <properties>
-        <node.version>v22.16.0</node.version>
-        <pnpm.version>10.11.0</pnpm.version>
+        <node.version>v16.14.0</node.version>
+        <pnpm.version>v7.1.0</pnpm.version>
         <sonar.sources>src</sonar.sources>
         <frontend-maven-plugin.version>1.12.1</frontend-maven-plugin.version>
     </properties>
 
-    <profiles>
-        <profile>
-            <id>release</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>com.github.eirslett</groupId>
-                        <artifactId>frontend-maven-plugin</artifactId>
-                        <version>${frontend-maven-plugin.version}</version>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>com.github.eirslett</groupId>
+                <artifactId>frontend-maven-plugin</artifactId>
+                <version>${frontend-maven-plugin.version}</version>
+                <configuration>
+                    <skip>${build.ui.skip}</skip>
+                    <pnpmInheritsProxyConfigFromMaven>false</pnpmInheritsProxyConfigFromMaven>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>install node and pnpm</id>
+                        <goals>
+                            <goal>install-node-and-pnpm</goal>
+                        </goals>
                         <configuration>
-                            <skip>${build.ui.skip}</skip>
-                            <pnpmInheritsProxyConfigFromMaven>false</pnpmInheritsProxyConfigFromMaven>
+                            <nodeVersion>${node.version}</nodeVersion>
+                            <pnpmVersion>${pnpm.version}</pnpmVersion>
                         </configuration>
-                        <executions>
-                            <execution>
-                                <id>install node and pnpm</id>
-                                <goals>
-                                    <goal>install-node-and-pnpm</goal>
-                                </goals>
-                                <configuration>
-                                    <nodeVersion>${node.version}</nodeVersion>
-                                    <pnpmVersion>${pnpm.version}</pnpmVersion>
-                                </configuration>
-                            </execution>
-                            <execution>
-                                <id>pnpm install</id>
-                                <goals>
-                                    <goal>pnpm</goal>
-                                </goals>
-                                <phase>generate-resources</phase>
-                                <configuration>
-                                    <arguments>install</arguments>
-                                </configuration>
-                            </execution>
-                            <execution>
-                                <id>pnpm run build:prod</id>
-                                <goals>
-                                    <goal>pnpm</goal>
-                                </goals>
-                                <configuration>
-                                    <arguments>run build:prod</arguments>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
+                    </execution>
+                    <execution>
+                        <id>pnpm install</id>
+                        <goals>
+                            <goal>pnpm</goal>
+                        </goals>
+                        <phase>generate-resources</phase>
+                        <configuration>
+                            <arguments>install</arguments>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>pnpm run build:prod</id>
+                        <goals>
+                            <goal>pnpm</goal>
+                        </goals>
+                        <configuration>
+                            <arguments>run build:prod</arguments>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-deploy-plugin</artifactId>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
+            </plugin>
+        </plugins>
 
-            </build>
-        </profile>
-    </profiles>
+    </build>
 </project>

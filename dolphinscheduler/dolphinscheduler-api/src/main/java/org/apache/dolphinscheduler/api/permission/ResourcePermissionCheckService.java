@@ -14,7 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.apache.dolphinscheduler.api.permission;
+
+import org.apache.dolphinscheduler.common.enums.AuthorizationType;
 
 import java.util.Set;
 
@@ -30,7 +33,7 @@ public interface ResourcePermissionCheckService<T> {
      * @param logger
      * @return
      */
-    boolean resourcePermissionCheck(Object authorizationType, Object[] needChecks, String userId, Logger logger);
+    boolean resourcePermissionCheck(Object authorizationType, Object[] needChecks, Integer userId, Logger logger);
 
     /**
      * userOwnedResourceIdsAcquisition
@@ -39,7 +42,7 @@ public interface ResourcePermissionCheckService<T> {
      * @param logger
      * @return
      */
-    Set<T> userOwnedResourceIdsAcquisition(Object authorizationType, String userId, Logger logger);
+    Set<T> userOwnedResourceIdsAcquisition(Object authorizationType, Integer userId, Logger logger);
 
     /**
      * operationpermissionCheck
@@ -49,13 +52,7 @@ public interface ResourcePermissionCheckService<T> {
      * @param logger
      * @return
      */
-    boolean operationPermissionCheck(Object authorizationType, String userId,
-                                     String permissionKey, Logger logger);
-
-    /**
-     * functionDisabled
-     * @return
-     */
-    boolean functionDisabled();
+    boolean operationPermissionCheck(AuthorizationType authorizationType, Integer userId, String permissionKey,
+                                     Logger logger);
 
 }

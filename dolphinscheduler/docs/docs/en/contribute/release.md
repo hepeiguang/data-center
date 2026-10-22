@@ -101,6 +101,17 @@ sub   4096R/A63BC462 2019-11-15
 
 Among them, 85E11560 is public key ID.
 
+The format has changed after gpg2.0 version
+
+```shell
+pub   rsa4096 2023-07-01 [SC]
+1234ABCD5678EFGH9012IJKL3456MNOP7890QRST
+uid           [ultimate] ${用户名} <{邮件地址}>
+sub   rsa4096 2023-07-01 [E]
+```
+
+Among them, 1234ABCD5678EFGH9012IJKL3456MNOP7890QRST is public key ID。
+
 #### Upload the Public Key to Key Server
 
 The command is as follow:
@@ -109,7 +120,7 @@ The command is as follow:
 gpg --keyserver hkp://pool.sks-keyservers.net --send-key 85E11560
 ```
 
-`pool.sks-keyservers.net` is randomly chosen from [public key server](https://sks-keyservers.net/status/).
+`pool.sks-keyservers.net` is randomly chosen from [public key server](https://keyserver.ubuntu.com).
 Each server will automatically synchronize with one another, so it would be okay to choose any one, a backup keys servers
 is `gpg --keyserver hkp://keyserver.ubuntu.com --send-key <YOUR_KEY_ID>`
 
@@ -165,8 +176,8 @@ SVN_DIR=<PATH-TO-SVN-ROOT>  # to keep binary package checkout from SVN, the sub 
 
 > Note: We can use the variable directly in you bash after we set environment, without changing anything. For example, we
 > can use command `git clone -b "${VERSION}"-prepare https://github.com/apache/dolphinscheduler.git` to clone the release branch
-> and it can be successful by converting the `"${VERSION}"` to `<THE-VERSION-YOU-RELEASE>`. But you have to change `3.2.2` manually in
-> some of not bash step like [vote mail](#vote-procedure), we are using `3.2.2` instead of `"${VERSION}"` to notice release
+> and it can be successful by converting the `"${VERSION}"` to `<THE-VERSION-YOU-RELEASE>`. But you have to change `<VERSION>` manually in
+> some of not bash step like [vote mail](#vote-procedure), we are using `<VERSION>` instead of `"${VERSION}"` to notice release
 > manager they have to change by hand.
 
 ### Update Documentation or Code Version
@@ -184,13 +195,22 @@ We need to update some documentation before the Maven release. For example, to r
   - `deploy/kubernetes/dolphinscheduler`:
     - `Chart.yaml`: `appVersion` and `version` needs to be updated to x.y.z
     - `values.yaml`: `image.tag` needs to be updated to x.y.z
+  - `config`
+    - `install-plugins.sh`: `dev-SNAPSHOT` needs to be updated to x.y.z
 - Version in the docs:
-  - Change the placeholder `3.2.2`(except `pom`) to the `x.y.z` in directory `docs`
+  - Change the placeholder `<version>`(except `pom`) to the `x.y.z` in directory `docs`
   - Add new history version
     - `docs/docs/en/history-versions.md` and `docs/docs/zh/history-versions.md`: Add the new version and link for `x.y.z`
   - `docs/configs/docsdev.js`: change `/dev/` to `/x.y.z/`, **DO NOT** change this filename, is will be auto change by website tools.
 
 > Note: `VERSION` is a place hold string, is same as the version we set in `VERSION=<THE-VERSION-YOU-RELEASE>`.
+> Please merge the dev branch of the main warehouse before merging the master branch of the website. When the modified pull requests are merged, it will take effect.
+
+### Modify Correct year in NOTICE file
+
+The NOTICE file needs to be checked, changing the correct year in the second line to the current year. Files to check include
+- `dolphinscheduler-dist/release-docs/NOTICE`
+- `NOTICE`
 
 ### Maven Release
 
@@ -202,13 +222,14 @@ Create release branch base on prepare branch.
 cd "${SOURCE_CODE_DIR}"
 git checkout -b "${VERSION}"-release "${VERSION}"-prepare
 git push "${GH_REMOTE}" "${VERSION}"-release
+export GPG_TTY=$(tty)
 ```
 
 > Note: If you release in remote host without source code, you should run `git clone -b "${VERSION}"-prepare https://github.com/apache/dolphinscheduler.git`
 > first to clone the source code. And then make sure you set `GH_REMOTE="origin"` to make all command work fine.
 
 ```shell
-mvn release:prepare -Prelease -Darguments="-Dmaven.test.skip=true -Dspotless.skip=true -Dmaven.javadoc.skip=true -Dspotless.check.skip=true" -DautoVersionSubmodules=true -DdryRun=true -Dusername="${GH_USERNAME}"
+mvn release:prepare -Papache-release,release -Darguments="-Dmaven.test.skip=true -Dspotless.skip=true -Dspotless.check.skip=true -Dmaven.javadoc.skip=true" -DautoVersionSubmodules=true -DdryRun=true -Dusername="${GH_USERNAME}"
 ```
 
 - `-Prelease`: choose release profile, which will pack all the source codes, jar files and executable binary packages.
@@ -226,7 +247,7 @@ mvn release:clean
 Then, prepare to execute the release.
 
 ```shell
-mvn release:prepare -Prelease -Darguments="-Dmaven.test.skip=true -Dspotless.skip=true -Dmaven.javadoc.skip=true -Dspotless.check.skip=true" -DautoVersionSubmodules=true -DpushChanges=false -Dusername="${GH_USERNAME}"
+mvn release:prepare -Papache-release,release -Darguments="-Dmaven.test.skip=true -Dspotless.skip=true -Dspotless.check.skip=true -Dmaven.javadoc.skip=true" -DautoVersionSubmodules=true -DpushChanges=false -Dusername="${GH_USERNAME}"
 ```
 
 It is basically the same as the previous rehearsal command, but deleting `-DdryRun=true` parameter.
@@ -258,7 +279,7 @@ git push "${GH_REMOTE}" --tags
 #### Maven Release Deploy
 
 ```shell
-mvn release:perform -Prelease -Darguments="-Dmaven.test.skip=true -Dspotless.skip=true -Dmaven.javadoc.skip=true -Dspotless.check.skip=true" -DautoVersionSubmodules=true -Dusername="${GH_USERNAME}"
+mvn release:perform -Papache-release,release -Darguments="-Dmaven.test.skip=true -Dspotless.skip=true -Dspotless.check.skip=true -Dmaven.javadoc.skip=true -Dmaven.deploy.skip=false" -DautoVersionSubmodules=true -Dusername="${GH_USERNAME}"
 ```
 
 After that command is executed, the version to be released will be uploaded to Apache staging repository automatically.
@@ -270,7 +291,7 @@ If there is any problem in gpg signature, `Close` will fail, but you can see the
 
 #### Checkout Dolphinscheduler Release Directory
 
-We need too checkout Dolphinscheduler dev release directory to local, and
+We need to checkout Dolphinscheduler dev release directory to local, and
 
 ```shell
 SVN_DIR_DEV="${SVN_DIR}/dolphinscheduler/dev"
@@ -288,8 +309,8 @@ svn --username="${A_USERNAME}" update "${SVN_DIR_DEV}"
 
 #### Export New GPG Key to KEYS(Optional)
 
-Only if the first time you release with this gpg KEY, including it is you first release, or you change your KEY. You should
-change working directory to another one because this step need checkout and change KEYS in release directory.
+Only if the first time you release with this gpg KEY, including it is your first release, or you change your KEY. You should
+change the working directory to another one because this step needs checkout and change KEYS in the release directory.
 
 ```shell
 # Optional, only if the SVN root path not exists.
@@ -340,7 +361,7 @@ svn --username="${A_USERNAME}" commit -m "release ${VERSION}"
 
 #### Check source package
 
-Decompress `apache-dolphinscheduler-3.2.2-src.tar.gz` then check the following items:
+Decompress `apache-dolphinscheduler-<VERSION>-src.tar.gz` then check the following items:
 
 - Check whether source tarball is oversized for including nonessential files
 - `LICENSE` and `NOTICE` files exist
@@ -353,7 +374,7 @@ Decompress `apache-dolphinscheduler-3.2.2-src.tar.gz` then check the following i
 
 #### Check binary packages
 
-Decompress `apache-dolphinscheduler-3.2.2-bin.tar.gz` to check the following items:
+Decompress `apache-dolphinscheduler-<VERSION>-bin.tar.gz` to check the following items:
 
 - `LICENSE` and `NOTICE` files exist
 - Correct year in `NOTICE` file
@@ -369,7 +390,7 @@ Decompress `apache-dolphinscheduler-3.2.2-bin.tar.gz` to check the following ite
 
 You should create a release note in GitHub by [new release note](https://github.com/apache/dolphinscheduler/releases/new).
 It should be done before vote mail because we need the release note in the mail. You could use command
-`python release.py changelog` in directory `tools/release` to creat the changelog.
+`python release.py changelog` in directory `tools/release` to creat the changelog.([Usage](https://github.com/apache/dolphinscheduler/blob/dev/tools/release/README.md)
 
 > NOTE: Or if you prefer to create manually, you can use command `git log --pretty="- %s" <PREVIOUS-RELEASE-SHA>..<CURRENT-RELEASE-SHA> > changelog.md`
 > (some log maybe not correct, you should filter them by yourself) and classify them and paste them to GitHub release note page
@@ -389,7 +410,7 @@ Announce the vote result: send the result vote e-mail to `dev@dolphinscheduler.a
 Title：
 
 ```txt
-[VOTE] Release Apache DolphinScheduler 3.2.2
+[VOTE] Release Apache DolphinScheduler <VERSION>
 ```
 
 Body：
@@ -397,15 +418,15 @@ Body：
 ```txt
 Hello DolphinScheduler Community,
 
-This is a call for vote to release Apache DolphinScheduler version 3.2.2
+This is a call for vote to release Apache DolphinScheduler version <VERSION>
 
-Release notes: https://github.com/apache/dolphinscheduler/releases/tag/3.2.2
+Release notes: https://github.com/apache/dolphinscheduler/releases/tag/<VERSION>
 
-The release candidates: https://dist.apache.org/repos/dist/dev/dolphinscheduler/3.2.2/
+The release candidates: https://dist.apache.org/repos/dist/dev/dolphinscheduler/<VERSION>/
 
 Maven 2 staging repository: https://repository.apache.org/content/repositories/<STAGING.REPOSITORY>/org/apache/dolphinscheduler/
 
-Git tag for the release: https://github.com/apache/dolphinscheduler/tree/3.2.2
+Git tag for the release: https://github.com/apache/dolphinscheduler/tree/<VERSION>
 
 Release Commit ID: https://github.com/apache/dolphinscheduler/commit/<SHA-VALUE>
 
@@ -436,13 +457,13 @@ Checklist for reference:
 Title：
 
 ```txt
-[RESULT][VOTE] Release Apache DolphinScheduler 3.2.2
+[RESULT][VOTE] Release Apache DolphinScheduler <VERSION>
 ```
 
 Body：
 
 ```txt
-The vote to release Apache DolphinScheduler 3.2.2 has passed.Here is the vote result,
+The vote to release Apache DolphinScheduler <VERSION> has passed.Here is the vote result,
 
 4 PMC member +1 votes:
 
@@ -468,9 +489,6 @@ svn mv -m "release ${VERSION}" https://dist.apache.org/repos/dist/dev/dolphinsch
 # remove old release directory
 svn delete -m "remove old release" https://dist.apache.org/repos/dist/release/dolphinscheduler/<PREVIOUS-RELEASE-VERSION>
 
-# Remove prepare branch
-cd "${SOURCE_CODE_DIR}"
-git push --delete "${GH_REMOTE}" "${VERSION}-prepare"
 ```
 
 and then find DolphinScheduler in [apache staging repositories](https://repository.apache.org/#stagingRepositories) and click `Release`
@@ -478,40 +496,40 @@ and then find DolphinScheduler in [apache staging repositories](https://reposito
 ### Update Document
 
 Website should be present before you send the announce mail this section will tell you how to change the website. For example,
-the release version is `3.2.2`, the following updates are required(note it will take effect immediately when the PR is merged):
+the release version is `<VERSION>`, the following updates are required(note it will take effect immediately when the PR is merged):
 
 - Repository **apache/dolphinscheduler-website**:
-  - `config/download.json`: add the download of the `3.2.2` release package
-  - `scripts/conf.sh`: Add new release version `3.2.2` key-value pair to variable `DEV_RELEASE_DOCS_VERSIONS`
+  - `config/download.json`: add the download of the `<VERSION>` release package
+  - `scripts/conf.sh`: Add new release version `<VERSION>` key-value pair to variable `DEV_RELEASE_DOCS_VERSIONS`
 - Repository **apache/dolphinscheduler** (dev branch):
   - `docs/configs/site.js`:
-    - `docsLatest`: update to `3.2.2`
-    - `docs0`: The `text` of two places of `en-us/zh-cn` needs to be updated to `latest(3.2.2)`
-  - `docs/configs/index.md.jsx`: Add `3.2.2: docsxyzConfig` and add new `import` for the new `docsxyzConfig`
-  - `docs/docs/en/history-versions.md` and `docs/docs/zh/history-versions.md`: Add new `3.2.2` release docs.
+    - `docsLatest`: update to `<VERSION>`
+    - `docs0`: The `text` of two places of `en-us/zh-cn` needs to be updated to `latest(<VERSION>)`
+  - `docs/configs/index.md.jsx`: Add `<VERSION>: docsxyzConfig` and add new `import` for the new `docsxyzConfig`
+  - `docs/docs/en/history-versions.md` and `docs/docs/zh/history-versions.md`: Add new `<VERSION>` release docs.
   - `.github/ISSUE_TEMPLATE/bug-report.yml`: DolphinScheduler's GitHub [bug-report](https://github.com/apache/dolphinscheduler/blob/dev/.github/ISSUE_TEMPLATE/bug-report.yml)
-    issue template have **Version** selection bottom. So after released we should add the new `3.2.2` to
+    issue template have **Version** selection bottom. So after released we should add the new `<VERSION>` to
     bug-report.yml
 
 ### Publish Docker Image and Helm Chart
 
 We have a [workflow](../../../../.github/workflows/publish-docker.yaml) to automatically publish Docker images
 and a [workflow](../../../../.github/workflows/publish-helm-chart.yaml) to automatically publish Helm Chart to Docker Hub,
-after you change the release from "pre-release" to "release", the workflow will be triggered. All you need to do
+after you create release node, the workflow will be triggered. All you need to do
 is to observe the aforementioned workflows, and after they are completed, you can pull the Docker images locally and
 verify that they work as expected.
 
 ### Send Announcement E-mail Community
 
 You should send announcement E-mail after release process finished. The E-mail should send to `dev@dolphinscheduler.apache.org`
-and cc to `announce@apache.org`.
+and cc to `announce@apache.org`, Note: **Mail format requires plain text format**.
 
 Announcement e-mail template as below：
 
 Title：
 
 ```txt
-[ANNOUNCE] Release Apache DolphinScheduler 3.2.2
+[ANNOUNCE] Release Apache DolphinScheduler <VERSION>
 ```
 
 Body：
@@ -519,7 +537,7 @@ Body：
 ```txt
 Hi all,
 
-We are glad to announce the release of Apache DolphinScheduler 3.2.2. Once again I would like to express my thanks to your help.
+We are glad to announce the release of Apache DolphinScheduler <VERSION>. Once again I would like to express my thanks to your help.
 
 Dolphin Scheduler is a distributed and easy-to-extend visual workflow scheduler system,
 dedicated to solving the complex task dependencies in data processing, making the scheduler system out of the box for data processing.
@@ -527,14 +545,21 @@ dedicated to solving the complex task dependencies in data processing, making th
 
 Download Links: https://dolphinscheduler.apache.org/en-us/download
 
-Release Notes: https://github.com/apache/dolphinscheduler/releases/tag/3.2.2
+Release Notes: https://github.com/apache/dolphinscheduler/releases/tag/<VERSION>
 
 Website: https://dolphinscheduler.apache.org/
 
 DolphinScheduler Resources:
 - Issue: https://github.com/apache/dolphinscheduler/issues/
 - Mailing list: dev@dolphinscheduler.apache.org
-- Documents: https://dolphinscheduler.apache.org/en-us/docs/3.2.2/about/introduction
+- Documents: https://dolphinscheduler.apache.org/en-us/docs/<VERSION>/about/introduction
+```
+
+## Remove prepare branch
+
+```shell
+cd "${SOURCE_CODE_DIR}"
+git push --delete "${GH_REMOTE}" "${VERSION}-prepare"
 ```
 
 ## News

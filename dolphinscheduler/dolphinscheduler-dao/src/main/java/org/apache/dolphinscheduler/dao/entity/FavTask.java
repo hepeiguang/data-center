@@ -18,17 +18,15 @@
 package org.apache.dolphinscheduler.dao.entity;
 
 import lombok.AllArgsConstructor;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 
 @NoArgsConstructor
-@Getter
-@Setter
+@Data
 @AllArgsConstructor
 @TableName("t_ds_fav_task")
 public class FavTask {
@@ -36,6 +34,6 @@ public class FavTask {
     @TableId(value = "id", type = IdType.AUTO)
     private Long id;
     private String taskType;
-    private String userId;
+    private int userId;
 
 }

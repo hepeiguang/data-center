@@ -61,7 +61,7 @@ export function useHiveCli(model: { [field: string]: any }): IJsonItem[] {
       }
     },
     {
-      type: 'mirror',
+      type: 'editor',
       field: 'hiveSqlScript',
       name: t('project.node.hive_sql_script'),
       props: {
@@ -82,6 +82,10 @@ export function useHiveCli(model: { [field: string]: any }): IJsonItem[] {
       }
     },
     useResources(24, resourcesRequired, resourcesLimit),
-    ...useCustomParams({ model, field: 'localParams', isSimple: false })
+    ...useCustomParams({
+      model,
+      field: 'localParams',
+      isSimple: model.readonly
+    })
   ]
 }

@@ -37,7 +37,12 @@ import org.apache.seatunnel.e2e.common.container.EngineType;
 import org.apache.seatunnel.e2e.common.container.TestContainer;
 import org.apache.seatunnel.e2e.common.junit.DisabledOnContainer;
 import org.apache.seatunnel.e2e.common.junit.TestContainerExtension;
+import org.apache.seatunnel.e2e.common.util.DependencyJar;
 
+import org.apache.kafka.clients.admin.AdminClient;
+import org.apache.kafka.clients.admin.AdminClientConfig;
+import org.apache.kafka.clients.admin.NewTopic;
+import org.apache.kafka.clients.admin.TopicDescription;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -48,6 +53,7 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.TestTemplate;
+import org.postgresql.Driver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.Container;
@@ -76,10 +82,12 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -120,6 +128,18 @@ public class KafkaFormatIT extends TestSuiteBase implements TestResource {
     private static final String DEBEZIUM_KAFKA_SINK_TOPIC = "test-debezium-sink";
     private static final String DEBEZIUM_DATA_PATH = "/debezium/debezium_data.txt";
     private static final String DEBEZIUM_KAFKA_SOURCE_TOPIC = "dbserver1.debezium.products";
+
+    private static final List<String> KAFKA_TOPICS =
+            Arrays.asList(
+                    CANAL_KAFKA_SOURCE_TOPIC,
+                    OGG_KAFKA_SOURCE_TOPIC,
+                    MAXWELL_KAFKA_SOURCE_TOPIC,
+                    COMPATIBLE_KAFKA_SOURCE_TOPIC,
+                    DEBEZIUM_KAFKA_SOURCE_TOPIC,
+                    CANAL_KAFKA_SINK_TOPIC,
+                    OGG_KAFKA_SINK_TOPIC,
+                    MAXWELL_KAFKA_SINK_TOPIC,
+                    DEBEZIUM_KAFKA_SINK_TOPIC);
 
     private static final String PG_SINK_TABLE1 = "sink";
     private static final String PG_SINK_TABLE2 = "sink2";
@@ -264,22 +284,13 @@ public class KafkaFormatIT extends TestSuiteBase implements TestResource {
     // --------------------------- Postgres Container-------------------------------------
     private static final String PG_IMAGE = "postgres:alpine3.16";
 
-    private static final String PG_DRIVER_JAR =
-            "https://repo1.maven.org/maven2/org/postgresql/postgresql/42.3.3/postgresql-42.3.3.jar";
-
     private static PostgreSQLContainer<?> POSTGRESQL_CONTAINER;
 
     @TestContainerExtension
     private final ContainerExtendedFactory extendedFactory =
-            container -> {
-                Container.ExecResult extraCommands =
-                        container.execInContainer(
-                                "bash",
-                                "-c",
-                                "mkdir -p /tmp/seatunnel/plugins/Jdbc/lib && cd /tmp/seatunnel/plugins/Jdbc/lib && curl -O "
-                                        + PG_DRIVER_JAR);
-                Assertions.assertEquals(0, extraCommands.getExitCode());
-            };
+            container ->
+                    DependencyJar.of(Driver.class)
+                            .copyTo(container, "/tmp/seatunnel/plugins/Jdbc/lib");
 
     private void createKafkaContainer() {
         KAFKA_CONTAINER =
@@ -303,7 +314,7 @@ public class KafkaFormatIT extends TestSuiteBase implements TestResource {
 
     @BeforeAll
     @Override
-    public void startUp() throws ClassNotFoundException, InterruptedException, IOException {
+    public void startUp() throws ClassNotFoundException, IOException {
 
         LOG.info("The first stage: Starting Kafka containers...");
         createKafkaContainer();
@@ -327,15 +338,22 @@ public class KafkaFormatIT extends TestSuiteBase implements TestResource {
                 .atLeast(100, TimeUnit.MILLISECONDS)
                 .pollInterval(500, TimeUnit.MILLISECONDS)
                 .atMost(180, TimeUnit.SECONDS)
-                .untilAsserted(this::initKafkaConsumer);
+                .untilAsserted(this::initializeKafkaTopics);
 
-        // local file local data send kafka
         given().ignoreExceptions()
                 .atLeast(100, TimeUnit.MILLISECONDS)
                 .pollInterval(500, TimeUnit.MILLISECONDS)
-                .atMost(3, TimeUnit.MINUTES)
-                .untilAsserted(this::initLocalDataToKafka);
-        Thread.sleep(20 * 1000);
+                .atMost(180, TimeUnit.SECONDS)
+                .untilAsserted(this::waitForKafkaTopicsReady);
+
+        given().ignoreExceptions()
+                .atLeast(100, TimeUnit.MILLISECONDS)
+                .pollInterval(500, TimeUnit.MILLISECONDS)
+                .atMost(180, TimeUnit.SECONDS)
+                .untilAsserted(this::initKafkaConsumer);
+
+        // local file local data send kafka
+        initLocalDataToKafka();
     }
 
     @DisabledOnContainer(
@@ -503,20 +521,20 @@ public class KafkaFormatIT extends TestSuiteBase implements TestResource {
     private void checkCanalFormat() {
         List<String> expectedResult =
                 Arrays.asList(
-                        "{\"data\":[{\"id\":1101,\"name\":\"scooter\",\"description\":\"Small 2-wheel scooter\",\"weight\":\"3.14\"}],\"type\":\"INSERT\"}",
-                        "{\"data\":[{\"id\":1102,\"name\":\"car battery\",\"description\":\"12V car battery\",\"weight\":\"8.1\"}],\"type\":\"INSERT\"}",
-                        "{\"data\":[{\"id\":1103,\"name\":\"12-pack drill bits\",\"description\":\"12-pack of drill bits with sizes ranging from #40 to #3\",\"weight\":\"0.8\"}],\"type\":\"INSERT\"}",
-                        "{\"data\":[{\"id\":1104,\"name\":\"hammer\",\"description\":\"12oz carpenter's hammer\",\"weight\":\"0.75\"}],\"type\":\"INSERT\"}",
-                        "{\"data\":[{\"id\":1105,\"name\":\"hammer\",\"description\":\"14oz carpenter's hammer\",\"weight\":\"0.875\"}],\"type\":\"INSERT\"}",
-                        "{\"data\":[{\"id\":1106,\"name\":\"hammer\",\"description\":\"16oz carpenter's hammer\",\"weight\":\"1.0\"}],\"type\":\"INSERT\"}",
-                        "{\"data\":[{\"id\":1107,\"name\":\"rocks\",\"description\":\"box of assorted rocks\",\"weight\":\"5.3\"}],\"type\":\"INSERT\"}",
-                        "{\"data\":[{\"id\":1108,\"name\":\"jacket\",\"description\":\"water resistent black wind breaker\",\"weight\":\"0.1\"}],\"type\":\"INSERT\"}",
-                        "{\"data\":[{\"id\":1109,\"name\":\"spare tire\",\"description\":\"24 inch spare tire\",\"weight\":\"22.2\"}],\"type\":\"INSERT\"}",
-                        "{\"data\":[{\"id\":1101,\"name\":\"scooter\",\"description\":\"Small 2-wheel scooter\",\"weight\":\"3.14\"}],\"type\":\"DELETE\"}",
-                        "{\"data\":[{\"id\":1101,\"name\":\"scooter\",\"description\":\"Small 2-wheel scooter\",\"weight\":\"4.56\"}],\"type\":\"INSERT\"}",
-                        "{\"data\":[{\"id\":1107,\"name\":\"rocks\",\"description\":\"box of assorted rocks\",\"weight\":\"5.3\"}],\"type\":\"DELETE\"}",
-                        "{\"data\":[{\"id\":1107,\"name\":\"rocks\",\"description\":\"box of assorted rocks\",\"weight\":\"7.88\"}],\"type\":\"INSERT\"}",
-                        "{\"data\":[{\"id\":1109,\"name\":\"spare tire\",\"description\":\"24 inch spare tire\",\"weight\":\"22.2\"}],\"type\":\"DELETE\"}");
+                        "{\"old\":null,\"data\":[{\"id\":1101,\"name\":\"scooter\",\"description\":\"Small 2-wheel scooter\",\"weight\":\"3.14\"}],\"type\":\"INSERT\",\"database\":null,\"table\":\"test-cdc_mds\",\"ts\":1697788900618}",
+                        "{\"old\":null,\"data\":[{\"id\":1102,\"name\":\"car battery\",\"description\":\"12V car battery\",\"weight\":\"8.1\"}],\"type\":\"INSERT\",\"database\":null,\"table\":\"test-cdc_mds\",\"ts\":1697788900618}",
+                        "{\"old\":null,\"data\":[{\"id\":1103,\"name\":\"12-pack drill bits\",\"description\":\"12-pack of drill bits with sizes ranging from #40 to #3\",\"weight\":\"0.8\"}],\"type\":\"INSERT\",\"database\":null,\"table\":\"test-cdc_mds\",\"ts\":1697788900618}",
+                        "{\"old\":null,\"data\":[{\"id\":1104,\"name\":\"hammer\",\"description\":\"12oz carpenter's hammer\",\"weight\":\"0.75\"}],\"type\":\"INSERT\",\"database\":null,\"table\":\"test-cdc_mds\",\"ts\":1697788900618}",
+                        "{\"old\":null,\"data\":[{\"id\":1105,\"name\":\"hammer\",\"description\":\"14oz carpenter's hammer\",\"weight\":\"0.875\"}],\"type\":\"INSERT\",\"database\":null,\"table\":\"test-cdc_mds\",\"ts\":1697788900618}",
+                        "{\"old\":null,\"data\":[{\"id\":1106,\"name\":\"hammer\",\"description\":\"16oz carpenter's hammer\",\"weight\":\"1.0\"}],\"type\":\"INSERT\",\"database\":null,\"table\":\"test-cdc_mds\",\"ts\":1697788900618}",
+                        "{\"old\":null,\"data\":[{\"id\":1107,\"name\":\"rocks\",\"description\":\"box of assorted rocks\",\"weight\":\"5.3\"}],\"type\":\"INSERT\",\"database\":null,\"table\":\"test-cdc_mds\",\"ts\":1697788900618}",
+                        "{\"old\":null,\"data\":[{\"id\":1108,\"name\":\"jacket\",\"description\":\"water resistent black wind breaker\",\"weight\":\"0.1\"}],\"type\":\"INSERT\",\"database\":null,\"table\":\"test-cdc_mds\",\"ts\":1697788900618}",
+                        "{\"old\":null,\"data\":[{\"id\":1109,\"name\":\"spare tire\",\"description\":\"24 inch spare tire\",\"weight\":\"22.2\"}],\"type\":\"INSERT\",\"database\":null,\"table\":\"test-cdc_mds\",\"ts\":1697788900618}",
+                        "{\"old\":null,\"data\":[{\"id\":1101,\"name\":\"scooter\",\"description\":\"Small 2-wheel scooter\",\"weight\":\"3.14\"}],\"type\":\"DELETE\",\"database\":null,\"table\":\"test-cdc_mds\",\"ts\":1697788900619}",
+                        "{\"old\":null,\"data\":[{\"id\":1101,\"name\":\"scooter\",\"description\":\"Small 2-wheel scooter\",\"weight\":\"4.56\"}],\"type\":\"INSERT\",\"database\":null,\"table\":\"test-cdc_mds\",\"ts\":1697788900619}",
+                        "{\"old\":null,\"data\":[{\"id\":1107,\"name\":\"rocks\",\"description\":\"box of assorted rocks\",\"weight\":\"5.3\"}],\"type\":\"DELETE\",\"database\":null,\"table\":\"test-cdc_mds\",\"ts\":1697788900619}",
+                        "{\"old\":null,\"data\":[{\"id\":1107,\"name\":\"rocks\",\"description\":\"box of assorted rocks\",\"weight\":\"7.88\"}],\"type\":\"INSERT\",\"database\":null,\"table\":\"test-cdc_mds\",\"ts\":1697788900619}",
+                        "{\"old\":null,\"data\":[{\"id\":1109,\"name\":\"spare tire\",\"description\":\"24 inch spare tire\",\"weight\":\"22.2\"}],\"type\":\"DELETE\",\"database\":null,\"table\":\"test-cdc_mds\",\"ts\":1697788900619}");
 
         ArrayList<String> result = new ArrayList<>();
         ArrayList<String> topics = new ArrayList<>();
@@ -562,20 +580,20 @@ public class KafkaFormatIT extends TestSuiteBase implements TestResource {
     private void checkMaxWellFormat() {
         List<String> expectedResult =
                 Arrays.asList(
-                        "{\"data\":{\"id\":101,\"name\":\"scooter\",\"description\":\"Small 2-wheel scooter\",\"weight\":\"3.14\"},\"type\":\"INSERT\"}",
-                        "{\"data\":{\"id\":102,\"name\":\"car battery\",\"description\":\"12V car battery\",\"weight\":\"8.1\"},\"type\":\"INSERT\"}",
-                        "{\"data\":{\"id\":103,\"name\":\"12-pack drill bits\",\"description\":\"12-pack of drill bits with sizes ranging from #40 to #3\",\"weight\":\"0.8\"},\"type\":\"INSERT\"}",
-                        "{\"data\":{\"id\":104,\"name\":\"hammer\",\"description\":\"12oz carpenter's hammer\",\"weight\":\"0.75\"},\"type\":\"INSERT\"}",
-                        "{\"data\":{\"id\":105,\"name\":\"hammer\",\"description\":\"14oz carpenter's hammer\",\"weight\":\"0.875\"},\"type\":\"INSERT\"}",
-                        "{\"data\":{\"id\":106,\"name\":\"hammer\",\"description\":\"16oz carpenter's hammer\",\"weight\":\"1.0\"},\"type\":\"INSERT\"}",
-                        "{\"data\":{\"id\":107,\"name\":\"rocks\",\"description\":\"box of assorted rocks\",\"weight\":\"5.3\"},\"type\":\"INSERT\"}",
-                        "{\"data\":{\"id\":108,\"name\":\"jacket\",\"description\":\"water resistent black wind breaker\",\"weight\":\"0.1\"},\"type\":\"INSERT\"}",
-                        "{\"data\":{\"id\":109,\"name\":\"spare tire\",\"description\":\"24 inch spare tire\",\"weight\":\"22.2\"},\"type\":\"INSERT\"}",
-                        "{\"data\":{\"id\":101,\"name\":\"scooter\",\"description\":\"Small 2-wheel scooter\",\"weight\":\"3.14\"},\"type\":\"DELETE\"}",
-                        "{\"data\":{\"id\":101,\"name\":\"scooter\",\"description\":\"Small 2-wheel scooter\",\"weight\":\"4.56\"},\"type\":\"INSERT\"}",
-                        "{\"data\":{\"id\":107,\"name\":\"rocks\",\"description\":\"box of assorted rocks\",\"weight\":\"5.3\"},\"type\":\"DELETE\"}",
-                        "{\"data\":{\"id\":107,\"name\":\"rocks\",\"description\":\"box of assorted rocks\",\"weight\":\"7.88\"},\"type\":\"INSERT\"}",
-                        "{\"data\":{\"id\":109,\"name\":\"spare tire\",\"description\":\"24 inch spare tire\",\"weight\":\"22.2\"},\"type\":\"DELETE\"}");
+                        "{\"old\":null,\"data\":{\"id\":101,\"name\":\"scooter\",\"description\":\"Small 2-wheel scooter\",\"weight\":\"3.14\"},\"type\":\"insert\",\"database\":null,\"table\":\"maxwell-test-cdc_mds\",\"ts\":1699253290000}",
+                        "{\"old\":null,\"data\":{\"id\":102,\"name\":\"car battery\",\"description\":\"12V car battery\",\"weight\":\"8.1\"},\"type\":\"insert\",\"database\":null,\"table\":\"maxwell-test-cdc_mds\",\"ts\":1699253290000}",
+                        "{\"old\":null,\"data\":{\"id\":103,\"name\":\"12-pack drill bits\",\"description\":\"12-pack of drill bits with sizes ranging from #40 to #3\",\"weight\":\"0.8\"},\"type\":\"insert\",\"database\":null,\"table\":\"maxwell-test-cdc_mds\",\"ts\":1699253290000}",
+                        "{\"old\":null,\"data\":{\"id\":104,\"name\":\"hammer\",\"description\":\"12oz carpenter's hammer\",\"weight\":\"0.75\"},\"type\":\"insert\",\"database\":null,\"table\":\"maxwell-test-cdc_mds\",\"ts\":1699253290000}",
+                        "{\"old\":null,\"data\":{\"id\":105,\"name\":\"hammer\",\"description\":\"14oz carpenter's hammer\",\"weight\":\"0.875\"},\"type\":\"insert\",\"database\":null,\"table\":\"maxwell-test-cdc_mds\",\"ts\":1699253290000}",
+                        "{\"old\":null,\"data\":{\"id\":106,\"name\":\"hammer\",\"description\":\"16oz carpenter's hammer\",\"weight\":\"1.0\"},\"type\":\"insert\",\"database\":null,\"table\":\"maxwell-test-cdc_mds\",\"ts\":1699253290000}",
+                        "{\"old\":null,\"data\":{\"id\":107,\"name\":\"rocks\",\"description\":\"box of assorted rocks\",\"weight\":\"5.3\"},\"type\":\"insert\",\"database\":null,\"table\":\"maxwell-test-cdc_mds\",\"ts\":1699253290000}",
+                        "{\"old\":null,\"data\":{\"id\":108,\"name\":\"jacket\",\"description\":\"water resistent black wind breaker\",\"weight\":\"0.1\"},\"type\":\"insert\",\"database\":null,\"table\":\"maxwell-test-cdc_mds\",\"ts\":1699253290000}",
+                        "{\"old\":null,\"data\":{\"id\":109,\"name\":\"spare tire\",\"description\":\"24 inch spare tire\",\"weight\":\"22.2\"},\"type\":\"insert\",\"database\":null,\"table\":\"maxwell-test-cdc_mds\",\"ts\":1699253290000}",
+                        "{\"old\":null,\"data\":{\"id\":101,\"name\":\"scooter\",\"description\":\"Small 2-wheel scooter\",\"weight\":\"3.14\"},\"type\":\"delete\",\"database\":null,\"table\":\"maxwell-test-cdc_mds\",\"ts\":1699253290000}",
+                        "{\"old\":null,\"data\":{\"id\":101,\"name\":\"scooter\",\"description\":\"Small 2-wheel scooter\",\"weight\":\"4.56\"},\"type\":\"insert\",\"database\":null,\"table\":\"maxwell-test-cdc_mds\",\"ts\":1699253290000}",
+                        "{\"old\":null,\"data\":{\"id\":107,\"name\":\"rocks\",\"description\":\"box of assorted rocks\",\"weight\":\"5.3\"},\"type\":\"delete\",\"database\":null,\"table\":\"maxwell-test-cdc_mds\",\"ts\":1699253290000}",
+                        "{\"old\":null,\"data\":{\"id\":107,\"name\":\"rocks\",\"description\":\"box of assorted rocks\",\"weight\":\"7.88\"},\"type\":\"insert\",\"database\":null,\"table\":\"maxwell-test-cdc_mds\",\"ts\":1699253290000}",
+                        "{\"old\":null,\"data\":{\"id\":109,\"name\":\"spare tire\",\"description\":\"24 inch spare tire\",\"weight\":\"22.2\"},\"type\":\"delete\",\"database\":null,\"table\":\"maxwell-test-cdc_mds\",\"ts\":1699253290000}");
 
         ArrayList<String> result = new ArrayList<>();
         ArrayList<String> topics = new ArrayList<>();
@@ -619,26 +637,26 @@ public class KafkaFormatIT extends TestSuiteBase implements TestResource {
     private void checkOggFormat() {
         List<String> kafkaExpectedResult =
                 Arrays.asList(
-                        "{\"data\":{\"id\":101,\"name\":\"scooter\",\"description\":\"Small 2-wheel scooter\",\"weight\":\"3.140000104904175\"},\"type\":\"INSERT\"}",
-                        "{\"data\":{\"id\":102,\"name\":\"car battery\",\"description\":\"12V car battery\",\"weight\":\"8.100000381469727\"},\"type\":\"INSERT\"}",
-                        "{\"data\":{\"id\":103,\"name\":\"12-pack drill bits\",\"description\":\"12-pack of drill bits with sizes ranging from #40 to #3\",\"weight\":\"0.800000011920929\"},\"type\":\"INSERT\"}",
-                        "{\"data\":{\"id\":104,\"name\":\"hammer\",\"description\":\"12oz carpenter's hammer\",\"weight\":\"0.75\"},\"type\":\"INSERT\"}",
-                        "{\"data\":{\"id\":105,\"name\":\"hammer\",\"description\":\"14oz carpenter's hammer\",\"weight\":\"0.875\"},\"type\":\"INSERT\"}",
-                        "{\"data\":{\"id\":106,\"name\":\"hammer\",\"description\":\"16oz carpenter's hammer\",\"weight\":\"1\"},\"type\":\"INSERT\"}",
-                        "{\"data\":{\"id\":107,\"name\":\"rocks\",\"description\":\"box of assorted rocks\",\"weight\":\"5.300000190734863\"},\"type\":\"INSERT\"}",
-                        "{\"data\":{\"id\":108,\"name\":\"jacket\",\"description\":\"water resistent black wind breaker\",\"weight\":\"0.10000000149011612\"},\"type\":\"INSERT\"}",
-                        "{\"data\":{\"id\":109,\"name\":\"spare tire\",\"description\":\"24 inch spare tire\",\"weight\":\"22.200000762939453\"},\"type\":\"INSERT\"}",
-                        "{\"data\":{\"id\":106,\"name\":\"hammer\",\"description\":\"16oz carpenter's hammer\",\"weight\":\"1\"},\"type\":\"DELETE\"}",
-                        "{\"data\":{\"id\":106,\"name\":\"hammer\",\"description\":\"18oz carpenter hammer\",\"weight\":\"1\"},\"type\":\"INSERT\"}",
-                        "{\"data\":{\"id\":107,\"name\":\"rocks\",\"description\":\"box of assorted rocks\",\"weight\":\"5.300000190734863\"},\"type\":\"DELETE\"}",
-                        "{\"data\":{\"id\":107,\"name\":\"rocks\",\"description\":\"box of assorted rocks\",\"weight\":\"5.099999904632568\"},\"type\":\"INSERT\"}",
-                        "{\"data\":{\"id\":110,\"name\":\"jacket\",\"description\":\"water resistent white wind breaker\",\"weight\":\"0.20000000298023224\"},\"type\":\"INSERT\"}",
-                        "{\"data\":{\"id\":111,\"name\":\"scooter\",\"description\":\"Big 2-wheel scooter \",\"weight\":\"5.179999828338623\"},\"type\":\"INSERT\"}",
-                        "{\"data\":{\"id\":110,\"name\":\"jacket\",\"description\":\"water resistent white wind breaker\",\"weight\":\"0.20000000298023224\"},\"type\":\"DELETE\"}",
-                        "{\"data\":{\"id\":110,\"name\":\"jacket\",\"description\":\"new water resistent white wind breaker\",\"weight\":\"0.5\"},\"type\":\"INSERT\"}",
-                        "{\"data\":{\"id\":111,\"name\":\"scooter\",\"description\":\"Big 2-wheel scooter \",\"weight\":\"5.179999828338623\"},\"type\":\"DELETE\"}",
-                        "{\"data\":{\"id\":111,\"name\":\"scooter\",\"description\":\"Big 2-wheel scooter \",\"weight\":\"5.170000076293945\"},\"type\":\"INSERT\"}",
-                        "{\"data\":{\"id\":111,\"name\":\"scooter\",\"description\":\"Big 2-wheel scooter \",\"weight\":\"5.170000076293945\"},\"type\":\"DELETE\"}");
+                        "{\"before\":null,\"after\":{\"id\":101,\"name\":\"scooter\",\"description\":\"Small 2-wheel scooter\",\"weight\":\"3.140000104904175\"},\"op_type\":\"I\",\"table\":\"test-ogg-source\",\"op_ts\":1589384406000}",
+                        "{\"before\":null,\"after\":{\"id\":102,\"name\":\"car battery\",\"description\":\"12V car battery\",\"weight\":\"8.100000381469727\"},\"op_type\":\"I\",\"table\":\"test-ogg-source\",\"op_ts\":1589384407000}",
+                        "{\"before\":null,\"after\":{\"id\":103,\"name\":\"12-pack drill bits\",\"description\":\"12-pack of drill bits with sizes ranging from #40 to #3\",\"weight\":\"0.800000011920929\"},\"op_type\":\"I\",\"table\":\"test-ogg-source\",\"op_ts\":1589384407000}",
+                        "{\"before\":null,\"after\":{\"id\":104,\"name\":\"hammer\",\"description\":\"12oz carpenter's hammer\",\"weight\":\"0.75\"},\"op_type\":\"I\",\"table\":\"test-ogg-source\",\"op_ts\":1589384407000}",
+                        "{\"before\":null,\"after\":{\"id\":105,\"name\":\"hammer\",\"description\":\"14oz carpenter's hammer\",\"weight\":\"0.875\"},\"op_type\":\"I\",\"table\":\"test-ogg-source\",\"op_ts\":1589384407000}",
+                        "{\"before\":null,\"after\":{\"id\":106,\"name\":\"hammer\",\"description\":\"16oz carpenter's hammer\",\"weight\":\"1\"},\"op_type\":\"I\",\"table\":\"test-ogg-source\",\"op_ts\":1589384407000}",
+                        "{\"before\":null,\"after\":{\"id\":107,\"name\":\"rocks\",\"description\":\"box of assorted rocks\",\"weight\":\"5.300000190734863\"},\"op_type\":\"I\",\"table\":\"test-ogg-source\",\"op_ts\":1589384407000}",
+                        "{\"before\":null,\"after\":{\"id\":108,\"name\":\"jacket\",\"description\":\"water resistent black wind breaker\",\"weight\":\"0.10000000149011612\"},\"op_type\":\"I\",\"table\":\"test-ogg-source\",\"op_ts\":1589384407000}",
+                        "{\"before\":null,\"after\":{\"id\":109,\"name\":\"spare tire\",\"description\":\"24 inch spare tire\",\"weight\":\"22.200000762939453\"},\"op_type\":\"I\",\"table\":\"test-ogg-source\",\"op_ts\":1589384407000}",
+                        "{\"before\":null,\"after\":{\"id\":106,\"name\":\"hammer\",\"description\":\"16oz carpenter's hammer\",\"weight\":\"1\"},\"op_type\":\"D\",\"table\":\"test-ogg-source\",\"op_ts\":1589390787000}",
+                        "{\"before\":null,\"after\":{\"id\":106,\"name\":\"hammer\",\"description\":\"18oz carpenter hammer\",\"weight\":\"1\"},\"op_type\":\"I\",\"table\":\"test-ogg-source\",\"op_ts\":1589390787000}",
+                        "{\"before\":null,\"after\":{\"id\":107,\"name\":\"rocks\",\"description\":\"box of assorted rocks\",\"weight\":\"5.300000190734863\"},\"op_type\":\"D\",\"table\":\"test-ogg-source\",\"op_ts\":1589390899000}",
+                        "{\"before\":null,\"after\":{\"id\":107,\"name\":\"rocks\",\"description\":\"box of assorted rocks\",\"weight\":\"5.099999904632568\"},\"op_type\":\"I\",\"table\":\"test-ogg-source\",\"op_ts\":1589390899000}",
+                        "{\"before\":null,\"after\":{\"id\":110,\"name\":\"jacket\",\"description\":\"water resistent white wind breaker\",\"weight\":\"0.20000000298023224\"},\"op_type\":\"I\",\"table\":\"test-ogg-source\",\"op_ts\":1589391010000}",
+                        "{\"before\":null,\"after\":{\"id\":111,\"name\":\"scooter\",\"description\":\"Big 2-wheel scooter \",\"weight\":\"5.179999828338623\"},\"op_type\":\"I\",\"table\":\"test-ogg-source\",\"op_ts\":1589391043000}",
+                        "{\"before\":null,\"after\":{\"id\":110,\"name\":\"jacket\",\"description\":\"water resistent white wind breaker\",\"weight\":\"0.20000000298023224\"},\"op_type\":\"D\",\"table\":\"test-ogg-source\",\"op_ts\":1589391140000}",
+                        "{\"before\":null,\"after\":{\"id\":110,\"name\":\"jacket\",\"description\":\"new water resistent white wind breaker\",\"weight\":\"0.5\"},\"op_type\":\"I\",\"table\":\"test-ogg-source\",\"op_ts\":1589391140000}",
+                        "{\"before\":null,\"after\":{\"id\":111,\"name\":\"scooter\",\"description\":\"Big 2-wheel scooter \",\"weight\":\"5.179999828338623\"},\"op_type\":\"D\",\"table\":\"test-ogg-source\",\"op_ts\":1589391130000}",
+                        "{\"before\":null,\"after\":{\"id\":111,\"name\":\"scooter\",\"description\":\"Big 2-wheel scooter \",\"weight\":\"5.170000076293945\"},\"op_type\":\"I\",\"table\":\"test-ogg-source\",\"op_ts\":1589391130000}",
+                        "{\"before\":null,\"after\":{\"id\":111,\"name\":\"scooter\",\"description\":\"Big 2-wheel scooter \",\"weight\":\"5.170000076293945\"},\"op_type\":\"D\",\"table\":\"test-ogg-source\",\"op_ts\":1589391144000}");
 
         ArrayList<String> checkKafkaConsumerResult = new ArrayList<>();
         ArrayList<String> topics = new ArrayList<>();
@@ -887,6 +905,56 @@ public class KafkaFormatIT extends TestSuiteBase implements TestResource {
         kafkaConsumer = new KafkaConsumer<>(prop);
     }
 
+    private void initializeKafkaTopics() {
+        try (AdminClient adminClient = createKafkaAdmin()) {
+            Set<String> existingTopics = adminClient.listTopics().names().get(30, TimeUnit.SECONDS);
+            List<NewTopic> topicsToCreate =
+                    KAFKA_TOPICS.stream()
+                            .filter(topic -> !existingTopics.contains(topic))
+                            .map(topic -> new NewTopic(topic, 1, (short) 1))
+                            .collect(Collectors.toList());
+            if (!topicsToCreate.isEmpty()) {
+                adminClient.createTopics(topicsToCreate).all().get(60, TimeUnit.SECONDS);
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Interrupted while initializing Kafka topics", e);
+        } catch (ExecutionException | java.util.concurrent.TimeoutException e) {
+            throw new RuntimeException("Failed to initialize Kafka topics", e);
+        }
+    }
+
+    private void waitForKafkaTopicsReady() {
+        try (AdminClient adminClient = createKafkaAdmin()) {
+            Map<String, TopicDescription> topicDescriptions =
+                    adminClient
+                            .describeTopics(KAFKA_TOPICS)
+                            .allTopicNames()
+                            .get(30, TimeUnit.SECONDS);
+            Assertions.assertEquals(
+                    new HashSet<>(KAFKA_TOPICS).size(),
+                    topicDescriptions.size(),
+                    "Kafka topics are not ready yet");
+            KAFKA_TOPICS.forEach(
+                    topic ->
+                            Assertions.assertTrue(
+                                    topicDescriptions.containsKey(topic),
+                                    "Kafka topic is not ready yet: " + topic));
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Interrupted while waiting for Kafka topics", e);
+        } catch (ExecutionException | java.util.concurrent.TimeoutException e) {
+            throw new RuntimeException("Kafka topics are not ready yet", e);
+        }
+    }
+
+    private AdminClient createKafkaAdmin() {
+        Properties props = new Properties();
+        props.put(
+                AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, KAFKA_CONTAINER.getBootstrapServers());
+        return AdminClient.create(props);
+    }
+
     // Example Initialize the pg sink table
     private void initializeJdbcTable() {
         try (Connection connection =
@@ -981,7 +1049,11 @@ public class KafkaFormatIT extends TestSuiteBase implements TestResource {
                         producer.send(record).get();
                     }
                 } catch (IOException | InterruptedException | ExecutionException e) {
-                    e.printStackTrace();
+                    if (e instanceof InterruptedException) {
+                        Thread.currentThread().interrupt();
+                    }
+                    throw new RuntimeException(
+                            "Failed to initialize local Kafka data for topic " + kafkaTopic, e);
                 }
             }
         }
@@ -1013,7 +1085,7 @@ public class KafkaFormatIT extends TestSuiteBase implements TestResource {
                 LOG.info("truncate table sink");
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            throw new RuntimeException("Query Postgre sink table failed: " + tableName, e);
         }
         return actual;
     }

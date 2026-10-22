@@ -38,7 +38,7 @@ import {
   NGrid
 } from 'naive-ui'
 import { useRoute } from 'vue-router'
-import { verifyName } from '@/service/modules/process-definition'
+import { verifyName } from '@/service/modules/workflow-definition'
 import './x6-style.scss'
 import { positiveIntegerRegex } from '@/utils/regex'
 import type { SaveForm, WorkflowDefinition, WorkflowInstance } from './types'
@@ -77,9 +77,7 @@ export default defineComponent({
       timeout: 0,
       globalParams: [],
       release: false,
-      sync: false,
-      taskType: ''
-    
+      sync: false
     })
     const formRef = ref()
 
@@ -87,23 +85,6 @@ export default defineComponent({
       name: {
         required: true,
         message: t('project.dag.dag_name_empty')
-      },
-      taskType: {
-        trigger: ['input', 'blur'],
-        required: true,
-        validator(validator: any, value: string) {
-          if (!value || /[^a-z|A-Z|0-9]/.test(value)) {
-            return new Error(t('project.dag.stategy_type_empty'))
-          }
-          // if (
-          //   !value ||
-          //   !/^(?![0-9]+$)(?![a-z]+$)(?![A-Z]+$)(?![`~!@#$%^&*()_\-+=<>?:"{}|,./;'\\[\]·~！@#￥%……&*（）——\-+={}|《》？：“”【】、；‘’，。、]+$)[`~!@#$%^&*()_\-+=<>?:"{}|,./;'\\[\]·~！@#￥%……&*（）——\-+={}|《》？：“”【】、；‘’，。、0-9A-Za-z]{6,22}$/.test(
-          //     value
-          //   )
-          // ) {
-          //   return new Error(t('security.user.user_password_tips'))
-          // }
-        }
       },
       timeout: {
         validator() {
@@ -117,23 +98,23 @@ export default defineComponent({
       },
       globalParams: {
         validator() {
-          const props = new Set()
+          const globalParams = formValue.value.globalParams || []
 
-          const keys = formValue.value.globalParams.map((item) => item.key)
-          const keysSet = new Set(keys)
-          if (keysSet.size !== keys.length) {
-            return new Error(t('project.dag.prop_repeat'))
-          }
+          if (!globalParams || globalParams.length === 0) return true
 
-          for (const param of formValue.value.globalParams) {
-            const prop = param.value
-            const direct = param.direct
-            if (direct === 'IN' && !prop) {
-              return new Error(t('project.dag.prop_empty'))
+          for (const param of globalParams) {
+            if (!param.key || param.key.trim() === '') {
+              return new Error(t('project.dag.prop_key_empty'))
             }
-
-            props.add(prop)
           }
+
+          const keys = globalParams.map((item) => (item.key || '').trim())
+          const uniqueKeys = new Set(keys)
+          if (uniqueKeys.size !== keys.length) {
+            return new Error(t('project.dag.prop_key_repeat'))
+          }
+
+          return true
         }
       }
     }
@@ -142,11 +123,10 @@ export default defineComponent({
         if (!valid) {
           const params = {
             name: formValue.value.name,
-            code: props.definition?.processDefinition.code,
-            taskType: formValue.value.taskType
+            code: props.definition?.workflowDefinition.code
           } as { name: string; code?: number }
           if (
-            props.definition?.processDefinition.name !== formValue.value.name
+            props.definition?.workflowDefinition.name !== formValue.value.name
           ) {
             verifyName(params, projectCode).then(() =>
               context.emit('save', formValue.value)
@@ -162,21 +142,23 @@ export default defineComponent({
     }
 
     const updateModalData = () => {
-      const process = props.definition?.processDefinition
-      if (process) {
-        formValue.value.name = process.name
-        formValue.value.description = process.description
-        formValue.value.executionType = process.executionType || 'PARALLEL'
-        formValue.value.taskType = process.taskType 
-        if (process.timeout && process.timeout > 0) {
+      const workflow = props.definition?.workflowDefinition
+      if (workflow) {
+        formValue.value.name = workflow.name
+        formValue.value.description = workflow.description
+        formValue.value.executionType = workflow.executionType || 'PARALLEL'
+        if (workflow.timeout && workflow.timeout > 0) {
           formValue.value.timeoutFlag = true
-          formValue.value.timeout = process.timeout
+          formValue.value.timeout = workflow.timeout
         }
-        formValue.value.globalParams = process.globalParamList.map((param) => ({
-          key: param.prop,
-          value: param.value,
-          direct: param.direct
-        }))
+        formValue.value.globalParams = workflow.globalParamList.map(
+          (param) => ({
+            key: param.prop,
+            value: param.value,
+            direct: param.direct,
+            type: param.type
+          })
+        )
       }
     }
 
@@ -185,28 +167,10 @@ export default defineComponent({
     onMounted(() => updateModalData())
 
     watch(
-      () => props.definition?.processDefinition,
+      () => props.definition?.workflowDefinition,
       () => updateModalData()
     )
-    // 查看路由跳转是否有类型参数
-    const queryParamsType = String(route.query.type)
-    // 基改ID
-    const jgId = String(route.query.id)
-    let workflowNameLabel = "", workflowMarkerLabel = "", workflowTypeLabel:any = null;
-    if (!queryParamsType || queryParamsType === 'undefined') {
-      workflowNameLabel = t('project.dag.workflow_name')
-      workflowMarkerLabel = t('project.dag.description')
-      workflowTypeLabel = false
-    } else if(queryParamsType ==='task') {
-      workflowNameLabel = t('project.node.task_name')
-      workflowMarkerLabel = t('project.dag.task_description')
-      workflowTypeLabel = t('project.dag.stategy_type')
-    } else if (queryParamsType ==='stategy') {
-      workflowNameLabel = t('project.dag.stategy_name')
-      workflowMarkerLabel = t('project.dag.stategy_description')
-      workflowTypeLabel = t('project.dag.stategy_type')
-    }
-    console.log(formValue, 'formValue')
+
     return () => (
       <Modal
         show={props.visible}
@@ -216,28 +180,14 @@ export default defineComponent({
         autoFocus={false}
       >
         <NForm model={formValue.value} rules={rule} ref={formRef}>
-          {/* t('project.dag.workflow_name') */}
-          <NFormItem label={ workflowNameLabel } path='name'>
+          <NFormItem label={t('project.node.workflow_name')} path='name'>
             <NInput
               allowInput={trim}
               v-model:value={formValue.value.name}
               class='input-name'
             />
           </NFormItem>
-          {/* { workflowTypeLabel && (
-            <NFormItem
-            label={ workflowTypeLabel }
-            path='taskType'
-          >
-            <NInput
-              allowInput={trim}
-              v-model:value={formValue.value.taskType}
-              class='input-taskType'
-            />
-          </NFormItem>
-          )} */}
-          {/* t('project.dag.description') */}
-          <NFormItem label={ workflowMarkerLabel } path='description'>
+          <NFormItem label={t('project.dag.description')} path='description'>
             <NInput
               allowInput={trim}
               type='textarea'
@@ -262,7 +212,7 @@ export default defineComponent({
           )}
           {!props.instance && (
             <NFormItem
-              label={t('project.dag.process_execute_type')}
+              label={t('project.dag.workflow_execute_type')}
               path='executionType'
             >
               <NSelect
@@ -292,6 +242,7 @@ export default defineComponent({
                 return {
                   key: '',
                   direct: 'IN',
+                  type: 'VARCHAR',
                   value: ''
                 }
               }}
@@ -299,16 +250,21 @@ export default defineComponent({
             >
               {{
                 default: (param: {
-                  value: { key: string; direct: string; value: string }
+                  value: {
+                    key: string
+                    direct: string
+                    type: string
+                    value: string
+                  }
                 }) => (
                   <NGrid xGap={12} cols={24}>
-                    <NGridItem span={9}>
+                    <NGridItem span={6}>
                       <NInput
                         v-model:value={param.value.key}
                         placeholder={t('project.dag.key')}
                       />
                     </NGridItem>
-                    <NGridItem span={6}>
+                    <NGridItem span={5}>
                       <NSelect
                         options={[
                           { value: 'IN', label: 'IN' },
@@ -318,7 +274,25 @@ export default defineComponent({
                         defaultValue={'IN'}
                       />
                     </NGridItem>
-                    <NGridItem span={9}>
+                    <NGridItem span={7}>
+                      <NSelect
+                        options={[
+                          { value: 'VARCHAR', label: 'VARCHAR' },
+                          { value: 'INTEGER', label: 'INTEGER' },
+                          { value: 'LONG', label: 'LONG' },
+                          { value: 'FLOAT', label: 'FLOAT' },
+                          { value: 'DOUBLE', label: 'DOUBLE' },
+                          { value: 'DATE', label: 'DATE' },
+                          { value: 'TIME', label: 'TIME' },
+                          { value: 'BOOLEAN', label: 'BOOLEAN' },
+                          { value: 'LIST', label: 'LIST' },
+                          { value: 'FILE', label: 'FILE' }
+                        ]}
+                        v-model:value={param.value.type}
+                        defaultValue={'VARCHAR'}
+                      />
+                    </NGridItem>
+                    <NGridItem span={6}>
                       <NInput
                         v-model:value={param.value.value}
                         placeholder={t('project.dag.value')}

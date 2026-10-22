@@ -17,6 +17,8 @@
 
 package org.apache.seatunnel.connectors.seatunnel.cassandra.util;
 
+import org.apache.seatunnel.shade.org.apache.commons.lang3.ArrayUtils;
+
 import org.apache.seatunnel.api.table.type.ArrayType;
 import org.apache.seatunnel.api.table.type.BasicType;
 import org.apache.seatunnel.api.table.type.LocalTimeType;
@@ -26,8 +28,6 @@ import org.apache.seatunnel.api.table.type.SeaTunnelRow;
 import org.apache.seatunnel.common.exception.CommonErrorCodeDeprecated;
 import org.apache.seatunnel.connectors.seatunnel.cassandra.exception.CassandraConnectorErrorCode;
 import org.apache.seatunnel.connectors.seatunnel.cassandra.exception.CassandraConnectorException;
-
-import org.apache.commons.lang3.ArrayUtils;
 
 import com.datastax.oss.driver.api.core.cql.BoundStatement;
 import com.datastax.oss.driver.api.core.cql.ColumnDefinitions;
@@ -44,6 +44,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.sql.Timestamp;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -181,9 +182,8 @@ public class TypeConvertUtil {
                     fields[i] = row.getLocalDate(i);
                     break;
                 case ProtocolConstants.DataType.TIMESTAMP:
-                    fields[i] =
-                            Timestamp.from(Objects.requireNonNull(row.getInstant(i)))
-                                    .toLocalDateTime();
+                    Instant instant = row.getInstant(i);
+                    fields[i] = instant == null ? null : Timestamp.from(instant).toLocalDateTime();
                     break;
                 case ProtocolConstants.DataType.BLOB:
                     fields[i] =

@@ -54,8 +54,6 @@ export function useCellActive(options: Options) {
   function setEdgeStyle(edge: Edge) {
     const isHover = edge === hoverCell.value
     const isSelected = graph.value?.isSelected(edge)
-    // TODO
-    // const labelName = this.getEdgeLabelName ? this.getEdgeLabelName(edge) : ''
     let edgeProps = null
 
     if (isHover) {
@@ -69,14 +67,9 @@ export function useCellActive(options: Options) {
     edge.setAttrs(edgeProps.attrs)
     edge.setLabels([
       {
-        ..._.merge(
-          {
-            attrs: _.cloneDeep(edgeProps.defaultLabel.attrs)
-          }
-          // {
-          //   attrs: { label: { text: labelName } }
-          // }
-        )
+        ..._.merge({
+          attrs: _.cloneDeep(edgeProps.defaultLabel.attrs)
+        })
       }
     ])
   }
@@ -116,11 +109,6 @@ export function useCellActive(options: Options) {
         : 'FLINK'
       ).toLocaleLowerCase()}.png`
       nodeAttrs = NODE.attrs
-      if (node.data && node.data.taskType == 'SEATUNNEL' && (node.data.useCustom || node.data.parent)) {
-        nodeAttrs.body.strokeDasharray = '5 5'
-      }else{
-        nodeAttrs.body.strokeDasharray = 'none'
-      }
       portAttrs = portDefault
     }
     node.setAttrByPath('image/xlink:href', img)

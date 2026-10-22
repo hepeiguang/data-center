@@ -27,6 +27,7 @@ import org.apache.seatunnel.api.table.catalog.PrimaryKey;
 import org.apache.seatunnel.api.table.catalog.TableIdentifier;
 import org.apache.seatunnel.api.table.catalog.TableSchema;
 import org.apache.seatunnel.api.table.type.BasicType;
+import org.apache.seatunnel.api.table.type.SeaTunnelDataType;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.dialect.DatabaseIdentifier;
 
 import org.junit.jupiter.api.Assertions;
@@ -34,8 +35,13 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
+
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 class PostgresCreateTableSqlBuilderTest {
 
@@ -82,6 +88,54 @@ class PostgresCreateTableSqlBuilderTest {
                                     Lists.newArrayList(),
                                     postgresCreateTableSqlBuilderSkipIndex.getCreateIndexSqls());
                         });
+    }
+
+    @Test
+    void testBuildCreateTableSqlWithTableOptions() {
+        CatalogTable catalogTable = catalogTable(false);
+        Map<String, String> options = new HashMap<>(catalogTable.getOptions());
+        options.put(PostgresCatalog.TABLE_OPTION_TABLESPACE, "pg_default");
+        options.put(PostgresCatalog.TABLE_OPTION_FILLFACTOR, "70");
+        CatalogTable tableWithOptions =
+                CatalogTable.of(
+                        catalogTable.getTableId(),
+                        catalogTable.getTableSchema(),
+                        options,
+                        catalogTable.getPartitionKeys(),
+                        catalogTable.getComment());
+
+        String createTableSql =
+                new PostgresCreateTableSqlBuilder(tableWithOptions, false)
+                        .build(tableWithOptions.getTableId().toTablePath());
+
+        Assertions.assertTrue(createTableSql.contains("WITH (fillfactor=70)"));
+        Assertions.assertTrue(createTableSql.contains("TABLESPACE \"pg_default\""));
+    }
+
+    @Test
+    void testBuildCreateTableSqlWithTableOptionsIgnoresFieldIde() {
+        CatalogTable catalogTable = catalogTable(false);
+        Map<String, String> options = new HashMap<>(catalogTable.getOptions());
+        options.put("fieldIde", "UPPERCASE");
+        options.put(PostgresCatalog.TABLE_OPTION_TABLESPACE, "pg_default");
+        options.put(PostgresCatalog.TABLE_OPTION_FILLFACTOR, "70");
+        CatalogTable tableWithOptions =
+                CatalogTable.of(
+                        catalogTable.getTableId(),
+                        catalogTable.getTableSchema(),
+                        options,
+                        catalogTable.getPartitionKeys(),
+                        catalogTable.getComment());
+
+        String createTableSql =
+                new PostgresCreateTableSqlBuilder(tableWithOptions, false)
+                        .build(tableWithOptions.getTableId().toTablePath());
+
+        Assertions.assertTrue(createTableSql.contains("WITH (fillfactor=70)"));
+        Assertions.assertTrue(
+                createTableSql.contains("TABLESPACE \"pg_default\""),
+                "tablespace must not be rewritten by fieldIde; got: " + createTableSql);
+        Assertions.assertFalse(createTableSql.contains("TABLESPACE \"PG_DEFAULT\""));
     }
 
     private CatalogTable catalogTable(boolean otherDB) {
@@ -169,5 +223,20 @@ class PostgresCreateTableSqlBuilderTest {
                 Collections.emptyMap(),
                 Collections.emptyList(),
                 "test table");
+    }
+
+    @Test
+    public void testColumnSinkType() {
+        PostgresCreateTableSqlBuilder sqlBuilder = mock(PostgresCreateTableSqlBuilder.class);
+
+        Column column = mock(Column.class);
+        when(column.getSinkType()).thenReturn("VARCHAR(10)");
+        when(column.getDataType()).thenReturn((SeaTunnelDataType) BasicType.INT_TYPE);
+        when(column.getName()).thenReturn("col1");
+        when(sqlBuilder.buildColumnSql(column)).thenCallRealMethod();
+
+        String result = sqlBuilder.buildColumnSql(column);
+
+        Assertions.assertEquals("\"col1\" VARCHAR(10) NOT NULL", result);
     }
 }

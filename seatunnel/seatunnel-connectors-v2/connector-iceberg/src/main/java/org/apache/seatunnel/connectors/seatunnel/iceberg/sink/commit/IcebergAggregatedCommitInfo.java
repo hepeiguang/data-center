@@ -26,5 +26,14 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 public class IcebergAggregatedCommitInfo implements Serializable {
+    private static final long serialVersionUID = -8652655689660607409L;
     List<IcebergCommitInfo> commitInfos;
+
+    /**
+     * Returns the checkpoint ID for this aggregated commit. Returns 0 if there are no commit infos
+     * (e.g. Spark epochId=0 or Flink schema-change flush).
+     */
+    public long getCheckpointId() {
+        return commitInfos.isEmpty() ? 0L : commitInfos.get(0).getCheckpointId();
+    }
 }

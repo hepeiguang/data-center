@@ -19,8 +19,11 @@ package org.apache.seatunnel.e2e.transform;
 
 import org.apache.seatunnel.e2e.common.TestResource;
 import org.apache.seatunnel.e2e.common.container.ContainerExtendedFactory;
+import org.apache.seatunnel.e2e.common.container.EngineType;
 import org.apache.seatunnel.e2e.common.container.TestContainer;
+import org.apache.seatunnel.e2e.common.junit.DisabledOnContainer;
 import org.apache.seatunnel.e2e.common.junit.TestContainerExtension;
+import org.apache.seatunnel.e2e.common.util.DependencyJar;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
@@ -82,15 +85,9 @@ public class TestDynamicCompileIT extends TestSuiteBase implements TestResource 
 
     @TestContainerExtension
     protected final ContainerExtendedFactory extendedFactory =
-            container -> {
-                Container.ExecResult extraCommands =
-                        container.execInContainer(
-                                "bash",
-                                "-c",
-                                "mkdir -p /tmp/seatunnel/plugins/Fake/lib && cd /tmp/seatunnel/plugins/Fake/lib && wget  "
-                                        + "https://repo1.maven.org/maven2/cn/hutool/hutool-all/5.3.6/hutool-all-5.3.6.jar");
-                Assertions.assertEquals(0, extraCommands.getExitCode(), extraCommands.getStderr());
-            };
+            container ->
+                    DependencyJar.of(cn.hutool.core.util.StrUtil.class)
+                            .copyTo(container, "/tmp/seatunnel/plugins/Fake/lib");
 
     @AfterAll
     @Override
@@ -181,5 +178,86 @@ public class TestDynamicCompileIT extends TestSuiteBase implements TestResource 
         Container.ExecResult execResult =
                 container.executeJob(basePath + "single_dynamic_http_compile_transform.conf");
         Assertions.assertEquals(0, execResult.getExitCode());
+    }
+
+    @DisabledOnContainer(
+            value = {},
+            type = {EngineType.SPARK, EngineType.FLINK},
+            disabledReason = "Currently SPARK and FLINK do not support scala dynamic compile")
+    @TestTemplate
+    public void testDynamicSingleCompileScala(TestContainer container)
+            throws IOException, InterruptedException {
+        Container.ExecResult execResult =
+                container.executeJob(basePath + "single_dynamic_scala_compile_transform.conf");
+        Assertions.assertEquals(
+                0,
+                execResult.getExitCode(),
+                "Scala dynamic compilation test failed. Error: " + execResult.getStderr());
+    }
+
+    @DisabledOnContainer(
+            value = {},
+            type = {EngineType.SPARK, EngineType.FLINK},
+            disabledReason = "Currently SPARK and FLINK do not support scala dynamic compile")
+    @TestTemplate
+    public void testDynamicSinglePathScala(TestContainer container)
+            throws IOException, InterruptedException {
+        container.copyFileToContainer("/dynamic_compile/source_file/ScalaFile", "/tmp/ScalaFile");
+        Container.ExecResult execResult =
+                container.executeJob(basePath + "single_scala_path_compile.conf");
+        Assertions.assertEquals(0, execResult.getExitCode());
+    }
+
+    @DisabledOnContainer(
+            value = {},
+            type = {EngineType.SPARK, EngineType.FLINK},
+            disabledReason = "Currently SPARK and FLINK do not support scala dynamic compile")
+    @TestTemplate
+    public void testDynamicMultipleCompileScala(TestContainer container)
+            throws IOException, InterruptedException {
+        Container.ExecResult execResult =
+                container.executeJob(basePath + "multiple_dynamic_scala_compile_transform.conf");
+        Assertions.assertEquals(0, execResult.getExitCode());
+    }
+
+    @DisabledOnContainer(
+            value = {},
+            type = {EngineType.SPARK, EngineType.FLINK},
+            disabledReason = "Currently SPARK and FLINK do not support scala dynamic compile ")
+    @TestTemplate
+    public void testDynamicMixedCompileJavaAndScala(TestContainer container)
+            throws IOException, InterruptedException {
+        Container.ExecResult execResult =
+                container.executeJob(basePath + "mixed_dynamic_java_scala_compile_transform.conf");
+        Assertions.assertEquals(0, execResult.getExitCode());
+    }
+
+    @DisabledOnContainer(
+            value = {},
+            type = {EngineType.SPARK, EngineType.FLINK},
+            disabledReason = "Currently SPARK and FLINK do not support scala dynamic compile ")
+    @TestTemplate
+    public void testDynamicMixedCompileGroovyAndScala(TestContainer container)
+            throws IOException, InterruptedException {
+        Container.ExecResult execResult =
+                container.executeJob(
+                        basePath + "mixed_dynamic_groovy_scala_compile_transform.conf");
+        Assertions.assertEquals(0, execResult.getExitCode());
+    }
+
+    @DisabledOnContainer(
+            value = {},
+            type = {EngineType.SPARK, EngineType.FLINK},
+            disabledReason = "Currently SPARK and FLINK do not support scala dynamic compile ")
+    @TestTemplate
+    public void testMixedThreeLanguagesCompile(TestContainer container)
+            throws IOException, InterruptedException {
+        Container.ExecResult execResult =
+                container.executeJob(basePath + "mixed_dynamic_all_compile_transform.conf");
+        Assertions.assertEquals(
+                0,
+                execResult.getExitCode(),
+                "Mixed three languages (Java + Groovy + Scala) compilation test failed. Error: "
+                        + execResult.getStderr());
     }
 }

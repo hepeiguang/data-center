@@ -36,7 +36,7 @@ public interface K8sNamespaceUserMapper extends BaseMapper<K8sNamespaceUser> {
      * @return delete result
      */
     int deleteNamespaceRelation(@Param("namespaceId") int namespaceId,
-                                @Param("userId") String userId);
+                                @Param("userId") int userId);
 
     /**
      * query namespace relation
@@ -46,5 +46,5 @@ public interface K8sNamespaceUserMapper extends BaseMapper<K8sNamespaceUser> {
      * @return namespace user relation
      */
     K8sNamespaceUser queryNamespaceRelation(@Param("namespaceId") int namespaceId,
-                                            @Param("userId") String userId);
+                                            @Param("userId") int userId);
 }

@@ -40,9 +40,9 @@ public class ProjectParameter {
     private Integer id;
 
     @TableField("user_id")
-    private String userId;
+    private Integer userId;
 
-    private String operator;
+    private Integer operator;
 
     private long code;
 
@@ -54,6 +54,9 @@ public class ProjectParameter {
 
     @TableField("param_value")
     private String paramValue;
+
+    @TableField("param_data_type")
+    private String paramDataType;
 
     private Date createTime;
 

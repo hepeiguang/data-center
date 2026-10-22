@@ -17,13 +17,12 @@
     limitations under the License.
 
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.apache.seatunnel</groupId>
         <artifactId>seatunnel</artifactId>
-        <version>${revision}</version>
+        <version>3.0.0</version>
     </parent>
 
     <artifactId>seatunnel-transforms-v2</artifactId>
@@ -31,8 +30,7 @@
 
     <properties>
         <httpclient.version>4.5.13</httpclient.version>
-        <httpcore.version>4.4.4</httpcore.version>
-        <mockwebserver.version>3.6.0</mockwebserver.version>
+        <httpcore.version>4.4.16</httpcore.version>
         <zhipu.version>release-V4-2.3.0</zhipu.version>
     </properties>
 
@@ -48,6 +46,16 @@
     </dependencyManagement>
 
     <dependencies>
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>bedrockruntime</artifactId>
+            <version>${software.amazon.awssdk.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>apache-client</artifactId>
+            <version>${software.amazon.awssdk.version}</version>
+        </dependency>
         <dependency>
             <groupId>org.apache.seatunnel</groupId>
             <artifactId>seatunnel-api</artifactId>
@@ -74,15 +82,37 @@
         </dependency>
 
         <dependency>
+            <groupId>org.apache.seatunnel</groupId>
+            <artifactId>seatunnel-shade-scala-compiler</artifactId>
+        </dependency>
+
+        <dependency>
             <groupId>org.apache.groovy</groupId>
             <artifactId>groovy</artifactId>
             <version>${groovy.version}</version>
         </dependency>
+
         <dependency>
             <groupId>org.apache.seatunnel</groupId>
-            <artifactId>seatunnel-janino</artifactId>
-            <version>${project.version}</version>
-            <classifier>optional</classifier>
+            <artifactId>seatunnel-shade-janino</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.seatunnel</groupId>
+            <artifactId>seatunnel-shade-calcite</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.calcite</groupId>
+                    <artifactId>calcite-core</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.scala-lang</groupId>
+                    <artifactId>scala-compiler</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.scala-lang</groupId>
+                    <artifactId>scala-reflect</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
@@ -97,13 +127,11 @@
         <dependency>
             <groupId>com.squareup.okhttp3</groupId>
             <artifactId>mockwebserver</artifactId>
-            <version>${mockwebserver.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>cn.datax</groupId>
-            <artifactId>datax-common-datasecurity</artifactId>
-            <version>2.0.0</version>
+            <groupId>org.apache.seatunnel</groupId>
+            <artifactId>seatunnel-shade-guava</artifactId>
         </dependency>
     </dependencies>
 

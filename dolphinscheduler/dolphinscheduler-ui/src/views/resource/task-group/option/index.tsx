@@ -149,13 +149,13 @@ const taskGroupOption = defineComponent({
       <NSpace vertical>
         <Card>
           <NSpace justify='space-between'>
-            {/* <NButton
+            <NButton
               size='small'
               type={'primary'}
               onClick={() => this.onCreate()}
             >
               {t('resource.task_group_option.create')}
-            </NButton> */}
+            </NButton>
             <NSpace>
               <Search
                 placeholder={t(
@@ -173,41 +173,28 @@ const taskGroupOption = defineComponent({
           </NSpace>
         </Card>
         <Card title={t('resource.task_group_option.option')}>
-          {{
-            default: () => (
-              <NSpace vertical>
-                <NDataTable
-                  loading={loadingRef}
-                  columns={columns}
-                  size={'small'}
-                  data={this.tableData}
-                  striped
-                  scrollX={this.tableWidth}
-                />
-                <NSpace justify='center'>
-                  <NPagination
-                    v-model:page={this.page}
-                    v-model:page-size={this.pageSize}
-                    page-count={this.totalPage}
-                    show-size-picker
-                    page-sizes={[10, 30, 50]}
-                    show-quick-jumper
-                    onUpdatePage={resetTableData}
-                    onUpdatePageSize={onUpdatePageSize}
-                  />
-                </NSpace>
-              </NSpace>
-            ),
-            'header-extra': () => (
-              <NButton
-                size='small'
-                type={'primary'}
-                onClick={() => this.onCreate()}
-              >
-                {t('resource.task_group_option.create')}
-              </NButton>
-            )
-          }}
+          <NSpace vertical>
+            <NDataTable
+              loading={loadingRef}
+              columns={columns}
+              size={'small'}
+              data={this.tableData}
+              striped
+              scrollX={this.tableWidth}
+            />
+            <NSpace justify='center'>
+              <NPagination
+                v-model:page={this.page}
+                v-model:page-size={this.pageSize}
+                page-count={this.totalPage}
+                show-size-picker
+                page-sizes={[10, 30, 50]}
+                show-quick-jumper
+                onUpdatePage={resetTableData}
+                onUpdatePageSize={onUpdatePageSize}
+              />
+            </NSpace>
+          </NSpace>
         </Card>
         {showModalRef && (
           <FormModal

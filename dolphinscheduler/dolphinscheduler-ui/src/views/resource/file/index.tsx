@@ -22,8 +22,6 @@ export default defineComponent({
   name: 'File',
   setup() {},
   render() {
-    return <ResourceListModal
-      resourceType={'FILE'}
-      isShowMutiSelect={false} />
+    return <ResourceListModal resourceType={'FILE'} />
   }
 })

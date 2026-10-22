@@ -23,7 +23,7 @@ export function useProcedure(model: { [field: string]: any }): IJsonItem[] {
 
   return [
     {
-      type: 'mirror',
+      type: 'editor',
       field: 'method',
       name: t('project.node.procedure_method'),
       props: {
@@ -36,6 +36,10 @@ export function useProcedure(model: { [field: string]: any }): IJsonItem[] {
         message: t('project.node.procedure_method_tips')
       }
     },
-    ...useCustomParams({ model, field: 'localParams', isSimple: false })
+    ...useCustomParams({
+      model,
+      field: 'localParams',
+      isSimple: model.readonly
+    })
   ]
 }

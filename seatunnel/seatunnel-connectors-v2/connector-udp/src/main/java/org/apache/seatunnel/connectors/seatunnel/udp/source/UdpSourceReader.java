@@ -82,31 +82,11 @@ public class UdpSourceReader implements SourceReader<SeaTunnelRow, UdpSourceSpli
                             packet.getLength(),
                             System.currentTimeMillis());
 
-            if (packetCodec != null) {
-                List<Map<String, Object>> rows = packetCodec.decode(payload, meta);
-                for (Map<String, Object> row : rows) {
-                    String json = JsonUtils.toJsonString(row);
-                    byte[] bytes;
-                    if (isSimpleContentSchema()) {
-                        ObjectNode node = JsonUtils.createObjectNode();
-                        node.put("content", json);
-                        bytes = JsonUtils.toJsonString(node).getBytes(config.getCharset());
-                    } else {
-                        bytes = json.getBytes(config.getCharset());
-                    }
-                    deserializationSchema.deserialize(bytes, output);
-                }
-            } else {
-                String message = new String(payload, config.getCharset());
-                log.debug("Receive udp data: {}", message);
-                if (UdpOptions.Format.JSON.equals(config.getFormat())) {
-                    deserializationSchema.deserialize(message.getBytes(config.getCharset()), output);
-                } else {
-                    ObjectNode node = JsonUtils.createObjectNode();
-                    node.put("content", message);
-                    deserializationSchema.deserialize(
-                            JsonUtils.toJsonString(node).getBytes(config.getCharset()), output);
-                }
+            try {
+                emitPacket(output, payload, meta);
+            } catch (Exception e) {
+                handleParseError(meta, e);
+                continue;
             }
 
             if (config.isReplyEnabled()) {
@@ -120,6 +100,52 @@ public class UdpSourceReader implements SourceReader<SeaTunnelRow, UdpSourceSpli
                 socket.send(responsePacket);
             }
         }
+    }
+
+    private void emitPacket(Collector<SeaTunnelRow> output, byte[] payload, PacketMeta meta)
+            throws Exception {
+        if (packetCodec != null) {
+            List<Map<String, Object>> rows = packetCodec.decode(payload, meta);
+            for (Map<String, Object> row : rows) {
+                String json = JsonUtils.toJsonString(row);
+                byte[] bytes;
+                if (isSimpleContentSchema()) {
+                    ObjectNode node = JsonUtils.createObjectNode();
+                    node.put("content", json);
+                    bytes = JsonUtils.toJsonString(node).getBytes(config.getCharset());
+                } else {
+                    bytes = json.getBytes(config.getCharset());
+                }
+                deserializationSchema.deserialize(bytes, output);
+            }
+        } else {
+            String message = new String(payload, config.getCharset());
+            log.debug("Receive udp data: {}", message);
+            if (UdpOptions.Format.JSON.equals(config.getFormat())) {
+                deserializationSchema.deserialize(message.getBytes(config.getCharset()), output);
+            } else {
+                ObjectNode node = JsonUtils.createObjectNode();
+                node.put("content", message);
+                deserializationSchema.deserialize(
+                        JsonUtils.toJsonString(node).getBytes(config.getCharset()), output);
+            }
+        }
+    }
+
+    private void handleParseError(PacketMeta meta, Exception e) throws Exception {
+        UdpOptions.ParseErrorHandleWay way = config.getParseErrorHandleWay();
+        if (way == null) {
+            way = UdpOptions.ParseErrorHandleWay.skip;
+        }
+        if (way == UdpOptions.ParseErrorHandleWay.fail) {
+            throw e;
+        }
+        log.warn(
+                "Skip bad UDP packet from {}:{} len={}: {}",
+                meta.getRemoteHost(),
+                meta.getRemotePort(),
+                meta.getLength(),
+                e.toString());
     }
 
     @Override

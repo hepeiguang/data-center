@@ -26,7 +26,7 @@
         <include refid="baseSql"/>
         from t_ds_datasource
         where type=#{type}
-        <if test="userId != null and userId != ''">
+        <if test="userId != 0">
             and id in
             (select datasource_id
             from t_ds_relation_datasource_user
@@ -46,7 +46,7 @@
         from t_ds_datasource d
         join t_ds_user u on d.user_id = u.id
         where 1 =1
-        <if test="userId != null and userId != ''">
+        <if test="userId != 0">
             and d.id in
             (select datasource_id
             from t_ds_relation_datasource_user
@@ -59,12 +59,6 @@
         <if test="name != null and name != ''">
             and name like concat ('%', #{name}, '%')
         </if>
-        <if test="type != null and type != ''">
-            and type = #{type}
-        </if>
-        <if test="serverType != null and serverType != ''">
-            and server_type = #{serverType}
-        </if>
         order by update_time desc
     </select>
     <select id="queryDataSourceByName" resultType="org.apache.dolphinscheduler.dao.entity.DataSource">
@@ -74,13 +68,12 @@
         where name=#{name}
     </select>
     <select id="queryAuthedDatasource" resultType="org.apache.dolphinscheduler.dao.entity.DataSource">
-        select ds.id, ds.name, ds.note, ds.type, ds.user_id, ds.connection_params, ds.create_time, ds.update_time
+        select ds.id, ds.name
         from t_ds_datasource ds, t_ds_relation_datasource_user rel
         where ds.id = rel.datasource_id AND rel.user_id = #{userId}
     </select>
     <select id="queryDatasourceExceptUserId" resultType="org.apache.dolphinscheduler.dao.entity.DataSource">
-        select
-        <include refid="baseSql"/>
+        select id, name
         from t_ds_datasource
         where user_id <![CDATA[ <> ]]> #{userId}
     </select>
@@ -95,7 +88,7 @@
         <include refid="baseSql"/>
         from t_ds_datasource
         where 1=1
-        <if test="userId != null and userId != ''">
+        <if test="userId != 0">
             and id in (select datasource_id from t_ds_relation_datasource_user where user_id=#{userId}
             union select id as datasource_id from t_ds_datasource where user_id=#{userId})
         </if>
@@ -135,12 +128,6 @@
             <foreach collection="dataSourceIds" item="i" open="(" close=")" separator=",">
                 #{i}
             </foreach>
-        </if>
-        <if test="type != null and type != ''">
-            and type = #{type}
-        </if>
-        <if test="serverType != null and serverType != ''">
-            and server_type = #{serverType}
         </if>
         order by update_time desc
     </select>

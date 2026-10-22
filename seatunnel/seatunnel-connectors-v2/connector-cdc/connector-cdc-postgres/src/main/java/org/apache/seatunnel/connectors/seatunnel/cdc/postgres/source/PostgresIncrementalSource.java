@@ -20,22 +20,30 @@ package org.apache.seatunnel.connectors.seatunnel.cdc.postgres.source;
 import org.apache.seatunnel.api.configuration.Option;
 import org.apache.seatunnel.api.configuration.ReadonlyConfig;
 import org.apache.seatunnel.api.source.SupportParallelism;
+import org.apache.seatunnel.api.source.SupportSchemaEvolution;
 import org.apache.seatunnel.api.table.catalog.CatalogTable;
+import org.apache.seatunnel.api.table.schema.SchemaChangeType;
 import org.apache.seatunnel.common.utils.JdbcUrlUtil;
 import org.apache.seatunnel.common.utils.SeaTunnelException;
 import org.apache.seatunnel.connectors.cdc.base.config.JdbcSourceConfig;
 import org.apache.seatunnel.connectors.cdc.base.config.SourceConfig;
+import org.apache.seatunnel.connectors.cdc.base.config.StartupConfig;
 import org.apache.seatunnel.connectors.cdc.base.dialect.DataSourceDialect;
 import org.apache.seatunnel.connectors.cdc.base.option.JdbcSourceOptions;
+import org.apache.seatunnel.connectors.cdc.base.option.SourceOptions;
 import org.apache.seatunnel.connectors.cdc.base.option.StartupMode;
 import org.apache.seatunnel.connectors.cdc.base.option.StopMode;
+import org.apache.seatunnel.connectors.cdc.base.schema.SchemaChangeEventFilter;
 import org.apache.seatunnel.connectors.cdc.base.source.IncrementalSource;
 import org.apache.seatunnel.connectors.cdc.base.source.offset.OffsetFactory;
 import org.apache.seatunnel.connectors.cdc.debezium.DebeziumDeserializationSchema;
+import org.apache.seatunnel.connectors.cdc.debezium.DeserializeFormat;
+import org.apache.seatunnel.connectors.cdc.debezium.row.DebeziumJsonDeserializeSchema;
 import org.apache.seatunnel.connectors.cdc.debezium.row.SeaTunnelRowDebeziumDeserializeSchema;
+import org.apache.seatunnel.connectors.seatunnel.cdc.postgres.config.PostgresIncrementalSourceOptions;
 import org.apache.seatunnel.connectors.seatunnel.cdc.postgres.config.PostgresSourceConfigFactory;
 import org.apache.seatunnel.connectors.seatunnel.cdc.postgres.source.offset.LsnOffsetFactory;
-import org.apache.seatunnel.connectors.seatunnel.jdbc.catalog.JdbcCatalogOptions;
+import org.apache.seatunnel.connectors.seatunnel.jdbc.config.JdbcCommonOptions;
 
 import org.apache.kafka.connect.data.Struct;
 
@@ -46,18 +54,25 @@ import io.debezium.relational.history.TableChanges;
 import io.debezium.util.SchemaNameAdjuster;
 
 import java.time.ZoneId;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class PostgresIncrementalSource<T> extends IncrementalSource<T, JdbcSourceConfig>
-        implements SupportParallelism {
+        implements SupportParallelism, SupportSchemaEvolution {
 
     static final String IDENTIFIER = "Postgres-CDC";
 
+    private final boolean requireReplicaIdentityFull;
+
     public PostgresIncrementalSource(ReadonlyConfig options, List<CatalogTable> catalogTables) {
         super(options, catalogTables);
+        this.requireReplicaIdentityFull =
+                options.get(PostgresIncrementalSourceOptions.REQUIRE_REPLICA_IDENTITY_FULL);
+        validateSchemaEvolutionOptions(options);
     }
 
     @Override
@@ -76,11 +91,17 @@ public class PostgresIncrementalSource<T> extends IncrementalSource<T, JdbcSourc
     }
 
     @Override
+    protected StartupConfig getStartupConfig(ReadonlyConfig config) {
+        StartupConfig startupConfig = super.getStartupConfig(config);
+        validateStartupOptions(config, startupConfig);
+        return startupConfig;
+    }
+
+    @Override
     public SourceConfig.Factory<JdbcSourceConfig> createSourceConfigFactory(ReadonlyConfig config) {
         PostgresSourceConfigFactory configFactory = new PostgresSourceConfigFactory();
         configFactory.fromReadonlyConfig(readonlyConfig);
-        JdbcUrlUtil.UrlInfo urlInfo =
-                JdbcUrlUtil.getUrlInfo(config.get(JdbcCatalogOptions.BASE_URL));
+        JdbcUrlUtil.UrlInfo urlInfo = JdbcUrlUtil.getUrlInfo(config.get(JdbcCommonOptions.URL));
         configFactory.originUrl(urlInfo.getOrigin());
         configFactory.hostname(urlInfo.getHost());
         configFactory.port(urlInfo.getPort());
@@ -93,17 +114,32 @@ public class PostgresIncrementalSource<T> extends IncrementalSource<T, JdbcSourc
     @Override
     public DebeziumDeserializationSchema<T> createDebeziumDeserializationSchema(
             ReadonlyConfig config) {
+        Map<TableId, Struct> tableIdTableChangeMap = tableChanges();
+        if (DeserializeFormat.COMPATIBLE_DEBEZIUM_JSON.equals(
+                config.get(JdbcSourceOptions.FORMAT))) {
+            return (DebeziumDeserializationSchema<T>)
+                    new DebeziumJsonDeserializeSchema(
+                            config.get(JdbcSourceOptions.DEBEZIUM_PROPERTIES),
+                            tableIdTableChangeMap);
+        }
+
         String zoneId = config.get(JdbcSourceOptions.SERVER_TIME_ZONE);
         return (DebeziumDeserializationSchema<T>)
                 SeaTunnelRowDebeziumDeserializeSchema.builder()
                         .setTables(catalogTables)
                         .setServerTimeZone(ZoneId.of(zoneId))
+                        .setTableIdTableChangeMap(tableIdTableChangeMap)
+                        .setSchemaChangeResolver(new PostgresRelationSchemaChangeResolver())
+                        .setSchemaChangeEventFilter(SchemaChangeEventFilter.fromConfig(config))
                         .build();
     }
 
     @Override
     public DataSourceDialect<JdbcSourceConfig> createDataSourceDialect(ReadonlyConfig config) {
-        return new PostgresDialect((PostgresSourceConfigFactory) configFactory, catalogTables);
+        return new PostgresDialect(
+                (PostgresSourceConfigFactory) configFactory,
+                catalogTables,
+                requireReplicaIdentityFull);
     }
 
     @Override
@@ -112,10 +148,53 @@ public class PostgresIncrementalSource<T> extends IncrementalSource<T, JdbcSourc
                 (PostgresSourceConfigFactory) configFactory, (PostgresDialect) dataSourceDialect);
     }
 
+    @Override
+    public Optional<String> driverName() {
+        return Optional.of("org.postgresql.Driver");
+    }
+
+    @Override
+    public List<SchemaChangeType> supports() {
+        return Collections.singletonList(SchemaChangeType.ADD_COLUMN);
+    }
+
+    private void validateStartupOptions(ReadonlyConfig options, StartupConfig startupConfig) {
+        if (startupConfig.getStartupMode() != StartupMode.COMMITTED_OFFSET) {
+            return;
+        }
+        Optional<String> slotName =
+                options.getOptional(PostgresIncrementalSourceOptions.SLOT_NAME)
+                        .map(String::trim)
+                        .filter(name -> !name.isEmpty());
+        if (!slotName.isPresent()) {
+            throw new SeaTunnelException(
+                    String.format(
+                            "PostgreSQL-CDC startup.mode '%s' requires an explicit '%s' option.",
+                            StartupMode.COMMITTED_OFFSET,
+                            PostgresIncrementalSourceOptions.SLOT_NAME.key()));
+        }
+    }
+
+    private void validateSchemaEvolutionOptions(ReadonlyConfig options) {
+        if (options.get(SourceOptions.SCHEMA_CHANGES_ENABLED)
+                && !"pgoutput"
+                        .equalsIgnoreCase(
+                                options.get(
+                                        PostgresIncrementalSourceOptions.DECODING_PLUGIN_NAME))) {
+            throw new SeaTunnelException(
+                    String.format(
+                            "PostgreSQL-CDC schema evolution requires '%s = pgoutput' because PostgreSQL RELATION messages provide the changed schema.",
+                            PostgresIncrementalSourceOptions.DECODING_PLUGIN_NAME.key()));
+        }
+    }
+
     private Map<TableId, Struct> tableChanges() {
         JdbcSourceConfig jdbcSourceConfig = configFactory.create(0);
         PostgresDialect dialect =
-                new PostgresDialect((PostgresSourceConfigFactory) configFactory, catalogTables);
+                new PostgresDialect(
+                        (PostgresSourceConfigFactory) configFactory,
+                        catalogTables,
+                        requireReplicaIdentityFull);
         List<TableId> discoverTables = dialect.discoverDataCollections(jdbcSourceConfig);
         SchemaNameAdjuster adjuster = SchemaNameAdjuster.create();
         ConnectTableChangeSerializer connectTableChangeSerializer =

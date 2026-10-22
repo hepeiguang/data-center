@@ -63,8 +63,38 @@ public class HttpSourceOptions extends HttpCommonOptions {
                     .withDescription(
                             "this parameter is used to specify the page field name in the request parameter");
 
+    public static final Option<Boolean> USE_PLACEHOLDER_REPLACEMENT =
+            Options.key("use_placeholder_replacement")
+                    .booleanType()
+                    .defaultValue(false)
+                    .withDescription(
+                            "If true, use placeholder replacement (${field}) for headers, parameters and body values, otherwise use key-based replacement.");
+
     public static final Option<Map<String, String>> PAGEING =
             Options.key("pageing").mapType().noDefaultValue().withDescription("pageing");
+
+    public static final Option<HttpPaginationType> PAGE_TYPE =
+            Options.key("page_type")
+                    .enumType(HttpPaginationType.class)
+                    .defaultValue(HttpPaginationType.PAGE_NUMBER)
+                    .withDescription(
+                            "this parameter specifies the pagination type and defaults to `PageNumber` if not explicitly set. "
+                                    + "Valid options include `PageNumber` (traditional page-number-based pagination) "
+                                    + "and `Cursor` (token-based cursor pagination).");
+
+    public static final Option<String> PAGE_CURSOR_FIELD_NAME =
+            Options.key("cursor_field")
+                    .stringType()
+                    .noDefaultValue()
+                    .withDescription(
+                            "this parameter is used to specify the Cursor field name in the request parameter");
+
+    public static final Option<String> PAGE_CURSOR_RESPONSE_FIELD =
+            Options.key("cursor_response_field")
+                    .stringType()
+                    .noDefaultValue()
+                    .withDescription(
+                            "This parameter specifies the field in the response from which the cursor is retrieved");
 
     public static final Option<HttpRequestMethod> METHOD =
             Options.key("method")
@@ -80,6 +110,13 @@ public class HttpSourceOptions extends HttpCommonOptions {
                     .enumType(HttpConfig.ResponseFormat.class)
                     .defaultValue(HttpConfig.ResponseFormat.TEXT)
                     .withDescription("Http response format");
+
+    public static final Option<Long> BINARY_CHUNK_SIZE =
+            Options.key("binary_chunk_size")
+                    .longType()
+                    .defaultValue(10 * 1024 * 1024L)
+                    .withDescription(
+                            "Chunk size in bytes for binary response mode. When the response body exceeds this size, it will be split into multiple rows. Only effective when format=binary. Default is 10MB.");
     public static final Option<Integer> POLL_INTERVAL_MILLS =
             Options.key("poll_interval_millis")
                     .intType()
@@ -117,4 +154,10 @@ public class HttpSourceOptions extends HttpCommonOptions {
                     .intType()
                     .defaultValue(DEFAULT_SOCKET_TIMEOUT_MS)
                     .withDescription("Socket timeout setting, default 60s.");
+
+    public static final Option<Boolean> JSON_FILED_MISSED_RETURN_NULL =
+            Options.key("json_filed_missed_return_null")
+                    .booleanType()
+                    .defaultValue(false)
+                    .withDescription("When the json field is missing, return null");
 }

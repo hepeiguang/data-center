@@ -18,6 +18,8 @@
 import type { IJsonItem } from '../types'
 import { watch, ref } from 'vue'
 import { useCustomParams } from '.'
+import utils from '@/utils'
+import { useI18n } from 'vue-i18n'
 
 export function useDatasync(model: { [field: string]: any }): IJsonItem[] {
   const jsonSpan = ref(0)
@@ -25,6 +27,7 @@ export function useDatasync(model: { [field: string]: any }): IJsonItem[] {
   const sourceLocationArnSpan = ref(0)
   const nameSpan = ref(0)
   const cloudWatchLogGroupArnSpan = ref(0)
+  const { t } = useI18n()
 
   const resetSpan = () => {
     jsonSpan.value = model.jsonFormat ? 24 : 0
@@ -51,12 +54,17 @@ export function useDatasync(model: { [field: string]: any }): IJsonItem[] {
       span: 12
     },
     {
-      type: 'mirror',
+      type: 'editor',
       field: 'json',
       name: 'json',
       span: jsonSpan,
-      props: {
-        language: 'sql',
+      validate: {
+        trigger: ['input', 'blur'],
+        validator() {
+          if (model.json && !utils.isJson(model.json)) {
+            return new Error(t('project.node.json_format_tips'))
+          }
+        }
       }
     },
     {
@@ -83,6 +91,10 @@ export function useDatasync(model: { [field: string]: any }): IJsonItem[] {
       name: 'cloudWatchLogGroupArn',
       span: cloudWatchLogGroupArnSpan
     },
-    ...useCustomParams({ model, field: 'localParams', isSimple: false })
+    ...useCustomParams({
+      model,
+      field: 'localParams',
+      isSimple: model.readonly
+    })
   ]
 }

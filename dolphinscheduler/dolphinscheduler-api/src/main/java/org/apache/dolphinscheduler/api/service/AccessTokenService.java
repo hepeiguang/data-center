@@ -23,9 +23,6 @@ import org.apache.dolphinscheduler.dao.entity.User;
 
 import java.util.List;
 
-/**
- * access token service
- */
 public interface AccessTokenService {
 
     /**
@@ -46,7 +43,7 @@ public interface AccessTokenService {
      * @param userId user id
      * @return token list for specified user
      */
-    List<AccessToken> queryAccessTokenByUser(User loginUser, String userId);
+    List<AccessToken> queryAccessTokenByUser(User loginUser, Integer userId);
 
     /**
      * create token
@@ -56,7 +53,7 @@ public interface AccessTokenService {
      * @param token token string (if it is absent, it will be automatically generated)
      * @return create result code
      */
-    AccessToken createToken(User loginUser, String userId, String expireTime, String token);
+    AccessToken createToken(User loginUser, int userId, String expireTime, String token);
 
     /**
      * generate token
@@ -65,7 +62,7 @@ public interface AccessTokenService {
      * @param expireTime token expire time
      * @return token string
      */
-    String generateToken(User loginUser, String userId, String expireTime);
+    String generateToken(User loginUser, int userId, String expireTime);
 
     /**
      * delete access token
@@ -85,5 +82,5 @@ public interface AccessTokenService {
      * @param token token string (if it is absent, it will be automatically generated)
      * @return updated access token entity
      */
-    AccessToken updateToken(User loginUser, int id, String userId, String expireTime, String token);
+    AccessToken updateToken(User loginUser, int id, int userId, String expireTime, String token);
 }

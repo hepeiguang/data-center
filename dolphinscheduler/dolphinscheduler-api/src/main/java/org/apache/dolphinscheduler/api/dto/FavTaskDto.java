@@ -18,13 +18,11 @@
 package org.apache.dolphinscheduler.api.dto;
 
 import lombok.AllArgsConstructor;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @NoArgsConstructor
-@Getter
-@Setter
+@Data
 @AllArgsConstructor
 public class FavTaskDto implements Cloneable {
 
@@ -33,7 +31,6 @@ public class FavTaskDto implements Cloneable {
     private boolean isCollection;
     // task category the task type belongs to
     private String taskCategory;
-    private String jobMode;
 
     @Override
     public Object clone() throws CloneNotSupportedException {

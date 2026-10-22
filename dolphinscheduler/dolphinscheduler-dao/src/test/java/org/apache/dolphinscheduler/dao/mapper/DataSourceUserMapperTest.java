@@ -40,7 +40,7 @@ public class DataSourceUserMapperTest extends BaseDaoTest {
     private DatasourceUser insertOne() {
         // insertOne
         DatasourceUser dataSourceUser = new DatasourceUser();
-        dataSourceUser.setUserId("4");
+        dataSourceUser.setUserId(4);
         dataSourceUser.setDatasourceId(1010);
         dataSourceUser.setPerm(7);
         dataSourceUser.setUpdateTime(new Date());

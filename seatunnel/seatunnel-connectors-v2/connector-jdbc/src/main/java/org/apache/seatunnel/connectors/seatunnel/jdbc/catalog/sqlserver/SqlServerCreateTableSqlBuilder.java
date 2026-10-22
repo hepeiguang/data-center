@@ -17,6 +17,8 @@
 
 package org.apache.seatunnel.connectors.seatunnel.jdbc.catalog.sqlserver;
 
+import org.apache.seatunnel.shade.org.apache.commons.lang3.StringUtils;
+
 import org.apache.seatunnel.api.table.catalog.CatalogTable;
 import org.apache.seatunnel.api.table.catalog.Column;
 import org.apache.seatunnel.api.table.catalog.ConstraintKey;
@@ -28,7 +30,6 @@ import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.dialect.DatabaseI
 import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.dialect.sqlserver.SqlServerTypeConverter;
 
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -152,7 +153,7 @@ public class SqlServerCreateTableSqlBuilder {
             tableAndColumnComment.append(
                     String.format(
                             "EXEC %s.sys.sp_addextendedproperty 'MS_Description', N'%s', 'schema', N'%s', 'table', N'%s';\n",
-                            tablePath.getDatabaseName(),
+                            "[" + tablePath.getDatabaseName() + "]",
                             comment,
                             tablePath.getSchemaName(),
                             tablePath.getTableName()));
@@ -164,7 +165,7 @@ public class SqlServerCreateTableSqlBuilder {
                     tableAndColumnComment.append(
                             String.format(
                                     columnComment,
-                                    tablePath.getDatabaseName(),
+                                    "[" + tablePath.getDatabaseName() + "]",
                                     com,
                                     tablePath.getSchemaName(),
                                     tablePath.getTableName(),
@@ -191,15 +192,21 @@ public class SqlServerCreateTableSqlBuilder {
         return String.join(", \n", columnSqls);
     }
 
-    private String buildColumnIdentifySql(
+    String buildColumnIdentifySql(
             Column column, String catalogName, Map<String, String> columnComments) {
         final List<String> columnSqls = new ArrayList<>();
         columnSqls.add("[" + column.getName() + "]");
-        if (StringUtils.equals(catalogName, DatabaseIdentifier.SQLSERVER)) {
-            columnSqls.add(column.getSourceType());
+
+        String columnType;
+        if (column.getSinkType() != null) {
+            columnType = column.getSinkType();
+        } else if (StringUtils.equals(catalogName, DatabaseIdentifier.SQLSERVER)
+                && StringUtils.isNotBlank(column.getSourceType())) {
+            columnType = column.getSourceType();
         } else {
-            columnSqls.add(SqlServerTypeConverter.INSTANCE.reconvert(column).getColumnType());
+            columnType = SqlServerTypeConverter.INSTANCE.reconvert(column).getColumnType();
         }
+        columnSqls.add(columnType);
 
         // nullable
         boolean isPrimaryKeyColumn =

@@ -21,7 +21,7 @@ import org.apache.dolphinscheduler.common.enums.AuthorizationType;
 import org.apache.dolphinscheduler.common.enums.UserType;
 import org.apache.dolphinscheduler.dao.entity.Queue;
 import org.apache.dolphinscheduler.dao.entity.User;
-import org.apache.dolphinscheduler.dao.mapper.QueueMapper;
+import org.apache.dolphinscheduler.dao.repository.QueueDao;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -45,7 +45,7 @@ public class QueueResourcePermissionCheckTest {
     private ResourcePermissionCheckServiceImpl.QueueResourcePermissionCheck queueResourcePermissionCheck;
 
     @Mock
-    private QueueMapper queueMapper;
+    private QueueDao queueDao;
 
     @Test
     public void testPermissionCheck() {
@@ -62,7 +62,7 @@ public class QueueResourcePermissionCheckTest {
     @Test
     public void testListAuthorizedResourceIds() {
         Queue queue = new Queue();
-        Mockito.when(queueMapper.selectList(null)).thenReturn(Arrays.asList(queue));
+        Mockito.when(queueDao.queryAll()).thenReturn(Arrays.asList(queue));
         // GENERAL_USER
         User user = getLoginUser();
         Assertions.assertEquals(0, queueResourcePermissionCheck.listAuthorizedResourceIds(user.getId(), logger).size());
@@ -76,7 +76,7 @@ public class QueueResourcePermissionCheckTest {
         User loginUser = new User();
         loginUser.setUserType(UserType.GENERAL_USER);
         loginUser.setUserName("test");
-        loginUser.setId("1");
+        loginUser.setId(1);
         return loginUser;
     }
 
@@ -84,7 +84,7 @@ public class QueueResourcePermissionCheckTest {
         User loginUser = new User();
         loginUser.setUserType(UserType.ADMIN_USER);
         loginUser.setUserName("test");
-        loginUser.setId("");
+        loginUser.setId(0);
         return loginUser;
     }
 }

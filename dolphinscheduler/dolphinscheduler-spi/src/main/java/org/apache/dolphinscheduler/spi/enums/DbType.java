@@ -17,82 +17,52 @@
 
 package org.apache.dolphinscheduler.spi.enums;
 
-import com.baomidou.mybatisplus.annotation.EnumValue;
-import com.google.common.base.Functions;
+import static java.util.stream.Collectors.toMap;
 
 import java.util.Arrays;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
-import static java.util.stream.Collectors.toMap;
+import lombok.Getter;
 
+import com.baomidou.mybatisplus.annotation.EnumValue;
+import com.google.common.base.Functions;
+
+@Getter
 public enum DbType {
 
-    /**
-     * 关系型数据库
-     */
-    MYSQL(0, "mysql", "mysql", "database"),
-    POSTGRESQL(1, "postgresql", "postgresql", "database"),
-    ORACLE(5, "oracle", "oracle", "database"),
-    SQLSERVER(6, "sqlserver", "sqlserver", "database"),
-    DB2(7, "db2", "db2", "database"),
-    H2(9, "h2", "h2", "database"),
-    DAMENG(15, "dameng", "dameng", "database"),
-    OCEANBASE(16, "oceanbase", "oceanbase", "database"),
-    OPENGAUSS(34, "opengauss", "opengauss", "database"),
+    MYSQL(0, "mysql", "mysql"),
+    POSTGRESQL(1, "postgresql", "postgresql"),
+    HIVE(2, "hive", "hive"),
+    SPARK(3, "spark", "spark"),
+    CLICKHOUSE(4, "clickhouse", "clickhouse"),
+    ORACLE(5, "oracle", "oracle"),
+    SQLSERVER(6, "sqlserver", "sqlserver"),
+    DB2(7, "db2", "db2"),
+    PRESTO(8, "presto", "presto"),
+    H2(9, "h2", "h2"),
+    REDSHIFT(10, "redshift", "redshift"),
+    ATHENA(11, "athena", "athena"),
+    TRINO(12, "trino", "trino"),
+    STARROCKS(13, "starrocks", "starrocks"),
+    AZURESQL(14, "azuresql", "azuresql"),
+    DAMENG(15, "dameng", "dameng"),
+    OCEANBASE(16, "oceanbase", "oceanbase"),
+    SSH(17, "ssh", "ssh"),
+    KYUUBI(18, "kyuubi", "kyuubi"),
+    DATABEND(19, "databend", "databend"),
+    SNOWFLAKE(20, "snowflake", "snowflake"),
+    VERTICA(21, "vertica", "vertica"),
+    HANA(22, "hana", "hana"),
+    DORIS(23, "doris", "doris"),
+    ZEPPELIN(24, "zeppelin", "zeppelin"),
+    SAGEMAKER(25, "sagemaker", "sagemaker"),
 
+    K8S(26, "k8s", "k8s"),
 
-    /**
-     * 数据仓库 (Data Warehouse)
-     */
-    REDSHIFT(10, "redshift", "redshift", "warehouse"),
-    SNOWFLAKE(20, "snowflake", "snowflake", "warehouse"),
-    VERTICA(21, "vertica", "vertica", "warehouse"),
-    STARROCKS(13, "starrocks", "starrocks", "warehouse"),
-    CLICKHOUSE(4, "clickhouse", "clickhouse", "warehouse"),
+    ALIYUN_SERVERLESS_SPARK(27, "aliyun_serverless_spark", "aliyun serverless spark"),
+    DOLPHINDB(28, "dolphindb", "dolphindb");
 
-    DORIS(23, "doris", "doris", "warehouse"),
-
-    /**
-     * 大数据分析引擎
-     */
-    DATABEND(19, "databend", "databend", "dataAnalysisEngine"),
-
-    HIVE(2, "hive", "hive", "dataAnalysisEngine"),
-    PRESTO(8, "presto", "presto", "dataAnalysisEngine"),
-    TRINO(12, "trino", "trino", "dataAnalysisEngine"),
-
-    SPARK(3, "spark", "spark", "dataAnalysisEngine"),
-    ATHENA(11, "athena", "athena", "dataAnalysisEngine"),
-    KYUUBI(18, "kyuubi", "kyuubi", "dataAnalysisEngine"),
-
-    // 文件/对象存储系统
-    HDFS_FILE(30, "hdfs_file", "hdfs_file", "fileStorageSystem"),
-    MINIO(31, "minio", "minio", "fileStorageSystem"),
-    YUNHEZI(36, "yunhezi", "yunhezi", "fileStorageSystem"),
-
-    //消息与流处理系统
-    KAFKA(26, "kafka", "kafka", "messageSystem"),
-    MQTT(37, "mqtt", "mqtt", "messageSystem"),
-
-
-    // 服务器/协议连接
-    SSH(17, "ssh", "ssh", "server"),
-    FTP(32, "ftp", "ftp", "server"),
-    SFTP(33, "sftp", "sftp", "server"),
-    SOCKET_SERVER(27, "socket_server", "socket_server", "server"),
-    HTTP(28, "http", "http", "server"),
-    UDP_MULTICAST(29, "udp_multicast", "udp_multicast", "server"),
-
-    RABBITMQ(35, "rabbitmq", "rabbitmq", "server"),
-
-
-    // 其他工具与服务
-    AZURESQL(14, "azuresql", "azuresql", "other"),
-    HANA(22, "hana", "hana", ""),
-    ZEPPELIN(24, "zeppelin", "zeppelin", "other"),
-    SAGEMAKER(25, "sagemaker", "sagemaker", "other"),
-    ;
     private static final Map<Integer, DbType> DB_TYPE_MAP =
             Arrays.stream(DbType.values()).collect(toMap(DbType::getCode, Functions.identity()));
     @EnumValue
@@ -100,13 +70,10 @@ public enum DbType {
     private final String name;
     private final String descp;
 
-    private final String serverType;
-
-    DbType(int code, String name, String descp, String serverType) {
+    DbType(int code, String name, String descp) {
         this.code = code;
         this.name = name;
         this.descp = descp;
-        this.serverType = serverType;
     }
 
     public static DbType of(int type) {
@@ -119,22 +86,6 @@ public enum DbType {
     public static DbType ofName(String name) {
         return Arrays.stream(DbType.values()).filter(e -> e.name().equals(name)).findFirst()
                 .orElseThrow(() -> new NoSuchElementException("no such db type"));
-    }
-
-    public int getCode() {
-        return code;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public String getDescp() {
-        return descp;
-    }
-
-    public String getServerType() {
-        return serverType;
     }
 
     public boolean isHive() {

@@ -40,7 +40,7 @@ public class ProjectPreferenceMapperTest extends BaseDaoTest {
         projectPreference.setPreferences("{workerGroup:{availableOptions:[],default:1}}");
         projectPreference.setCreateTime(new Date());
         projectPreference.setUpdateTime(new Date());
-        projectPreference.setUserId("1");
+        projectPreference.setUserId(1);
         projectPreferenceMapper.insert(projectPreference);
         return projectPreference;
     }

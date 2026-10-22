@@ -18,14 +18,13 @@
 package org.apache.dolphinscheduler.api.service;
 
 import org.apache.dolphinscheduler.api.dto.FavTaskDto;
-import org.apache.dolphinscheduler.api.dto.taskType.TaskConfig;
 import org.apache.dolphinscheduler.dao.entity.User;
 
 import java.util.List;
 
 public interface FavTaskService {
 
-    List<TaskConfig> getFavTaskList(User loginUser);
+    List<FavTaskDto> getFavTaskList(User loginUser);
 
     boolean deleteFavTask(User loginUser, String taskType);
 

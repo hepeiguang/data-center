@@ -19,6 +19,7 @@ package org.apache.seatunnel.connectors.seatunnel.file.cos.config;
 
 import org.apache.seatunnel.shade.com.typesafe.config.Config;
 
+import org.apache.seatunnel.api.configuration.ReadonlyConfig;
 import org.apache.seatunnel.connectors.seatunnel.file.config.HadoopConf;
 
 import org.apache.hadoop.fs.CosNConfigKeys;
@@ -44,16 +45,31 @@ public class CosConf extends HadoopConf {
     }
 
     public static HadoopConf buildWithConfig(Config config) {
-        HadoopConf hadoopConf = new CosConf(config.getString(CosConfigOptions.BUCKET.key()));
+        HadoopConf hadoopConf = new CosConf(config.getString(CosFileBaseOptions.BUCKET.key()));
         HashMap<String, String> cosOptions = new HashMap<>();
         cosOptions.put(
                 CosNConfigKeys.COSN_USERINFO_SECRET_ID_KEY,
-                config.getString(CosConfigOptions.SECRET_ID.key()));
+                config.getString(CosFileBaseOptions.SECRET_ID.key()));
         cosOptions.put(
                 CosNConfigKeys.COSN_USERINFO_SECRET_KEY_KEY,
-                config.getString(CosConfigOptions.SECRET_KEY.key()));
+                config.getString(CosFileBaseOptions.SECRET_KEY.key()));
         cosOptions.put(
-                CosNConfigKeys.COSN_REGION_KEY, config.getString(CosConfigOptions.REGION.key()));
+                CosNConfigKeys.COSN_REGION_KEY, config.getString(CosFileBaseOptions.REGION.key()));
+        hadoopConf.setExtraOptions(cosOptions);
+        return hadoopConf;
+    }
+
+    public static HadoopConf buildWithReadonlyConfig(ReadonlyConfig readonlyConfig) {
+        HadoopConf hadoopConf = new CosConf(readonlyConfig.get(CosFileBaseOptions.BUCKET));
+        HashMap<String, String> cosOptions = new HashMap<>();
+        cosOptions.put(
+                CosNConfigKeys.COSN_USERINFO_SECRET_ID_KEY,
+                readonlyConfig.get(CosFileBaseOptions.SECRET_ID));
+        cosOptions.put(
+                CosNConfigKeys.COSN_USERINFO_SECRET_KEY_KEY,
+                readonlyConfig.get(CosFileBaseOptions.SECRET_KEY));
+        cosOptions.put(
+                CosNConfigKeys.COSN_REGION_KEY, readonlyConfig.get(CosFileBaseOptions.REGION));
         hadoopConf.setExtraOptions(cosOptions);
         return hadoopConf;
     }

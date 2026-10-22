@@ -17,11 +17,12 @@
 
 package org.apache.dolphinscheduler.spi.datasource;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import java.util.Map;
+
 import lombok.Data;
 
-import java.util.Map;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
 @Data
 @JsonInclude(Include.NON_NULL)
@@ -43,9 +44,7 @@ public abstract class BaseConnectionParam implements ConnectionParam {
 
     protected String validationQuery;
 
-    protected String host;
-
-    protected Integer port;
+    protected String compatibleMode;
 
     protected Map<String, String> other;
 

@@ -53,28 +53,9 @@ export default {
     success: 'Success',
     file_details: 'File Details',
     return: 'Return',
-    save: 'Save',
-
-
-    enter_type_option_tips: "Please select a resource type",
-    type: "Resource Type",
-    type_file: "Folder",
-    type_hive: "HIVE",
-    type_seatunnel: "SEATUNNEL",
-    type_unknow: "UDF",
-    resource_file_must_endwith_jar: "Resource file must end with .jar",
-  },
-  udf: {
-    udf_resources: 'UDF resources',
-    upload_udf_resources: 'Upload UDF Resources',
-    udf_source_name: 'UDF Resource Name',
-    user_name: 'Resource userName'
+    save: 'Save'
   },
   function: {
-    udf_function: 'UDF Function',
-    create_udf_function: 'Create UDF Function',
-    edit_udf_function: 'Edit UDF Function',
-    udf_function_name: 'UDF Function Name',
     user_name: 'Resource userName',
     class_name: 'Class Name',
     type: 'Type',
@@ -87,40 +68,15 @@ export default {
     delete: 'Delete',
     success: 'Success',
     package_name: 'Package Name',
-    udf_resources: 'UDF Resources',
     instructions: 'Instructions',
     upload_resources: 'Upload Resources',
-    udf_resources_directory: 'UDF resources directory',
     delete_confirm: 'Delete?',
     enter_keyword_tips: 'Please enter keyword',
-    enter_udf_unction_name_tips: 'Please enter a UDF function name',
     enter_package_name_tips: 'Please enter a Package name',
-    enter_select_udf_resources_tips: 'Please select UDF resources',
-    enter_select_udf_resources_directory_tips:
-      'Please select UDF resources directory',
     enter_instructions_tips: 'Please enter a instructions',
     enter_name_tips: 'Please enter name',
     enter_description_tips: 'Please enter description',
-    upload: 'Upload',
-    upload_udf_resources: 'Upload UDF Resources',
-
-
-    //自定义提示字段--setunnel函数上传
-    udf_app_name: "Function Application Name",
-    udf_display_name: "Function Display Name",
-    enter_app_name_tips: "Please enter application name",
-    enter_display_name_tips: "Please enter display name",
-    enter_app_name_must_english_tips: "Application name can only contain English characters",
-    enter_seatunnel_app_udf_unction_name_tips: "Function name defined in the code, e.g. SUBSTRING",
-    enter_seatunnel_display_udf_unction_name_tips: "Name displayed on the page, e.g. String Substring",
-    enter_seatunnel_params_input_udf_unction_name_tips: "Please enter parameter name",
-    udf_param_name: "UDF Parameter Name",
-    udf_param_name_tip: "Please enter parameter name",
-    list_must_having_args_or_params: "UDF parameter name cannot be empty",
-    list_must_having_unique_params: "UDF parameter names must be unique",
-    funcNameOrDisplayName: "Function Name",
-    select_option_required: "Please enter selector parameter",
-    select_option_length: "Number of parameters"
+    upload: 'Upload'
   },
   task_group_option: {
     manage: 'Task group manage',

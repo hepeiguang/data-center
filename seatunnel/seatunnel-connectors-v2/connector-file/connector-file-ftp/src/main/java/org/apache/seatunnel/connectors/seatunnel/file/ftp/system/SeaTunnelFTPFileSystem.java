@@ -17,11 +17,16 @@
 
 package org.apache.seatunnel.connectors.seatunnel.file.ftp.system;
 
+import org.apache.seatunnel.connectors.seatunnel.file.ftp.config.FtpFileBaseOptions;
+import org.apache.seatunnel.connectors.seatunnel.file.hadoop.FileStatusListingSession;
+import org.apache.seatunnel.connectors.seatunnel.file.hadoop.StreamingFileSystem;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
+import org.apache.commons.net.ftp.FTPListParseEngine;
 import org.apache.commons.net.ftp.FTPReply;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
@@ -47,7 +52,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.ConnectException;
 import java.net.URI;
-import java.nio.charset.StandardCharsets;
 
 /**
  * A {@link FileSystem} backed by an FTP client provided by <a
@@ -56,7 +60,7 @@ import java.nio.charset.StandardCharsets;
 @InterfaceAudience.Public
 @InterfaceStability.Stable
 @Slf4j
-public class SeaTunnelFTPFileSystem extends FileSystem {
+public class SeaTunnelFTPFileSystem extends FileSystem implements StreamingFileSystem {
     public static final Log LOG = LogFactory.getLog(SeaTunnelFTPFileSystem.class);
 
     public static final int DEFAULT_BUFFER_SIZE = 1024 * 1024;
@@ -67,6 +71,9 @@ public class SeaTunnelFTPFileSystem extends FileSystem {
     public static final String FS_FTP_HOST_PORT = "fs.ftp.host.port";
     public static final String FS_FTP_PASSWORD_PREFIX = "fs.ftp.password.";
     public static final String FS_FTP_CONNECTION_MODE = "fs.ftp.connection.mode";
+    public static final String FS_FTP_REMOTE_VERIFICATION_ENABLED =
+            "fs.ftp.remote.verification.enabled";
+    public static final String FS_FTP_CONTROL_ENCODING = "fs.ftp.control.encoding";
 
     public static final String E_SAME_DIRECTORY_ONLY = "only same directory renames are supported";
 
@@ -129,20 +136,27 @@ public class SeaTunnelFTPFileSystem extends FileSystem {
      */
     private FTPClient connect() throws IOException {
         FTPClient client = new FTPClient();
-        client.setControlEncoding("UTF-8");
-        client.setAutodetectUTF8(true);
         Configuration conf = getConf();
-        LOG.info("recordlog --配置文件 " + conf.toString());
         // Get the connection mode from configuration, default to passive_local mode
         String connectionMode =
                 conf.get(FS_FTP_CONNECTION_MODE, FtpConnectionMode.ACTIVE_LOCAL.getMode());
+
+        // Set control encoding BEFORE connecting - this is critical for special characters
+        String controlEncoding = conf.get(FS_FTP_CONTROL_ENCODING, "UTF-8");
+        client.setControlEncoding(controlEncoding);
+
+        // Check if remote verification is enabled
+        boolean remoteVerificationEnabled =
+                conf.getBoolean(
+                        FS_FTP_REMOTE_VERIFICATION_ENABLED,
+                        FtpFileBaseOptions.FTP_REMOTE_VERIFICATION_ENABLED.defaultValue());
+        client.setRemoteVerificationEnabled(remoteVerificationEnabled);
 
         // Retrieve host, port, user, and password from configuration
         String host = conf.get(FS_FTP_HOST);
         int port = conf.getInt(FS_FTP_HOST_PORT, FTP.DEFAULT_PORT);
         String user = conf.get(FS_FTP_USER_PREFIX + host);
         String password = conf.get(FS_FTP_PASSWORD_PREFIX + host);
-        LOG.info("recordlog --连接模式 " + connectionMode.toString());
 
         // Connect to the FTP server
         client.connect(host, port);
@@ -155,6 +169,7 @@ public class SeaTunnelFTPFileSystem extends FileSystem {
                     0,
                     new ConnectException("Server response " + reply));
         }
+
         // Log in to the FTP server
         if (!client.login(user, password)) {
             throw new IOException(
@@ -168,7 +183,6 @@ public class SeaTunnelFTPFileSystem extends FileSystem {
         client.setBufferSize(DEFAULT_BUFFER_SIZE);
         client.setFileTransferMode(FTP.BLOCK_TRANSFER_MODE);
 
-        LOG.info("recordlog --文件配置 " + client.toString());
         // Set the connection mode
         setFsFtpConnectionMode(client, connectionMode);
 
@@ -189,11 +203,9 @@ public class SeaTunnelFTPFileSystem extends FileSystem {
      */
     private void setFsFtpConnectionMode(FTPClient client, String mode) throws IOException {
         FtpConnectionMode connectionMode = FtpConnectionMode.fromMode(mode);
-        LOG.info("recordlog --进入相应的ftp模式 " + connectionMode.toString());
         switch (connectionMode) {
             case PASSIVE_LOCAL:
                 client.enterLocalPassiveMode();
-                LOG.info("recordlog --进入相应的被动模式 " + client.toString());
                 LOG.info("Using passive mode for FTP connection");
                 break;
             case ACTIVE_LOCAL:
@@ -207,7 +219,7 @@ public class SeaTunnelFTPFileSystem extends FileSystem {
                         LOG.warn("Active mode failed, switching to passive mode");
                         throw new IOException("FTP connection active mode test failed");
                     }
-                    LOG.info("recordlog --进入相应的主动模式 " + client.toString());
+
                     LOG.info("Using active mode for FTP connection");
                 } catch (IOException e) {
                     // if active mode failed, switch to passive mode
@@ -237,18 +249,30 @@ public class SeaTunnelFTPFileSystem extends FileSystem {
      * Logout and disconnect the given FTPClient. *
      *
      * @param client FTPClient
-     * @throws IOException IOException
      */
-    private void disconnect(FTPClient client) throws IOException {
-        if (client != null) {
-            if (!client.isConnected()) {
-                throw new FTPException("Client not connected");
-            }
+    void disconnect(FTPClient client) {
+        if (client == null || !client.isConnected()) {
+            return;
+        }
+
+        try {
             boolean logoutSuccess = client.logout();
-            client.disconnect();
             if (!logoutSuccess) {
                 LOG.warn(
                         "Logout failed while disconnecting, error code - " + client.getReplyCode());
+            }
+        } catch (IOException e) {
+            // Some FTP servers close the control connection before responding to QUIT. The
+            // preceding operation has already completed, so do not turn a successful operation
+            // into a failure while releasing the connection.
+            LOG.warn("Failed to logout from FTP server while disconnecting", e);
+        } finally {
+            if (client.isConnected()) {
+                try {
+                    client.disconnect();
+                } catch (IOException e) {
+                    LOG.warn("Failed to disconnect from FTP server", e);
+                }
             }
         }
     }
@@ -262,7 +286,15 @@ public class SeaTunnelFTPFileSystem extends FileSystem {
      */
     private Path makeAbsolute(Path workDir, Path path) {
         if (path.isAbsolute()) {
-            return path;
+            String filePath = path.toUri().getPath();
+            if (filePath.equals("/")) {
+                return workDir;
+            }
+            if (filePath.startsWith(workDir.toUri().getPath())) {
+                return path;
+            }
+            // delete '/'
+            return new Path(workDir, filePath.substring(1));
         }
         return new Path(workDir, path);
     }
@@ -286,20 +318,8 @@ public class SeaTunnelFTPFileSystem extends FileSystem {
         // directory on the server is changed to the parent directory of the file.
         // The FTP client connection is closed when close() is called on the
         // FSDataInputStream.
-        boolean haschangeDirecory = client.changeWorkingDirectory(parent.toUri().getPath());
+        client.changeWorkingDirectory(parent.toUri().getPath());
         InputStream is = client.retrieveFileStream(file.getName());
-        if (!haschangeDirecory) {
-            String newpath = new String(parent.toUri().getPath().getBytes(StandardCharsets.UTF_8));
-            client.changeWorkingDirectory(newpath);
-        }
-        if (null == is){
-            // String newfilename = new String(file.getName().getBytes(StandardCharsets.UTF_8), StandardCharsets.ISO_8859_1);
-            String newfilename = new String(file.getName().getBytes(StandardCharsets.UTF_8));
-            is = client.retrieveFileStream(newfilename);
-        }
-
-        LOG.info("recordlog --父目录是否更改 " + haschangeDirecory);
-
         FSDataInputStream fis = new FSDataInputStream(new FTPInputStream(is, client, statistics));
         if (!FTPReply.isPositivePreliminary(client.getReplyCode())) {
             // The ftpClient is an inconsistent state. Must close the stream
@@ -485,6 +505,102 @@ public class SeaTunnelFTPFileSystem extends FileSystem {
         }
     }
 
+    @Override
+    public FileStatusListingSession openFileStatusListingSession() throws IOException {
+        return new FtpListingSession(connect());
+    }
+
+    private final class FtpListingSession implements FileStatusListingSession {
+        private static final int PAGE_SIZE = 1_000;
+        private final FTPClient client;
+
+        private FtpListingSession(FTPClient client) {
+            this.client = client;
+        }
+
+        @Override
+        public FileStatus getFileStatus(Path path) throws IOException {
+            return SeaTunnelFTPFileSystem.this.getFileStatus(client, path);
+        }
+
+        @Override
+        public void list(Path directory, FileStatusConsumer consumer) throws IOException {
+            Path workDir = new Path(client.printWorkingDirectory());
+            Path absolute = makeAbsolute(workDir, directory);
+            String previousDirectory = client.printWorkingDirectory();
+            if (!client.changeWorkingDirectory(absolute.toUri().getPath())) {
+                throw new FileNotFoundException("FTP directory does not exist: " + mask(absolute));
+            }
+            Throwable failure = null;
+            try {
+                FTPListParseEngine engine = client.initiateListParsing();
+                if (!FTPReply.isPositiveCompletion(client.getReplyCode())) {
+                    throw new IOException(
+                            "FTP LIST failed for path="
+                                    + mask(absolute)
+                                    + ", replyCode="
+                                    + client.getReplyCode());
+                }
+                while (engine.hasNext()) {
+                    FTPFile[] files = engine.getNext(PAGE_SIZE);
+                    int skipped = emitFileStatuses(files, absolute, consumer);
+                    if (skipped > 0) {
+                        LOG.warn(
+                                "Skipped "
+                                        + skipped
+                                        + " unparseable FTP listing entries under "
+                                        + mask(absolute));
+                    }
+                }
+            } catch (IOException | RuntimeException | Error e) {
+                failure = e;
+                throw e;
+            } finally {
+                if (!client.changeWorkingDirectory(previousDirectory)) {
+                    IOException restoreFailure =
+                            new IOException(
+                                    "Failed to restore FTP working directory, replyCode="
+                                            + client.getReplyCode());
+                    if (failure != null) {
+                        failure.addSuppressed(restoreFailure);
+                    } else {
+                        throw restoreFailure;
+                    }
+                }
+            }
+        }
+
+        @Override
+        public void close() throws IOException {
+            disconnect(client);
+        }
+    }
+
+    int emitFileStatuses(
+            FTPFile[] files, Path parent, FileStatusListingSession.FileStatusConsumer consumer)
+            throws IOException {
+        int skipped = 0;
+        for (FTPFile file : files) {
+            if (file == null) {
+                skipped++;
+                continue;
+            }
+            String name = file.getName();
+            if (!".".equals(name) && !"..".equals(name)) {
+                consumer.accept(getFileStatus(file, parent));
+            }
+        }
+        return skipped;
+    }
+
+    private static String mask(Path path) {
+        URI uri = path.toUri();
+        if (uri.getUserInfo() == null || uri.getAuthority() == null) {
+            return path.toString();
+        }
+        return path.toString().replace(uri.getUserInfo() + "@", "***@");
+    }
+
     /**
      * Convenience method, so that we don't open a new connection when using this method from within
      * another method. Otherwise every API invocation incurs the overhead of opening/closing a TCP
@@ -538,36 +654,17 @@ public class SeaTunnelFTPFileSystem extends FileSystem {
         }
         String pathName = parentPath.toUri().getPath();
         FTPFile[] ftpFiles = client.listFiles(pathName);
-
-
-        if (ftpFiles == null) {
-            client.setControlEncoding("UTF-8");
-            client.setAutodetectUTF8(true);
-            client.sendCommand("OPTS UTF8 ON");
-//            client.enterLocalActiveMode();
-            LOG.info("recordlog -- 当文件为空时 设置格式重新查找" + client.toString());
-            ftpFiles = client.listFiles(new String(pathName.getBytes(StandardCharsets.UTF_8)));
-            LOG.info("recordlog -- 当文件为空时 设置格式重新查找后的结果" + ftpFiles);
-        }
-
         if (ftpFiles != null) {
             for (FTPFile ftpFile : ftpFiles) {
-                LOG.info("recordlog -- ftp列表文件名是" + ftpFile.getName());
-                String newfilename = new String(ftpFile.getName().getBytes(StandardCharsets.UTF_8));
-                LOG.info("recordlog -- 用户选择的文件名是" + ftpFile.getName());
-                LOG.info("ftp list file equal ftp transfer name " + ftpFile.getName() +" "+ newfilename);
-                if (newfilename.equals(file.getName())) { // file found in dir
+                if (ftpFile.getName().equals(file.getName())) { // file found in dir
                     fileStat = getFileStatus(ftpFile, parentPath);
-                    LOG.info("recordlog -- 比对结果" + newfilename.equals(file.getName()));
                     break;
                 }
             }
             if (fileStat == null) {
-                LOG.info("recordlog -- fileStat无法根据文件名找到文件(即文件状态不对)");
                 throw new FileNotFoundException("File " + file + " does not exist.");
             }
         } else {
-            LOG.info("recordlog -- 无法找到文件");
             throw new FileNotFoundException("File " + file + " does not exist.");
         }
         return fileStat;
@@ -593,18 +690,6 @@ public class SeaTunnelFTPFileSystem extends FileSystem {
         String user = ftpFile.getUser();
         String group = ftpFile.getGroup();
         Path filePath = new Path(parentPath, ftpFile.getName());
-        FileStatus fileStatus = new FileStatus(
-                length,
-                isDir,
-                blockReplication,
-                blockSize,
-                modTime,
-                accessTime,
-                permission,
-                user,
-                group,
-                filePath.makeQualified(this));
-        LOG.info("recordlog -- FileStatus内容" + fileStatus.toString());
         return new FileStatus(
                 length,
                 isDir,
@@ -760,8 +845,8 @@ public class SeaTunnelFTPFileSystem extends FileSystem {
             throw new IOException(
                     "Cannot rename " + absoluteSrc + " under itself" + " : " + absoluteDst);
         }
-        String from = absoluteSrc.toString();
-        String to = absoluteDst.toString();
+        String from = absoluteSrc.toUri().getPath();
+        String to = absoluteDst.toUri().getPath();
         return client.rename(from, to);
     }
 
@@ -781,11 +866,7 @@ public class SeaTunnelFTPFileSystem extends FileSystem {
         } catch (IOException ioe) {
             throw new FTPException("Failed to get home directory", ioe);
         } finally {
-            try {
-                disconnect(client);
-            } catch (IOException ioe) {
-                throw new FTPException("Failed to disconnect", ioe);
-            }
+            disconnect(client);
         }
     }
 

@@ -102,14 +102,13 @@ public class OceanBaseMySqlTypeConverter
     public static final long POWER_2_32 = (long) Math.pow(2, 32);
     public static final long MAX_VARBINARY_LENGTH = POWER_2_16 - 4;
 
-    private static final String VECTOR_TYPE_NAME = "";
     private static final String VECTOR_NAME = "VECTOR";
 
     public static final OceanBaseMySqlTypeConverter INSTANCE = new OceanBaseMySqlTypeConverter();
 
     @Override
     public String identifier() {
-        return DatabaseIdentifier.OCENABASE;
+        return DatabaseIdentifier.OCEANBASE;
     }
 
     @Override
@@ -292,13 +291,16 @@ public class OceanBaseMySqlTypeConverter
                 builder.scale(typeDefine.getScale());
                 break;
             case MYSQL_DATETIME:
-            case MYSQL_TIMESTAMP:
                 builder.dataType(LocalTimeType.LOCAL_DATE_TIME_TYPE);
                 builder.scale(typeDefine.getScale());
                 break;
-            case VECTOR_TYPE_NAME:
-                String columnType = typeDefine.getColumnType();
-                if (columnType.startsWith("vector(") && columnType.endsWith(")")) {
+            case MYSQL_TIMESTAMP:
+                builder.dataType(LocalTimeType.OFFSET_DATE_TIME_TYPE);
+                builder.scale(typeDefine.getScale());
+                break;
+            case VECTOR_NAME:
+                String columnType = typeDefine.getColumnType().toUpperCase();
+                if (columnType.startsWith("VECTOR(") && columnType.endsWith(")")) {
                     Integer number =
                             Integer.parseInt(
                                     columnType.substring(
@@ -309,7 +311,7 @@ public class OceanBaseMySqlTypeConverter
                 break;
             default:
                 throw CommonError.convertToSeaTunnelTypeError(
-                        DatabaseIdentifier.OCENABASE, mysqlDataType, typeDefine.getName());
+                        DatabaseIdentifier.OCEANBASE, mysqlDataType, typeDefine.getName());
         }
         return builder.build();
     }
@@ -519,6 +521,28 @@ public class OceanBaseMySqlTypeConverter
                     builder.columnType(MYSQL_DATETIME);
                 }
                 break;
+            case TIMESTAMP_TZ:
+                builder.nativeType(OceanBaseMysqlType.TIMESTAMP);
+                builder.dataType(MYSQL_TIMESTAMP);
+                if (column.getScale() != null && column.getScale() > 0) {
+                    int timestampTzScale = column.getScale();
+                    if (timestampTzScale > MAX_TIMESTAMP_SCALE) {
+                        timestampTzScale = MAX_TIMESTAMP_SCALE;
+                        log.warn(
+                                "The timestamp_tz column {} type timestamp({}) is out of range, "
+                                        + "which exceeds the maximum scale of {}, "
+                                        + "it will be converted to timestamp({})",
+                                column.getName(),
+                                column.getScale(),
+                                MAX_TIMESTAMP_SCALE,
+                                timestampTzScale);
+                    }
+                    builder.columnType(String.format("%s(%s)", MYSQL_TIMESTAMP, timestampTzScale));
+                    builder.scale(timestampTzScale);
+                } else {
+                    builder.columnType(MYSQL_TIMESTAMP);
+                }
+                break;
             case FLOAT_VECTOR:
                 builder.nativeType(VECTOR_NAME);
                 builder.columnType(String.format("%s(%s)", VECTOR_NAME, column.getScale()));
@@ -526,7 +550,7 @@ public class OceanBaseMySqlTypeConverter
                 break;
             default:
                 throw CommonError.convertToConnectorTypeError(
-                        DatabaseIdentifier.OCENABASE,
+                        DatabaseIdentifier.OCEANBASE,
                         column.getDataType().getSqlType().name(),
                         column.getName());
         }

@@ -52,7 +52,7 @@ const props = {
   userName: {
     type: String as PropType<string>,
     default: ''
-  },
+  }
 }
 
 export default defineComponent({
@@ -65,7 +65,7 @@ export default defineComponent({
       props.fullName,
       props.name,
       props.description,
-      props.userName,
+      props.userName
     )
     const { handleRenameFile } = useRename(state)
     const hideModal = () => {

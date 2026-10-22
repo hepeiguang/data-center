@@ -17,13 +17,12 @@
     limitations under the License.
 
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.apache.seatunnel</groupId>
         <artifactId>seatunnel-connectors-v2</artifactId>
-        <version>${revision}</version>
+        <version>3.0.0</version>
     </parent>
 
     <artifactId>connector-jdbc</artifactId>
@@ -41,11 +40,10 @@
         <sqlite.version>3.39.3.0</sqlite.version>
         <tablestore.version>5.13.9</tablestore.version>
         <teradata.version>17.20.00.12</teradata.version>
-        <redshift.version>2.1.0.9</redshift.version>
+        <redshift.version>2.1.0.30</redshift.version>
         <saphana.version>2.23.10</saphana.version>
         <snowflake.version>3.13.29</snowflake.version>
         <vertica.version>12.0.3-0</vertica.version>
-        <hikari.version>4.0.3</hikari.version>
         <postgis.jdbc.version>2.5.1</postgis.jdbc.version>
         <kingbase8.version>8.6.0</kingbase8.version>
         <hive.jdbc.version>3.1.3</hive.jdbc.version>
@@ -53,19 +51,18 @@
         <xugu.jdbc.version>12.2.0</xugu.jdbc.version>
         <iris.jdbc.version>3.0.0</iris.jdbc.version>
         <tikv.version>3.2.0</tikv.version>
-        <opengauss.jdbc.version>6.0.0-og</opengauss.jdbc.version>
+        <opengauss.jdbc.version>5.1.0-og</opengauss.jdbc.version>
         <mariadb.jdbc.version>3.5.1</mariadb.jdbc.version>
         <highgo.version>6.2.3</highgo.version>
-        <opengauss-jdbc.version>6.0.0-og</opengauss-jdbc.version>
+        <presto.version>0.279</presto.version>
+        <trino.version>460</trino.version>
+        <aws.sdk.version>2.31.30</aws.sdk.version>
+        <duckdb.version>1.3.1.0</duckdb.version>
+        <yashandb.jdbc.version>1.10.7</yashandb.jdbc.version>
     </properties>
 
     <dependencyManagement>
         <dependencies>
-            <dependency>
-                <groupId>com.zaxxer</groupId>
-                <artifactId>HikariCP</artifactId>
-                <version>${hikari.version}</version>
-            </dependency>
             <dependency>
                 <groupId>com.aliyun.phoenix</groupId>
                 <artifactId>ali-phoenix-shaded-thin-client</artifactId>
@@ -211,6 +208,7 @@
                 <groupId>org.tikv</groupId>
                 <artifactId>tikv-client-java</artifactId>
                 <version>${tikv.version}</version>
+                <scope>provided</scope>
             </dependency>
             <dependency>
                 <groupId>org.opengauss</groupId>
@@ -231,9 +229,28 @@
                 <scope>provided</scope>
             </dependency>
             <dependency>
-                <groupId>org.opengauss</groupId>
-                <artifactId>opengauss-jdbc</artifactId>
-                <version>${opengauss-jdbc.version}</version>
+                <groupId>com.facebook.presto</groupId>
+                <artifactId>presto-jdbc</artifactId>
+                <version>${presto.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>io.trino</groupId>
+                <artifactId>trino-jdbc</artifactId>
+                <version>${trino.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.duckdb</groupId>
+                <artifactId>duckdb_jdbc</artifactId>
+                <version>${duckdb.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.yashandb</groupId>
+                <artifactId>yashandb-jdbc</artifactId>
+                <version>${yashandb.jdbc.version}</version>
+                <scope>provided</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -247,9 +264,7 @@
 
         <dependency>
             <groupId>org.apache.seatunnel</groupId>
-            <artifactId>seatunnel-hikari</artifactId>
-            <version>${project.version}</version>
-            <classifier>optional</classifier>
+            <artifactId>seatunnel-shade-hikari</artifactId>
         </dependency>
 
         <dependency>
@@ -334,6 +349,10 @@
             <artifactId>hive-jdbc</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.yashandb</groupId>
+            <artifactId>yashandb-jdbc</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.oceanbase</groupId>
             <artifactId>oceanbase-client</artifactId>
         </dependency>
@@ -357,6 +376,70 @@
         <dependency>
             <groupId>com.highgo</groupId>
             <artifactId>HgdbJdbc</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.facebook.presto</groupId>
+            <artifactId>presto-jdbc</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.trino</groupId>
+            <artifactId>trino-jdbc</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.duckdb</groupId>
+            <artifactId>duckdb_jdbc</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <!-- AWS SDK for DSQL -->
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>dsql</artifactId>
+            <version>${aws.sdk.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>auth</artifactId>
+            <version>${aws.sdk.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>regions</artifactId>
+            <version>${aws.sdk.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>sts</artifactId>
+            <version>${aws.sdk.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.seatunnel</groupId>
+            <artifactId>connector-common</artifactId>
+            <version>${project.version}</version>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Testcontainers for unit tests -->
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>${testcontainer.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>oracle-xe</artifactId>
+            <version>${testcontainer.version}</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 

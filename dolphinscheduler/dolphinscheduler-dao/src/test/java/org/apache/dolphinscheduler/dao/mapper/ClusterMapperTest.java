@@ -47,7 +47,7 @@ public class ClusterMapperTest extends BaseDaoTest {
         Cluster cluster = new Cluster();
         cluster.setName("testCluster");
         cluster.setCode(1L);
-        cluster.setOperator("1");
+        cluster.setOperator(1);
         cluster.setConfig(getConfig());
         cluster.setDescription(getDesc());
         cluster.setCreateTime(new Date());

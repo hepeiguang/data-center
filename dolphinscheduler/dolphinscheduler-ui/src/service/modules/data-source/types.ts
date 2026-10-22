@@ -41,15 +41,9 @@ type IDataBase =
   | 'KYUUBI'
   | 'ZEPPELIN'
   | 'SAGEMAKER'
-  | 'KAFKA'
-  | 'SOCKET_SERVER'
-  | 'HTTP_SERVER'
-  | 'UDP_MULTICAST'
-  | 'HDFS_FILE'
-  | 'MINIO'
-  | 'FTP'
-  | 'SFTP'
-  | 'OPENGAUSS'
+  | 'K8S'
+  | 'ALIYUN_SERVERLESS_SPARK'
+  | 'DOLPHINDB'
 
 type IDataBaseLabel =
   | 'MYSQL'
@@ -72,15 +66,9 @@ type IDataBaseLabel =
   | 'KYUUBI'
   | 'ZEPPELIN'
   | 'SAGEMAKER'
-  | 'KAFKA'
-  | 'SOCKET_SERVER'
-  | 'HTTP_SERVER'
-  | 'UDP_MULTICAST'
-  | 'HDFS_FILE'
-  | 'MINIO'
-  | 'FTP'
-  | 'SFTP'
-  | 'OPENGAUSS'
+  | 'K8S'
+  | 'ALIYUN_SERVERLESS_SPARK'
+  | 'DOLPHINDB'
 
 interface IDataSource {
   id?: number
@@ -101,34 +89,24 @@ interface IDataSource {
   database?: string
   connectType?: string
   other?: object
-  endpoint?: string
   restEndpoint?: string
+  kubeConfig?: string
+  namespace?: string
   MSIClientId?: string
   dbUser?: string
   compatibleMode?: string
-  publicKey?: string
+  privateKey?: string
   datawarehouse?: string
-  httpEndpoint?: string
-  httpMethod?: string
-  httpAuthType?: object
-  httpAuthConfig?: object
-  connectTimeout?: number
-  socketTimeout?: number
-  maxConnections?: number
-  multicastAddress?: string
-  bufferSize?: number
-  udpMulticastType?: string
-  remoteUser?: string
-  hdfsSitePath?: string
-  secure?: boolean
+  accessKeyId?: string
+  accessKeySecret?: string
+  regionId?: string
+  endpoint?: string
 }
 
 interface ListReq {
-  datasourceId?: number
   pageNo: number
   pageSize: number
   searchVal?: string
-  type?: string
 }
 
 interface UserIdReq {

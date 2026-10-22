@@ -41,7 +41,7 @@ public class ProjectUserMapperTest extends BaseDaoTest {
         // insertOne
         ProjectUser projectUser = new ProjectUser();
         projectUser.setProjectId(1010);
-        projectUser.setUserId("111");
+        projectUser.setUserId(111);
         projectUserMapper.insert(projectUser);
         return projectUser;
     }

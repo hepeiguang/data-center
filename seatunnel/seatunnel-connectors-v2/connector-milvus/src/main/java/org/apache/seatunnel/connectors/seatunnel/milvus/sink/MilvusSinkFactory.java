@@ -17,7 +17,10 @@
 
 package org.apache.seatunnel.connectors.seatunnel.milvus.sink;
 
+import org.apache.seatunnel.shade.org.apache.commons.lang3.StringUtils;
+
 import org.apache.seatunnel.api.configuration.ReadonlyConfig;
+import org.apache.seatunnel.api.configuration.util.Conditions;
 import org.apache.seatunnel.api.configuration.util.OptionRule;
 import org.apache.seatunnel.api.table.catalog.CatalogTable;
 import org.apache.seatunnel.api.table.catalog.TableIdentifier;
@@ -25,9 +28,7 @@ import org.apache.seatunnel.api.table.connector.TableSink;
 import org.apache.seatunnel.api.table.factory.Factory;
 import org.apache.seatunnel.api.table.factory.TableSinkFactory;
 import org.apache.seatunnel.api.table.factory.TableSinkFactoryContext;
-import org.apache.seatunnel.connectors.seatunnel.milvus.config.MilvusSinkConfig;
-
-import org.apache.commons.lang3.StringUtils;
+import org.apache.seatunnel.connectors.seatunnel.milvus.config.MilvusSinkOptions;
 
 import com.google.auto.service.AutoService;
 
@@ -42,17 +43,31 @@ public class MilvusSinkFactory implements TableSinkFactory {
     @Override
     public OptionRule optionRule() {
         return OptionRule.builder()
-                .required(MilvusSinkConfig.URL, MilvusSinkConfig.TOKEN)
+                .required(MilvusSinkOptions.URL, MilvusSinkOptions.TOKEN)
                 .optional(
-                        MilvusSinkConfig.ENABLE_UPSERT,
-                        MilvusSinkConfig.ENABLE_DYNAMIC_FIELD,
-                        MilvusSinkConfig.ENABLE_AUTO_ID,
-                        MilvusSinkConfig.SCHEMA_SAVE_MODE,
-                        MilvusSinkConfig.DATA_SAVE_MODE)
+                        MilvusSinkOptions.DATABASE,
+                        MilvusSinkOptions.COLLECTION,
+                        MilvusSinkOptions.COLLECTION_DESCRIPTION,
+                        MilvusSinkOptions.PARTITION_KEY,
+                        MilvusSinkOptions.ENABLE_UPSERT,
+                        MilvusSinkOptions.ENABLE_DYNAMIC_FIELD,
+                        MilvusSinkOptions.ENABLE_NULLABLE_FIELD,
+                        MilvusSinkOptions.ENABLE_AUTO_ID,
+                        MilvusSinkOptions.RATE_LIMIT,
+                        MilvusSinkOptions.LOAD_COLLECTION,
+                        MilvusSinkOptions.CREATE_INDEX,
+                        MilvusSinkOptions.SCHEMA_SAVE_MODE,
+                        MilvusSinkOptions.DATA_SAVE_MODE)
+                .optional(
+                        MilvusSinkOptions.BATCH_SIZE,
+                        Conditions.greaterOrEqual(MilvusSinkOptions.BATCH_SIZE, 0))
                 .build();
     }
 
     public TableSink createSink(TableSinkFactoryContext context) {
+        if (context == null) {
+            return () -> new MilvusSink(null, null);
+        }
         ReadonlyConfig config = context.getOptions();
         CatalogTable catalogTable = renameCatalogTable(config, context.getCatalogTable());
         return () -> new MilvusSink(config, catalogTable);
@@ -60,20 +75,25 @@ public class MilvusSinkFactory implements TableSinkFactory {
 
     private CatalogTable renameCatalogTable(
             ReadonlyConfig config, CatalogTable sourceCatalogTable) {
-        TableIdentifier sourceTableId = sourceCatalogTable.getTableId();
-        String databaseName;
-        if (StringUtils.isNotEmpty(config.get(MilvusSinkConfig.DATABASE))) {
-            databaseName = config.get(MilvusSinkConfig.DATABASE);
+        TableIdentifier sourceTable = sourceCatalogTable.getTableId();
+        String databaseName, tableName;
+        if (StringUtils.isNotEmpty(config.get(MilvusSinkOptions.DATABASE))) {
+            databaseName = config.get(MilvusSinkOptions.DATABASE);
         } else {
-            databaseName = sourceTableId.getDatabaseName();
+            databaseName = sourceTable.getDatabaseName();
+        }
+        if (StringUtils.isNotEmpty(config.get(MilvusSinkOptions.COLLECTION))) {
+            tableName = config.get(MilvusSinkOptions.COLLECTION);
+        } else {
+            tableName = sourceTable.getTableName();
         }
 
         TableIdentifier newTableId =
                 TableIdentifier.of(
-                        sourceTableId.getCatalogName(),
+                        sourceTable.getCatalogName(),
                         databaseName,
-                        sourceTableId.getSchemaName(),
-                        sourceTableId.getTableName());
+                        sourceTable.getSchemaName(),
+                        tableName);
 
         return CatalogTable.of(newTableId, sourceCatalogTable);
     }

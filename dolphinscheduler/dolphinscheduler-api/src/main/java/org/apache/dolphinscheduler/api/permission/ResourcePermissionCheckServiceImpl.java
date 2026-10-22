@@ -14,22 +14,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 
 package org.apache.dolphinscheduler.api.permission;
 
@@ -46,22 +30,20 @@ import org.apache.dolphinscheduler.dao.entity.Project;
 import org.apache.dolphinscheduler.dao.entity.Queue;
 import org.apache.dolphinscheduler.dao.entity.TaskGroup;
 import org.apache.dolphinscheduler.dao.entity.Tenant;
-import org.apache.dolphinscheduler.dao.entity.UdfFunc;
 import org.apache.dolphinscheduler.dao.entity.User;
 import org.apache.dolphinscheduler.dao.entity.WorkerGroup;
-import org.apache.dolphinscheduler.dao.mapper.AccessTokenMapper;
-import org.apache.dolphinscheduler.dao.mapper.AlertGroupMapper;
 import org.apache.dolphinscheduler.dao.mapper.AlertPluginInstanceMapper;
-import org.apache.dolphinscheduler.dao.mapper.DataSourceMapper;
 import org.apache.dolphinscheduler.dao.mapper.EnvironmentMapper;
-import org.apache.dolphinscheduler.dao.mapper.K8sNamespaceMapper;
-import org.apache.dolphinscheduler.dao.mapper.ProjectMapper;
-import org.apache.dolphinscheduler.dao.mapper.QueueMapper;
 import org.apache.dolphinscheduler.dao.mapper.TaskGroupMapper;
-import org.apache.dolphinscheduler.dao.mapper.TenantMapper;
-import org.apache.dolphinscheduler.dao.mapper.UdfFuncMapper;
-import org.apache.dolphinscheduler.dao.mapper.WorkerGroupMapper;
-import org.apache.dolphinscheduler.service.process.ProcessService;
+import org.apache.dolphinscheduler.dao.repository.AccessTokenDao;
+import org.apache.dolphinscheduler.dao.repository.AlertGroupDao;
+import org.apache.dolphinscheduler.dao.repository.DataSourceDao;
+import org.apache.dolphinscheduler.dao.repository.K8sNamespaceDao;
+import org.apache.dolphinscheduler.dao.repository.ProjectDao;
+import org.apache.dolphinscheduler.dao.repository.QueueDao;
+import org.apache.dolphinscheduler.dao.repository.TenantDao;
+import org.apache.dolphinscheduler.dao.repository.UserDao;
+import org.apache.dolphinscheduler.dao.repository.WorkerGroupDao;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -87,9 +69,9 @@ public class ResourcePermissionCheckServiceImpl
             ApplicationContextAware {
 
     @Autowired
-    private ProcessService processService;
+    private UserDao userDao;
 
-    public static final Map<AuthorizationType, ResourceAcquisitionAndPermissionCheck<?>> RESOURCE_LIST_MAP =
+    static final Map<AuthorizationType, ResourceAcquisitionAndPermissionCheck<?>> RESOURCE_LIST_MAP =
             new ConcurrentHashMap<>();
 
     @Override
@@ -102,7 +84,7 @@ public class ResourcePermissionCheckServiceImpl
     }
 
     @Override
-    public boolean resourcePermissionCheck(Object authorizationType, Object[] needChecks, String userId,
+    public boolean resourcePermissionCheck(Object authorizationType, Object[] needChecks, Integer userId,
                                            Logger logger) {
         if (Objects.nonNull(needChecks) && needChecks.length > 0) {
             Set<?> originResSet = new HashSet<>(Arrays.asList(needChecks));
@@ -117,9 +99,9 @@ public class ResourcePermissionCheckServiceImpl
     }
 
     @Override
-    public boolean operationPermissionCheck(Object authorizationType, String userId,
-                                            String permissionKey, Logger logger) {
-        User user = processService.getUserById(userId);
+    public boolean operationPermissionCheck(AuthorizationType authorizationType, Integer userId, String permissionKey,
+                                            Logger logger) {
+        User user = userDao.queryById(userId);
         if (user == null) {
             logger.error("User does not exist, userId:{}.", userId);
             return false;
@@ -131,28 +113,23 @@ public class ResourcePermissionCheckServiceImpl
     }
 
     @Override
-    public boolean functionDisabled() {
-        return false;
-    }
-
-    @Override
-    public Set<Object> userOwnedResourceIdsAcquisition(Object authorizationType, String userId, Logger logger) {
-        User user = processService.getUserById(userId);
+    public Set<Object> userOwnedResourceIdsAcquisition(Object authorizationType, Integer userId, Logger logger) {
+        User user = userDao.queryById(userId);
         if (user == null) {
             logger.error("User does not exist, userId:{}.", userId);
             return Collections.emptySet();
         }
         return (Set<Object>) RESOURCE_LIST_MAP.get(authorizationType).listAuthorizedResourceIds(
-                user.getUserType().equals(UserType.ADMIN_USER) ? "" : userId, logger);
+                user.getUserType().equals(UserType.ADMIN_USER) ? 0 : userId, logger);
     }
 
     @Component
     public static class QueueResourcePermissionCheck implements ResourceAcquisitionAndPermissionCheck<Integer> {
 
-        private final QueueMapper queueMapper;
+        private final QueueDao queueDao;
 
-        public QueueResourcePermissionCheck(QueueMapper queueMapper) {
-            this.queueMapper = queueMapper;
+        public QueueResourcePermissionCheck(QueueDao queueDao) {
+            this.queueDao = queueDao;
         }
 
         @Override
@@ -161,16 +138,16 @@ public class ResourcePermissionCheckServiceImpl
         }
 
         @Override
-        public boolean permissionCheck(String userId, String permissionKey, Logger logger) {
+        public boolean permissionCheck(int userId, String permissionKey, Logger logger) {
             return false;
         }
 
         @Override
-        public Set<Integer> listAuthorizedResourceIds(String userId, Logger logger) {
-            if (userId != null && !userId.isEmpty()) {
+        public Set<Integer> listAuthorizedResourceIds(int userId, Logger logger) {
+            if (userId != 0) {
                 return Collections.emptySet();
             }
-            List<Queue> queues = queueMapper.selectList(null);
+            List<Queue> queues = queueDao.queryAll();
             return queues.stream().map(Queue::getId).collect(toSet());
         }
     }
@@ -178,10 +155,10 @@ public class ResourcePermissionCheckServiceImpl
     @Component
     public static class ProjectsResourcePermissionCheck implements ResourceAcquisitionAndPermissionCheck<Integer> {
 
-        private final ProjectMapper projectMapper;
+        private final ProjectDao projectDao;
 
-        public ProjectsResourcePermissionCheck(ProjectMapper projectMapper) {
-            this.projectMapper = projectMapper;
+        public ProjectsResourcePermissionCheck(ProjectDao projectDao) {
+            this.projectDao = projectDao;
         }
 
         @Override
@@ -190,40 +167,14 @@ public class ResourcePermissionCheckServiceImpl
         }
 
         @Override
-        public boolean permissionCheck(String userId, String permissionKey, Logger logger) {
+        public boolean permissionCheck(int userId, String permissionKey, Logger logger) {
             // all users can create projects
             return true;
         }
 
         @Override
-        public Set<Integer> listAuthorizedResourceIds(String userId, Logger logger) {
-            return projectMapper.listAuthorizedProjects(userId, null).stream().map(Project::getId).collect(toSet());
-        }
-    }
-
-    @Component
-    public static class UdfFuncPermissionCheck implements ResourceAcquisitionAndPermissionCheck<Integer> {
-
-        private final UdfFuncMapper udfFuncMapper;
-
-        public UdfFuncPermissionCheck(UdfFuncMapper udfFuncMapper) {
-            this.udfFuncMapper = udfFuncMapper;
-        }
-
-        @Override
-        public List<AuthorizationType> authorizationTypes() {
-            return Collections.singletonList(AuthorizationType.UDF);
-        }
-
-        @Override
-        public Set<Integer> listAuthorizedResourceIds(String userId, Logger logger) {
-            List<UdfFunc> udfFuncList = udfFuncMapper.listAuthorizedUdfByUserId(userId);
-            return udfFuncList.stream().map(UdfFunc::getId).collect(toSet());
-        }
-
-        @Override
-        public boolean permissionCheck(String userId, String permissionKey, Logger logger) {
-            return true;
+        public Set<Integer> listAuthorizedResourceIds(int userId, Logger logger) {
+            return projectDao.listAuthorizedProjects(userId, null).stream().map(Project::getId).collect(toSet());
         }
     }
 
@@ -242,13 +193,13 @@ public class ResourcePermissionCheckServiceImpl
         }
 
         @Override
-        public Set<Integer> listAuthorizedResourceIds(String userId, Logger logger) {
+        public Set<Integer> listAuthorizedResourceIds(int userId, Logger logger) {
             List<TaskGroup> taskGroupList = taskGroupMapper.listAuthorizedResource(userId);
             return taskGroupList.stream().map(TaskGroup::getId).collect(Collectors.toSet());
         }
 
         @Override
-        public boolean permissionCheck(String userId, String permissionKey, Logger logger) {
+        public boolean permissionCheck(int userId, String permissionKey, Logger logger) {
             return true;
         }
     }
@@ -256,10 +207,10 @@ public class ResourcePermissionCheckServiceImpl
     @Component
     public static class K8sNamespaceResourcePermissionCheck implements ResourceAcquisitionAndPermissionCheck<Integer> {
 
-        private final K8sNamespaceMapper k8sNamespaceMapper;
+        private final K8sNamespaceDao k8sNamespaceDao;
 
-        public K8sNamespaceResourcePermissionCheck(K8sNamespaceMapper k8sNamespaceMapper) {
-            this.k8sNamespaceMapper = k8sNamespaceMapper;
+        public K8sNamespaceResourcePermissionCheck(K8sNamespaceDao k8sNamespaceDao) {
+            this.k8sNamespaceDao = k8sNamespaceDao;
         }
 
         @Override
@@ -268,13 +219,13 @@ public class ResourcePermissionCheckServiceImpl
         }
 
         @Override
-        public boolean permissionCheck(String userId, String url, Logger logger) {
+        public boolean permissionCheck(int userId, String url, Logger logger) {
             return false;
         }
 
         @Override
-        public Set<Integer> listAuthorizedResourceIds(String userId, Logger logger) {
-            List<K8sNamespace> k8sNamespaces = k8sNamespaceMapper.queryAuthedNamespaceListByUserId(userId);
+        public Set<Integer> listAuthorizedResourceIds(int userId, Logger logger) {
+            List<K8sNamespace> k8sNamespaces = k8sNamespaceDao.queryAuthedNamespaceListByUserId(userId);
             return k8sNamespaces.stream().map(K8sNamespace::getId).collect(Collectors.toSet());
         }
     }
@@ -284,8 +235,11 @@ public class ResourcePermissionCheckServiceImpl
 
         private final EnvironmentMapper environmentMapper;
 
-        public EnvironmentResourcePermissionCheck(EnvironmentMapper environmentMapper) {
+        private final UserDao userDao;
+
+        public EnvironmentResourcePermissionCheck(EnvironmentMapper environmentMapper, UserDao userDao) {
             this.environmentMapper = environmentMapper;
+            this.userDao = userDao;
         }
 
         @Override
@@ -294,12 +248,17 @@ public class ResourcePermissionCheckServiceImpl
         }
 
         @Override
-        public boolean permissionCheck(String userId, String url, Logger logger) {
-            return true;
+        public boolean permissionCheck(int userId, String url, Logger logger) {
+            User user = userDao.queryById(userId);
+            if (user == null) {
+                logger.error("User does not exist, userId:{}.", userId);
+                return false;
+            }
+            return user.getUserType() == UserType.ADMIN_USER;
         }
 
         @Override
-        public Set<Integer> listAuthorizedResourceIds(String userId, Logger logger) {
+        public Set<Integer> listAuthorizedResourceIds(int userId, Logger logger) {
             List<Environment> environments = environmentMapper.queryAllEnvironmentList();
             return environments.stream().map(Environment::getId).collect(Collectors.toSet());
         }
@@ -308,10 +267,10 @@ public class ResourcePermissionCheckServiceImpl
     @Component
     public static class WorkerGroupResourcePermissionCheck implements ResourceAcquisitionAndPermissionCheck<Integer> {
 
-        private final WorkerGroupMapper workerGroupMapper;
+        private final WorkerGroupDao workerGroupDao;
 
-        public WorkerGroupResourcePermissionCheck(WorkerGroupMapper workerGroupMapper) {
-            this.workerGroupMapper = workerGroupMapper;
+        public WorkerGroupResourcePermissionCheck(WorkerGroupDao workerGroupDao) {
+            this.workerGroupDao = workerGroupDao;
         }
 
         @Override
@@ -320,13 +279,13 @@ public class ResourcePermissionCheckServiceImpl
         }
 
         @Override
-        public boolean permissionCheck(String userId, String url, Logger logger) {
+        public boolean permissionCheck(int userId, String url, Logger logger) {
             return false;
         }
 
         @Override
-        public Set<Integer> listAuthorizedResourceIds(String userId, Logger logger) {
-            List<WorkerGroup> workerGroups = workerGroupMapper.queryAllWorkerGroup();
+        public Set<Integer> listAuthorizedResourceIds(int userId, Logger logger) {
+            List<WorkerGroup> workerGroups = workerGroupDao.queryAllWorkerGroup();
             return workerGroups.stream().map(WorkerGroup::getId).collect(Collectors.toSet());
         }
     }
@@ -351,12 +310,12 @@ public class ResourcePermissionCheckServiceImpl
         }
 
         @Override
-        public boolean permissionCheck(String userId, String url, Logger logger) {
+        public boolean permissionCheck(int userId, String url, Logger logger) {
             return false;
         }
 
         @Override
-        public Set<Integer> listAuthorizedResourceIds(String userId, Logger logger) {
+        public Set<Integer> listAuthorizedResourceIds(int userId, Logger logger) {
             return Collections.emptySet();
         }
     }
@@ -367,10 +326,10 @@ public class ResourcePermissionCheckServiceImpl
     @Component
     public static class AlertGroupResourcePermissionCheck implements ResourceAcquisitionAndPermissionCheck<Integer> {
 
-        private final AlertGroupMapper alertGroupMapper;
+        private final AlertGroupDao alertGroupDao;
 
-        public AlertGroupResourcePermissionCheck(AlertGroupMapper alertGroupMapper) {
-            this.alertGroupMapper = alertGroupMapper;
+        public AlertGroupResourcePermissionCheck(AlertGroupDao alertGroupDao) {
+            this.alertGroupDao = alertGroupDao;
         }
 
         @Override
@@ -379,13 +338,13 @@ public class ResourcePermissionCheckServiceImpl
         }
 
         @Override
-        public boolean permissionCheck(String userId, String url, Logger logger) {
+        public boolean permissionCheck(int userId, String url, Logger logger) {
             return false;
         }
 
         @Override
-        public Set<Integer> listAuthorizedResourceIds(String userId, Logger logger) {
-            List<AlertGroup> alertGroupList = alertGroupMapper.queryAllGroupList();
+        public Set<Integer> listAuthorizedResourceIds(int userId, Logger logger) {
+            List<AlertGroup> alertGroupList = alertGroupDao.queryAllGroupList();
             return alertGroupList.stream().map(AlertGroup::getId).collect(toSet());
         }
     }
@@ -396,10 +355,10 @@ public class ResourcePermissionCheckServiceImpl
     @Component
     public static class TenantResourcePermissionCheck implements ResourceAcquisitionAndPermissionCheck<Integer> {
 
-        private final TenantMapper tenantMapper;
+        private final TenantDao tenantDao;
 
-        public TenantResourcePermissionCheck(TenantMapper tenantMapper) {
-            this.tenantMapper = tenantMapper;
+        public TenantResourcePermissionCheck(TenantDao tenantDao) {
+            this.tenantDao = tenantDao;
         }
 
         @Override
@@ -408,13 +367,13 @@ public class ResourcePermissionCheckServiceImpl
         }
 
         @Override
-        public boolean permissionCheck(String userId, String url, Logger logger) {
+        public boolean permissionCheck(int userId, String url, Logger logger) {
             return false;
         }
 
         @Override
-        public Set<Integer> listAuthorizedResourceIds(String userId, Logger logger) {
-            List<Tenant> tenantList = tenantMapper.queryAll();
+        public Set<Integer> listAuthorizedResourceIds(int userId, Logger logger) {
+            List<Tenant> tenantList = tenantDao.queryAll();
             return tenantList.stream().map(Tenant::getId).collect(Collectors.toSet());
         }
     }
@@ -425,10 +384,10 @@ public class ResourcePermissionCheckServiceImpl
     @Component
     public static class DataSourceResourcePermissionCheck implements ResourceAcquisitionAndPermissionCheck<Integer> {
 
-        private final DataSourceMapper dataSourceMapper;
+        private final DataSourceDao dataSourceDao;
 
-        public DataSourceResourcePermissionCheck(DataSourceMapper dataSourceMapper) {
-            this.dataSourceMapper = dataSourceMapper;
+        public DataSourceResourcePermissionCheck(DataSourceDao dataSourceDao) {
+            this.dataSourceDao = dataSourceDao;
         }
 
         @Override
@@ -437,13 +396,13 @@ public class ResourcePermissionCheckServiceImpl
         }
 
         @Override
-        public boolean permissionCheck(String userId, String url, Logger logger) {
+        public boolean permissionCheck(int userId, String url, Logger logger) {
             return true;
         }
 
         @Override
-        public Set<Integer> listAuthorizedResourceIds(String userId, Logger logger) {
-            return dataSourceMapper.listAuthorizedDataSource(userId, null).stream().map(DataSource::getId)
+        public Set<Integer> listAuthorizedResourceIds(int userId, Logger logger) {
+            return dataSourceDao.listAuthorizedDataSource(userId, null).stream().map(DataSource::getId)
                     .collect(toSet());
         }
     }
@@ -454,10 +413,10 @@ public class ResourcePermissionCheckServiceImpl
     @Component
     public static class AccessTokenResourcePermissionCheck implements ResourceAcquisitionAndPermissionCheck<Integer> {
 
-        private final AccessTokenMapper accessTokenMapper;
+        private final AccessTokenDao accessTokenDao;
 
-        public AccessTokenResourcePermissionCheck(AccessTokenMapper accessTokenMapper) {
-            this.accessTokenMapper = accessTokenMapper;
+        public AccessTokenResourcePermissionCheck(AccessTokenDao accessTokenDao) {
+            this.accessTokenDao = accessTokenDao;
         }
 
         @Override
@@ -466,13 +425,13 @@ public class ResourcePermissionCheckServiceImpl
         }
 
         @Override
-        public boolean permissionCheck(String userId, String url, Logger logger) {
-            return false;
+        public boolean permissionCheck(int userId, String url, Logger logger) {
+            return true;
         }
 
         @Override
-        public Set<Integer> listAuthorizedResourceIds(String userId, Logger logger) {
-            return accessTokenMapper.listAuthorizedAccessToken(userId, null).stream().map(AccessToken::getId)
+        public Set<Integer> listAuthorizedResourceIds(int userId, Logger logger) {
+            return accessTokenDao.listAuthorizedAccessToken(userId, null).stream().map(AccessToken::getId)
                     .collect(toSet());
         }
     }
@@ -481,6 +440,7 @@ public class ResourcePermissionCheckServiceImpl
 
         /**
          * authorization types
+         *
          * @return
          */
         List<AuthorizationType> authorizationTypes();
@@ -491,14 +451,15 @@ public class ResourcePermissionCheckServiceImpl
          * @param userId
          * @return
          */
-        Set<T> listAuthorizedResourceIds(String userId, Logger logger);
+        Set<T> listAuthorizedResourceIds(int userId, Logger logger);
 
         /**
          * permission check
+         *
          * @param userId
          * @return
          */
-        boolean permissionCheck(String userId, String permissionKey, Logger logger);
+        boolean permissionCheck(int userId, String permissionKey, Logger logger);
 
     }
 }

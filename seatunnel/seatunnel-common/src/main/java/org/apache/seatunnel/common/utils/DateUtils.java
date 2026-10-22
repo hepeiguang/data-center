@@ -21,6 +21,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.format.SignStyle;
+import java.time.temporal.Temporal;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
@@ -57,7 +58,7 @@ public class DateUtils {
                 Pattern.compile("\\d{4}/\\d{2}/\\d{2}"),
                 Pattern.compile("\\d{4}\\.\\d{2}\\.\\d{2}"),
                 Pattern.compile("\\d{8}"),
-                Pattern.compile("\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d{1,9})?Z"),
+                Pattern.compile("\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d{1,9})?Z?"),
                 Pattern.compile("\\d{2}:\\d{2}:\\d{2}\\+\\d{2}:\\d{2}"),
                 Pattern.compile("\\d{2}:\\d{2}:\\d{2}(\\.\\d{1,9})?"),
                 Pattern.compile("\\d{4}/\\d{1,2}/\\d{1,2}")
@@ -187,6 +188,10 @@ public class DateUtils {
 
     public static String toString(LocalDate date, Formatter formatter) {
         return date.format(FORMATTER_MAP.get(formatter));
+    }
+
+    public static String toString(Temporal temporal, Formatter formatter) {
+        return FORMATTER_MAP.get(formatter).format(temporal);
     }
 
     public enum Formatter {

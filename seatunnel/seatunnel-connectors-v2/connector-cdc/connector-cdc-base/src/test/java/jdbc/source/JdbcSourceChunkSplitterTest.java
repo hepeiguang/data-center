@@ -45,19 +45,57 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-public class JdbcSourceChunkSplitterTest {
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+class JdbcSourceChunkSplitterTest {
 
     @Test
-    public void splitColumnTest() throws SQLException {
+    void splitColumnTest() throws SQLException {
         TestJdbcSourceChunkSplitter testJdbcSourceChunkSplitter =
                 new TestJdbcSourceChunkSplitter(null, new TestSourceDialect());
         Column splitColumn =
                 testJdbcSourceChunkSplitter.getSplitColumn(
                         null, new TestSourceDialect(), new TableId("", "", ""));
-        Assertions.assertEquals(splitColumn.typeName(), "tinyint");
+        Assertions.assertEquals("varchar", splitColumn.typeName());
+    }
+
+    @Test
+    void splitColumnTestWithUniqueKey() throws SQLException {
+        TestJdbcSourceChunkSplitter testJdbcSourceChunkSplitter =
+                new TestJdbcSourceChunkSplitter(null, new TestSourceDialectWithUniqueKey());
+        Column splitColumn =
+                testJdbcSourceChunkSplitter.getSplitColumn(
+                        null, new TestSourceDialectWithUniqueKey(), new TableId("", "", ""));
+        Assertions.assertEquals("bigint", splitColumn.typeName());
+    }
+
+    @Test
+    void splitColumnTestWithUniqueKey_2() throws SQLException {
+        TestJdbcSourceChunkSplitter testJdbcSourceChunkSplitter =
+                new TestJdbcSourceChunkSplitter(null, new TestSourceDialectWithUniqueKey_2());
+        Column splitColumn =
+                testJdbcSourceChunkSplitter.getSplitColumn(
+                        null, new TestSourceDialectWithUniqueKey_2(), new TableId("", "", ""));
+        Assertions.assertEquals("int", splitColumn.typeName());
+    }
+
+    @Test
+    void splitColumnTestWithConfiguredPrimaryKey() throws SQLException {
+        JdbcSourceConfig sourceConfig = mock(JdbcSourceConfig.class);
+        when(sourceConfig.getSplitColumn()).thenReturn(Collections.singletonMap(".", "bigint_col"));
+        TestSourceDialect dialect = new TestSourceDialect();
+        TestJdbcSourceChunkSplitter testJdbcSourceChunkSplitter =
+                new TestJdbcSourceChunkSplitter(sourceConfig, dialect);
+
+        Column splitColumn =
+                testJdbcSourceChunkSplitter.getSplitColumn(null, dialect, new TableId("", "", ""));
+
+        Assertions.assertEquals("bigint", splitColumn.typeName());
     }
 
     private class TestJdbcSourceChunkSplitter extends AbstractJdbcSourceChunkSplitter {
@@ -245,6 +283,68 @@ public class JdbcSourceChunkSplitterTest {
         public List<ConstraintKey> getUniqueKeys(JdbcConnection jdbcConnection, TableId tableId)
                 throws SQLException {
             return new ArrayList<ConstraintKey>();
+        }
+    }
+
+    private class TestSourceDialectWithUniqueKey extends TestSourceDialect {
+
+        @Override
+        public Optional<PrimaryKey> getPrimaryKey(JdbcConnection jdbcConnection, TableId tableId)
+                throws SQLException {
+            return Optional.of(PrimaryKey.of("pkName", Arrays.asList("bigint_col")));
+        }
+
+        @Override
+        public List<ConstraintKey> getUniqueKeys(JdbcConnection jdbcConnection, TableId tableId)
+                throws SQLException {
+            List<ConstraintKey> keys = new ArrayList<>();
+
+            keys.add(
+                    ConstraintKey.of(
+                            ConstraintKey.ConstraintType.UNIQUE_KEY,
+                            "uk_1",
+                            Arrays.asList(
+                                    ConstraintKey.ConstraintKeyColumn.of(
+                                            "string_col", ConstraintKey.ColumnSortType.ASC),
+                                    ConstraintKey.ConstraintKeyColumn.of(
+                                            "int", ConstraintKey.ColumnSortType.ASC))));
+
+            return keys;
+        }
+    }
+
+    private class TestSourceDialectWithUniqueKey_2 extends TestSourceDialect {
+
+        @Override
+        public Optional<PrimaryKey> getPrimaryKey(JdbcConnection jdbcConnection, TableId tableId)
+                throws SQLException {
+            return Optional.of(PrimaryKey.of("pkName", Arrays.asList("bigint_col")));
+        }
+
+        @Override
+        public List<ConstraintKey> getUniqueKeys(JdbcConnection jdbcConnection, TableId tableId)
+                throws SQLException {
+            List<ConstraintKey> keys = new ArrayList<>();
+
+            keys.add(
+                    ConstraintKey.of(
+                            ConstraintKey.ConstraintType.UNIQUE_KEY,
+                            "uk_1",
+                            Arrays.asList(
+                                    ConstraintKey.ConstraintKeyColumn.of(
+                                            "string_col", ConstraintKey.ColumnSortType.ASC))));
+
+            keys.add(
+                    ConstraintKey.of(
+                            ConstraintKey.ConstraintType.UNIQUE_KEY,
+                            "uk_2",
+                            Arrays.asList(
+                                    ConstraintKey.ConstraintKeyColumn.of(
+                                            "int", ConstraintKey.ColumnSortType.ASC),
+                                    ConstraintKey.ConstraintKeyColumn.of(
+                                            "smallint", ConstraintKey.ColumnSortType.ASC))));
+
+            return keys;
         }
     }
 }

@@ -17,6 +17,8 @@
 
 package org.apache.seatunnel.core.starter.seatunnel;
 
+import org.apache.seatunnel.shade.org.apache.commons.lang3.StringUtils;
+
 import org.apache.seatunnel.api.configuration.Option;
 import org.apache.seatunnel.api.configuration.util.OptionRule;
 import org.apache.seatunnel.api.table.factory.Factory;
@@ -30,8 +32,6 @@ import org.apache.seatunnel.e2e.common.container.TestContainer;
 import org.apache.seatunnel.e2e.common.junit.DisabledOnContainer;
 import org.apache.seatunnel.e2e.common.util.ContainerUtil;
 import org.apache.seatunnel.transform.sql.SQLTransformFactory;
-
-import org.apache.commons.lang3.StringUtils;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.TestTemplate;
@@ -64,13 +64,7 @@ public class SeaTunnelConnectorTest extends TestSuiteBase implements TestResourc
      * be discovered by seatunnel-plugin-discovery todo: If these connectors implement the Factory
      * interface in the future, it should be removed from here
      */
-    private static final Set<String> EXCLUDE_CONNECTOR =
-            new HashSet() {
-                {
-                    add("TDengine");
-                    add("SelectDBCloud");
-                }
-            };
+    private static final Set<String> EXCLUDE_CONNECTOR = new HashSet();
 
     /** All supported transforms. */
     private static final Set<String> TRANSFORMS =
@@ -275,7 +269,14 @@ public class SeaTunnelConnectorTest extends TestSuiteBase implements TestResourc
             throws IOException, InterruptedException {
         Container.ExecResult execResult = container.executeConnectorCheck(case1);
         Assertions.assertEquals(0, execResult.getExitCode());
-        Assertions.assertTrue(StringUtils.isBlank(execResult.getStderr()));
+        String stderrWithoutSlf4jNoise =
+                Arrays.stream(StringUtils.defaultString(execResult.getStderr()).split("\\R"))
+                        .map(String::trim)
+                        .filter(StringUtils::isNotBlank)
+                        .filter(line -> !line.startsWith("SLF4J:"))
+                        .collect(Collectors.joining(System.lineSeparator()));
+        Assertions.assertTrue(
+                StringUtils.isBlank(stderrWithoutSlf4jNoise), stderrWithoutSlf4jNoise);
         log.info(execResult.getStdout());
         return execResult;
     }
