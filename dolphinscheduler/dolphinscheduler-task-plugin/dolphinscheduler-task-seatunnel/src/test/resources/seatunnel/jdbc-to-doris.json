@@ -1,0 +1,139 @@
+{
+  "taskInstanceId" : 1569,
+  "taskName" : "SEATUNNEL",
+  "firstSubmitTime" : 1748599249510,
+  "startTime" : 1748599249531,
+  "taskType" : "SEATUNNEL",
+  "workflowInstanceHost" : "172.19.0.1:5678",
+  "host" : "172.19.0.1:1234",
+  "logPath" : "/home/services/bigdata/dolphinscheduler/worker-server/logs/20250530/142483028828256/3/963/1569.log",
+  "processId" : 0,
+  "processDefineCode" : 142483028828256,
+  "processDefineVersion" : 3,
+  "processInstanceId" : 963,
+  "scheduleTime" : 0,
+  "executorId" : "1",
+  "cmdTypeIfComplement" : 0,
+  "tenantCode" : "default",
+  "processDefineId" : 0,
+  "projectId" : 0,
+  "projectCode" : 142233140251904,
+  "taskParams" : "{\"localParams\":[{\"prop\":\"parallelism\",\"value\":\"2\",\"direct\":\"IN\",\"type\":\"VARCHAR\"},{\"prop\":\"job.mode\",\"value\":\"BATCH\",\"direct\":\"IN\",\"type\":\"VARCHAR\"},{\"prop\":\"checkpoint.interval\",\"value\":\"10000\",\"direct\":\"IN\",\"type\":\"VARCHAR\"}],\"rawScript\":\"[{\\\"type\\\":\\\"SOURCE\\\",\\\"pluginName\\\":\\\"JDBC\\\",\\\"code\\\":\\\"142508237818944\\\",\\\"params\\\":{\\\"outputFields\\\":null,\\\"datasourceId\\\":1,\\\"query\\\":\\\"\\\",\\\"fetch_size\\\":0,\\\"table_path\\\":\\\"dam_test.dam_metadata_table_column\\\",\\\"where_condition\\\":\\\"\\\",\\\"plugin_output\\\":\\\"\\\",\\\"result_table_name\\\":\\\"\\\",\\\"selectedColumns\\\":[\\\"id\\\",\\\"source_id\\\",\\\"table_id\\\",\\\"table_name\\\",\\\"column_name\\\",\\\"column_comment\\\",\\\"column_key\\\",\\\"column_nullable\\\",\\\"column_position\\\",\\\"data_type\\\",\\\"data_length\\\",\\\"data_precision\\\",\\\"data_scale\\\",\\\"data_default\\\",\\\"is_dimension\\\",\\\"create_time\\\",\\\"del_flag\\\"],\\\"is_custom_sql\\\":false,\\\"parallelism\\\":6},\\\"name\\\":\\\"JDBC\\\",\\\"outputFields\\\":[{\\\"fields\\\":[\\\"id\\\",\\\"source_id\\\",\\\"table_id\\\",\\\"table_name\\\",\\\"column_name\\\",\\\"column_comment\\\",\\\"column_key\\\",\\\"column_nullable\\\",\\\"column_position\\\",\\\"data_type\\\",\\\"data_length\\\",\\\"data_precision\\\",\\\"data_scale\\\",\\\"data_default\\\",\\\"is_dimension\\\",\\\"create_time\\\",\\\"del_flag\\\"],\\\"type\\\":\\\"TABLE\\\",\\\"taskName\\\":\\\"JDBC\\\",\\\"tableName\\\":\\\"dam_test.dam_metadata_table_column\\\",\\\"datasourceId\\\":1}],\\\"postTaskcode\\\":142508264329280},{\\\"type\\\":\\\"SINK\\\",\\\"pluginName\\\":\\\"DORIS\\\",\\\"code\\\":\\\"142508264329280\\\",\\\"params\\\":{\\\"outputFields\\\":null,\\\"datasourceId\\\":20,\\\"table\\\":\\\"table_column_test\\\",\\\"dorisConfig\\\":\\\"{\\\\\\\"format\\\\\\\":\\\\\\\"json\\\\\\\",\\\\\\\"read_json_by_line\\\\\\\" :\\\\\\\" \\\\\\\"true\\\\\\\"}\\\",\\\"sinkEnableDelete\\\":false,\\\"needsUnsupportedTypeCasting\\\":false,\\\"caseSensitive\\\":false,\\\"primary_keys\\\":[],\\\"batch_size\\\":1000,\\\"transaction_timeout_sec\\\":-1,\\\"field_ide\\\":\\\"ORIGINAL\\\",\\\"plugin_input\\\":\\\"\\\",\\\"custom_sql\\\":\\\"\\\",\\\"enable_upsert\\\":true,\\\"use_copy_statement\\\":false,\\\"schema_save_mode\\\":\\\"CREATE_SCHEMA_WHEN_NOT_EXIST\\\",\\\"data_save_mode\\\":\\\"APPEND_DATA\\\"},\\\"name\\\":\\\"DORIS\\\",\\\"outputFields\\\":[{\\\"type\\\":\\\"TABLE\\\",\\\"taskName\\\":\\\"JDBC\\\",\\\"tableName\\\":\\\"dam_test.dam_metadata_table_column\\\",\\\"datasourceId\\\":1,\\\"fields\\\":[\\\"data_precision\\\",\\\"del_flag\\\",\\\"is_dimension\\\",\\\"create_time\\\",\\\"data_length\\\",\\\"column_name\\\",\\\"data_default\\\",\\\"table_id\\\",\\\"table_name\\\",\\\"column_key\\\",\\\"column_position\\\",\\\"data_scale\\\",\\\"column_comment\\\",\\\"data_type\\\",\\\"id\\\",\\\"source_id\\\",\\\"column_nullable\\\"]}],\\\"preTaskcode\\\":142508237818944}]\",\"resourceList\":[],\"startupScript\":\"seatunnel.sh\",\"useCustom\":true,\"scriptType\":\"visualize\",\"deployMode\":\"cluster\"}",
+  "prepareParamsMap" : {
+    "system.task.definition.name" : {
+      "prop" : "system.task.definition.name",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "SEATUNNEL"
+    },
+    "system.project.name" : {
+      "prop" : "system.project.name",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : null
+    },
+    "parallelism" : {
+      "prop" : "parallelism",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "2"
+    },
+    "system.biz.curdate" : {
+      "prop" : "system.biz.curdate",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "20250530"
+    },
+    "system.task.instance.id" : {
+      "prop" : "system.task.instance.id",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "1569"
+    },
+    "system.task.definition.code" : {
+      "prop" : "system.task.definition.code",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "142508232729664"
+    },
+    "system.datetime" : {
+      "prop" : "system.datetime",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "20250530180049"
+    },
+    "job.mode" : {
+      "prop" : "job.mode",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "BATCH"
+    },
+    "system.project.code" : {
+      "prop" : "system.project.code",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "142233140251904"
+    },
+    "system.workflow.instance.id" : {
+      "prop" : "system.workflow.instance.id",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "963"
+    },
+    "system.biz.date" : {
+      "prop" : "system.biz.date",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "20250529"
+    },
+    "system.workflow.definition.name" : {
+      "prop" : "system.workflow.definition.name",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "5555"
+    },
+    "checkpoint.interval" : {
+      "prop" : "checkpoint.interval",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "10000"
+    },
+    "system.workflow.definition.code" : {
+      "prop" : "system.workflow.definition.code",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "142483028828256"
+    }
+  },
+  "taskAppId" : "963_1569",
+  "taskTimeout" : 2147483647,
+  "workerGroup" : "default",
+  "delayTime" : 0,
+  "currentExecutionStatus" : "SUBMITTED_SUCCESS",
+  "resourceParametersHelper" : {
+    "resourceMap" : {
+      "DATASOURCE" : {
+        "1" : {
+          "resourceType" : "DATASOURCE",
+          "type" : "MYSQL",
+          "connectionParams" : "{\"user\":\"root\",\"password\":\"********\",\"address\":\"jdbc:mysql://192.168.0.201:3306\",\"database\":\"dam_test\",\"jdbcUrl\":\"jdbc:mysql://192.168.0.201:3306/dam_test\",\"driverClassName\":\"com.mysql.cj.jdbc.Driver\",\"validationQuery\":\"select 1\",\"other\":{\"useSSL\":\"false\",\"serverTimezone\":\"Asia/Shanghai\"}}",
+          "DATASOURCE" : null
+        },
+        "20" : {
+          "resourceType" : "DATASOURCE",
+          "type" : "DORIS",
+          "connectionParams" : "{\"user\":\"root\",\"password\":\"**************\",\"address\":\"jdbc:mysql:loadbalance://139.198.13.185:9030\",\"database\":\"test1\",\"jdbcUrl\":\"jdbc:mysql:loadbalance://139.198.13.185:9030/test1\",\"driverClassName\":\"com.mysql.cj.jdbc.Driver\",\"validationQuery\":\"select 1\",\"other\":{\"fe_http_port\":\"8030\"}}",
+          "DATASOURCE" : null
+        }
+      }
+    }
+  },
+  "endTime" : 0,
+  "dryRun" : 0,
+  "paramsMap" : { },
+  "cpuQuota" : -1,
+  "memoryMax" : -1,
+  "testFlag" : 0,
+  "logBufferEnable" : false,
+  "dispatchFailTimes" : 0
+}

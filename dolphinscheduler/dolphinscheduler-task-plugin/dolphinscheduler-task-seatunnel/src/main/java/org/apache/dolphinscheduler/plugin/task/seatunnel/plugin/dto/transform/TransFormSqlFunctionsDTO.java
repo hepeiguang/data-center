@@ -1,0 +1,33 @@
+package org.apache.dolphinscheduler.plugin.task.seatunnel.plugin.dto.transform;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.apache.dolphinscheduler.plugin.task.seatunnel.plugin.dto.BaseSeatunneTransformDTO;
+import org.apache.dolphinscheduler.plugin.task.seatunnel.plugin.enums.RowErrorHandleWayEnum;
+
+import java.util.ArrayList;
+import java.util.List;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
+public class TransFormSqlFunctionsDTO extends BaseSeatunneTransformDTO {
+
+    @JsonProperty("columns")
+    private String columns;
+
+    @JsonProperty("plugin_input")
+    private String pluginInput;
+
+    @JsonProperty("plugin_output")
+    private String pluginOutput;
+
+    @JsonProperty("row_error_handle_way")
+    private RowErrorHandleWayEnum rowErrorHandleWay = RowErrorHandleWayEnum.FAIL;
+
+    private String query;
+}

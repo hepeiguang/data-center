@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="org.apache.dolphinscheduler.dao.mapper.FunctionInfoCfgMapper">
+
+    <insert id="insertFunctionInfoCfg" useGeneratedKeys="true" keyProperty="id">
+        insert into function_info_cfg
+        (
+        function_type,
+        type_name,
+        function_name,
+        function_code,
+        sort,
+        function_remark,
+        function_attribute,
+        status,
+        create_time,
+        type_name,
+        resource_fullname
+        )
+        values
+        (#{functionType}, #{typeName}, #{functionName}, #{functionCode}, #{sort}, #{functionRemark}, #{functionAttribute}, #{status}, #{createTime},#{resource_fullname})
+    </insert>
+
+    <update id="fixFunctionInfoCfg">
+        update function_info_cfg
+        set
+        <if test="functionName!= null and functionName!= ''">
+            function_name = #{functionName},
+        </if>
+        <if test="functionCode!= null and functionCode!= ''">
+            function_code = #{functionCode},
+        </if>
+
+        <if test="functionRemark!= null and functionRemark!= ''">
+            function_remark = #{functionRemark},
+        </if>
+        <if test="functionAttribute!= null and functionAttribute!= ''">
+            function_attribute = #{functionAttribute}
+        </if>
+        where id = #{id}
+    </update>
+    <delete id="deleteFunctionInfoCfgByUdfsId">
+        delete
+        from function_info_cfg
+        where udfs_id = #{udfsId}
+    </delete>
+
+    <!--查询单个-->
+    <select id="queryById" resultType="org.apache.dolphinscheduler.dao.entity.FunctionInfoCfg">
+        select
+            *
+        from function_info_cfg
+        where id = #{id}
+    </select>
+
+    <!--查询单个-->
+    <select id="queryByCode" resultType="org.apache.dolphinscheduler.dao.entity.FunctionInfoCfg">
+        select
+            *
+        from function_info_cfg
+        where function_code = #{code}
+    </select>
+
+    <!--查询指定行数据-->
+    <select id="queryAllByLimit" resultType="org.apache.dolphinscheduler.dao.entity.FunctionInfoCfg">
+        select
+            *
+        from function_info_cfg
+        <where>
+            <if test="id != null">
+                and id = #{id}
+            </if>
+            <if test="functionType != null and functionType != ''">
+                and function_type = #{functionType}
+            </if>
+            <if test="typeName != null and typeName != ''">
+                and type_name = #{typeName}
+            </if>
+            <if test="functionName != null and functionName != ''">
+                and function_name = #{functionName}
+            </if>
+            <if test="functionCode != null and functionCode != ''">
+                and function_code = #{functionCode}
+            </if>
+            <if test="sort != null">
+                and sort = #{sort}
+            </if>
+            <if test="functionRemark != null and functionRemark != ''">
+                and function_remark = #{functionRemark}
+            </if>
+            <if test="functionAttribute != null and functionAttribute != ''">
+                and function_attribute = #{functionAttribute}
+            </if>
+            <if test="status != null">
+                and status = #{status}
+            </if>
+            <if test="createTime != null">
+                and create_time = #{createTime}
+            </if>
+        </where>
+    </select>
+
+
+    <select id="queryFunctionInfoCfgNumByTypeName" resultType="java.lang.Integer">
+        SELECT COUNT(*)
+        FROM function_info_cfg
+        <where>
+            <if test="typeName != null and typeName != ''">
+                AND type_name = #{typeName}
+            </if>
+        </where>
+    </select>
+
+
+    <select id="queryByUdfsId" resultType="org.apache.dolphinscheduler.dao.entity.FunctionInfoCfg">
+        select
+            *
+        from function_info_cfg
+        where udfs_id = #{udfsId}
+    </select>
+    <select id="queryFunctionInfoCfgNumByById"
+            resultType="org.apache.dolphinscheduler.dao.entity.FunctionInfoCfg">
+        select
+            *
+        from function_info_cfg
+        where id = #{id}
+    </select>
+</mapper>
+

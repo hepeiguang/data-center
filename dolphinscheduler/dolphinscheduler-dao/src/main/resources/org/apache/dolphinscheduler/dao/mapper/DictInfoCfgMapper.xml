@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="org.apache.dolphinscheduler.dao.mapper.DictInfoCfgMapper">
+
+    <!--查询单个-->
+    <select id="queryById" resultType="org.apache.dolphinscheduler.dao.entity.DictInfoCfg">
+        select
+            *
+        from dict_info_cfg
+        where id = #{id}
+    </select>
+
+    <!--查询单个-->
+    <select id="queryByCode" resultType="org.apache.dolphinscheduler.dao.entity.DictInfoCfg">
+        select
+            *
+        from dict_info_cfg
+        where dict_code = #{code}
+    </select>
+
+    <!--查询指定行数据-->
+    <select id="queryAllByLimit" resultType="org.apache.dolphinscheduler.dao.entity.DictInfoCfg">
+        select
+            *
+        from dict_info_cfg
+        <where>
+            <if test="id != null">
+                and id = #{id}
+            </if>
+            <if test="dictType != null and dictType != ''">
+                and dict_Type = #{dictType}
+            </if>
+            <if test="dictName != null and dictName != ''">
+                and dict_Name = #{dictName}
+            </if>
+            <if test="dictCode != null and dictCode != ''">
+                and dict_code = #{dictCode}
+            </if>
+            <if test="dictRemark != null and dictRemark != ''">
+                and dict_remark = #{dictRemark}
+            </if>
+            <if test="status != null">
+                and status = #{status}
+            </if>
+            <if test="createTime != null">
+                and create_time = #{createTime}
+            </if>
+        </where>
+
+    </select>
+</mapper>
+

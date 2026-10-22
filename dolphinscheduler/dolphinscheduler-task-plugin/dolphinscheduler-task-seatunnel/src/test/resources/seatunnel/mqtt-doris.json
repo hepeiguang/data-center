@@ -1,0 +1,140 @@
+{
+  "taskInstanceId" : 397,
+  "taskName" : "mqtt数据接引",
+  "firstSubmitTime" : 1765372099198,
+  "startTime" : 1765372099223,
+  "taskType" : "SEATUNNEL",
+  "workflowInstanceHost" : "172.41.133.91:5678",
+  "host" : "172.41.133.90:1234",
+  "logPath" : "/services/etl/worker-server/logs/20251210/159677053830720/2/58/397.log",
+  "processId" : 0,
+  "processDefineCode" : 159677053830720,
+  "processDefineVersion" : 2,
+  "processInstanceId" : 58,
+  "scheduleTime" : 0,
+  "executorId" : "1",
+  "cmdTypeIfComplement" : 0,
+  "tenantCode" : "default",
+  "processDefineId" : 0,
+  "projectId" : 0,
+  "projectCode" : 159676830017088,
+  "taskParams" : "{\"localParams\":[{\"prop\":\"parallelism\",\"value\":\"1\",\"direct\":\"IN\",\"type\":\"VARCHAR\"},{\"prop\":\"job.mode\",\"value\":\"STREAM\",\"direct\":\"IN\",\"type\":\"VARCHAR\"},{\"prop\":\"checkpoint.interval\",\"value\":\"10000\",\"direct\":\"IN\",\"type\":\"VARCHAR\"}],\"rawScript\":\"[{\\\"type\\\":\\\"SOURCE\\\",\\\"pluginName\\\":\\\"MQTT\\\",\\\"code\\\":\\\"159677034854976\\\",\\\"params\\\":{\\\"outputFields\\\":null,\\\"datasourceId\\\":7,\\\"clientIdPrefix\\\":\\\"dam-mqtt-client-001\\\",\\\"topicList\\\":[{\\\"topic\\\":\\\"DHLT_S_KIO_DCS\\\",\\\"qos\\\":\\\"1\\\"}],\\\"cleanSession\\\":true,\\\"keepAliveInterval\\\":60,\\\"connectionTimeout\\\":30,\\\"automaticReconnect\\\":true,\\\"maxReconnectDelay\\\":128000,\\\"messageFormat\\\":\\\"json\\\",\\\"schemaVo\\\":\\\"{\\\\n  \\\\\\\"PNs\\\\\\\": \\\\\\\"map<string, string>\\\\\\\",\\\\n  \\\\\\\"PVs\\\\\\\": \\\\\\\"map<string, string>\\\\\\\",\\\\n  \\\\\\\"Objs\\\\\\\": \\\\\\\"array<map<string, {\\\\\\\\\\\\\\\"N\\\\\\\\\\\\\\\":\\\\\\\\\\\\\\\"string\\\\\\\\\\\\\\\",\\\\\\\\\\\\\\\"1\\\\\\\\\\\\\\\":\\\\\\\\\\\\\\\"decimal(20,15)\\\\\\\\\\\\\\\",\\\\\\\\\\\\\\\"2\\\\\\\\\\\\\\\":\\\\\\\\\\\\\\\"int\\\\\\\\\\\\\\\",\\\\\\\\\\\\\\\"3\\\\\\\\\\\\\\\":\\\\\\\\\\\\\\\"int\\\\\\\\\\\\\\\"}>>\\\\\\\"\\\\n}\\\",\\\"asyncProcessing\\\":true,\\\"processingThreads\\\":5,\\\"processingTimeout\\\":30000,\\\"localParams\\\":null},\\\"name\\\":\\\"Mqtt\\\",\\\"outputFields\\\":[],\\\"postTaskcode\\\":159684220968512},{\\\"type\\\":\\\"SINK\\\",\\\"pluginName\\\":\\\"DORIS\\\",\\\"code\\\":\\\"159684220968512\\\",\\\"params\\\":{\\\"outputFields\\\":null,\\\"datasourceId\\\":1,\\\"table\\\":\\\"ods_tcjzjk_scada_metric_values\\\",\\\"schemaSaveMode\\\":\\\"RECREATE_SCHEMA\\\",\\\"dataSaveMode\\\":\\\"APPEND_DATA\\\",\\\"format\\\":\\\"json\\\",\\\"readJsonByLine\\\":\\\"true\\\",\\\"columnSeparator\\\":\\\"\\\",\\\"sinkEnableDelete\\\":\\\"false\\\",\\\"needsUnsupportedTypeCasting\\\":\\\"false\\\",\\\"sink\\\":\\\"\\\",\\\"sinkEnable2pc\\\":\\\"false\\\",\\\"customSql\\\":\\\"\\\",\\\"sinkCheckInterval\\\":10000,\\\"sinkMaxRetries\\\":3,\\\"sinkBufferSize\\\":262144,\\\"sinkBufferCount\\\":3,\\\"dorisBatchSize\\\":1024,\\\"primary_keys\\\":[],\\\"batch_size\\\":1000,\\\"transaction_timeout_sec\\\":-1,\\\"field_ide\\\":\\\"ORIGINAL\\\",\\\"plugin_input\\\":\\\"\\\",\\\"custom_sql\\\":\\\"\\\",\\\"enable_upsert\\\":true,\\\"use_copy_statement\\\":false,\\\"schema_save_mode\\\":\\\"CREATE_SCHEMA_WHEN_NOT_EXIST\\\",\\\"data_save_mode\\\":\\\"APPEND_DATA\\\",\\\"feHttpPort\\\":8030,\\\"localParams\\\":null},\\\"name\\\":\\\"Doris数据库\\\",\\\"outputFields\\\":[],\\\"preTaskcode\\\":159677034854976}]\",\"resourceList\":[],\"startupScript\":\"seatunnel.sh\",\"useCustom\":true,\"scriptType\":\"visualize\",\"deployMode\":\"cluster\",\"relation\":\"[{\\\"name\\\":\\\"\\\",\\\"preTaskCode\\\":0,\\\"preTaskVersion\\\":0,\\\"postTaskCode\\\":159677034854976,\\\"postTaskVersion\\\":0,\\\"conditionType\\\":\\\"NONE\\\",\\\"conditionParams\\\":{}},{\\\"name\\\":\\\"\\\",\\\"preTaskCode\\\":159677034854976,\\\"preTaskVersion\\\":0,\\\"postTaskCode\\\":159684220968512,\\\"postTaskVersion\\\":0,\\\"conditionType\\\":\\\"NONE\\\",\\\"conditionParams\\\":{}}]\"}",
+  "prepareParamsMap" : {
+    "system.task.definition.name" : {
+      "prop" : "system.task.definition.name",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "mqtt数据接引"
+    },
+    "system.project.name" : {
+      "prop" : "system.project.name",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : null
+    },
+    "parallelism" : {
+      "prop" : "parallelism",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "1"
+    },
+    "system.biz.curdate" : {
+      "prop" : "system.biz.curdate",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "20251210"
+    },
+    "system.task.instance.id" : {
+      "prop" : "system.task.instance.id",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "397"
+    },
+    "system.task.definition.code" : {
+      "prop" : "system.task.definition.code",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "159676892598848"
+    },
+    "system.datetime" : {
+      "prop" : "system.datetime",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "20251210210819"
+    },
+    "job.mode" : {
+      "prop" : "job.mode",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "STREAM"
+    },
+    "system.project.code" : {
+      "prop" : "system.project.code",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "159676830017088"
+    },
+    "system.workflow.instance.id" : {
+      "prop" : "system.workflow.instance.id",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "58"
+    },
+    "system.biz.date" : {
+      "prop" : "system.biz.date",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "20251209"
+    },
+    "system.workflow.definition.name" : {
+      "prop" : "system.workflow.definition.name",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "mqtt数据采集"
+    },
+    "checkpoint.interval" : {
+      "prop" : "checkpoint.interval",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "10000"
+    },
+    "system.workflow.definition.code" : {
+      "prop" : "system.workflow.definition.code",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "159677053830720"
+    }
+  },
+  "taskAppId" : "58_397",
+  "taskTimeout" : 2147483647,
+  "workerGroup" : "default",
+  "delayTime" : 0,
+  "currentExecutionStatus" : "SUBMITTED_SUCCESS",
+  "resourceParametersHelper" : {
+    "resourceMap" : {
+      "DATASOURCE" : {
+        "1" : {
+          "resourceType" : "DATASOURCE",
+          "type" : "DORIS",
+          "connectionParams" : "{\"user\":\"root\",\"password\":\"*****************\",\"address\":\"jdbc:mysql:loadbalance://172.41.133.91:9030\",\"database\":\"dhdw\",\"jdbcUrl\":\"jdbc:mysql:loadbalance://172.41.133.91:9030/dhdw\",\"driverClassName\":\"com.mysql.cj.jdbc.Driver\",\"validationQuery\":\"select 1\",\"host\":\"172.41.133.91\",\"port\":9030,\"other\":{\"feHttpPort\":\"8030\"}}",
+          "DATASOURCE" : null
+        },
+        "7" : {
+          "resourceType" : "DATASOURCE",
+          "type" : "MQTT",
+          "connectionParams" : "{\"brokenUrls\":\"tcp://172.41.133.90:1883\",\"cleanSession\":true,\"keepAliveInterval\":60,\"connectionTimeout\":30,\"automaticReconnect\":false,\"maxReconnectDelay\":128000,\"useSsl\":false,\"password\":\"\"}",
+          "DATASOURCE" : null
+        }
+      }
+    }
+  },
+  "endTime" : 0,
+  "dryRun" : 0,
+  "paramsMap" : { },
+  "cpuQuota" : -1,
+  "memoryMax" : -1,
+  "testFlag" : 0,
+  "logBufferEnable" : false,
+  "dispatchFailTimes" : 0,
+  "userId" : "1"
+}

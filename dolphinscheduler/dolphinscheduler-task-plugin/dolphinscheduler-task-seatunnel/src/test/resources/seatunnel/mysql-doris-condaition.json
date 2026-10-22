@@ -1,0 +1,147 @@
+{
+  "taskInstanceId" : 1274,
+  "taskName" : "t_core_alarm_log",
+  "firstSubmitTime" : 1765701897816,
+  "startTime" : 1765701897846,
+  "taskType" : "SEATUNNEL",
+  "workflowInstanceHost" : "172.41.133.91:5678",
+  "host" : "172.41.133.89:1234",
+  "logPath" : "/services/etl/worker-server/logs/20251214/160021995864544/1/162/1274.log",
+  "processId" : 0,
+  "processDefineCode" : 160021995864544,
+  "processDefineVersion" : 1,
+  "processInstanceId" : 162,
+  "scheduleTime" : 0,
+  "globalParams" : "[{\"prop\":\"one_hour_ago\",\"direct\":\"IN\",\"type\":\"VARCHAR\",\"value\":\"$[yyyy-MM-dd HH:00:00-1/24]\"}]",
+  "executorId" : "1",
+  "cmdTypeIfComplement" : 0,
+  "tenantCode" : "default",
+  "processDefineId" : 0,
+  "projectId" : 0,
+  "projectCode" : 159488335400448,
+  "taskParams" : "{\"localParams\":[{\"prop\":\"parallelism\",\"value\":\"2\",\"direct\":\"IN\",\"type\":\"VARCHAR\"},{\"prop\":\"job.mode\",\"value\":\"BATCH\",\"direct\":\"IN\",\"type\":\"VARCHAR\"},{\"prop\":\"checkpoint.interval\",\"value\":\"10000\",\"direct\":\"IN\",\"type\":\"VARCHAR\"}],\"rawScript\":\"[{\\\"type\\\":\\\"SOURCE\\\",\\\"pluginName\\\":\\\"MYSQL\\\",\\\"code\\\":\\\"160021809451488\\\",\\\"params\\\":{\\\"outputFields\\\":null,\\\"datasourceId\\\":4,\\\"query\\\":\\\"\\\",\\\"partition_column\\\":\\\"\\\",\\\"partition_lower_bound\\\":\\\"\\\",\\\"partition_upper_bound\\\":\\\"\\\",\\\"fetch_size\\\":\\\"\\\",\\\"table_path\\\":\\\"scada.t_core_alarm_log\\\",\\\"split.size\\\":\\\"\\\",\\\"where_condition\\\":{\\\"mysql\\\":\\\"where gmt_rec_trigger >= ${one_hour_ago}\\\"},\\\"whereCondition\\\":\\\"where gmt_rec_trigger >= '${one_hour_ago}'\\\",\\\"connection_check_timeout_sec\\\":30,\\\"partition_num\\\":\\\"\\\",\\\"properties\\\":{},\\\"is_partition\\\":false,\\\"is_custom_sql\\\":false,\\\"selectedColumns\\\":[\\\"id\\\",\\\"sn\\\",\\\"type\\\",\\\"alarm_id\\\",\\\"signal_id\\\",\\\"alarm_level_id\\\",\\\"state\\\",\\\"value\\\",\\\"msg\\\",\\\"gmt_trigger\\\",\\\"gmt_release\\\",\\\"gmt_rec_trigger\\\",\\\"gmt_rec_release\\\"],\\\"localParams\\\":null},\\\"name\\\":\\\"MySql数据库\\\",\\\"outputFields\\\":[{\\\"fields\\\":[\\\"id\\\",\\\"sn\\\",\\\"type\\\",\\\"alarm_id\\\",\\\"signal_id\\\",\\\"alarm_level_id\\\",\\\"state\\\",\\\"value\\\",\\\"msg\\\",\\\"gmt_trigger\\\",\\\"gmt_release\\\",\\\"gmt_rec_trigger\\\",\\\"gmt_rec_release\\\"],\\\"type\\\":\\\"TABLE\\\",\\\"taskName\\\":\\\"MySql数据库\\\",\\\"tableName\\\":\\\"scada.t_core_alarm_log\\\",\\\"datasourceId\\\":4}],\\\"postTaskcode\\\":160021880668640},{\\\"type\\\":\\\"SINK\\\",\\\"pluginName\\\":\\\"DORIS\\\",\\\"code\\\":\\\"160021880668640\\\",\\\"params\\\":{\\\"outputFields\\\":null,\\\"datasourceId\\\":9,\\\"table\\\":\\\"test_t_core_alarm_log\\\",\\\"schemaSaveMode\\\":\\\"CREATE_SCHEMA_WHEN_NOT_EXIST\\\",\\\"dataSaveMode\\\":\\\"APPEND_DATA\\\",\\\"format\\\":\\\"json\\\",\\\"readJsonByLine\\\":\\\"true\\\",\\\"columnSeparator\\\":\\\"\\\",\\\"sinkEnableDelete\\\":\\\"false\\\",\\\"needsUnsupportedTypeCasting\\\":\\\"false\\\",\\\"sink\\\":\\\"\\\",\\\"sinkEnable2pc\\\":\\\"false\\\",\\\"customSql\\\":\\\"\\\",\\\"sinkCheckInterval\\\":10000,\\\"sinkMaxRetries\\\":3,\\\"sinkBufferSize\\\":262144,\\\"sinkBufferCount\\\":3,\\\"dorisBatchSize\\\":1024,\\\"primary_keys\\\":[],\\\"batch_size\\\":1000,\\\"transaction_timeout_sec\\\":-1,\\\"field_ide\\\":\\\"ORIGINAL\\\",\\\"plugin_input\\\":\\\"\\\",\\\"custom_sql\\\":\\\"\\\",\\\"enable_upsert\\\":true,\\\"use_copy_statement\\\":false,\\\"schema_save_mode\\\":\\\"CREATE_SCHEMA_WHEN_NOT_EXIST\\\",\\\"data_save_mode\\\":\\\"APPEND_DATA\\\",\\\"feHttpPort\\\":8030,\\\"localParams\\\":null},\\\"name\\\":\\\"Doris数据库\\\",\\\"outputFields\\\":[],\\\"preTaskcode\\\":160021809451488}]\",\"resourceList\":[],\"startupScript\":\"seatunnel.sh\",\"useCustom\":true,\"scriptType\":\"visualize\",\"deployMode\":\"cluster\",\"relation\":\"[{\\\"name\\\":\\\"\\\",\\\"preTaskCode\\\":0,\\\"preTaskVersion\\\":0,\\\"postTaskCode\\\":160021809451488,\\\"postTaskVersion\\\":0,\\\"conditionType\\\":\\\"NONE\\\",\\\"conditionParams\\\":{}},{\\\"name\\\":\\\"\\\",\\\"preTaskCode\\\":160021809451488,\\\"preTaskVersion\\\":0,\\\"postTaskCode\\\":160021880668640,\\\"postTaskVersion\\\":0,\\\"conditionType\\\":\\\"NONE\\\",\\\"conditionParams\\\":{}}]\"}",
+  "prepareParamsMap" : {
+    "system.task.definition.name" : {
+      "prop" : "system.task.definition.name",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "t_core_alarm_log"
+    },
+    "system.project.name" : {
+      "prop" : "system.project.name",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : null
+    },
+    "parallelism" : {
+      "prop" : "parallelism",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "2"
+    },
+    "system.biz.curdate" : {
+      "prop" : "system.biz.curdate",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "20251214"
+    },
+    "system.task.instance.id" : {
+      "prop" : "system.task.instance.id",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "1274"
+    },
+    "system.task.definition.code" : {
+      "prop" : "system.task.definition.code",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "160021764528608"
+    },
+    "system.datetime" : {
+      "prop" : "system.datetime",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "20251214164457"
+    },
+    "job.mode" : {
+      "prop" : "job.mode",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "BATCH"
+    },
+    "one_hour_ago" : {
+      "prop" : "one_hour_ago",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "2025-12-14 15:00:00"
+    },
+    "system.project.code" : {
+      "prop" : "system.project.code",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "159488335400448"
+    },
+    "system.workflow.instance.id" : {
+      "prop" : "system.workflow.instance.id",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "162"
+    },
+    "system.biz.date" : {
+      "prop" : "system.biz.date",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "20251213"
+    },
+    "system.workflow.definition.name" : {
+      "prop" : "system.workflow.definition.name",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "测试"
+    },
+    "checkpoint.interval" : {
+      "prop" : "checkpoint.interval",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "10000"
+    },
+    "system.workflow.definition.code" : {
+      "prop" : "system.workflow.definition.code",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "160021995864544"
+    }
+  },
+  "taskAppId" : "162_1274",
+  "taskTimeout" : 2147483647,
+  "workerGroup" : "default",
+  "delayTime" : 0,
+  "currentExecutionStatus" : "SUBMITTED_SUCCESS",
+  "resourceParametersHelper" : {
+    "resourceMap" : {
+      "DATASOURCE" : {
+        "4" : {
+          "resourceType" : "DATASOURCE",
+          "type" : "MYSQL",
+          "connectionParams" : "{\"user\":\"root\",\"password\":\"*********\",\"address\":\"jdbc:mysql://172.41.133.87:3306\",\"database\":\"scada\",\"jdbcUrl\":\"jdbc:mysql://172.41.133.87:3306/scada\",\"driverClassName\":\"com.mysql.cj.jdbc.Driver\",\"validationQuery\":\"select 1\",\"host\":\"172.41.133.87\",\"port\":3306}",
+          "DATASOURCE" : null
+        },
+        "9" : {
+          "resourceType" : "DATASOURCE",
+          "type" : "DORIS",
+          "connectionParams" : "{\"user\":\"root\",\"password\":\"*****************\",\"address\":\"jdbc:mysql:loadbalance://172.41.133.91:9030\",\"database\":\"test\",\"jdbcUrl\":\"jdbc:mysql:loadbalance://172.41.133.91:9030/test\",\"driverClassName\":\"com.mysql.cj.jdbc.Driver\",\"validationQuery\":\"select 1\",\"host\":\"172.41.133.91\",\"port\":9030,\"other\":{\"feHttpPort\":\"8030\"}}",
+          "DATASOURCE" : null
+        }
+      }
+    }
+  },
+  "endTime" : 0,
+  "dryRun" : 0,
+  "paramsMap" : { },
+  "cpuQuota" : -1,
+  "memoryMax" : -1,
+  "testFlag" : 0,
+  "logBufferEnable" : false,
+  "dispatchFailTimes" : 0,
+  "userId" : "1"
+}

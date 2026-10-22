@@ -1,0 +1,147 @@
+{
+  "taskInstanceId" : 76,
+  "taskName" : "组",
+  "firstSubmitTime" : 1765196264725,
+  "startTime" : 1765196264798,
+  "taskType" : "SEATUNNEL",
+  "workflowInstanceHost" : "172.41.133.90:5678",
+  "host" : "172.41.133.90:1234",
+  "logPath" : "/services/etl/worker-server/logs/20251208/159496911201411/7/27/76.log",
+  "processId" : 0,
+  "processDefineCode" : 159496911201411,
+  "processDefineVersion" : 7,
+  "processInstanceId" : 27,
+  "scheduleTime" : 0,
+  "globalParams" : "[{\"prop\":\"api_token\",\"direct\":\"OUT\",\"type\":\"VARCHAR\",\"value\":\"ASP.NET_SessionId=3jqwmtawvbzqonneubja11eh\"}]",
+  "executorId" : "1",
+  "cmdTypeIfComplement" : 0,
+  "tenantCode" : "default",
+  "processDefineId" : 0,
+  "projectId" : 0,
+  "projectCode" : 159490384126464,
+  "taskParams" : "{\"localParams\":[{\"prop\":\"parallelism\",\"value\":\"2\",\"direct\":\"IN\",\"type\":\"VARCHAR\"},{\"prop\":\"job.mode\",\"value\":\"BATCH\",\"direct\":\"IN\",\"type\":\"VARCHAR\"},{\"prop\":\"checkpoint.interval\",\"value\":\"10000\",\"direct\":\"IN\",\"type\":\"VARCHAR\"}],\"rawScript\":\"[{\\\"type\\\":\\\"SOURCE\\\",\\\"pluginName\\\":\\\"HTTP\\\",\\\"code\\\":\\\"159490442036736\\\",\\\"params\\\":{\\\"outputFields\\\":null,\\\"url\\\":\\\"/Api/Company_basic_information/ModelB\\\",\\\"method\\\":\\\"GET\\\",\\\"httpParams\\\":[],\\\"httpHeaders\\\":[{\\\"prop\\\":\\\"cookie\\\",\\\"value\\\":\\\"${api_token}\\\"}],\\\"body\\\":\\\"\\\",\\\"format\\\":\\\"json\\\",\\\"schemaVo\\\":\\\"{\\\\n  \\\\\\\"Id\\\\\\\": \\\\\\\"string\\\\\\\",\\\\n  \\\\\\\"Park_code\\\\\\\": \\\\\\\"string\\\\\\\",\\\\n  \\\\\\\"Company_code\\\\\\\": \\\\\\\"string\\\\\\\",\\\\n  \\\\\\\"Parent_code\\\\\\\": \\\\\\\"string\\\\\\\",\\\\n  \\\\\\\"Company_name\\\\\\\": \\\\\\\"string\\\\\\\",\\\\n  \\\\\\\"Company_short_name\\\\\\\": \\\\\\\"string\\\\\\\",\\\\n  \\\\\\\"Area_code\\\\\\\": \\\\\\\"string\\\\\\\",\\\\n  \\\\\\\"Address_regi_stry\\\\\\\": \\\\\\\"string\\\\\\\",\\\\n  \\\\\\\"Produce_address\\\\\\\": \\\\\\\"string\\\\\\\",\\\\n  \\\\\\\"Longitude\\\\\\\": \\\\\\\"string\\\\\\\",\\\\n  \\\\\\\"Latitude\\\\\\\": \\\\\\\"string\\\\\\\",\\\\n  \\\\\\\"Representative_persion\\\\\\\": \\\\\\\"string\\\\\\\",\\\\n  \\\\\\\"Representative_phone\\\\\\\": \\\\\\\"string\\\\\\\",\\\\n  \\\\\\\"Responsible_persion\\\\\\\": \\\\\\\"string\\\\\\\",\\\\n  \\\\\\\"Responsible_phone\\\\\\\": \\\\\\\"string\\\\\\\",\\\\n  \\\\\\\"Responsible_cellphone\\\\\\\": \\\\\\\"string\\\\\\\",\\\\n  \\\\\\\"Safety_responsible_person\\\\\\\": \\\\\\\"string\\\\\\\",\\\\n  \\\\\\\"Safety_responsible_phone\\\\\\\": \\\\\\\"string\\\\\\\",\\\\n  \\\\\\\"Safety_responsible_cellphone\\\\\\\": \\\\\\\"string\\\\\\\",\\\\n  \\\\\\\"Duty_phone\\\\\\\": \\\\\\\"string\\\\\\\",\\\\n  \\\\\\\"Post_code\\\\\\\": \\\\\\\"string\\\\\\\",\\\\n  \\\\\\\"Establish_date\\\\\\\": \\\\\\\"string\\\\\\\",\\\\n  \\\\\\\"Web_site\\\\\\\": \\\\\\\"string\\\\\\\",\\\\n  \\\\\\\"Company_scale\\\\\\\": \\\\\\\"string\\\\\\\",\\\\n  \\\\\\\"Company_type\\\\\\\": \\\\\\\"string\\\\\\\",\\\\n  \\\\\\\"Business_type\\\\\\\": \\\\\\\"string\\\\\\\",\\\\n  \\\\\\\"Import_type\\\\\\\": \\\\\\\"string\\\\\\\",\\\\n  \\\\\\\"Import\\\\\\\": \\\\\\\"string\\\\\\\",\\\\n  \\\\\\\"Economic_type\\\\\\\": \\\\\\\"string\\\\\\\",\\\\n  \\\\\\\"Economic_type_small\\\\\\\": \\\\\\\"string\\\\\\\",\\\\n  \\\\\\\"Industry_category\\\\\\\": \\\\\\\"string\\\\\\\",\\\\n  \\\\\\\"Industry_class\\\\\\\": \\\\\\\"string\\\\\\\",\\\\n  \\\\\\\"Social_credit_code\\\\\\\": \\\\\\\"string\\\\\\\",\\\\n  \\\\\\\"Business_scope\\\\\\\": \\\\\\\"string\\\\\\\",\\\\n  \\\\\\\"Safety_stand_ard_grad\\\\\\\": \\\\\\\"string\\\\\\\",\\\\n  \\\\\\\"Safety_license_no\\\\\\\": \\\\\\\"string\\\\\\\",\\\\n  \\\\\\\"Safety_license_start\\\\\\\": \\\\\\\"string\\\\\\\",\\\\n  \\\\\\\"Safety_license_end\\\\\\\": \\\\\\\"string\\\\\\\",\\\\n  \\\\\\\"People_employee\\\\\\\": \\\\\\\"string\\\\\\\",\\\\n  \\\\\\\"People_practioner\\\\\\\": \\\\\\\"string\\\\\\\",\\\\n  \\\\\\\"People_toxic\\\\\\\": \\\\\\\"string\\\\\\\",\\\\n  \\\\\\\"People_hazard\\\\\\\": \\\\\\\"string\\\\\\\",\\\\n  \\\\\\\"People_specia\\\\\\\": \\\\\\\"string\\\\\\\",\\\\n  \\\\\\\"Industrial_park\\\\\\\": \\\\\\\"string\\\\\\\",\\\\n  \\\\\\\"Industrial_park_name\\\\\\\": \\\\\\\"string\\\\\\\",\\\\n  \\\\\\\"Company_status\\\\\\\": \\\\\\\"string\\\\\\\",\\\\n  \\\\\\\"Factory_area\\\\\\\": \\\\\\\"string\\\\\\\",\\\\n  \\\\\\\"Password\\\\\\\": \\\\\\\"string\\\\\\\",\\\\n  \\\\\\\"Deleted\\\\\\\": \\\\\\\"string\\\\\\\",\\\\n  \\\\\\\"Create_date\\\\\\\": \\\\\\\"string\\\\\\\",\\\\n  \\\\\\\"Create_by\\\\\\\": \\\\\\\"string\\\\\\\",\\\\n  \\\\\\\"Update_date\\\\\\\": \\\\\\\"string\\\\\\\",\\\\n  \\\\\\\"Update_by\\\\\\\": \\\\\\\"string\\\\\\\",\\\\n  \\\\\\\"Area\\\\\\\": \\\\\\\"string\\\\\\\",\\\\n  \\\\\\\"Business_code\\\\\\\": \\\\\\\"string\\\\\\\",\\\\n  \\\\\\\"Link_name\\\\\\\": \\\\\\\"string\\\\\\\",\\\\n  \\\\\\\"Link_tel\\\\\\\": \\\\\\\"string\\\\\\\",\\\\n  \\\\\\\"Produce_address_code\\\\\\\": \\\\\\\"string\\\\\\\",\\\\n  \\\\\\\"Major_run\\\\\\\": \\\\\\\"string\\\\\\\",\\\\n  \\\\\\\"Store_build_area\\\\\\\": \\\\\\\"string\\\\\\\",\\\\n  \\\\\\\"Pot_cubage\\\\\\\": \\\\\\\"string\\\\\\\",\\\\n  \\\\\\\"Counsel_phone\\\\\\\": \\\\\\\"string\\\\\\\",\\\\n  \\\\\\\"Company_level\\\\\\\": \\\\\\\"string\\\\\\\",\\\\n  \\\\\\\"Is_contain\\\\\\\": \\\\\\\"string\\\\\\\",\\\\n  \\\\\\\"Instrument_num\\\\\\\": \\\\\\\"string\\\\\\\",\\\\n  \\\\\\\"Safty_manage_dept\\\\\\\": \\\\\\\"string\\\\\\\",\\\\n  \\\\\\\"Safety_principal\\\\\\\": \\\\\\\"string\\\\\\\",\\\\n  \\\\\\\"Safety_principal_tel\\\\\\\": \\\\\\\"string\\\\\\\",\\\\n  \\\\\\\"Dept_principal\\\\\\\": \\\\\\\"string\\\\\\\",\\\\n  \\\\\\\"Dept_principal_tel\\\\\\\": \\\\\\\"string\\\\\\\",\\\\n  \\\\\\\"Fulltime_safety_num\\\\\\\": \\\\\\\"string\\\\\\\",\\\\n  \\\\\\\"Parttime_safety_num\\\\\\\": \\\\\\\"string\\\\\\\",\\\\n  \\\\\\\"Fulltime_emergency_num\\\\\\\": \\\\\\\"string\\\\\\\",\\\\n  \\\\\\\"Cse_num\\\\\\\": \\\\\\\"string\\\\\\\",\\\\n  \\\\\\\"Fulltime_rescue_num\\\\\\\": \\\\\\\"string\\\\\\\",\\\\n  \\\\\\\"Parttime_rescue_num\\\\\\\": \\\\\\\"string\\\\\\\",\\\\n  \\\\\\\"Process_files\\\\\\\": \\\\\\\"string\\\\\\\",\\\\n  \\\\\\\"Industry_middle\\\\\\\": \\\\\\\"string\\\\\\\",\\\\n  \\\\\\\"Industry_small\\\\\\\": \\\\\\\"string\\\\\\\",\\\\n  \\\\\\\"PointList\\\\\\\": \\\\\\\"string\\\\\\\",\\\\n  \\\\\\\"Taxation\\\\\\\": \\\\\\\"string\\\\\\\",\\\\n  \\\\\\\"OutputValue\\\\\\\": \\\\\\\"string\\\\\\\",\\\\n  \\\\\\\"FXSST\\\\\\\": \\\\\\\"string\\\\\\\",\\\\n  \\\\\\\"ISGW\\\\\\\": \\\\\\\"string\\\\\\\"\\\\n}\\\",\\\"httpExtra\\\":[],\\\"jsonFieldVo\\\":\\\"\\\",\\\"datasourceId\\\":6,\\\"isPage\\\":false,\\\"isIterative\\\":false,\\\"field_path_type\\\":\\\"content\\\",\\\"content_field\\\":\\\"\\\",\\\"localParams\\\":null},\\\"name\\\":\\\"企业基础资料\\\",\\\"outputFields\\\":[],\\\"postTaskcode\\\":159490867164672},{\\\"type\\\":\\\"SINK\\\",\\\"pluginName\\\":\\\"DORIS\\\",\\\"code\\\":\\\"159490867164672\\\",\\\"params\\\":{\\\"outputFields\\\":null,\\\"datasourceId\\\":1,\\\"table\\\":\\\"ods_zdaqfxznh_company_basic_information\\\",\\\"schemaSaveMode\\\":\\\"CREATE_SCHEMA_WHEN_NOT_EXIST\\\",\\\"dataSaveMode\\\":\\\"APPEND_DATA\\\",\\\"format\\\":\\\"json\\\",\\\"readJsonByLine\\\":\\\"true\\\",\\\"columnSeparator\\\":\\\"\\\",\\\"sinkEnableDelete\\\":\\\"false\\\",\\\"needsUnsupportedTypeCasting\\\":false,\\\"sink\\\":false,\\\"sinkEnable2pc\\\":\\\"false\\\",\\\"customSql\\\":\\\"\\\",\\\"sinkCheckInterval\\\":10000,\\\"sinkMaxRetries\\\":3,\\\"sinkBufferSize\\\":262144,\\\"sinkBufferCount\\\":3,\\\"dorisBatchSize\\\":1024,\\\"primary_keys\\\":[\\\"Id\\\"],\\\"batch_size\\\":1000,\\\"transaction_timeout_sec\\\":-1,\\\"field_ide\\\":\\\"ORIGINAL\\\",\\\"plugin_input\\\":\\\"\\\",\\\"custom_sql\\\":\\\"\\\",\\\"enable_upsert\\\":true,\\\"use_copy_statement\\\":false,\\\"schema_save_mode\\\":\\\"CREATE_SCHEMA_WHEN_NOT_EXIST\\\",\\\"data_save_mode\\\":\\\"APPEND_DATA\\\",\\\"feHttpPort\\\":8030,\\\"localParams\\\":null},\\\"name\\\":\\\"Doris数据库\\\",\\\"outputFields\\\":[{\\\"type\\\":\\\"OTHER\\\",\\\"taskName\\\":\\\"企业基础资料\\\",\\\"tableName\\\":\\\"\\\",\\\"datasourceId\\\":null,\\\"fields\\\":[]}],\\\"preTaskcode\\\":159490442036736}]\",\"resourceList\":[],\"startupScript\":\"seatunnel.sh\",\"useCustom\":true,\"scriptType\":\"visualize\",\"deployMode\":\"cluster\",\"relation\":\"[{\\\"name\\\":\\\"\\\",\\\"preTaskCode\\\":0,\\\"preTaskVersion\\\":0,\\\"postTaskCode\\\":159490442036736,\\\"postTaskVersion\\\":0,\\\"conditionType\\\":\\\"NONE\\\",\\\"conditionParams\\\":{}},{\\\"name\\\":\\\"\\\",\\\"preTaskCode\\\":159490442036736,\\\"preTaskVersion\\\":0,\\\"postTaskCode\\\":159490867164672,\\\"postTaskVersion\\\":0,\\\"conditionType\\\":\\\"NONE\\\",\\\"conditionParams\\\":{}},{\\\"name\\\":\\\"\\\",\\\"preTaskCode\\\":159490442036736,\\\"preTaskVersion\\\":0,\\\"postTaskCode\\\":159490867164672,\\\"postTaskVersion\\\":0,\\\"conditionType\\\":\\\"NONE\\\",\\\"conditionParams\\\":{}},{\\\"name\\\":\\\"\\\",\\\"preTaskCode\\\":159490442036736,\\\"preTaskVersion\\\":0,\\\"postTaskCode\\\":159490867164672,\\\"postTaskVersion\\\":0,\\\"conditionType\\\":\\\"NONE\\\",\\\"conditionParams\\\":{}},{\\\"name\\\":\\\"\\\",\\\"preTaskCode\\\":159490442036736,\\\"preTaskVersion\\\":0,\\\"postTaskCode\\\":159490867164672,\\\"postTaskVersion\\\":0,\\\"conditionType\\\":\\\"NONE\\\",\\\"conditionParams\\\":{}},{\\\"name\\\":\\\"\\\",\\\"preTaskCode\\\":159490442036736,\\\"preTaskVersion\\\":0,\\\"postTaskCode\\\":159490867164672,\\\"postTaskVersion\\\":0,\\\"conditionType\\\":\\\"NONE\\\",\\\"conditionParams\\\":{}},{\\\"name\\\":\\\"\\\",\\\"preTaskCode\\\":159490442036736,\\\"preTaskVersion\\\":0,\\\"postTaskCode\\\":159490867164672,\\\"postTaskVersion\\\":0,\\\"conditionType\\\":\\\"NONE\\\",\\\"conditionParams\\\":{}},{\\\"name\\\":\\\"\\\",\\\"preTaskCode\\\":159490442036736,\\\"preTaskVersion\\\":0,\\\"postTaskCode\\\":159490867164672,\\\"postTaskVersion\\\":0,\\\"conditionType\\\":\\\"NONE\\\",\\\"conditionParams\\\":{}},{\\\"name\\\":\\\"\\\",\\\"preTaskCode\\\":159490442036736,\\\"preTaskVersion\\\":0,\\\"postTaskCode\\\":159490867164672,\\\"postTaskVersion\\\":0,\\\"conditionType\\\":\\\"NONE\\\",\\\"conditionParams\\\":{}},{\\\"name\\\":\\\"\\\",\\\"preTaskCode\\\":159490442036736,\\\"preTaskVersion\\\":0,\\\"postTaskCode\\\":159490867164672,\\\"postTaskVersion\\\":0,\\\"conditionType\\\":\\\"NONE\\\",\\\"conditionParams\\\":{}}]\"}",
+  "prepareParamsMap" : {
+    "system.task.definition.name" : {
+      "prop" : "system.task.definition.name",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "组"
+    },
+    "system.project.name" : {
+      "prop" : "system.project.name",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : null
+    },
+    "api_token" : {
+      "prop" : "api_token",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "ASP.NET_SessionId=3jqwmtawvbzqonneubja11eh"
+    },
+    "parallelism" : {
+      "prop" : "parallelism",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "2"
+    },
+    "system.biz.curdate" : {
+      "prop" : "system.biz.curdate",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "20251208"
+    },
+    "system.task.instance.id" : {
+      "prop" : "system.task.instance.id",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "76"
+    },
+    "system.task.definition.code" : {
+      "prop" : "system.task.definition.code",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "159496911201408"
+    },
+    "system.datetime" : {
+      "prop" : "system.datetime",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "20251208201744"
+    },
+    "job.mode" : {
+      "prop" : "job.mode",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "BATCH"
+    },
+    "system.project.code" : {
+      "prop" : "system.project.code",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "159490384126464"
+    },
+    "system.workflow.instance.id" : {
+      "prop" : "system.workflow.instance.id",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "27"
+    },
+    "system.biz.date" : {
+      "prop" : "system.biz.date",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "20251207"
+    },
+    "system.workflow.definition.name" : {
+      "prop" : "system.workflow.definition.name",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "1.基本信息菜单_copy_20251208181822346"
+    },
+    "checkpoint.interval" : {
+      "prop" : "checkpoint.interval",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "10000"
+    },
+    "system.workflow.definition.code" : {
+      "prop" : "system.workflow.definition.code",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "159496911201411"
+    }
+  },
+  "taskAppId" : "27_76",
+  "taskTimeout" : 2147483647,
+  "workerGroup" : "default",
+  "delayTime" : 0,
+  "currentExecutionStatus" : "SUBMITTED_SUCCESS",
+  "resourceParametersHelper" : {
+    "resourceMap" : {
+      "DATASOURCE" : {
+        "1" : {
+          "resourceType" : "DATASOURCE",
+          "type" : "DORIS",
+          "connectionParams" : "{\"user\":\"root\",\"password\":\"*****************\",\"address\":\"jdbc:mysql:loadbalance://172.41.133.91:9030\",\"database\":\"dhdw\",\"jdbcUrl\":\"jdbc:mysql:loadbalance://172.41.133.91:9030/dhdw\",\"driverClassName\":\"com.mysql.cj.jdbc.Driver\",\"validationQuery\":\"select 1\",\"host\":\"172.41.133.91\",\"port\":9030,\"other\":{\"feHttpPort\":\"8030\"}}",
+          "DATASOURCE" : null
+        },
+        "6" : {
+          "resourceType" : "DATASOURCE",
+          "type" : "HTTP_SERVER",
+          "connectionParams" : "{\"host\":\"218.31.50.112\",\"port\":8086,\"httpEndpoint\":\"\",\"httpMethod\":\"\",\"httpAuthType\":\"\",\"httpAuthConfig\":\"\",\"connectTimeout\":5000,\"socketTimeout\":5000,\"password\":\"\"}",
+          "DATASOURCE" : null
+        }
+      }
+    }
+  },
+  "endTime" : 0,
+  "dryRun" : 0,
+  "paramsMap" : { },
+  "cpuQuota" : -1,
+  "memoryMax" : -1,
+  "testFlag" : 0,
+  "logBufferEnable" : false,
+  "dispatchFailTimes" : 0,
+  "userId" : "1"
+}

@@ -1,0 +1,133 @@
+{
+  "taskInstanceId" : 30,
+  "taskName" : "jdbc-udp",
+  "firstSubmitTime" : 1750297865711,
+  "startTime" : 1750297865763,
+  "taskType" : "SEATUNNEL",
+  "workflowInstanceHost" : "172.19.0.1:5678",
+  "host" : "172.19.0.1:1234",
+  "logPath" : "/home/services/bigdata/dolphinscheduler/worker-server/logs/20250619/144244545422048/1/16/30.log",
+  "processId" : 0,
+  "processDefineCode" : 144244545422048,
+  "processDefineVersion" : 1,
+  "processInstanceId" : 16,
+  "scheduleTime" : 0,
+  "executorId" : "1",
+  "cmdTypeIfComplement" : 0,
+  "tenantCode" : "default",
+  "processDefineId" : 0,
+  "projectId" : 0,
+  "projectCode" : 144176060445952,
+  "taskParams" : "{\"localParams\":[{\"prop\":\"parallelism\",\"value\":\"2\",\"direct\":\"IN\",\"type\":\"VARCHAR\"},{\"prop\":\"job.mode\",\"value\":\"BATCH\",\"direct\":\"IN\",\"type\":\"VARCHAR\"},{\"prop\":\"checkpoint.interval\",\"value\":\"10000\",\"direct\":\"IN\",\"type\":\"VARCHAR\"}],\"rawScript\":\"[{\\\"type\\\":\\\"SOURCE\\\",\\\"pluginName\\\":\\\"JDBC\\\",\\\"code\\\":\\\"144244460216032\\\",\\\"params\\\":{\\\"outputFields\\\":null,\\\"datasourceId\\\":5,\\\"query\\\":\\\"\\\",\\\"fetch_size\\\":0,\\\"table_path\\\":\\\"dam_test.metadata_table\\\",\\\"where_condition\\\":\\\"\\\",\\\"plugin_output\\\":\\\"\\\",\\\"result_table_name\\\":\\\"\\\",\\\"selectedColumns\\\":[\\\"id\\\",\\\"source_id\\\",\\\"table_name\\\",\\\"table_comment\\\",\\\"level_type\\\",\\\"ref_topic_id\\\",\\\"source_type\\\",\\\"remark\\\",\\\"del_flag\\\",\\\"create_time\\\",\\\"version\\\"],\\\"is_custom_sql\\\":false,\\\"parallelism\\\":6},\\\"name\\\":\\\"JDBC\\\",\\\"outputFields\\\":[{\\\"fields\\\":[\\\"id\\\",\\\"source_id\\\",\\\"table_name\\\",\\\"table_comment\\\",\\\"level_type\\\",\\\"ref_topic_id\\\",\\\"source_type\\\",\\\"remark\\\",\\\"del_flag\\\",\\\"create_time\\\",\\\"version\\\"],\\\"type\\\":\\\"TABLE\\\",\\\"taskName\\\":\\\"JDBC\\\",\\\"tableName\\\":\\\"dam_test.metadata_table\\\",\\\"datasourceId\\\":5}],\\\"postTaskcode\\\":144244496193248},{\\\"type\\\":\\\"SINK\\\",\\\"pluginName\\\":\\\"UDP\\\",\\\"code\\\":\\\"144244496193248\\\",\\\"params\\\":{\\\"outputFields\\\":null,\\\"host\\\":\\\"1492.168.0.201\\\",\\\"port\\\":9998,\\\"maxRetries\\\":3,\\\"timeoutMs\\\":1000,\\\"retryIntervalMs\\\":1000,\\\"enableMessageReply\\\":false,\\\"asyncEnabled\\\":true,\\\"asyncThreads\\\":1},\\\"name\\\":\\\"UDP\\\",\\\"outputFields\\\":[],\\\"preTaskcode\\\":144244460216032}]\",\"resourceList\":[],\"startupScript\":\"seatunnel.sh\",\"useCustom\":true,\"scriptType\":\"visualize\",\"deployMode\":\"cluster\",\"relation\":\"[{\\\"name\\\":\\\"\\\",\\\"preTaskCode\\\":0,\\\"preTaskVersion\\\":0,\\\"postTaskCode\\\":144244460216032,\\\"postTaskVersion\\\":0,\\\"conditionType\\\":\\\"NONE\\\",\\\"conditionParams\\\":{}},{\\\"name\\\":\\\"\\\",\\\"preTaskCode\\\":144244460216032,\\\"preTaskVersion\\\":0,\\\"postTaskCode\\\":144244496193248,\\\"postTaskVersion\\\":0,\\\"conditionType\\\":\\\"NONE\\\",\\\"conditionParams\\\":{}}]\"}",
+  "prepareParamsMap" : {
+    "system.task.definition.name" : {
+      "prop" : "system.task.definition.name",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "jdbc-udp"
+    },
+    "system.project.name" : {
+      "prop" : "system.project.name",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : null
+    },
+    "parallelism" : {
+      "prop" : "parallelism",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "2"
+    },
+    "system.biz.curdate" : {
+      "prop" : "system.biz.curdate",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "20250619"
+    },
+    "system.task.instance.id" : {
+      "prop" : "system.task.instance.id",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "30"
+    },
+    "system.task.definition.code" : {
+      "prop" : "system.task.definition.code",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "144244440832736"
+    },
+    "system.datetime" : {
+      "prop" : "system.datetime",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "20250619095105"
+    },
+    "job.mode" : {
+      "prop" : "job.mode",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "BATCH"
+    },
+    "system.project.code" : {
+      "prop" : "system.project.code",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "144176060445952"
+    },
+    "system.workflow.instance.id" : {
+      "prop" : "system.workflow.instance.id",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "16"
+    },
+    "system.biz.date" : {
+      "prop" : "system.biz.date",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "20250618"
+    },
+    "system.workflow.definition.name" : {
+      "prop" : "system.workflow.definition.name",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "jdbc-udp"
+    },
+    "checkpoint.interval" : {
+      "prop" : "checkpoint.interval",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "10000"
+    },
+    "system.workflow.definition.code" : {
+      "prop" : "system.workflow.definition.code",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "144244545422048"
+    }
+  },
+  "taskAppId" : "16_30",
+  "taskTimeout" : 2147483647,
+  "workerGroup" : "default",
+  "delayTime" : 0,
+  "currentExecutionStatus" : "SUBMITTED_SUCCESS",
+  "resourceParametersHelper" : {
+    "resourceMap" : {
+      "DATASOURCE" : {
+        "5" : {
+          "resourceType" : "DATASOURCE",
+          "type" : "MYSQL",
+          "connectionParams" : "{\"user\":\"root\",\"password\":\"********\",\"address\":\"jdbc:mysql://192.168.0.201:3306\",\"database\":\"dam_test\",\"jdbcUrl\":\"jdbc:mysql://192.168.0.201:3306/dam_test\",\"driverClassName\":\"com.mysql.cj.jdbc.Driver\",\"validationQuery\":\"select 1\",\"other\":{\"useSSL\":\"false\"}}",
+          "DATASOURCE" : null
+        }
+      }
+    }
+  },
+  "endTime" : 0,
+  "dryRun" : 0,
+  "paramsMap" : { },
+  "cpuQuota" : -1,
+  "memoryMax" : -1,
+  "testFlag" : 0,
+  "logBufferEnable" : false,
+  "dispatchFailTimes" : 0
+}

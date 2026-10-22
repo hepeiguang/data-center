@@ -1,0 +1,153 @@
+{
+  "taskInstanceId" : 20107,
+  "taskName" : "监控分组数据同步",
+  "firstSubmitTime" : 1766033953783,
+  "startTime" : 1766033953891,
+  "taskType" : "SEATUNNEL",
+  "workflowInstanceHost" : "172.41.133.90:5678",
+  "host" : "172.41.133.90:1234",
+  "logPath" : "/services/etl/worker-server/logs/20251218/160361903575361/3/617/20107.log",
+  "processId" : 0,
+  "processDefineCode" : 160361903575361,
+  "processDefineVersion" : 3,
+  "processInstanceId" : 617,
+  "scheduleTime" : 0,
+  "globalParams" : "[{\"prop\":\"cookie\",\"direct\":\"OUT\",\"type\":\"VARCHAR\",\"value\":\".AspNetCore.Antiforgery.UcLF_yeFggM=CfDJ8Pkg8Pyc-KpKubt3wyNW7OtZje5zbE4kjSGqKlCPD5v9F9F1Nivyzu6XFwPZWbJRu5VLNR55S6JZ3qRQo51ibuP5JNRfkK05ePiX0LNBjQeaMilvzmBEVl0J1mx2DytUFDXMu3hXnRaVGP6v90O8zos; .AspNetCore.Session=CfDJ8Pkg8Pyc%2BKpKubt3wyNW7OubgPi%2F969gBDmRBf%2BVhQCSc1Ab2QQ3MRdLyyiojG%2Br6kn8r4Cy1TlDQgM8jvmfpiNtOIxJ9loPIsYS0ge2DtIG7T0bnYsIrbyxFyItckdL%2ByJzfsMositalhAZ4wIksgBfzI7%2Fc5XATHXnsL6CK7Vd; .AspNetCore.Cookies=CfDJ8Pkg8Pyc-KpKubt3wyNW7OuJeUirZejBNjS7jIBVPq_QYhuFHhZ5iBb6lfcBYXQI6jk_6IxEvWvpf74d7fkXkcXXnCvxtChpYe-Eh1xDx4Sd1wJDJpKNjqhvvPJ9JypQf3OBfggNocKepQUOSqJRljV0AmVxb4A17sQOIuU1KM5TvlDoHQjhXcsr0D9OWScXhPZ8AGhpYMO7lzMO6HXOL_b33okB5Rg7_o-6E-6QymaE_odk9USpESXHBfkJx9s7jMikNKtfXyA84r6OHNi8DlNH9ZzNxUKuLr_qXHdLBPvGjfmBin09VGxFjemt4TYPxeg4FfZ2C67xFkZxw-zL-w11C5U1zaLFjgGJ5HqA2beYpRth_rDmQUy7ST5mZS04LEqnKCwUqUBO07Uai4G2EotUZHhPH_HHET7X2KE9ZEBVgLgHpLaTfMRqOc22B5ohRWO15R-cfCEiv3OhHmhwQtarBf5Joeo8pVLu5wHqPLhvTzXMMtabHtnsaHqwLf7GlVwByQusb_G8rboHmyMhCv8O4kap3PwtROZxgA7sCy25SgeOxozfiYgcMR5vP26mqsfSDjBkHWvFc2nSg8pLBheZPnP9zOtJOTD_ljPvCCS4sH-uUc4xVuChDFBb1un1SG8dCWzG7iIEznV0_clRVPy5o6w6w0Pu5fnNPx9ibBhDkKt8fnjHgjcu8J8tU9nNjg\"},{\"prop\":\"token\",\"direct\":\"OUT\",\"type\":\"VARCHAR\",\"value\":\"CfDJ8Pkg8Pyc-KpKubt3wyNW7OvZlDgRspOT05N_iQ2o597DlkigjD0CkuI1lGDCxE8RDWEPCWsD_x3Nvd7TEl7g5Yiw9JqtqtB-_8WPfLPq78QjxUObjOncVtX-RVVSOVPEgf4FhWmbB0D5hmFvdncrQOhsPIQewtQU4Far0XodAEXwpzUpbKSj0dY2hQ1Kd7P46w\"}]",
+  "executorId" : "1",
+  "cmdTypeIfComplement" : 7,
+  "tenantCode" : "default",
+  "processDefineId" : 0,
+  "projectId" : 0,
+  "projectCode" : 160353491907904,
+  "taskParams" : "{\"localParams\":[{\"prop\":\"parallelism\",\"value\":\"2\",\"direct\":\"IN\",\"type\":\"VARCHAR\"},{\"prop\":\"job.mode\",\"value\":\"BATCH\",\"direct\":\"IN\",\"type\":\"VARCHAR\"},{\"prop\":\"checkpoint.interval\",\"value\":\"10000\",\"direct\":\"IN\",\"type\":\"VARCHAR\"}],\"rawScript\":\"[{\\\"type\\\":\\\"SOURCE\\\",\\\"pluginName\\\":\\\"HTTP\\\",\\\"code\\\":\\\"160358650907968\\\",\\\"params\\\":{\\\"outputFields\\\":null,\\\"url\\\":\\\"/Enterprise/spfzlist?handler=XL_DoPostBack\\\",\\\"method\\\":\\\"POST\\\",\\\"httpParams\\\":[],\\\"httpHeaders\\\":[{\\\"prop\\\":\\\"content-type\\\",\\\"value\\\":\\\"application/x-www-form-urlencoded; charset=UTF-8\\\"},{\\\"prop\\\":\\\"cookie\\\",\\\"value\\\":\\\"${cookie}\\\"}],\\\"body\\\":\\\"hfunitid=9&txtfzmc=&Grid1_pagingToolbar_pageNumberBox=1&ddlGridPageSize=25&Grid1_fields%5B%5D=id&Grid1_fields%5B%5D=fzmc&Grid1_fields%5B%5D=fzbz&Grid1_pageIndex=0&Grid1_pageSize=25&Grid1_sortField=id&Grid1_sortDirection=asc&ddlGridPageSize_text=25&actionType=btnsearch&__RequestVerificationToken=CfDJ8Pkg8Pyc-KpKubt3wyNW7OvZlDgRspOT05N_iQ2o597DlkigjD0CkuI1lGDCxE8RDWEPCWsD_x3Nvd7TEl7g5Yiw9JqtqtB-_8WPfLPq78QjxUObjOncVtX-RVVSOVPEgf4FhWmbB0D5hmFvdncrQOhsPIQewtQU4Far0XodAEXwpzUpbKSj0dY2hQ1Kd7P46w\\\",\\\"format\\\":\\\"text\\\",\\\"schemaVo\\\":\\\"\\\",\\\"httpExtra\\\":[],\\\"jsonFieldVo\\\":\\\"\\\",\\\"datasourceId\\\":17,\\\"isPage\\\":false,\\\"isIterative\\\":false,\\\"field_path_type\\\":\\\"content\\\",\\\"content_field\\\":\\\"\\\",\\\"localParams\\\":null},\\\"name\\\":\\\"Http\\\",\\\"outputFields\\\":[],\\\"postTaskcode\\\":160359213729088},{\\\"type\\\":\\\"TRANSFORM\\\",\\\"pluginName\\\":\\\"SQL\\\",\\\"code\\\":\\\"160359213729088\\\",\\\"params\\\":{\\\"outputFields\\\":null,\\\"query\\\":\\\"WITH extracted AS (\\\\n          SELECT \\\\n            REGEXP_EXTRACT(data, 'loadData\\\\\\\\\\\\\\\\(\\\\\\\\\\\\\\\\[\\\\\\\\\\\\\\\\[([^\\\\\\\\\\\\\\\\]]+\\\\\\\\\\\\\\\\]\\\\\\\\\\\\\\\\])\\\\\\\\\\\\\\\\]\\\\\\\\\\\\\\\\)', 1) as raw_array\\\\n          FROM source_table\\\\n        )\\\\n        SELECT \\\\n          REGEXP_EXTRACT_ALL(raw_array, '\\\\\\\\\\\\\\\\[\\\\\\\"([^\\\\\\\"]+)\\\\\\\",\\\\\\\"([^\\\\\\\"]+)\\\\\\\",\\\\\\\"([^\\\\\\\"]+)\\\\\\\",\\\\\\\"([^\\\\\\\"]+)\\\\\\\",\\\\\\\"([^\\\\\\\"]+)\\\\\\\"\\\\\\\\\\\\\\\\]') as records\\\\n        FROM extracted\\\",\\\"flag\\\":\\\"YES\\\",\\\"localParams\\\":null},\\\"name\\\":\\\"SQL语句\\\",\\\"outputFields\\\":[{\\\"type\\\":\\\"OTHER\\\",\\\"taskName\\\":\\\"Http\\\",\\\"tableName\\\":\\\"\\\",\\\"datasourceId\\\":null,\\\"fields\\\":[]}],\\\"preTaskcode\\\":160358650907968,\\\"postTaskcode\\\":160359273942336},{\\\"type\\\":\\\"SINK\\\",\\\"pluginName\\\":\\\"DORIS\\\",\\\"code\\\":\\\"160359273942336\\\",\\\"params\\\":{\\\"outputFields\\\":null,\\\"datasourceId\\\":9,\\\"table\\\":\\\"dddddddddd\\\",\\\"schemaSaveMode\\\":\\\"\\\",\\\"dataSaveMode\\\":\\\"\\\",\\\"format\\\":\\\"json\\\",\\\"readJsonByLine\\\":\\\"true\\\",\\\"columnSeparator\\\":\\\"\\\",\\\"sinkEnableDelete\\\":\\\"false\\\",\\\"needsUnsupportedTypeCasting\\\":\\\"false\\\",\\\"sink\\\":\\\"\\\",\\\"sinkEnable2pc\\\":\\\"false\\\",\\\"customSql\\\":\\\"\\\",\\\"sinkCheckInterval\\\":10000,\\\"sinkMaxRetries\\\":3,\\\"sinkBufferSize\\\":262144,\\\"sinkBufferCount\\\":3,\\\"dorisBatchSize\\\":1024,\\\"primary_keys\\\":[],\\\"batch_size\\\":1000,\\\"transaction_timeout_sec\\\":-1,\\\"field_ide\\\":\\\"ORIGINAL\\\",\\\"plugin_input\\\":\\\"\\\",\\\"custom_sql\\\":\\\"\\\",\\\"enable_upsert\\\":true,\\\"use_copy_statement\\\":false,\\\"schema_save_mode\\\":\\\"CREATE_SCHEMA_WHEN_NOT_EXIST\\\",\\\"data_save_mode\\\":\\\"APPEND_DATA\\\",\\\"feHttpPort\\\":8030,\\\"localParams\\\":null},\\\"name\\\":\\\"Doris数据库\\\",\\\"outputFields\\\":[],\\\"preTaskcode\\\":160359213729088}]\",\"resourceList\":[],\"startupScript\":\"seatunnel.sh\",\"useCustom\":true,\"scriptType\":\"visualize\",\"deployMode\":\"cluster\",\"relation\":\"[{\\\"name\\\":\\\"\\\",\\\"preTaskCode\\\":0,\\\"preTaskVersion\\\":0,\\\"postTaskCode\\\":160358650907968,\\\"postTaskVersion\\\":0,\\\"conditionType\\\":\\\"NONE\\\",\\\"conditionParams\\\":{}},{\\\"name\\\":\\\"\\\",\\\"preTaskCode\\\":160358650907968,\\\"preTaskVersion\\\":0,\\\"postTaskCode\\\":160359213729088,\\\"postTaskVersion\\\":0,\\\"conditionType\\\":\\\"NONE\\\",\\\"conditionParams\\\":{}},{\\\"name\\\":\\\"\\\",\\\"preTaskCode\\\":160359213729088,\\\"preTaskVersion\\\":0,\\\"postTaskCode\\\":160359273942336,\\\"postTaskVersion\\\":0,\\\"conditionType\\\":\\\"NONE\\\",\\\"conditionParams\\\":{}}]\"}",
+  "prepareParamsMap" : {
+    "system.task.definition.name" : {
+      "prop" : "system.task.definition.name",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "监控分组数据同步"
+    },
+    "system.project.name" : {
+      "prop" : "system.project.name",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : null
+    },
+    "cookie" : {
+      "prop" : "cookie",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : ".AspNetCore.Antiforgery.UcLF_yeFggM=CfDJ8Pkg8Pyc-KpKubt3wyNW7OtZje5zbE4kjSGqKlCPD5v9F9F1Nivyzu6XFwPZWbJRu5VLNR55S6JZ3qRQo51ibuP5JNRfkK05ePiX0LNBjQeaMilvzmBEVl0J1mx2DytUFDXMu3hXnRaVGP6v90O8zos; .AspNetCore.Session=CfDJ8Pkg8Pyc%2BKpKubt3wyNW7OubgPi%2F969gBDmRBf%2BVhQCSc1Ab2QQ3MRdLyyiojG%2Br6kn8r4Cy1TlDQgM8jvmfpiNtOIxJ9loPIsYS0ge2DtIG7T0bnYsIrbyxFyItckdL%2ByJzfsMositalhAZ4wIksgBfzI7%2Fc5XATHXnsL6CK7Vd; .AspNetCore.Cookies=CfDJ8Pkg8Pyc-KpKubt3wyNW7OuJeUirZejBNjS7jIBVPq_QYhuFHhZ5iBb6lfcBYXQI6jk_6IxEvWvpf74d7fkXkcXXnCvxtChpYe-Eh1xDx4Sd1wJDJpKNjqhvvPJ9JypQf3OBfggNocKepQUOSqJRljV0AmVxb4A17sQOIuU1KM5TvlDoHQjhXcsr0D9OWScXhPZ8AGhpYMO7lzMO6HXOL_b33okB5Rg7_o-6E-6QymaE_odk9USpESXHBfkJx9s7jMikNKtfXyA84r6OHNi8DlNH9ZzNxUKuLr_qXHdLBPvGjfmBin09VGxFjemt4TYPxeg4FfZ2C67xFkZxw-zL-w11C5U1zaLFjgGJ5HqA2beYpRth_rDmQUy7ST5mZS04LEqnKCwUqUBO07Uai4G2EotUZHhPH_HHET7X2KE9ZEBVgLgHpLaTfMRqOc22B5ohRWO15R-cfCEiv3OhHmhwQtarBf5Joeo8pVLu5wHqPLhvTzXMMtabHtnsaHqwLf7GlVwByQusb_G8rboHmyMhCv8O4kap3PwtROZxgA7sCy25SgeOxozfiYgcMR5vP26mqsfSDjBkHWvFc2nSg8pLBheZPnP9zOtJOTD_ljPvCCS4sH-uUc4xVuChDFBb1un1SG8dCWzG7iIEznV0_clRVPy5o6w6w0Pu5fnNPx9ibBhDkKt8fnjHgjcu8J8tU9nNjg"
+    },
+    "parallelism" : {
+      "prop" : "parallelism",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "2"
+    },
+    "system.biz.curdate" : {
+      "prop" : "system.biz.curdate",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "20251218"
+    },
+    "system.task.instance.id" : {
+      "prop" : "system.task.instance.id",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "20107"
+    },
+    "system.task.definition.code" : {
+      "prop" : "system.task.definition.code",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "160361903575360"
+    },
+    "system.datetime" : {
+      "prop" : "system.datetime",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "20251218125913"
+    },
+    "token" : {
+      "prop" : "token",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "CfDJ8Pkg8Pyc-KpKubt3wyNW7OvZlDgRspOT05N_iQ2o597DlkigjD0CkuI1lGDCxE8RDWEPCWsD_x3Nvd7TEl7g5Yiw9JqtqtB-_8WPfLPq78QjxUObjOncVtX-RVVSOVPEgf4FhWmbB0D5hmFvdncrQOhsPIQewtQU4Far0XodAEXwpzUpbKSj0dY2hQ1Kd7P46w"
+    },
+    "job.mode" : {
+      "prop" : "job.mode",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "BATCH"
+    },
+    "system.project.code" : {
+      "prop" : "system.project.code",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "160353491907904"
+    },
+    "system.workflow.instance.id" : {
+      "prop" : "system.workflow.instance.id",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "617"
+    },
+    "system.biz.date" : {
+      "prop" : "system.biz.date",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "20251217"
+    },
+    "system.workflow.definition.name" : {
+      "prop" : "system.workflow.definition.name",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "巴州安全生产特殊作业监管平台_copy_20251218125701461"
+    },
+    "checkpoint.interval" : {
+      "prop" : "checkpoint.interval",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "10000"
+    },
+    "system.workflow.definition.code" : {
+      "prop" : "system.workflow.definition.code",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "160361903575361"
+    }
+  },
+  "taskAppId" : "617_20107",
+  "taskTimeout" : 2147483647,
+  "workerGroup" : "default",
+  "delayTime" : 0,
+  "currentExecutionStatus" : "SUBMITTED_SUCCESS",
+  "resourceParametersHelper" : {
+    "resourceMap" : {
+      "DATASOURCE" : {
+        "17" : {
+          "resourceType" : "DATASOURCE",
+          "type" : "HTTP",
+          "connectionParams" : "{\"host\":\"36.108.189.194\",\"port\":9005,\"httpEndpoint\":\"\",\"httpMethod\":\"\",\"httpAuthType\":\"\",\"httpAuthConfig\":\"\",\"connectTimeout\":5000,\"socketTimeout\":5000,\"protocol\":\"HTTP\",\"password\":\"\"}",
+          "DATASOURCE" : null
+        },
+        "9" : {
+          "resourceType" : "DATASOURCE",
+          "type" : "DORIS",
+          "connectionParams" : "{\"user\":\"root\",\"password\":\"*****************\",\"address\":\"jdbc:mysql:loadbalance://172.41.133.91:9030\",\"database\":\"test\",\"jdbcUrl\":\"jdbc:mysql:loadbalance://172.41.133.91:9030/test\",\"driverClassName\":\"com.mysql.cj.jdbc.Driver\",\"validationQuery\":\"select 1\",\"host\":\"172.41.133.91\",\"port\":9030,\"other\":{\"feHttpPort\":\"8030\"}}",
+          "DATASOURCE" : null
+        }
+      }
+    }
+  },
+  "endTime" : 0,
+  "dryRun" : 0,
+  "paramsMap" : { },
+  "cpuQuota" : -1,
+  "memoryMax" : -1,
+  "testFlag" : 0,
+  "logBufferEnable" : false,
+  "dispatchFailTimes" : 0,
+  "userId" : "1"
+}

@@ -1,0 +1,132 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+version: "3.1"
+
+services:
+  ds-postgresql:
+    image: postgresql:15.2.0
+    environment:
+      TZ: Asia/Shanghai
+      POSTGRESQL_USERNAME: root
+      POSTGRESQL_PASSWORD: root
+      POSTGRESQL_DATABASE: dam
+    volumes:
+      - ds-postgresql:/opt/postgresql
+    networks:
+      - zdkj-net
+    deploy:
+      mode: replicated
+      replicas: 1
+
+  ds-zookeeper:
+    image: zookeeper:3.8.1
+    environment:
+      TZ: Asia/Shanghai
+      ALLOW_ANONYMOUS_LOGIN: "yes"
+      ZOO_4LW_COMMANDS_WHITELIST: srvr,ruok,wchs,cons
+    volumes:
+      - ds-zookeeper:/opt/zookeeper
+    networks:
+      - zdkj-net
+    deploy:
+      mode: replicated
+      replicas: 1
+
+  ds-api:
+    image: ds-api
+    ports:
+      - 12345:12345
+      - 25333:25333
+    env_file: .env
+    healthcheck:
+      test: [ "CMD", "curl", "http://localhost:12345/actuator/health" ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    volumes:
+      - ds-logs:/opt/dolphinscheduler/logs
+      - ds-shared-local:/opt/soft
+      - ds-resource-local:/dolphinscheduler
+    networks:
+      - zdkj-net
+    deploy:
+      mode: replicated
+      replicas: 1
+
+  ds-alert:
+    image: ds-alert
+    env_file: .env
+    healthcheck:
+      test: [ "CMD", "curl", "http://localhost:50053/actuator/health" ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    volumes:
+      - ds-logs:/opt/dolphinscheduler/logs
+    networks:
+      - zdkj-net
+    deploy:
+      mode: replicated
+      replicas: 1
+
+  ds-master:
+    image: ds-master
+    env_file: .env
+    healthcheck:
+      test: [ "CMD", "curl", "http://localhost:50053/actuator/health" ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    volumes:
+      - ds-logs:/opt/dolphinscheduler/logs
+      - ds-shared-local:/opt/soft
+    networks:
+      - zdkj-net
+    deploy:
+      mode: replicated
+      replicas: 1
+
+  ds-worker:
+    image: ds-worker
+    env_file: .env
+    healthcheck:
+      test: [ "CMD", "curl", "http://localhost:50053/actuator/health" ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    volumes:
+      - ds-worker-data:/tmp/dolphinscheduler
+      - ds-logs:/opt/dolphinscheduler/logs
+      - ds-shared-local:/opt/soft
+      - ds-resource-local:/dolphinscheduler
+    networks:
+      - zdkj-net
+    deploy:
+      mode: replicated
+      replicas: 1
+
+networks:
+  zdkj-net:
+    driver: overlay
+
+volumes:
+  ds-postgresql:
+  ds-zookeeper:
+  ds-worker-data:
+  ds-logs:
+  ds-shared-local:
+  ds-resource-local:

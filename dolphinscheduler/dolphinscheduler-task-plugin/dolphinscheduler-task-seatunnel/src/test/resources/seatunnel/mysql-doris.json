@@ -1,0 +1,134 @@
+{
+  "taskInstanceId" : 32,
+  "taskName" : "t_5",
+  "firstSubmitTime" : 1765194596923,
+  "startTime" : 1765194596955,
+  "taskType" : "SEATUNNEL",
+  "workflowInstanceHost" : "172.41.133.91:5678",
+  "host" : "172.41.133.89:1234",
+  "logPath" : "/services/etl/worker-server/logs/20251208/159501558837184/1/19/32.log",
+  "processId" : 0,
+  "processDefineCode" : 159501558837184,
+  "processDefineVersion" : 1,
+  "processInstanceId" : 19,
+  "scheduleTime" : 0,
+  "executorId" : "1",
+  "cmdTypeIfComplement" : 0,
+  "tenantCode" : "default",
+  "processDefineId" : 0,
+  "projectId" : 0,
+  "projectCode" : 159488335400448,
+  "taskParams" : "{\"useCustom\":true,\"deployMode\":\"cluster\",\"scriptType\":\"visualize\",\"rawScript\":\"[{\\\"type\\\":\\\"SOURCE\\\",\\\"code\\\":\\\"159501553384384\\\",\\\"pluginName\\\":\\\"MYSQL\\\",\\\"preTaskcode\\\":null,\\\"postTaskcode\\\":\\\"159501553384385\\\",\\\"params\\\":{\\\"is_custom_sql\\\":false,\\\"table_path\\\":\\\"eg_data.t_5\\\",\\\"parallelism\\\":6,\\\"datasourceId\\\":2,\\\"fetch_size\\\":0},\\\"name\\\":\\\"t_5\\\",\\\"inputFields\\\":null,\\\"outputFields\\\":null,\\\"select\\\":null},{\\\"type\\\":\\\"SINK\\\",\\\"code\\\":\\\"159501553384385\\\",\\\"pluginName\\\":\\\"DORIS\\\",\\\"preTaskcode\\\":\\\"159501553384384\\\",\\\"postTaskcode\\\":null,\\\"params\\\":{\\\"sinkEnableDelete\\\":false,\\\"batch_size\\\":1000,\\\"dataSaveMode\\\":\\\"APPEND_DATA\\\",\\\"sink\\\":false,\\\"sinkBufferCount\\\":3,\\\"format\\\":\\\"json\\\",\\\"schema_save_mode\\\":\\\"CREATE_SCHEMA_WHEN_NOT_EXIST\\\",\\\"columnSeparator\\\":\\\"\\\",\\\"field_ide\\\":\\\"ORIGINAL\\\",\\\"use_copy_statement\\\":false,\\\"sinkBufferSize\\\":262144,\\\"needsUnsupportedTypeCasting\\\":false,\\\"database\\\":\\\"dhdw\\\",\\\"schemaSaveMode\\\":\\\"CREATE_SCHEMA_WHEN_NOT_EXIST\\\",\\\"sinkCheckInterval\\\":10000,\\\"enable_upsert\\\":true,\\\"sinkEnable2pc\\\":false,\\\"transaction_timeout_sec\\\":-1,\\\"data_save_mode\\\":\\\"APPEND_DATA\\\",\\\"datasourceId\\\":1,\\\"sinkMaxRetries\\\":3,\\\"readJsonByLine\\\":\\\"true\\\",\\\"dorisBatchSize\\\":1024,\\\"table\\\":\\\"ods_co2zr_eg_data_t_5\\\"},\\\"name\\\":\\\"ods_co2zr_eg_data_t_5\\\",\\\"inputFields\\\":null,\\\"outputFields\\\":null,\\\"select\\\":null}]\",\"localParams\":[{\"prop\":\"parallelism\",\"direct\":\"IN\",\"type\":\"VARCHAR\",\"value\":\"2\"},{\"prop\":\"job.mode\",\"direct\":\"IN\",\"type\":\"VARCHAR\",\"value\":\"BATCH\"},{\"prop\":\"checkpoint.interval\",\"direct\":\"OUT\",\"type\":\"VARCHAR\",\"value\":\"10000\"}],\"resourceList\":[],\"startupScript\":\"seatunnel.sh\",\"relation\":\"[{\\\"id\\\":null,\\\"name\\\":null,\\\"processDefinitionVersion\\\":0,\\\"projectCode\\\":0,\\\"processDefinitionCode\\\":0,\\\"preTaskCode\\\":0,\\\"preTaskVersion\\\":0,\\\"postTaskCode\\\":159501553384384,\\\"postTaskVersion\\\":0,\\\"conditionType\\\":null,\\\"conditionParams\\\":null,\\\"createTime\\\":null,\\\"updateTime\\\":null},{\\\"id\\\":null,\\\"name\\\":null,\\\"processDefinitionVersion\\\":0,\\\"projectCode\\\":0,\\\"processDefinitionCode\\\":0,\\\"preTaskCode\\\":159501553384384,\\\"preTaskVersion\\\":0,\\\"postTaskCode\\\":159501553384385,\\\"postTaskVersion\\\":0,\\\"conditionType\\\":null,\\\"conditionParams\\\":null,\\\"createTime\\\":null,\\\"updateTime\\\":null}]\"}",
+  "prepareParamsMap" : {
+    "system.task.definition.name" : {
+      "prop" : "system.task.definition.name",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "t_5"
+    },
+    "system.project.name" : {
+      "prop" : "system.project.name",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : null
+    },
+    "parallelism" : {
+      "prop" : "parallelism",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "2"
+    },
+    "system.biz.curdate" : {
+      "prop" : "system.biz.curdate",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "20251208"
+    },
+    "system.task.instance.id" : {
+      "prop" : "system.task.instance.id",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "32"
+    },
+    "system.task.definition.code" : {
+      "prop" : "system.task.definition.code",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "159501553384386"
+    },
+    "system.datetime" : {
+      "prop" : "system.datetime",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "20251208194956"
+    },
+    "job.mode" : {
+      "prop" : "job.mode",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "BATCH"
+    },
+    "system.project.code" : {
+      "prop" : "system.project.code",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "159488335400448"
+    },
+    "system.workflow.instance.id" : {
+      "prop" : "system.workflow.instance.id",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "19"
+    },
+    "system.biz.date" : {
+      "prop" : "system.biz.date",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "20251207"
+    },
+    "system.workflow.definition.name" : {
+      "prop" : "system.workflow.definition.name",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "CO2注入系统eg_data数据库数据同步"
+    },
+    "system.workflow.definition.code" : {
+      "prop" : "system.workflow.definition.code",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "159501558837184"
+    }
+  },
+  "taskAppId" : "19_32",
+  "taskTimeout" : 2147483647,
+  "workerGroup" : "default",
+  "delayTime" : 0,
+  "currentExecutionStatus" : "SUBMITTED_SUCCESS",
+  "resourceParametersHelper" : {
+    "resourceMap" : {
+      "DATASOURCE" : {
+        "1" : {
+          "resourceType" : "DATASOURCE",
+          "type" : "DORIS",
+          "connectionParams" : "{\"user\":\"root\",\"password\":\"*****************\",\"address\":\"jdbc:mysql:loadbalance://172.41.133.91:9030\",\"database\":\"dhdw\",\"jdbcUrl\":\"jdbc:mysql:loadbalance://172.41.133.91:9030/dhdw\",\"driverClassName\":\"com.mysql.cj.jdbc.Driver\",\"validationQuery\":\"select 1\",\"host\":\"172.41.133.91\",\"port\":9030,\"other\":{\"feHttpPort\":\"8030\"}}",
+          "DATASOURCE" : null
+        },
+        "2" : {
+          "resourceType" : "DATASOURCE",
+          "type" : "MYSQL",
+          "connectionParams" : "{\"user\":\"root\",\"password\":\"*********\",\"address\":\"jdbc:mysql://172.41.133.87:3306\",\"database\":\"eg_data\",\"jdbcUrl\":\"jdbc:mysql://172.41.133.87:3306/eg_data\",\"driverClassName\":\"com.mysql.cj.jdbc.Driver\",\"validationQuery\":\"select 1\",\"host\":\"172.41.133.87\",\"port\":3306}",
+          "DATASOURCE" : null
+        }
+      }
+    }
+  },
+  "endTime" : 0,
+  "dryRun" : 0,
+  "paramsMap" : { },
+  "cpuQuota" : -1,
+  "memoryMax" : -1,
+  "testFlag" : 0,
+  "logBufferEnable" : false,
+  "dispatchFailTimes" : 0,
+  "userId" : "1"
+}

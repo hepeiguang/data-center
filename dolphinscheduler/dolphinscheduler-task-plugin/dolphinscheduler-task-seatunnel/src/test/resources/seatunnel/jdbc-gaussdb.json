@@ -1,0 +1,139 @@
+{
+  "taskInstanceId" : 776,
+  "taskName" : "seatunnel父节点",
+  "firstSubmitTime" : 1751007079068,
+  "startTime" : 1751007079113,
+  "taskType" : "SEATUNNEL",
+  "workflowInstanceHost" : "172.19.0.1:5678",
+  "host" : "172.19.0.1:1234",
+  "logPath" : "/home/services/bigdata/dolphinscheduler/worker-server/logs/20250627/144649113241120/5/664/776.log",
+  "processId" : 0,
+  "processDefineCode" : 144649113241120,
+  "processDefineVersion" : 5,
+  "processInstanceId" : 664,
+  "scheduleTime" : 0,
+  "executorId" : "1",
+  "cmdTypeIfComplement" : 0,
+  "tenantCode" : "default",
+  "processDefineId" : 0,
+  "projectId" : 0,
+  "projectCode" : 144263976783456,
+  "taskParams" : "{\"localParams\":[{\"prop\":\"parallelism\",\"value\":\"2\",\"direct\":\"IN\",\"type\":\"VARCHAR\"},{\"prop\":\"job.mode\",\"value\":\"BATCH\",\"direct\":\"IN\",\"type\":\"VARCHAR\"},{\"prop\":\"checkpoint.interval\",\"value\":\"10000\",\"direct\":\"IN\",\"type\":\"VARCHAR\"}],\"rawScript\":\"[{\\\"type\\\":\\\"SOURCE\\\",\\\"pluginName\\\":\\\"JDBC\\\",\\\"code\\\":\\\"144649055923744\\\",\\\"params\\\":{\\\"outputFields\\\":null,\\\"datasourceId\\\":1,\\\"query\\\":\\\"\\\",\\\"fetch_size\\\":0,\\\"table_path\\\":\\\"dam_test.testearthpoint\\\",\\\"where_condition\\\":\\\"\\\",\\\"plugin_output\\\":\\\"\\\",\\\"result_table_name\\\":\\\"\\\",\\\"selectedColumns\\\":[\\\"id\\\",\\\"longitude\\\",\\\"latitude\\\",\\\"label\\\",\\\"tooltip\\\",\\\"time\\\",\\\"bool\\\",\\\"json\\\",\\\"aes256\\\",\\\"des\\\",\\\"aes128\\\",\\\"desede112\\\",\\\"aes192\\\",\\\"rsa\\\"],\\\"is_custom_sql\\\":false,\\\"parallelism\\\":6,\\\"localParams\\\":null},\\\"name\\\":\\\"JDBC\\\",\\\"outputFields\\\":[{\\\"fields\\\":[\\\"id\\\",\\\"source_id\\\",\\\"table_id\\\",\\\"table_name\\\",\\\"column_name\\\",\\\"column_comment\\\",\\\"column_key\\\",\\\"column_nullable\\\",\\\"column_position\\\",\\\"data_type\\\",\\\"data_length\\\",\\\"data_precision\\\",\\\"data_scale\\\",\\\"data_default\\\",\\\"is_dimension\\\",\\\"create_time\\\",\\\"del_flag\\\",\\\"version\\\"],\\\"type\\\":\\\"TABLE\\\",\\\"taskName\\\":\\\"JDBC\\\",\\\"tableName\\\":\\\"dam_test.metadata_table_column\\\",\\\"datasourceId\\\":1}],\\\"postTaskcode\\\":144649085129248},{\\\"type\\\":\\\"SINK\\\",\\\"pluginName\\\":\\\"GAUSSDB\\\",\\\"code\\\":\\\"144649085129248\\\",\\\"params\\\":{\\\"outputFields\\\":null,\\\"datasourceId\\\":30,\\\"is_custom_sql\\\":false,\\\"is_partition\\\":false,\\\"query\\\":\\\"\\\",\\\"is_exactly_once\\\":false,\\\"database\\\":\\\"test1\\\",\\\"table\\\":\\\"test_jdbc_to_gaussdb\\\",\\\"field_ide\\\":\\\"UPPERCASE\\\",\\\"primary_keys\\\":[],\\\"support_upsert_by_query_primary_key_exist\\\":\\\"\\\",\\\"connection_check_timeout_sec\\\":30,\\\"batch_size\\\":\\\"\\\",\\\"generate_sink_sql\\\":false,\\\"xa_data_source_class_name\\\":\\\"\\\",\\\"max_commit_attempts\\\":3,\\\"transaction_timeout_sec\\\":-1,\\\"auto_commit\\\":true,\\\"partition_column\\\":10,\\\"properties\\\":{},\\\"max_retries\\\":\\\"\\\",\\\"schema_save_mode\\\":\\\"CREATE_SCHEMA_WHEN_NOT_EXIST\\\",\\\"data_save_mode\\\":\\\"APPEND_DATA\\\",\\\"custom_sql\\\":\\\"\\\",\\\"enable_upsert\\\":false,\\\"localParams\\\":null},\\\"name\\\":\\\"高斯数据库\\\",\\\"outputFields\\\":[{\\\"type\\\":\\\"TABLE\\\",\\\"taskName\\\":\\\"JDBC\\\",\\\"tableName\\\":\\\"dam_test.metadata_table_column\\\",\\\"datasourceId\\\":1,\\\"fields\\\":[\\\"data_precision\\\",\\\"del_flag\\\",\\\"is_dimension\\\",\\\"create_time\\\",\\\"data_length\\\",\\\"column_name\\\",\\\"data_default\\\",\\\"table_id\\\",\\\"table_name\\\",\\\"version\\\",\\\"column_key\\\",\\\"column_position\\\",\\\"data_scale\\\",\\\"column_comment\\\",\\\"data_type\\\",\\\"id\\\",\\\"source_id\\\",\\\"column_nullable\\\"]}],\\\"preTaskcode\\\":144649055923744}]\",\"resourceList\":[],\"startupScript\":\"seatunnel.sh\",\"useCustom\":true,\"scriptType\":\"visualize\",\"deployMode\":\"cluster\",\"relation\":\"[{\\\"name\\\":\\\"\\\",\\\"preTaskCode\\\":0,\\\"preTaskVersion\\\":0,\\\"postTaskCode\\\":144649055923744,\\\"postTaskVersion\\\":0,\\\"conditionType\\\":\\\"NONE\\\",\\\"conditionParams\\\":{}},{\\\"name\\\":\\\"\\\",\\\"preTaskCode\\\":144649055923744,\\\"preTaskVersion\\\":0,\\\"postTaskCode\\\":144649085129248,\\\"postTaskVersion\\\":0,\\\"conditionType\\\":\\\"NONE\\\",\\\"conditionParams\\\":{}}]\"}",
+  "prepareParamsMap" : {
+    "system.task.definition.name" : {
+      "prop" : "system.task.definition.name",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "seatunnel父节点"
+    },
+    "system.project.name" : {
+      "prop" : "system.project.name",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : null
+    },
+    "parallelism" : {
+      "prop" : "parallelism",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "2"
+    },
+    "system.biz.curdate" : {
+      "prop" : "system.biz.curdate",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "20250627"
+    },
+    "system.task.instance.id" : {
+      "prop" : "system.task.instance.id",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "776"
+    },
+    "system.task.definition.code" : {
+      "prop" : "system.task.definition.code",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "144649047620128"
+    },
+    "system.datetime" : {
+      "prop" : "system.datetime",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "20250627145119"
+    },
+    "job.mode" : {
+      "prop" : "job.mode",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "BATCH"
+    },
+    "system.project.code" : {
+      "prop" : "system.project.code",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "144263976783456"
+    },
+    "system.workflow.instance.id" : {
+      "prop" : "system.workflow.instance.id",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "664"
+    },
+    "system.biz.date" : {
+      "prop" : "system.biz.date",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "20250626"
+    },
+    "system.workflow.definition.name" : {
+      "prop" : "system.workflow.definition.name",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "test_jdbc_to_gaussdb"
+    },
+    "checkpoint.interval" : {
+      "prop" : "checkpoint.interval",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "10000"
+    },
+    "system.workflow.definition.code" : {
+      "prop" : "system.workflow.definition.code",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "144649113241120"
+    }
+  },
+  "taskAppId" : "664_776",
+  "taskTimeout" : 2147483647,
+  "workerGroup" : "default",
+  "delayTime" : 0,
+  "currentExecutionStatus" : "SUBMITTED_SUCCESS",
+  "resourceParametersHelper" : {
+    "resourceMap" : {
+      "DATASOURCE" : {
+        "1" : {
+          "resourceType" : "DATASOURCE",
+          "type" : "MYSQL",
+          "connectionParams" : "{\"user\":\"root\",\"password\":\"********\",\"address\":\"jdbc:mysql://192.168.0.201:3306\",\"database\":\"dam_test\",\"jdbcUrl\":\"jdbc:mysql://192.168.0.201:3306/dam_test\",\"driverClassName\":\"com.mysql.cj.jdbc.Driver\",\"validationQuery\":\"select 1\",\"host\":\"192.168.0.201\",\"port\":3306,\"other\":{\"useSSL\":\"false\",\"serverTimezone\":\"Asia/Shanghai\"}}",
+          "DATASOURCE" : null
+        },
+        "30" : {
+          "resourceType" : "DATASOURCE",
+          "type" : "OPENGAUSS",
+          "connectionParams" : "{\"user\":\"gaussdb\",\"password\":\"*********\",\"address\":\"jdbc:opengauss://192.168.0.203:15432\",\"database\":\"test1\",\"jdbcUrl\":\"jdbc:opengauss://192.168.0.203:15432/test1\",\"driverClassName\":\"org.opengauss.Driver\",\"validationQuery\":\"select 1\",\"host\":\"192.168.0.203\",\"port\":15432,\"other\":{\"currentSchema\":\"public\"}}",
+          "DATASOURCE" : null
+        }
+      }
+    }
+  },
+  "endTime" : 0,
+  "dryRun" : 0,
+  "paramsMap" : { },
+  "cpuQuota" : -1,
+  "memoryMax" : -1,
+  "testFlag" : 0,
+  "logBufferEnable" : false,
+  "dispatchFailTimes" : 0
+}

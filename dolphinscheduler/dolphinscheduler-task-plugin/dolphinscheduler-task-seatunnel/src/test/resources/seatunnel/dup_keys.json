@@ -1,0 +1,166 @@
+{
+  "taskInstanceId" : 307198,
+  "taskName" : "ods_cwu8_ufdata_zhtjrd_win_4u22vfgcllu6",
+  "firstSubmitTime" : 1768120312625,
+  "startTime" : 1768120312642,
+  "taskType" : "SEATUNNEL",
+  "workflowInstanceHost" : "172.41.133.90:5678",
+  "host" : "172.41.133.90:1234",
+  "logPath" : "/services/etl/worker-server/logs/20260111/162498066107296/1/5308/307198.log",
+  "processId" : 0,
+  "processDefineCode" : 162498066107296,
+  "processDefineVersion" : 1,
+  "processInstanceId" : 5308,
+  "scheduleTime" : 0,
+  "globalParams" : "[{\"prop\":\"start_datetime_yyyyMMddHHmmss\",\"direct\":\"OUT\",\"type\":\"VARCHAR\",\"value\":\"1970-01-01 00:00:00\"},{\"prop\":\"data_cacc_id\",\"direct\":\"OUT\",\"type\":\"VARCHAR\",\"value\":\"016\"},{\"prop\":\"data_year_start\",\"direct\":\"OUT\",\"type\":\"VARCHAR\",\"value\":\"2019\"},{\"prop\":\"data_year_end\",\"direct\":\"OUT\",\"type\":\"VARCHAR\",\"value\":\"null\"}]",
+  "executorId" : "1",
+  "cmdTypeIfComplement" : 0,
+  "tenantCode" : "default",
+  "processDefineId" : 0,
+  "projectId" : 0,
+  "projectCode" : 162479343146784,
+  "taskParams" : "{\"useCustom\":true,\"deployMode\":\"cluster\",\"scriptType\":\"visualize\",\"rawScript\":\"[{\\\"type\\\":\\\"SOURCE\\\",\\\"code\\\":\\\"162498065709984\\\",\\\"pluginName\\\":\\\"JDBC\\\",\\\"preTaskcode\\\":null,\\\"postTaskcode\\\":\\\"162498065709985\\\",\\\"params\\\":{\\\"is_custom_sql\\\":false,\\\"table_path\\\":\\\"UFDATA_016_2019.ZHTJRD_WIN_4U22VFGCLLU6\\\",\\\"parallelism\\\":2,\\\"datasourceId\\\":43,\\\"fetch_size\\\":0,\\\"partition_column\\\":\\\"供应商编码\\\"},\\\"name\\\":\\\"ZHTJRD_WIN_4U22VFGCLLU6\\\",\\\"inputFields\\\":null,\\\"outputFields\\\":null,\\\"select\\\":null},{\\\"type\\\":\\\"TRANSFORM\\\",\\\"code\\\":\\\"162498065709985\\\",\\\"pluginName\\\":\\\"SQL\\\",\\\"preTaskcode\\\":\\\"162498065709984\\\",\\\"postTaskcode\\\":\\\"162498065709986\\\",\\\"params\\\":{\\\"flag\\\":\\\"YES\\\",\\\"query\\\":\\\"SELECT '${data_cacc_id}' AS data_cacc_id, ${data_year_start} AS data_year_start, CAST(${data_year_end} AS INTEGER) AS data_year_end, * FROM dule\\\",\\\"type\\\":\\\"TRANSFORM\\\"},\\\"name\\\":\\\"SQL语句\\\",\\\"inputFields\\\":null,\\\"outputFields\\\":null,\\\"select\\\":null},{\\\"type\\\":\\\"SINK\\\",\\\"code\\\":\\\"162498065709986\\\",\\\"pluginName\\\":\\\"DORIS\\\",\\\"preTaskcode\\\":\\\"162498065709985\\\",\\\"postTaskcode\\\":null,\\\"params\\\":{\\\"dataSaveMode\\\":\\\"APPEND_DATA\\\",\\\"sinkBufferCount\\\":3,\\\"columnSeparator\\\":\\\"\\\",\\\"field_ide\\\":\\\"ORIGINAL\\\",\\\"use_copy_statement\\\":false,\\\"dup_keys\\\":[\\\"data_cacc_id\\\",\\\"data_year_start\\\",\\\"data_year_end\\\"],\\\"database\\\":\\\"dhdw\\\",\\\"enable_upsert\\\":true,\\\"sinkEnable2pc\\\":false,\\\"transaction_timeout_sec\\\":-1,\\\"datasourceId\\\":1,\\\"dorisBatchSize\\\":1024,\\\"table\\\":\\\"ods_cwu8_ufdata_zhtjrd_win_4u22vfgcllu6\\\",\\\"sinkEnableDelete\\\":false,\\\"batch_size\\\":1000,\\\"sink\\\":false,\\\"format\\\":\\\"json\\\",\\\"schema_save_mode\\\":\\\"CREATE_SCHEMA_WHEN_NOT_EXIST\\\",\\\"sinkBufferSize\\\":262144,\\\"needsUnsupportedTypeCasting\\\":false,\\\"schemaSaveMode\\\":\\\"CREATE_SCHEMA_WHEN_NOT_EXIST\\\",\\\"sinkCheckInterval\\\":10000,\\\"data_save_mode\\\":\\\"APPEND_DATA\\\",\\\"sinkMaxRetries\\\":3,\\\"readJsonByLine\\\":\\\"true\\\",\\\"custom_sql\\\":\\\"DELETE FROM dhdw.ods_cwu8_ufdata_zhtjrd_win_4u22vfgcllu6 WHERE data_cacc_id='${data_cacc_id}' AND data_year_start=${data_year_start} AND data_year_end IS NULL\\\"},\\\"name\\\":\\\"ods_cwu8_ufdata_zhtjrd_win_4u22vfgcllu6\\\",\\\"inputFields\\\":null,\\\"outputFields\\\":null,\\\"select\\\":null}]\",\"localParams\":[{\"prop\":\"parallelism\",\"direct\":\"IN\",\"type\":\"VARCHAR\",\"value\":\"2\"},{\"prop\":\"job.mode\",\"direct\":\"IN\",\"type\":\"VARCHAR\",\"value\":\"BATCH\"},{\"prop\":\"checkpoint.interval\",\"direct\":\"OUT\",\"type\":\"VARCHAR\",\"value\":\"10000\"}],\"resourceList\":[],\"startupScript\":\"seatunnel.sh\",\"relation\":\"[{\\\"id\\\":null,\\\"name\\\":null,\\\"processDefinitionVersion\\\":0,\\\"projectCode\\\":0,\\\"processDefinitionCode\\\":0,\\\"preTaskCode\\\":0,\\\"preTaskVersion\\\":0,\\\"postTaskCode\\\":162498065709984,\\\"postTaskVersion\\\":0,\\\"conditionType\\\":null,\\\"conditionParams\\\":null,\\\"createTime\\\":null,\\\"updateTime\\\":null},{\\\"id\\\":null,\\\"name\\\":null,\\\"processDefinitionVersion\\\":0,\\\"projectCode\\\":0,\\\"processDefinitionCode\\\":0,\\\"preTaskCode\\\":162498065709984,\\\"preTaskVersion\\\":0,\\\"postTaskCode\\\":162498065709985,\\\"postTaskVersion\\\":0,\\\"conditionType\\\":null,\\\"conditionParams\\\":null,\\\"createTime\\\":null,\\\"updateTime\\\":null},{\\\"id\\\":null,\\\"name\\\":null,\\\"processDefinitionVersion\\\":0,\\\"projectCode\\\":0,\\\"processDefinitionCode\\\":0,\\\"preTaskCode\\\":162498065709985,\\\"preTaskVersion\\\":0,\\\"postTaskCode\\\":162498065709986,\\\"postTaskVersion\\\":0,\\\"conditionType\\\":null,\\\"conditionParams\\\":null,\\\"createTime\\\":null,\\\"updateTime\\\":null}]\"}",
+  "prepareParamsMap" : {
+    "start_datetime_yyyyMMddHHmmss" : {
+      "prop" : "start_datetime_yyyyMMddHHmmss",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "1970-01-01 00:00:00"
+    },
+    "system.task.definition.name" : {
+      "prop" : "system.task.definition.name",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "ods_cwu8_ufdata_zhtjrd_win_4u22vfgcllu6"
+    },
+    "system.project.name" : {
+      "prop" : "system.project.name",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : null
+    },
+    "data_cacc_id" : {
+      "prop" : "data_cacc_id",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "016"
+    },
+    "parallelism" : {
+      "prop" : "parallelism",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "2"
+    },
+    "system.biz.curdate" : {
+      "prop" : "system.biz.curdate",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "20260111"
+    },
+    "system.task.instance.id" : {
+      "prop" : "system.task.instance.id",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "307198"
+    },
+    "system.task.definition.code" : {
+      "prop" : "system.task.definition.code",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "162498065709987"
+    },
+    "system.datetime" : {
+      "prop" : "system.datetime",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "20260111163152"
+    },
+    "job.mode" : {
+      "prop" : "job.mode",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "BATCH"
+    },
+    "data_year_start" : {
+      "prop" : "data_year_start",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "2019"
+    },
+    "system.project.code" : {
+      "prop" : "system.project.code",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "162479343146784"
+    },
+    "system.workflow.instance.id" : {
+      "prop" : "system.workflow.instance.id",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "5308"
+    },
+    "system.biz.date" : {
+      "prop" : "system.biz.date",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "20260110"
+    },
+    "data_year_end" : {
+      "prop" : "data_year_end",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "null"
+    },
+    "system.workflow.definition.name" : {
+      "prop" : "system.workflow.definition.name",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "活跃表-UFDATA_016_2019数据库"
+    },
+    "checkpoint.interval" : {
+      "prop" : "checkpoint.interval",
+      "direct" : "OUT",
+      "type" : "VARCHAR",
+      "value" : "10000"
+    },
+    "system.workflow.definition.code" : {
+      "prop" : "system.workflow.definition.code",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "162498066107296"
+    }
+  },
+  "taskAppId" : "5308_307198",
+  "taskTimeout" : 2147483647,
+  "workerGroup" : "default",
+  "delayTime" : 0,
+  "currentExecutionStatus" : "SUBMITTED_SUCCESS",
+  "resourceParametersHelper" : {
+    "resourceMap" : {
+      "DATASOURCE" : {
+        "1" : {
+          "resourceType" : "DATASOURCE",
+          "type" : "DORIS",
+          "connectionParams" : "{\"user\":\"root\",\"password\":\"*****************\",\"address\":\"jdbc:mysql:loadbalance://172.41.133.91:9030\",\"database\":\"dhdw\",\"jdbcUrl\":\"jdbc:mysql:loadbalance://172.41.133.91:9030/dhdw\",\"driverClassName\":\"com.mysql.cj.jdbc.Driver\",\"validationQuery\":\"select 1\",\"host\":\"172.41.133.91\",\"port\":9030,\"other\":{\"feHttpPort\":\"8030\"}}",
+          "DATASOURCE" : null
+        },
+        "43" : {
+          "resourceType" : "DATASOURCE",
+          "type" : "SQLSERVER",
+          "connectionParams" : "{\"user\":\"sa\",\"password\":\"*********\",\"address\":\"jdbc:sqlserver://172.41.133.84:1433\",\"database\":\"UFDATA_016_2019\",\"jdbcUrl\":\"jdbc:sqlserver://172.41.133.84:1433;databaseName=UFDATA_016_2019\",\"driverClassName\":\"com.microsoft.sqlserver.jdbc.SQLServerDriver\",\"validationQuery\":\"select 1\",\"host\":\"172.41.133.84\",\"port\":1433,\"other\":{\"encrypt\":\"false\",\"currentSchema\":\"dbo\"}}",
+          "DATASOURCE" : null
+        }
+      }
+    }
+  },
+  "endTime" : 0,
+  "varPool" : "[{\"prop\":\"checkpoint.interval\",\"direct\":\"OUT\",\"type\":\"VARCHAR\",\"value\":\"10000\"}]",
+  "dryRun" : 0,
+  "paramsMap" : { },
+  "cpuQuota" : -1,
+  "memoryMax" : -1,
+  "testFlag" : 0,
+  "logBufferEnable" : false,
+  "dispatchFailTimes" : 0,
+  "userId" : "1"
+}

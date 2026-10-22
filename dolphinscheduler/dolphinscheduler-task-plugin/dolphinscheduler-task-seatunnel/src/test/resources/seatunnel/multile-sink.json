@@ -1,0 +1,172 @@
+{
+  "taskInstanceId" : 244354,
+  "taskName" : "ods_chuanyun_clgl_chedui_xinxi_50a",
+  "firstSubmitTime" : 1767873326072,
+  "startTime" : 1767873326088,
+  "taskType" : "SEATUNNEL",
+  "workflowInstanceHost" : "172.41.133.90:5678",
+  "host" : "172.41.133.90:1234",
+  "logPath" : "/services/etl/worker-server/logs/20260108/162218864722752/3/4410/244354.log",
+  "processId" : 0,
+  "processDefineCode" : 162218864722752,
+  "processDefineVersion" : 3,
+  "processInstanceId" : 4410,
+  "scheduleTime" : 0,
+  "globalParams" : "[{\"prop\":\"full_yesterday_start\",\"direct\":\"OUT\",\"type\":\"VARCHAR\",\"value\":\"$[yyyy/MM/dd 00:00:00-3650]\"},{\"prop\":\"full_today_start\",\"direct\":\"OUT\",\"type\":\"VARCHAR\",\"value\":\"$[yyyy/MM/dd 00:00:00]\"},{\"prop\":\"engine_code\",\"direct\":\"OUT\",\"type\":\"VARCHAR\",\"value\":\"\"},{\"prop\":\"engine_secret\",\"direct\":\"OUT\",\"type\":\"VARCHAR\",\"value\":\"\"},{\"prop\":\"sleep\",\"direct\":\"OUT\",\"type\":\"VARCHAR\",\"value\":\"6\"}]",
+  "executorId" : "1",
+  "cmdTypeIfComplement" : 0,
+  "tenantCode" : "default",
+  "processDefineId" : 0,
+  "projectId" : 0,
+  "projectCode" : 162129923856192,
+  "taskParams" : "{\"useCustom\":true,\"deployMode\":\"cluster\",\"scriptType\":\"visualize\",\"rawScript\":\"[{\\\"type\\\":\\\"SOURCE\\\",\\\"pluginName\\\":\\\"HTTP\\\",\\\"code\\\":\\\"162222254315328\\\",\\\"params\\\":{\\\"isIterative\\\":false,\\\"httpExtra\\\":[],\\\"method\\\":\\\"POST\\\",\\\"httpParams\\\":[],\\\"format\\\":\\\"json\\\",\\\"content_field\\\":\\\"$.ReturnData.BizObjectArray[*]\\\",\\\"httpHeaders\\\":[{\\\"prop\\\":\\\"EngineCode\\\",\\\"value\\\":\\\"${engine_code}\\\"},{\\\"prop\\\":\\\"EngineSecret\\\",\\\"value\\\":\\\"${engine_secret}\\\"}],\\\"body\\\":\\\"{\\\\\\\"ActionName\\\\\\\":\\\\\\\"LoadBizObjects\\\\\\\",\\\\\\\"SchemaCode\\\\\\\":\\\\\\\"sh6c5ymrr30wvhvhyxglz\\\\\\\",\\\\\\\"Filter\\\\\\\":\\\\\\\"{\\\\\\\\\\\\\\\"ToRowNum\\\\\\\\\\\\\\\":500,\\\\\\\\\\\\\\\"Matcher\\\\\\\\\\\\\\\":{\\\\\\\\\\\\\\\"Type\\\\\\\\\\\\\\\":\\\\\\\\\\\\\\\"And\\\\\\\\\\\\\\\",\\\\\\\\\\\\\\\"Matchers\\\\\\\\\\\\\\\":[{\\\\\\\\\\\\\\\"Operator\\\\\\\\\\\\\\\":1,\\\\\\\\\\\\\\\"Type\\\\\\\\\\\\\\\":\\\\\\\\\\\\\\\"Item\\\\\\\\\\\\\\\",\\\\\\\\\\\\\\\"Value\\\\\\\\\\\\\\\":\\\\\\\\\\\\\\\"${full_yesterday_start}\\\\\\\\\\\\\\\",\\\\\\\\\\\\\\\"Name\\\\\\\\\\\\\\\":\\\\\\\\\\\\\\\"ModifiedTime\\\\\\\\\\\\\\\"},{\\\\\\\\\\\\\\\"Operator\\\\\\\\\\\\\\\":4,\\\\\\\\\\\\\\\"Type\\\\\\\\\\\\\\\":\\\\\\\\\\\\\\\"Item\\\\\\\\\\\\\\\",\\\\\\\\\\\\\\\"Value\\\\\\\\\\\\\\\":\\\\\\\\\\\\\\\"${full_today_start}\\\\\\\\\\\\\\\",\\\\\\\\\\\\\\\"Name\\\\\\\\\\\\\\\":\\\\\\\\\\\\\\\"ModifiedTime\\\\\\\\\\\\\\\"}]},\\\\\\\\\\\\\\\"RequireCount\\\\\\\\\\\\\\\":false,\\\\\\\\\\\\\\\"ReturnItems\\\\\\\\\\\\\\\":[],\\\\\\\\\\\\\\\"FromRowNum\\\\\\\\\\\\\\\":0,\\\\\\\\\\\\\\\"SortByCollection\\\\\\\\\\\\\\\":[]}\\\\\\\"}\\\",\\\"url\\\":\\\"/OpenApi/Invoke\\\",\\\"schemaVo\\\":\\\"{\\\\\\\"Status\\\\\\\":\\\\\\\"string\\\\\\\",\\\\\\\"OwnerDeptIdObject\\\\\\\":\\\\\\\"map<string,string>\\\\\\\",\\\\\\\"CreatedBy\\\\\\\":\\\\\\\"string\\\\\\\",\\\\\\\"CreatedTime\\\\\\\":\\\\\\\"string\\\\\\\",\\\\\\\"ObjectId\\\\\\\":\\\\\\\"string\\\\\\\",\\\\\\\"OwnerIdObject\\\\\\\":\\\\\\\"map<string,string>\\\\\\\",\\\\\\\"F0000001\\\\\\\":\\\\\\\"string\\\\\\\",\\\\\\\"ModifiedBy\\\\\\\":\\\\\\\"string\\\\\\\",\\\\\\\"F0000002\\\\\\\":\\\\\\\"string\\\\\\\",\\\\\\\"ModifiedByObject\\\\\\\":\\\\\\\"map<string,string>\\\\\\\",\\\\\\\"Name\\\\\\\":\\\\\\\"string\\\\\\\",\\\\\\\"CreatedByObject\\\\\\\":\\\\\\\"map<string,string>\\\\\\\",\\\\\\\"OwnerId\\\\\\\":\\\\\\\"string\\\\\\\",\\\\\\\"ModifiedTime\\\\\\\":\\\\\\\"string\\\\\\\",\\\\\\\"WorkflowInstanceId\\\\\\\":\\\\\\\"string\\\\\\\",\\\\\\\"OwnerDeptId\\\\\\\":\\\\\\\"string\\\\\\\"}\\\",\\\"field_path_type\\\":\\\"content\\\",\\\"pageingVo\\\":\\\"{\\\\\\\"from_index_field\\\\\\\":\\\\\\\"$.Filter.FromRowNum\\\\\\\",\\\\\\\"page_field\\\\\\\":\\\\\\\"page\\\\\\\",\\\\\\\"batch_size\\\\\\\":\\\\\\\"500\\\\\\\",\\\\\\\"page_type\\\\\\\":\\\\\\\"PageNumber\\\\\\\",\\\\\\\"keep_page_param_as_http_body\\\\\\\":true,\\\\\\\"to_index_field\\\\\\\":\\\\\\\"$.Filter.ToRowNum\\\\\\\",\\\\\\\"start_page_number\\\\\\\":1}\\\",\\\"datasourceId\\\":24,\\\"isPage\\\":true,\\\"outputFields\\\":null,\\\"localParams\\\":null},\\\"name\\\":\\\"1_表单_车队信息_39h\\\",\\\"outputFields\\\":null,\\\"postTaskcode\\\":162222287195968},{\\\"type\\\":\\\"TRANSFORM\\\",\\\"pluginName\\\":\\\"JSONPATH\\\",\\\"code\\\":\\\"162222254332736\\\",\\\"params\\\":{\\\"columns\\\":[{\\\"src_field\\\":\\\"CreatedByObject\\\",\\\"path\\\":\\\"$.ObjectId\\\",\\\"dest_field\\\":\\\"CreatedByObjectId\\\",\\\"dest_type\\\":\\\"STRING\\\",\\\"column_error_handle_way\\\":\\\"SKIP\\\"},{\\\"src_field\\\":\\\"CreatedByObject\\\",\\\"path\\\":\\\"$.Name\\\",\\\"dest_field\\\":\\\"CreatedByObjectName\\\",\\\"dest_type\\\":\\\"STRING\\\",\\\"column_error_handle_way\\\":\\\"SKIP\\\"},{\\\"src_field\\\":\\\"ModifiedByObject\\\",\\\"path\\\":\\\"$.ObjectId\\\",\\\"dest_field\\\":\\\"ModifiedByObjectId\\\",\\\"dest_type\\\":\\\"STRING\\\",\\\"column_error_handle_way\\\":\\\"SKIP\\\"},{\\\"src_field\\\":\\\"ModifiedByObject\\\",\\\"path\\\":\\\"$.Name\\\",\\\"dest_field\\\":\\\"ModifiedByObjectName\\\",\\\"dest_type\\\":\\\"STRING\\\",\\\"column_error_handle_way\\\":\\\"SKIP\\\"},{\\\"src_field\\\":\\\"OwnerIdObject\\\",\\\"path\\\":\\\"$.ObjectId\\\",\\\"dest_field\\\":\\\"OwnerIdObjectId\\\",\\\"dest_type\\\":\\\"STRING\\\",\\\"column_error_handle_way\\\":\\\"SKIP\\\"},{\\\"src_field\\\":\\\"OwnerIdObject\\\",\\\"path\\\":\\\"$.Name\\\",\\\"dest_field\\\":\\\"OwnerIdObjectName\\\",\\\"dest_type\\\":\\\"STRING\\\",\\\"column_error_handle_way\\\":\\\"SKIP\\\"},{\\\"src_field\\\":\\\"OwnerDeptIdObject\\\",\\\"path\\\":\\\"$.ObjectId\\\",\\\"dest_field\\\":\\\"OwnerDeptIdObjectId\\\",\\\"dest_type\\\":\\\"STRING\\\",\\\"column_error_handle_way\\\":\\\"SKIP\\\"},{\\\"src_field\\\":\\\"OwnerDeptIdObject\\\",\\\"path\\\":\\\"$.Name\\\",\\\"dest_field\\\":\\\"OwnerDeptIdObjectName\\\",\\\"dest_type\\\":\\\"STRING\\\",\\\"column_error_handle_way\\\":\\\"SKIP\\\"}],\\\"row_error_handle_way\\\":\\\"SKIP\\\",\\\"outputFields\\\":null,\\\"localParams\\\":null},\\\"name\\\":\\\"Json解析器_1us\\\",\\\"outputFields\\\":null,\\\"preTaskcode\\\":162222254315328,\\\"postTaskcode\\\":162222254350144},{\\\"type\\\":\\\"TRANSFORM\\\",\\\"pluginName\\\":\\\"SQL\\\",\\\"code\\\":\\\"162222254350144\\\",\\\"params\\\":{\\\"flag\\\":\\\"YES\\\",\\\"query\\\":\\\"SELECT ObjectId, Name, CreatedBy, OwnerId, OwnerDeptId, CreatedTime, ModifiedBy, ModifiedTime, WorkflowInstanceId, Status, F0000001, F0000002, CreatedByObjectId, CreatedByObjectName, ModifiedByObjectId, ModifiedByObjectName, OwnerIdObjectId, OwnerIdObjectName, OwnerDeptIdObjectId, OwnerDeptIdObjectName FROM dule\\\",\\\"type\\\":\\\"TRANSFORM\\\",\\\"outputFields\\\":null,\\\"localParams\\\":null},\\\"name\\\":\\\"SQL语句_2dp\\\",\\\"outputFields\\\":null,\\\"preTaskcode\\\":162222254332736,\\\"postTaskcode\\\":162222254366528},{\\\"type\\\":\\\"SINK\\\",\\\"pluginName\\\":\\\"DORIS\\\",\\\"code\\\":\\\"162222254366528\\\",\\\"params\\\":{\\\"outputFields\\\":null,\\\"datasourceId\\\":9,\\\"table\\\":\\\"ods_switch1\\\",\\\"schemaSaveMode\\\":\\\"CREATE_SCHEMA_WHEN_NOT_EXIST\\\",\\\"dataSaveMode\\\":\\\"APPEND_DATA\\\",\\\"format\\\":\\\"json\\\",\\\"readJsonByLine\\\":\\\"true\\\",\\\"columnSeparator\\\":\\\"\\\",\\\"sinkEnableDelete\\\":\\\"false\\\",\\\"needsUnsupportedTypeCasting\\\":\\\"false\\\",\\\"sink\\\":false,\\\"sinkEnable2pc\\\":\\\"false\\\",\\\"customSql\\\":\\\"\\\",\\\"sinkCheckInterval\\\":10000,\\\"sinkMaxRetries\\\":3,\\\"sinkBufferSize\\\":262144,\\\"sinkBufferCount\\\":3,\\\"dorisBatchSize\\\":1024,\\\"primary_keys\\\":[\\\"ObjectId\\\"],\\\"batch_size\\\":1000,\\\"transaction_timeout_sec\\\":-1,\\\"field_ide\\\":\\\"ORIGINAL\\\",\\\"plugin_input\\\":\\\"\\\",\\\"custom_sql\\\":\\\"\\\",\\\"enable_upsert\\\":true,\\\"use_copy_statement\\\":false,\\\"schema_save_mode\\\":\\\"CREATE_SCHEMA_WHEN_NOT_EXIST\\\",\\\"data_save_mode\\\":\\\"APPEND_DATA\\\",\\\"feHttpPort\\\":8030,\\\"localParams\\\":null},\\\"name\\\":\\\"ods_chuanyun_clgl_chedui_xinxi_5cm\\\",\\\"outputFields\\\":[{\\\"type\\\":\\\"OTHER\\\",\\\"taskName\\\":\\\"SQL语句\\\",\\\"tableName\\\":\\\"\\\",\\\"datasourceId\\\":null,\\\"fields\\\":null}],\\\"preTaskcode\\\":162222254350144},{\\\"type\\\":\\\"SINK\\\",\\\"pluginName\\\":\\\"DORIS\\\",\\\"code\\\":\\\"162222254381888\\\",\\\"params\\\":{\\\"outputFields\\\":null,\\\"datasourceId\\\":9,\\\"table\\\":\\\"ods_switch2\\\",\\\"schemaSaveMode\\\":\\\"CREATE_SCHEMA_WHEN_NOT_EXIST\\\",\\\"dataSaveMode\\\":\\\"APPEND_DATA\\\",\\\"format\\\":\\\"json\\\",\\\"readJsonByLine\\\":\\\"true\\\",\\\"columnSeparator\\\":\\\"\\\",\\\"sinkEnableDelete\\\":\\\"false\\\",\\\"needsUnsupportedTypeCasting\\\":\\\"false\\\",\\\"sink\\\":\\\"\\\",\\\"sinkEnable2pc\\\":\\\"false\\\",\\\"customSql\\\":\\\"\\\",\\\"sinkCheckInterval\\\":10000,\\\"sinkMaxRetries\\\":3,\\\"sinkBufferSize\\\":262144,\\\"sinkBufferCount\\\":3,\\\"dorisBatchSize\\\":1024,\\\"primary_keys\\\":[\\\"ObjectId\\\"],\\\"batch_size\\\":1000,\\\"transaction_timeout_sec\\\":-1,\\\"field_ide\\\":\\\"ORIGINAL\\\",\\\"plugin_input\\\":\\\"\\\",\\\"custom_sql\\\":\\\"\\\",\\\"enable_upsert\\\":true,\\\"use_copy_statement\\\":false,\\\"schema_save_mode\\\":\\\"CREATE_SCHEMA_WHEN_NOT_EXIST\\\",\\\"data_save_mode\\\":\\\"APPEND_DATA\\\",\\\"feHttpPort\\\":\\\"\\\",\\\"localParams\\\":null},\\\"name\\\":\\\"Doris数据库_502\\\",\\\"outputFields\\\":[],\\\"preTaskcode\\\":162222445092672},{\\\"type\\\":\\\"TRANSFORM\\\",\\\"pluginName\\\":\\\"JSONPATH\\\",\\\"code\\\":\\\"162222287195968\\\",\\\"params\\\":{\\\"outputFields\\\":null,\\\"row_error_handle_way\\\":\\\"FAIL\\\",\\\"columns\\\":[{\\\"src_field\\\":\\\"CreatedByObject\\\",\\\"path\\\":\\\"$.ObjectId\\\",\\\"dest_field\\\":\\\"CreatedByObjectId\\\",\\\"dest_type\\\":\\\"STRING\\\",\\\"column_error_handle_way\\\":\\\"FAIL\\\"}],\\\"localParams\\\":null},\\\"name\\\":\\\"Json解析器\\\",\\\"outputFields\\\":[{\\\"type\\\":\\\"OTHER\\\",\\\"taskName\\\":\\\"1_表单_车队信息_39h\\\",\\\"tableName\\\":\\\"\\\",\\\"datasourceId\\\":null,\\\"fields\\\":null}],\\\"preTaskcode\\\":162222254315328,\\\"postTaskcode\\\":162222445092672},{\\\"type\\\":\\\"TRANSFORM\\\",\\\"pluginName\\\":\\\"JSONPATH\\\",\\\"code\\\":\\\"162222445092672\\\",\\\"params\\\":{\\\"outputFields\\\":null,\\\"row_error_handle_way\\\":\\\"FAIL\\\",\\\"columns\\\":[{\\\"src_field\\\":\\\"CreatedByObject\\\",\\\"path\\\":\\\"$.Name\\\",\\\"dest_field\\\":\\\"CreatedByObjectName\\\",\\\"dest_type\\\":\\\"STRING\\\",\\\"column_error_handle_way\\\":\\\"FAIL\\\"}],\\\"localParams\\\":null},\\\"name\\\":\\\"Json解析器\\\",\\\"outputFields\\\":[],\\\"preTaskcode\\\":162222287195968,\\\"postTaskcode\\\":162222254381888}]\",\"localParams\":[{\"prop\":\"parallelism\",\"direct\":\"IN\",\"type\":\"VARCHAR\",\"value\":\"2\"},{\"prop\":\"job.mode\",\"direct\":\"IN\",\"type\":\"VARCHAR\",\"value\":\"BATCH\"},{\"prop\":\"checkpoint.interval\",\"direct\":\"OUT\",\"type\":\"VARCHAR\",\"value\":\"10000\"}],\"resourceList\":[],\"startupScript\":\"seatunnel.sh\",\"relation\":\"[{\\\"name\\\":\\\"\\\",\\\"preTaskCode\\\":0,\\\"preTaskVersion\\\":0,\\\"postTaskCode\\\":162222254315328,\\\"postTaskVersion\\\":0,\\\"conditionType\\\":\\\"NONE\\\",\\\"conditionParams\\\":{}},{\\\"name\\\":\\\"\\\",\\\"preTaskCode\\\":162222254315328,\\\"preTaskVersion\\\":0,\\\"postTaskCode\\\":162222254332736,\\\"postTaskVersion\\\":0,\\\"conditionType\\\":\\\"NONE\\\",\\\"conditionParams\\\":{}},{\\\"name\\\":\\\"\\\",\\\"preTaskCode\\\":162222254332736,\\\"preTaskVersion\\\":0,\\\"postTaskCode\\\":162222254350144,\\\"postTaskVersion\\\":0,\\\"conditionType\\\":\\\"NONE\\\",\\\"conditionParams\\\":{}},{\\\"name\\\":\\\"\\\",\\\"preTaskCode\\\":162222254350144,\\\"preTaskVersion\\\":0,\\\"postTaskCode\\\":162222254366528,\\\"postTaskVersion\\\":0,\\\"conditionType\\\":\\\"NONE\\\",\\\"conditionParams\\\":{}},{\\\"name\\\":\\\"\\\",\\\"preTaskCode\\\":162222254315328,\\\"preTaskVersion\\\":0,\\\"postTaskCode\\\":162222287195968,\\\"postTaskVersion\\\":0,\\\"conditionType\\\":\\\"NONE\\\",\\\"conditionParams\\\":{}},{\\\"name\\\":\\\"\\\",\\\"preTaskCode\\\":162222287195968,\\\"preTaskVersion\\\":0,\\\"postTaskCode\\\":162222445092672,\\\"postTaskVersion\\\":0,\\\"conditionType\\\":\\\"NONE\\\",\\\"conditionParams\\\":{}},{\\\"name\\\":\\\"\\\",\\\"preTaskCode\\\":162222445092672,\\\"preTaskVersion\\\":0,\\\"postTaskCode\\\":162222254381888,\\\"postTaskVersion\\\":0,\\\"conditionType\\\":\\\"NONE\\\",\\\"conditionParams\\\":{}}]\"}",
+  "prepareParamsMap" : {
+    "full_yesterday_start" : {
+      "prop" : "full_yesterday_start",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "2016/01/11 00:00:00"
+    },
+    "system.task.definition.name" : {
+      "prop" : "system.task.definition.name",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "ods_chuanyun_clgl_chedui_xinxi_50a"
+    },
+    "system.project.name" : {
+      "prop" : "system.project.name",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : null
+    },
+    "parallelism" : {
+      "prop" : "parallelism",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "2"
+    },
+    "system.biz.curdate" : {
+      "prop" : "system.biz.curdate",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "20260108"
+    },
+    "system.task.instance.id" : {
+      "prop" : "system.task.instance.id",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "244354"
+    },
+    "system.task.definition.code" : {
+      "prop" : "system.task.definition.code",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "162222254287680"
+    },
+    "system.datetime" : {
+      "prop" : "system.datetime",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "20260108195526"
+    },
+    "sleep" : {
+      "prop" : "sleep",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "6"
+    },
+    "job.mode" : {
+      "prop" : "job.mode",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "BATCH"
+    },
+    "system.project.code" : {
+      "prop" : "system.project.code",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "162129923856192"
+    },
+    "engine_code" : {
+      "prop" : "engine_code",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : ""
+    },
+    "system.workflow.instance.id" : {
+      "prop" : "system.workflow.instance.id",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "4410"
+    },
+    "system.biz.date" : {
+      "prop" : "system.biz.date",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "20260107"
+    },
+    "system.workflow.definition.name" : {
+      "prop" : "system.workflow.definition.name",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "测试单任务多sink"
+    },
+    "checkpoint.interval" : {
+      "prop" : "checkpoint.interval",
+      "direct" : "OUT",
+      "type" : "VARCHAR",
+      "value" : "10000"
+    },
+    "system.workflow.definition.code" : {
+      "prop" : "system.workflow.definition.code",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "162218864722752"
+    },
+    "full_today_start" : {
+      "prop" : "full_today_start",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "2026/01/08 00:00:00"
+    },
+    "engine_secret" : {
+      "prop" : "engine_secret",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : ""
+    }
+  },
+  "taskAppId" : "4410_244354",
+  "taskTimeout" : 2147483647,
+  "workerGroup" : "default",
+  "delayTime" : 0,
+  "currentExecutionStatus" : "SUBMITTED_SUCCESS",
+  "resourceParametersHelper" : {
+    "resourceMap" : {
+      "DATASOURCE" : {
+        "24" : {
+          "resourceType" : "DATASOURCE",
+          "type" : "HTTP",
+          "connectionParams" : "{\"host\":\"www.h3yun.com\",\"port\":443,\"httpEndpoint\":\"\",\"httpMethod\":\"\",\"httpAuthType\":\"\",\"httpAuthConfig\":\"\",\"connectTimeout\":5000,\"socketTimeout\":5000,\"protocol\":\"HTTPS\",\"password\":\"\"}",
+          "DATASOURCE" : null
+        },
+        "9" : {
+          "resourceType" : "DATASOURCE",
+          "type" : "DORIS",
+          "connectionParams" : "{\"user\":\"root\",\"password\":\"*****************\",\"address\":\"jdbc:mysql:loadbalance://172.41.133.91:9030\",\"database\":\"test\",\"jdbcUrl\":\"jdbc:mysql:loadbalance://172.41.133.91:9030/test\",\"driverClassName\":\"com.mysql.cj.jdbc.Driver\",\"validationQuery\":\"select 1\",\"host\":\"172.41.133.91\",\"port\":9030,\"other\":{\"feHttpPort\":\"8030\"}}",
+          "DATASOURCE" : null
+        }
+      }
+    }
+  },
+  "endTime" : 0,
+  "varPool" : "[{\"prop\":\"checkpoint.interval\",\"direct\":\"OUT\",\"type\":\"VARCHAR\",\"value\":\"10000\"}]",
+  "dryRun" : 0,
+  "paramsMap" : { },
+  "cpuQuota" : -1,
+  "memoryMax" : -1,
+  "testFlag" : 0,
+  "logBufferEnable" : false,
+  "dispatchFailTimes" : 0,
+  "userId" : "1"
+}

@@ -1,0 +1,134 @@
+{
+  "taskInstanceId" : 950,
+  "taskName" : "localfile-to-jdbc",
+  "firstSubmitTime" : 1746683252222,
+  "startTime" : 1746683252255,
+  "taskType" : "SEATUNNEL",
+  "workflowInstanceHost" : "172.19.0.1:5678",
+  "host" : "172.19.0.1:1234",
+  "logPath" : "/home/services/bigdata/dolphinscheduler/worker-server/logs/20250508/140538781444672/5/507/950.log",
+  "processId" : 0,
+  "processDefineCode" : 140538781444672,
+  "processDefineVersion" : 5,
+  "processInstanceId" : 507,
+  "scheduleTime" : 0,
+  "executorId" : 1,
+  "cmdTypeIfComplement" : 4,
+  "tenantCode" : "default",
+  "processDefineId" : 0,
+  "projectId" : 0,
+  "projectCode" : 139822994720704,
+  "taskParams" : "{\"localParams\":[{\"prop\":\"parallelism\",\"value\":\"2\",\"direct\":\"IN\",\"type\":\"VARCHAR\"},{\"prop\":\"job.mode\",\"value\":\"BATCH\",\"direct\":\"IN\",\"type\":\"VARCHAR\"},{\"prop\":\"checkpoint.interval\",\"value\":\"10000\",\"direct\":\"IN\",\"type\":\"VARCHAR\"}],\"rawScript\":\"[{\\\"type\\\":\\\"SOURCE\\\",\\\"pluginName\\\":\\\"LOCALFILE\\\",\\\"code\\\":\\\"140538450335296\\\",\\\"params\\\":{\\\"path\\\":\\\"/tmp/setunnel\\\",\\\"file_format_type\\\":\\\"excel\\\",\\\"schemaVo\\\":\\\"{\\\\r\\\\n    \\\\\\\"id\\\\\\\":\\\\\\\"string\\\\\\\",\\\\r\\\\n    \\\\\\\"parent_id\\\\\\\":\\\\\\\"string\\\\\\\",\\\\r\\\\n    \\\\\\\"menu_name\\\\\\\":\\\\\\\"string\\\\\\\",\\\\r\\\\n    \\\\\\\"menu_path\\\\\\\":\\\\\\\"string\\\\\\\",\\\\r\\\\n    \\\\\\\"menu_component\\\\\\\":\\\\\\\"string\\\\\\\",\\\\r\\\\n    \\\\\\\"menu_redirect\\\\\\\":\\\\\\\"string\\\\\\\",\\\\r\\\\n    \\\\\\\"menu_perms\\\\\\\":\\\\\\\"string\\\\\\\",\\\\r\\\\n    \\\\\\\"menu_icon\\\\\\\":\\\\\\\"string\\\\\\\",\\\\r\\\\n    \\\\\\\"menu_type\\\\\\\":\\\\\\\"string\\\\\\\",\\\\r\\\\n    \\\\\\\"menu_code\\\\\\\":\\\\\\\"string\\\\\\\"\\\\r\\\\n}\\\",\\\"sheet_name\\\":\\\"0\\\",\\\"excel_engine\\\":\\\"EasyExcel\\\",\\\"advanced\\\":false},\\\"name\\\":\\\"localfile\\\"},{\\\"type\\\":\\\"SINK\\\",\\\"pluginName\\\":\\\"JDBC\\\",\\\"code\\\":\\\"140538712931904\\\",\\\"params\\\":{\\\"datasourceId\\\":3,\\\"query\\\":\\\"\\\",\\\"database\\\":\\\"datawarehouse\\\",\\\"table\\\":\\\"localfile_sys_menu\\\",\\\"primary_keys\\\":[],\\\"batch_size\\\":1000,\\\"is_exactly_once\\\":false,\\\"transaction_timeout_sec\\\":-1,\\\"field_ide\\\":\\\"ORIGINAL\\\",\\\"plugin_input\\\":\\\"\\\",\\\"custom_sql\\\":\\\"\\\",\\\"enable_upsert\\\":true,\\\"use_copy_statement\\\":false,\\\"schema_save_mode\\\":\\\"CREATE_SCHEMA_WHEN_NOT_EXIST\\\",\\\"data_save_mode\\\":\\\"APPEND_DATA\\\"},\\\"name\\\":\\\"jdbc\\\"}]\",\"resourceList\":[],\"startupScript\":\"seatunnel.sh\",\"useCustom\":true,\"scriptType\":\"visualize\",\"deployMode\":\"cluster\"}",
+  "prepareParamsMap" : {
+    "system.task.definition.name" : {
+      "prop" : "system.task.definition.name",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "localfile-to-jdbc"
+    },
+    "system.project.name" : {
+      "prop" : "system.project.name",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : null
+    },
+    "parallelism" : {
+      "prop" : "parallelism",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "2"
+    },
+    "system.biz.curdate" : {
+      "prop" : "system.biz.curdate",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "20250508"
+    },
+    "system.task.instance.id" : {
+      "prop" : "system.task.instance.id",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "950"
+    },
+    "system.task.definition.code" : {
+      "prop" : "system.task.definition.code",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "140538427202112"
+    },
+    "system.datetime" : {
+      "prop" : "system.datetime",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "20250508134732"
+    },
+    "job.mode" : {
+      "prop" : "job.mode",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "BATCH"
+    },
+    "system.project.code" : {
+      "prop" : "system.project.code",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "139822994720704"
+    },
+    "system.workflow.instance.id" : {
+      "prop" : "system.workflow.instance.id",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "507"
+    },
+    "system.biz.date" : {
+      "prop" : "system.biz.date",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "20250507"
+    },
+    "system.workflow.definition.name" : {
+      "prop" : "system.workflow.definition.name",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "jdbc-localfile-jdbc"
+    },
+    "checkpoint.interval" : {
+      "prop" : "checkpoint.interval",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "10000"
+    },
+    "system.workflow.definition.code" : {
+      "prop" : "system.workflow.definition.code",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "140538781444672"
+    }
+  },
+  "taskAppId" : "507_950",
+  "taskTimeout" : 2147483647,
+  "workerGroup" : "default",
+  "delayTime" : 0,
+  "currentExecutionStatus" : "SUBMITTED_SUCCESS",
+  "resourceParametersHelper" : {
+    "resourceMap" : {
+      "DATASOURCE" : {
+        "3" : {
+          "resourceType" : "DATASOURCE",
+          "type" : "MYSQL",
+          "connectionParams" : "{\"user\":\"root\",\"password\":\"********\",\"address\":\"jdbc:mysql://192.168.0.201:3306\",\"database\":\"datawarehouse\",\"jdbcUrl\":\"jdbc:mysql://192.168.0.201:3306/datawarehouse\",\"driverClassName\":\"com.mysql.cj.jdbc.Driver\",\"validationQuery\":\"select 1\",\"other\":{\"useSSL\":\"false\",\"serverTimezone\":\"Asia/Shanghai\"}}",
+          "DATASOURCE" : null
+        }
+      }
+    }
+  },
+  "endTime" : 0,
+  "varPool" : "[]",
+  "dryRun" : 0,
+  "paramsMap" : { },
+  "cpuQuota" : -1,
+  "memoryMax" : -1,
+  "testFlag" : 0,
+  "logBufferEnable" : false,
+  "dispatchFailTimes" : 0
+}

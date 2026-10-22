@@ -1,0 +1,148 @@
+{
+  "taskInstanceId" : 60105,
+  "taskName" : "ods_shzaqzk_self_inspection_record_detail",
+  "firstSubmitTime" : 1766544531700,
+  "startTime" : 1766544532140,
+  "taskType" : "SEATUNNEL",
+  "workflowInstanceHost" : "172.41.133.90:5678",
+  "host" : "172.41.133.89:1234",
+  "logPath" : "/services/etl/worker-server/logs/20251224/160882771377888/3/1481/60105.log",
+  "processId" : 0,
+  "processDefineCode" : 160882771377888,
+  "processDefineVersion" : 3,
+  "processInstanceId" : 1481,
+  "scheduleTime" : 0,
+  "globalParams" : "[{\"prop\":\"sleep\",\"direct\":\"OUT\",\"type\":\"VARCHAR\",\"value\":\"3\"}]",
+  "executorId" : "1",
+  "cmdTypeIfComplement" : 0,
+  "tenantCode" : "default",
+  "processDefineId" : 0,
+  "projectId" : 0,
+  "projectCode" : 159751280166016,
+  "taskParams" : "{\"useCustom\":true,\"deployMode\":\"cluster\",\"scriptType\":\"visualize\",\"rawScript\":\"[{\\\"type\\\":\\\"SOURCE\\\",\\\"pluginName\\\":\\\"DORIS\\\",\\\"code\\\":\\\"160882362771169\\\",\\\"params\\\":{\\\"dorisExecMemLimit\\\":2147483648,\\\"is_custom_sql\\\":false,\\\"table_path\\\":\\\"dhdw.ods_shzaqzk_self_inspection_record\\\",\\\"dorisRequestConnectTimeoutMs\\\":30000,\\\"parallelism\\\":6,\\\"datasourceId\\\":1,\\\"dorisBatchSize\\\":1024,\\\"dorisRequestQueryTimeouts\\\":3600,\\\"dorisRequestRetries\\\":3,\\\"dorisRequestReadTimeoutMs\\\":30000,\\\"outputFields\\\":null,\\\"localParams\\\":null},\\\"name\\\":\\\"ods_shzaqzk_self_inspection_record\\\",\\\"outputFields\\\":null,\\\"postTaskcode\\\":160882362771170},{\\\"type\\\":\\\"TRANSFORM\\\",\\\"pluginName\\\":\\\"HTTP\\\",\\\"code\\\":\\\"160882362771170\\\",\\\"params\\\":{\\\"isIterative\\\":false,\\\"httpExtra\\\":[],\\\"method\\\":\\\"POST\\\",\\\"httpParams\\\":[],\\\"format\\\":\\\"json\\\",\\\"content_field\\\":\\\"$.data\\\",\\\"httpHeaders\\\":[{\\\"prop\\\":\\\"Authorization\\\",\\\"value\\\":\\\"${api_token}\\\"},{\\\"prop\\\":\\\"Hse-User-Id\\\",\\\"value\\\":\\\"${hse_user_id}\\\"},{\\\"prop\\\":\\\"Hse-User-Name\\\",\\\"value\\\":\\\"${hse_user_name}\\\"},{\\\"prop\\\":\\\"Hse-Role-Code\\\",\\\"value\\\":\\\"${hse_role_code}\\\"},{\\\"prop\\\":\\\"Hse-Enterprise-Name\\\",\\\"value\\\":\\\"${hse_enterprise_name}\\\"},{\\\"prop\\\":\\\"Hse-Enterprise-Id\\\",\\\"value\\\":\\\"${hse_enterprise_id}\\\"}],\\\"jsonFieldVo\\\":\\\"\\\",\\\"body\\\":\\\"{\\\\\\\"taskId\\\\\\\":\\\\\\\"222098554880\\\\\\\"}\\\",\\\"url\\\":\\\"/gateway/safe-server/safe/dual-system/supervise-check/task/detail\\\",\\\"outputFields\\\":null,\\\"schemaVo\\\":\\\"{\\\\n  \\\\\\\"id\\\\\\\": \\\\\\\"string\\\\\\\",\\\\n  \\\\\\\"taskName\\\\\\\": \\\\\\\"string\\\\\\\",\\\\n  \\\\\\\"taskType\\\\\\\": \\\\\\\"string\\\\\\\",\\\\n  \\\\\\\"taskStartTime\\\\\\\": \\\\\\\"string\\\\\\\",\\\\n  \\\\\\\"taskEndTime\\\\\\\": \\\\\\\"string\\\\\\\",\\\\n  \\\\\\\"taskContent\\\\\\\": \\\\\\\"string\\\\\\\",\\\\n  \\\\\\\"proposerRegion\\\\\\\": \\\\\\\"string\\\\\\\",\\\\n  \\\\\\\"proposerUnit\\\\\\\": \\\\\\\"string\\\\\\\",\\\\n  \\\\\\\"enterpriseIds\\\\\\\": \\\\\\\"string\\\\\\\",\\\\n  \\\\\\\"enterpriseNames\\\\\\\": \\\\\\\"string\\\\\\\",\\\\n  \\\\\\\"recordNum\\\\\\\": \\\\\\\"int\\\\\\\",\\\\n  \\\\\\\"hiddenNum\\\\\\\": \\\\\\\"int\\\\\\\"\\\\n}\\\",\\\"field_path_type\\\":\\\"content\\\",\\\"datasourceId\\\":20,\\\"isPage\\\":false,\\\"localParams\\\":null},\\\"name\\\":\\\"2_企业自查记录_企业自查记录详情\\\",\\\"outputFields\\\":[],\\\"preTaskcode\\\":160882362771169,\\\"postTaskcode\\\":160882362771171},{\\\"type\\\":\\\"SINK\\\",\\\"pluginName\\\":\\\"DORIS\\\",\\\"code\\\":\\\"160882362771171\\\",\\\"params\\\":{\\\"primary_keys\\\":[\\\"id\\\"],\\\"dataSaveMode\\\":\\\"APPEND_DATA\\\",\\\"sinkBufferCount\\\":3,\\\"columnSeparator\\\":\\\"\\\",\\\"field_ide\\\":\\\"ORIGINAL\\\",\\\"use_copy_statement\\\":false,\\\"customSql\\\":\\\"\\\",\\\"plugin_input\\\":\\\"\\\",\\\"enable_upsert\\\":true,\\\"sinkEnable2pc\\\":\\\"false\\\",\\\"transaction_timeout_sec\\\":-1,\\\"datasourceId\\\":1,\\\"dorisBatchSize\\\":1024,\\\"table\\\":\\\"ods_shzaqzk_self_inspection_record_detail\\\",\\\"sinkEnableDelete\\\":\\\"false\\\",\\\"batch_size\\\":1000,\\\"feHttpPort\\\":8030,\\\"sink\\\":false,\\\"format\\\":\\\"json\\\",\\\"schema_save_mode\\\":\\\"CREATE_SCHEMA_WHEN_NOT_EXIST\\\",\\\"sinkBufferSize\\\":262144,\\\"outputFields\\\":null,\\\"needsUnsupportedTypeCasting\\\":\\\"false\\\",\\\"schemaSaveMode\\\":\\\"CREATE_SCHEMA_WHEN_NOT_EXIST\\\",\\\"sinkCheckInterval\\\":10000,\\\"data_save_mode\\\":\\\"APPEND_DATA\\\",\\\"sinkMaxRetries\\\":3,\\\"readJsonByLine\\\":\\\"true\\\",\\\"custom_sql\\\":\\\"\\\",\\\"localParams\\\":null},\\\"name\\\":\\\"ods_shzaqzk_self_inspection_record_detail\\\",\\\"outputFields\\\":[{\\\"datasourceId\\\":null,\\\"taskName\\\":\\\"Http\\\",\\\"type\\\":\\\"OTHER\\\",\\\"fields\\\":[],\\\"tableName\\\":\\\"\\\"}],\\\"preTaskcode\\\":160882362771170}]\",\"localParams\":[{\"prop\":\"parallelism\",\"direct\":\"IN\",\"type\":\"VARCHAR\",\"value\":\"2\"},{\"prop\":\"job.mode\",\"direct\":\"IN\",\"type\":\"VARCHAR\",\"value\":\"BATCH\"},{\"prop\":\"checkpoint.interval\",\"direct\":\"OUT\",\"type\":\"VARCHAR\",\"value\":\"10000\"}],\"resourceList\":[],\"startupScript\":\"seatunnel.sh\",\"relation\":null}",
+  "prepareParamsMap" : {
+    "system.task.definition.name" : {
+      "prop" : "system.task.definition.name",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "ods_shzaqzk_self_inspection_record_detail"
+    },
+    "system.project.name" : {
+      "prop" : "system.project.name",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : null
+    },
+    "parallelism" : {
+      "prop" : "parallelism",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "2"
+    },
+    "system.biz.curdate" : {
+      "prop" : "system.biz.curdate",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "20251224"
+    },
+    "system.task.instance.id" : {
+      "prop" : "system.task.instance.id",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "60105"
+    },
+    "system.task.definition.code" : {
+      "prop" : "system.task.definition.code",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "160882362771172"
+    },
+    "system.datetime" : {
+      "prop" : "system.datetime",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "20251224104851"
+    },
+    "sleep" : {
+      "prop" : "sleep",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "3"
+    },
+    "job.mode" : {
+      "prop" : "job.mode",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "BATCH"
+    },
+    "system.project.code" : {
+      "prop" : "system.project.code",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "159751280166016"
+    },
+    "system.workflow.instance.id" : {
+      "prop" : "system.workflow.instance.id",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "1481"
+    },
+    "system.biz.date" : {
+      "prop" : "system.biz.date",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "20251223"
+    },
+    "system.workflow.definition.name" : {
+      "prop" : "system.workflow.definition.name",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "安全管理相等6模块数据同步44"
+    },
+    "checkpoint.interval" : {
+      "prop" : "checkpoint.interval",
+      "direct" : "OUT",
+      "type" : "VARCHAR",
+      "value" : "10000"
+    },
+    "system.workflow.definition.code" : {
+      "prop" : "system.workflow.definition.code",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "160882771377888"
+    }
+  },
+  "taskAppId" : "1481_60105",
+  "taskTimeout" : 2147483647,
+  "workerGroup" : "default",
+  "delayTime" : 0,
+  "currentExecutionStatus" : "SUBMITTED_SUCCESS",
+  "resourceParametersHelper" : {
+    "resourceMap" : {
+      "DATASOURCE" : {
+        "1" : {
+          "resourceType" : "DATASOURCE",
+          "type" : "DORIS",
+          "connectionParams" : "{\"user\":\"root\",\"password\":\"*****************\",\"address\":\"jdbc:mysql:loadbalance://172.41.133.91:9030\",\"database\":\"dhdw\",\"jdbcUrl\":\"jdbc:mysql:loadbalance://172.41.133.91:9030/dhdw\",\"driverClassName\":\"com.mysql.cj.jdbc.Driver\",\"validationQuery\":\"select 1\",\"host\":\"172.41.133.91\",\"port\":9030,\"other\":{\"feHttpPort\":\"8030\"}}",
+          "DATASOURCE" : null
+        },
+        "20" : {
+          "resourceType" : "DATASOURCE",
+          "type" : "HTTP",
+          "connectionParams" : "{\"host\":\"safe.shihezi.hgyq365.cn\",\"port\":18898,\"httpEndpoint\":\"\",\"httpMethod\":\"\",\"httpAuthType\":\"\",\"httpAuthConfig\":\"\",\"connectTimeout\":5000,\"socketTimeout\":5000,\"protocol\":\"HTTPS\",\"password\":\"\"}",
+          "DATASOURCE" : null
+        }
+      }
+    }
+  },
+  "endTime" : 0,
+  "varPool" : "[{\"prop\":\"checkpoint.interval\",\"direct\":\"OUT\",\"type\":\"VARCHAR\",\"value\":\"10000\"}]",
+  "dryRun" : 0,
+  "paramsMap" : { },
+  "cpuQuota" : -1,
+  "memoryMax" : -1,
+  "testFlag" : 0,
+  "logBufferEnable" : false,
+  "dispatchFailTimes" : 0,
+  "userId" : "1"
+}

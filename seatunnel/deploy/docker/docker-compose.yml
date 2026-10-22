@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  seatunnel-master:
+    image: zdkj/seatunnel:latest
+    container_name: seatunnel-master
+    ports:
+      - "5801:5801"   # Hazelcast 通信端口
+      - "8080:8080"   # HTTP 管理接口
+    environment:
+      - TZ=Asia/Shanghai
+      - SEATUNNEL_ROLE=master  # 通过环境变量控制角色
+    volumes:
+      - ${SEATUNNEL_HOME}/config:/opt/sort/seatunnel # 修改目录
+    networks:
+      - zdkj-net
+    restart: unless-stopped
+
+  seatunnel-worker:
+    image: zdkj/seatunnel:latest
+    container_name: seatunnel-worker
+    environment:
+      - TZ=Asia/Shanghai
+      - SEATUNNEL_ROLE=worker  # 通过环境变量控制角色
+      - SEATUNNEL_MASTER_ADDRESS=seatunnel-master:5801
+    volumes:
+      - ${SEATUNNEL_HOME}/config:/opt/sort/seatunnel
+    networks:
+      - zdkj-net
+    depends_on:
+      - seatunnel-master
+    restart: unless-stopped
+
+networks:
+  zdkj-net:
+    driver: bridge
+    attachable: true

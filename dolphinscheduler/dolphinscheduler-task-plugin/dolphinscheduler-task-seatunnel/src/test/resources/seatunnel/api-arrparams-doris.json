@@ -1,0 +1,153 @@
+{
+  "taskInstanceId" : 41960,
+  "taskName" : "监控分组数据同步",
+  "firstSubmitTime" : 1766306179009,
+  "startTime" : 1766306179790,
+  "taskType" : "SEATUNNEL",
+  "workflowInstanceHost" : "172.41.133.90:5678",
+  "host" : "172.41.133.89:1234",
+  "logPath" : "/services/etl/worker-server/logs/20251221/160640631855649/2/1064/41960.log",
+  "processId" : 0,
+  "processDefineCode" : 160640631855649,
+  "processDefineVersion" : 2,
+  "processInstanceId" : 1064,
+  "scheduleTime" : 0,
+  "globalParams" : "[{\"prop\":\"cookie\",\"direct\":\"OUT\",\"type\":\"VARCHAR\",\"value\":\".AspNetCore.Antiforgery.UcLF_yeFggM=CfDJ8BL1kaDt5Y9EosMU2Kfm5VYyYWCs_MAN4AjVHah8Y5lVjFY6n7KxpvWD4FV6db96iuIBIoJNMPYPxvHSbC6Alq3YAAyJ4cqeH9s0KhaOJWS60S7mwkoSXoo1L9xjXJXTSaBEcweeKgL-RTWexFwscDg; .AspNetCore.Session=CfDJ8BL1kaDt5Y9EosMU2Kfm5VaaN6s632QwbmrS2yEJfK6wHe0nxK6IiupnEu3ygz4m3HHCuu0AcUMtckQu%2B6MvrrmiVTEUGmtGDpys0U%2FTky2QzG%2F1KmOwshiPEoJUccyoz8xHS4Ejn41%2B%2Fb3E%2FvC6HijwkR9QSkXM5ZVQUA08Qgy5; .AspNetCore.Cookies=CfDJ8BL1kaDt5Y9EosMU2Kfm5Vb6OxlGqyeaeK5ggOkkEF0-9Fd0Olzz_gPwb2KEF321OA6sCgmIMwHEo0WmSq66cpQCoLZrkKhiR3h1FKKliFX9Kwxb0l81b-GY1u0bhaRwotSHKBKR6oqJbfn4sugOitby1-QHPve6MiNTtM8bTJOTmMnsKDTcwXdHPuuUXs0DGYBBwGZKWgks1U3RDeQAE0LT7sW1LYctZEM_kVSHtjjYYojnOWnM53rLCZDal3EamMTqhDT0PePmPHYJiRuzXN21E1Z7YUsORd61qpv90vZXEJdCXiFwwp3S_1xc5hQMJDYc1-TgBD6vxrAZVD6fLJy6OIOsdO1O9Kwxq2qABolfaBWTtzrVD4AT91Vr8bWgi4uMqiwAClHpWrDIzOsK2-25Gt9-6N-li1JHYRU0ghr9T5oNpVStjxG1jhYepQtY4izB8SeMwIDAXxRXgshEMNBnvf5iggoeyM5KWQV2D9t1BtrJcAHwMtiDErYV1jfPJchiDa-rxs-Z30AI9IcHVQd-G5zgdbBTOk2KhZdRhYynYQLIWeZxT00Cc0Ta6E8KVZqbb24DSkyGurx4AmIcKv9bOQZNiKELrWJa5o_EHegRjt7wur8EJfVJU5cldRnCCOb_KpZstZwTiO_z78Cr9lGR7iYJUdH-IF2RGxJaMMuONr71JNidhaJHfIUukelk8A\"},{\"prop\":\"token\",\"direct\":\"OUT\",\"type\":\"VARCHAR\",\"value\":\"CfDJ8BL1kaDt5Y9EosMU2Kfm5VZlIKrgMhMBwj6u8dSVkCmxK3i1ibjvF-ddQ9OnsRpPJ6HSHURrjTt08cvb7Uf2Py8tqo3nrF09vE001i8oZtJ8cpba3B4xXnGuBtHsxtUsX65RFvTLv31xgMPqTDXcrwCYtTjKqG-fekztx3qPbohXfNe2Uo5f_-hvbktnw8zDsA\"}]",
+  "executorId" : "1",
+  "cmdTypeIfComplement" : 0,
+  "tenantCode" : "default",
+  "processDefineId" : 0,
+  "projectId" : 0,
+  "projectCode" : 160353491907904,
+  "taskParams" : "{\"localParams\":[{\"prop\":\"parallelism\",\"value\":\"2\",\"direct\":\"IN\",\"type\":\"VARCHAR\"},{\"prop\":\"job.mode\",\"value\":\"BATCH\",\"direct\":\"IN\",\"type\":\"VARCHAR\"},{\"prop\":\"checkpoint.interval\",\"value\":\"10000\",\"direct\":\"IN\",\"type\":\"VARCHAR\"}],\"rawScript\":\"[{\\\"type\\\":\\\"SOURCE\\\",\\\"pluginName\\\":\\\"HTTP\\\",\\\"code\\\":\\\"160358650907968\\\",\\\"params\\\":{\\\"outputFields\\\":null,\\\"url\\\":\\\"/Enterprise/spfzlist?handler=XL_DoPostBack\\\",\\\"method\\\":\\\"POST\\\",\\\"httpParams\\\":[],\\\"httpHeaders\\\":[{\\\"prop\\\":\\\"cookie\\\",\\\"value\\\":\\\"${cookie}\\\"},{\\\"prop\\\":\\\"Content-Type\\\",\\\"value\\\":\\\"application/x-www-form-urlencoded\\\"}],\\\"body\\\":\\\"{\\\\n\\\\t\\\\\\\"hfunitid\\\\\\\": \\\\\\\"9\\\\\\\",\\\\n\\\\t\\\\\\\"Grid1_fields[1]\\\\\\\": \\\\\\\"fzmc\\\\\\\",\\\\n\\\\t\\\\\\\"Grid1_sortField\\\\\\\": \\\\\\\"id\\\\\\\",\\\\n\\\\t\\\\\\\"__RequestVerificationToken\\\\\\\": \\\\\\\"CfDJ8MzpsMfmogxHgsa2dv6Fy0BZW6O2jZ8_-5tmSJOI-ZBPujaf0ygFGjNgmuBS7oBy1OSDzO15kVopTRjE3KiVH2awbU0wP8-P9oB-I2Xz5LHqdniQl4Dr3HzzVRIxrWu-SPeewgE_qGpg5qSNzGesSQaVR2qvBah1xgNFJYVC3kfHHz7rhYy5vqg7hRfdpq66Lw\\\\\\\",\\\\n\\\\t\\\\\\\"Grid1_fields[0]\\\\\\\": \\\\\\\"id\\\\\\\",\\\\n\\\\t\\\\\\\"Grid1_fields[2]\\\\\\\": \\\\\\\"fzbz\\\\\\\",\\\\n\\\\t\\\\\\\"ddlGridPageSize\\\\\\\": \\\\\\\"25\\\\\\\",\\\\n\\\\t\\\\\\\"actionType\\\\\\\": \\\\\\\"btnsearch\\\\\\\",\\\\n\\\\t\\\\\\\"Grid1_pageIndex\\\\\\\": \\\\\\\"0\\\\\\\",\\\\n\\\\t\\\\\\\"Grid1_sortDirection\\\\\\\": \\\\\\\"asc\\\\\\\",\\\\n\\\\t\\\\\\\"Grid1_pagingToolbar_pageNumberBox\\\\\\\": \\\\\\\"1\\\\\\\",\\\\n\\\\t\\\\\\\"Grid1_pageSize\\\\\\\": \\\\\\\"25\\\\\\\",\\\\n\\\\t\\\\\\\"ddlGridPageSize_text\\\\\\\": \\\\\\\"25\\\\\\\"\\\\n}\\\",\\\"format\\\":\\\"text\\\",\\\"schemaVo\\\":\\\"\\\",\\\"httpExtra\\\":[],\\\"jsonFieldVo\\\":\\\"\\\",\\\"datasourceId\\\":17,\\\"isPage\\\":false,\\\"isIterative\\\":false,\\\"field_path_type\\\":\\\"content\\\",\\\"content_field\\\":\\\"\\\",\\\"httpCheckCondition\\\":\\\"\\\",\\\"condition\\\":\\\"\\\",\\\"localParams\\\":null},\\\"name\\\":\\\"Http\\\",\\\"outputFields\\\":[],\\\"postTaskcode\\\":160359273942336},{\\\"type\\\":\\\"SINK\\\",\\\"pluginName\\\":\\\"DORIS\\\",\\\"code\\\":\\\"160359273942336\\\",\\\"params\\\":{\\\"outputFields\\\":null,\\\"datasourceId\\\":9,\\\"table\\\":\\\"test_1\\\",\\\"schemaSaveMode\\\":\\\"\\\",\\\"dataSaveMode\\\":\\\"\\\",\\\"format\\\":\\\"json\\\",\\\"readJsonByLine\\\":\\\"true\\\",\\\"columnSeparator\\\":\\\"\\\",\\\"sinkEnableDelete\\\":\\\"false\\\",\\\"needsUnsupportedTypeCasting\\\":\\\"false\\\",\\\"sink\\\":\\\"\\\",\\\"sinkEnable2pc\\\":\\\"false\\\",\\\"customSql\\\":\\\"\\\",\\\"sinkCheckInterval\\\":10000,\\\"sinkMaxRetries\\\":3,\\\"sinkBufferSize\\\":262144,\\\"sinkBufferCount\\\":3,\\\"dorisBatchSize\\\":1024,\\\"primary_keys\\\":[],\\\"batch_size\\\":1000,\\\"transaction_timeout_sec\\\":-1,\\\"field_ide\\\":\\\"ORIGINAL\\\",\\\"plugin_input\\\":\\\"\\\",\\\"custom_sql\\\":\\\"\\\",\\\"enable_upsert\\\":true,\\\"use_copy_statement\\\":false,\\\"schema_save_mode\\\":\\\"CREATE_SCHEMA_WHEN_NOT_EXIST\\\",\\\"data_save_mode\\\":\\\"APPEND_DATA\\\",\\\"feHttpPort\\\":8030,\\\"localParams\\\":null},\\\"name\\\":\\\"Doris数据库\\\",\\\"outputFields\\\":[{\\\"type\\\":\\\"OTHER\\\",\\\"taskName\\\":\\\"Http\\\",\\\"tableName\\\":\\\"\\\",\\\"datasourceId\\\":null,\\\"fields\\\":[]}],\\\"preTaskcode\\\":160358650907968}]\",\"resourceList\":[],\"startupScript\":\"seatunnel.sh\",\"useCustom\":true,\"scriptType\":\"visualize\",\"deployMode\":\"cluster\",\"relation\":\"[{\\\"name\\\":\\\"\\\",\\\"preTaskCode\\\":0,\\\"preTaskVersion\\\":0,\\\"postTaskCode\\\":160358650907968,\\\"postTaskVersion\\\":0,\\\"conditionType\\\":\\\"NONE\\\",\\\"conditionParams\\\":{}},{\\\"name\\\":\\\"\\\",\\\"preTaskCode\\\":160358650907968,\\\"preTaskVersion\\\":0,\\\"postTaskCode\\\":160359273942336,\\\"postTaskVersion\\\":0,\\\"conditionType\\\":\\\"NONE\\\",\\\"conditionParams\\\":{}}]\"}",
+  "prepareParamsMap" : {
+    "system.task.definition.name" : {
+      "prop" : "system.task.definition.name",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "监控分组数据同步"
+    },
+    "system.project.name" : {
+      "prop" : "system.project.name",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : null
+    },
+    "cookie" : {
+      "prop" : "cookie",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : ".AspNetCore.Antiforgery.UcLF_yeFggM=CfDJ8BL1kaDt5Y9EosMU2Kfm5VYyYWCs_MAN4AjVHah8Y5lVjFY6n7KxpvWD4FV6db96iuIBIoJNMPYPxvHSbC6Alq3YAAyJ4cqeH9s0KhaOJWS60S7mwkoSXoo1L9xjXJXTSaBEcweeKgL-RTWexFwscDg; .AspNetCore.Session=CfDJ8BL1kaDt5Y9EosMU2Kfm5VaaN6s632QwbmrS2yEJfK6wHe0nxK6IiupnEu3ygz4m3HHCuu0AcUMtckQu%2B6MvrrmiVTEUGmtGDpys0U%2FTky2QzG%2F1KmOwshiPEoJUccyoz8xHS4Ejn41%2B%2Fb3E%2FvC6HijwkR9QSkXM5ZVQUA08Qgy5; .AspNetCore.Cookies=CfDJ8BL1kaDt5Y9EosMU2Kfm5Vb6OxlGqyeaeK5ggOkkEF0-9Fd0Olzz_gPwb2KEF321OA6sCgmIMwHEo0WmSq66cpQCoLZrkKhiR3h1FKKliFX9Kwxb0l81b-GY1u0bhaRwotSHKBKR6oqJbfn4sugOitby1-QHPve6MiNTtM8bTJOTmMnsKDTcwXdHPuuUXs0DGYBBwGZKWgks1U3RDeQAE0LT7sW1LYctZEM_kVSHtjjYYojnOWnM53rLCZDal3EamMTqhDT0PePmPHYJiRuzXN21E1Z7YUsORd61qpv90vZXEJdCXiFwwp3S_1xc5hQMJDYc1-TgBD6vxrAZVD6fLJy6OIOsdO1O9Kwxq2qABolfaBWTtzrVD4AT91Vr8bWgi4uMqiwAClHpWrDIzOsK2-25Gt9-6N-li1JHYRU0ghr9T5oNpVStjxG1jhYepQtY4izB8SeMwIDAXxRXgshEMNBnvf5iggoeyM5KWQV2D9t1BtrJcAHwMtiDErYV1jfPJchiDa-rxs-Z30AI9IcHVQd-G5zgdbBTOk2KhZdRhYynYQLIWeZxT00Cc0Ta6E8KVZqbb24DSkyGurx4AmIcKv9bOQZNiKELrWJa5o_EHegRjt7wur8EJfVJU5cldRnCCOb_KpZstZwTiO_z78Cr9lGR7iYJUdH-IF2RGxJaMMuONr71JNidhaJHfIUukelk8A"
+    },
+    "parallelism" : {
+      "prop" : "parallelism",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "2"
+    },
+    "system.biz.curdate" : {
+      "prop" : "system.biz.curdate",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "20251221"
+    },
+    "system.task.instance.id" : {
+      "prop" : "system.task.instance.id",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "41960"
+    },
+    "system.task.definition.code" : {
+      "prop" : "system.task.definition.code",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "160640631855648"
+    },
+    "system.datetime" : {
+      "prop" : "system.datetime",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "20251221163619"
+    },
+    "token" : {
+      "prop" : "token",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "CfDJ8BL1kaDt5Y9EosMU2Kfm5VZlIKrgMhMBwj6u8dSVkCmxK3i1ibjvF-ddQ9OnsRpPJ6HSHURrjTt08cvb7Uf2Py8tqo3nrF09vE001i8oZtJ8cpba3B4xXnGuBtHsxtUsX65RFvTLv31xgMPqTDXcrwCYtTjKqG-fekztx3qPbohXfNe2Uo5f_-hvbktnw8zDsA"
+    },
+    "job.mode" : {
+      "prop" : "job.mode",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "BATCH"
+    },
+    "system.project.code" : {
+      "prop" : "system.project.code",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "160353491907904"
+    },
+    "system.workflow.instance.id" : {
+      "prop" : "system.workflow.instance.id",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "1064"
+    },
+    "system.biz.date" : {
+      "prop" : "system.biz.date",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "20251220"
+    },
+    "system.workflow.definition.name" : {
+      "prop" : "system.workflow.definition.name",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "测试sql_copy_20251221163337047"
+    },
+    "checkpoint.interval" : {
+      "prop" : "checkpoint.interval",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "10000"
+    },
+    "system.workflow.definition.code" : {
+      "prop" : "system.workflow.definition.code",
+      "direct" : "IN",
+      "type" : "VARCHAR",
+      "value" : "160640631855649"
+    }
+  },
+  "taskAppId" : "1064_41960",
+  "taskTimeout" : 2147483647,
+  "workerGroup" : "default",
+  "delayTime" : 0,
+  "currentExecutionStatus" : "SUBMITTED_SUCCESS",
+  "resourceParametersHelper" : {
+    "resourceMap" : {
+      "DATASOURCE" : {
+        "17" : {
+          "resourceType" : "DATASOURCE",
+          "type" : "HTTP",
+          "connectionParams" : "{\"host\":\"36.108.189.194\",\"port\":9005,\"httpEndpoint\":\"\",\"httpMethod\":\"\",\"httpAuthType\":\"\",\"httpAuthConfig\":\"\",\"connectTimeout\":5000,\"socketTimeout\":5000,\"protocol\":\"HTTP\",\"password\":\"\"}",
+          "DATASOURCE" : null
+        },
+        "9" : {
+          "resourceType" : "DATASOURCE",
+          "type" : "DORIS",
+          "connectionParams" : "{\"user\":\"root\",\"password\":\"*****************\",\"address\":\"jdbc:mysql:loadbalance://172.41.133.91:9030\",\"database\":\"test\",\"jdbcUrl\":\"jdbc:mysql:loadbalance://172.41.133.91:9030/test\",\"driverClassName\":\"com.mysql.cj.jdbc.Driver\",\"validationQuery\":\"select 1\",\"host\":\"172.41.133.91\",\"port\":9030,\"other\":{\"feHttpPort\":\"8030\"}}",
+          "DATASOURCE" : null
+        }
+      }
+    }
+  },
+  "endTime" : 0,
+  "dryRun" : 0,
+  "paramsMap" : { },
+  "cpuQuota" : -1,
+  "memoryMax" : -1,
+  "testFlag" : 0,
+  "logBufferEnable" : false,
+  "dispatchFailTimes" : 0,
+  "userId" : "1"
+}

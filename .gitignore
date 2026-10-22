@@ -1,0 +1,10 @@
+﻿# build / IDE
+**/target/
+**/node_modules/
+**/dist/
+**/.idea/
+**/.vscode/
+**/*.iml
+**/META-INF/
+**/downloads/
+.DS_Store
