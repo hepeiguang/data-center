@@ -79,6 +79,11 @@
         </dependency>
         <dependency>
             <groupId>org.apache.dolphinscheduler</groupId>
+            <artifactId>dolphinscheduler-datasource-api</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.dolphinscheduler</groupId>
             <artifactId>dolphinscheduler-datasource-all</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -86,6 +91,24 @@
 
     <build>
         <plugins>
+            <!-- Do not compile legacy custom SeaTunnel operator plugins (old visual nodes). -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <!-- Only legacy custom operator trees; do NOT match .../plugin/task/seatunnel/*.java -->
+                        <exclude>**/task/seatunnel/plugin/**</exclude>
+                        <exclude>**/task/seatunnel/sqlcondition/**</exclude>
+                        <exclude>**/task/seatunnel/sqlparser/**</exclude>
+                    </excludes>
+                    <testExcludes>
+                        <testExclude>**/task/seatunnel/plugin/**</testExclude>
+                        <testExclude>**/task/seatunnel/sqlcondition/**</testExclude>
+                        <testExclude>**/task/seatunnel/sqlparser/**</testExclude>
+                    </testExcludes>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
@@ -101,3 +124,4 @@
         </plugins>
     </build>
 </project>
+

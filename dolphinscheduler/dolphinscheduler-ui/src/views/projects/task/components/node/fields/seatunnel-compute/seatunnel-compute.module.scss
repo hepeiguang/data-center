@@ -1,0 +1,66 @@
+.wrap {
+  display: grid;
+  grid-template-columns: 220px 1fr 280px;
+  gap: 12px;
+  width: 100%;
+  min-height: 420px;
+  border: 1px solid var(--n-border-color, #e0e0e6);
+  border-radius: 6px;
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+.palette,
+.canvas,
+.config {
+  min-width: 0;
+  overflow: auto;
+  max-height: 520px;
+}
+
+.paletteTitle,
+.sectionTitle {
+  font-weight: 600;
+  margin-bottom: 8px;
+  font-size: 13px;
+}
+
+.pluginList {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 200px;
+  overflow: auto;
+}
+
+.pluginItem {
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  &:hover {
+    background: rgba(40, 143, 255, 0.12);
+  }
+}
+
+.nodeCard {
+  padding: 8px 10px;
+  border: 1px solid var(--n-border-color, #e0e0e6);
+  border-radius: 6px;
+  cursor: pointer;
+  background: var(--n-color, #fff);
+}
+
+.nodeCardActive {
+  border-color: #288fff;
+  box-shadow: 0 0 0 1px rgba(40, 143, 255, 0.35);
+}
+
+.nodeName {
+  font-weight: 600;
+}
+
+.nodeAlias {
+  color: #999;
+  font-size: 12px;
+}

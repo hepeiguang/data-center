@@ -302,6 +302,7 @@ public final class Constants {
      */
     public static final String TYPE_UNIVERSAL = "Universal";
     public static final String TYPE_DATA_INTEGRATION = "DataIntegration";
+    public static final String TYPE_DATA_COMPUTATION = "DataComputation";
     public static final String TYPE_CLOUD = "Cloud";
     public static final String TYPE_LOGIC = "Logic";
     public static final String TYPE_OTHER = "Other";

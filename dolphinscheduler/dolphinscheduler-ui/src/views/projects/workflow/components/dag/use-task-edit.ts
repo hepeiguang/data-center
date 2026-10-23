@@ -28,17 +28,80 @@ import type {
   WorkflowDefinition,
   EditWorkflowDefinition
 } from './types'
+import {
+  buildDefaultConnects,
+  defaultConnectorParams,
+  isSeaTunnelChildType,
+  isSeaTunnelComputeParent,
+  parseSeaTunnelChildType,
+  parseStComputeGraph,
+  taskDefFromStNode
+} from './seatunnel-compute-utils'
 
 interface Options {
   graph: Ref<Graph | undefined>
   definition: Ref<WorkflowDefinition | undefined>
 }
 
-/**
- * Edit task configuration when dbclick
- * @param {Options} options
- * @returns
- */
+function expandDefinition(
+  def: WorkflowDefinition | undefined
+): EditWorkflowDefinition {
+  const base = (def || {
+    workflowDefinition: {},
+    workflowTaskRelationList: [],
+    taskDefinitionList: []
+  }) as EditWorkflowDefinition
+
+  const tasks = [...(base.taskDefinitionList || [])]
+  const relations = [...(base.workflowTaskRelationList || [])]
+  const codes = new Set(tasks.map((t: any) => Number(t.code)))
+
+  tasks.forEach((task: any) => {
+    if (!isSeaTunnelComputeParent(task.taskType)) return
+    const params = task.taskParams || {}
+    if (params.scriptType === 'custom') return
+    const graph = parseStComputeGraph(params)
+    graph.nodes.forEach((node) => {
+      if (codes.has(Number(node.code))) return
+      codes.add(Number(node.code))
+      tasks.push(taskDefFromStNode(node))
+    })
+    let childRels: any[] = []
+    if (params.relation) {
+      try {
+        const rel = JSON.parse(params.relation)
+        if (Array.isArray(rel)) {
+          childRels = rel.filter(
+            (r: any) => Number(r.preTaskCode) > 0 && Number(r.postTaskCode) > 0
+          )
+        }
+      } catch {
+        /* ignore */
+      }
+    }
+    if (!childRels.length && graph.nodes.length > 1) {
+      childRels = buildDefaultConnects(graph.nodes)
+    }
+    childRels.forEach((r: any) => {
+      if (
+        !relations.find(
+          (x: any) =>
+            Number(x.preTaskCode) === Number(r.preTaskCode) &&
+            Number(x.postTaskCode) === Number(r.postTaskCode)
+        )
+      ) {
+        relations.push(r)
+      }
+    })
+  })
+
+  return {
+    ...base,
+    taskDefinitionList: tasks,
+    workflowTaskRelationList: relations
+  }
+}
+
 export function useTaskEdit(options: Options) {
   const { graph, definition } = options
   const {
@@ -53,11 +116,7 @@ export function useTaskEdit(options: Options) {
     graph
   })
   const workflowDefinition = ref(
-    definition?.value || {
-      workflowDefinition: {},
-      workflowTaskRelationList: [],
-      taskDefinitionList: []
-    }
+    expandDefinition(definition?.value)
   ) as Ref<EditWorkflowDefinition>
 
   const currTask = ref<NodeData>({
@@ -67,22 +126,65 @@ export function useTaskEdit(options: Options) {
   })
   const taskModalVisible = ref(false)
 
-  /**
-   * Append a new task
-   */
   function appendTask(code: number, type: TaskType, coordinate: Coordinate) {
-    addNode(code + '', type, '', 'YES', coordinate)
+    const isParent = isSeaTunnelComputeParent(String(type))
+    const isChild = isSeaTunnelChildType(String(type))
+    const node = addNode(
+      code + '',
+      type,
+      '',
+      'YES',
+      coordinate,
+      isParent ? 'visualize' : undefined,
+      isParent ? true : false
+    )
+    if (!node && isChild) {
+      return
+    }
+
+    const parsed = isChild
+      ? parseSeaTunnelChildType(String(type))
+      : null
+    const taskParams = isParent
+      ? {
+          scriptType: 'visualize',
+          useCustom: true,
+          startupScript: 'seatunnel.sh',
+          deployMode: 'local',
+          stComputeGraph: JSON.stringify({
+            env: { 'job.mode': 'BATCH', parallelism: 2 },
+            nodes: []
+          }),
+          rawScript: JSON.stringify({
+            env: { 'job.mode': 'BATCH', parallelism: 2 },
+            source: [],
+            sink: []
+          })
+        }
+      : isChild && parsed
+        ? {
+            pluginName: parsed.pluginName,
+            connectorType: parsed.kind,
+            ...defaultConnectorParams(parsed.pluginName, parsed.kind),
+            localParams: [],
+            resourceList: []
+          }
+        : undefined
+
     workflowDefinition.value.taskDefinitionList.push({
       code,
       taskType: type,
-      name: ''
-    })
-    openTaskModal({ code, taskType: type, name: '' })
+      name: '',
+      ...(taskParams ? { taskParams } : {})
+    } as any)
+    openTaskModal({
+      code,
+      taskType: type,
+      name: '',
+      ...(taskParams ? { taskParams } : {})
+    } as any)
   }
 
-  /**
-   * Copy a task
-   */
   function copyTask(
     name: string,
     code: number,
@@ -92,12 +194,12 @@ export function useTaskEdit(options: Options) {
     coordinate: Coordinate
   ) {
     addNode(code + '', type, name, flag, coordinate)
-    const definition = workflowDefinition.value.taskDefinitionList.find(
+    const definitionItem = workflowDefinition.value.taskDefinitionList.find(
       (t) => t.code === targetCode
     )
 
     const newDefinition = {
-      ...cloneDeep(definition),
+      ...cloneDeep(definitionItem),
       code,
       name
     } as NodeData
@@ -105,10 +207,6 @@ export function useTaskEdit(options: Options) {
     workflowDefinition.value.taskDefinitionList.push(newDefinition)
   }
 
-  /**
-   * Remove task
-   * @param {number} codes
-   */
   function removeTasks(codes: number[], cells: any[]) {
     workflowDefinition.value.taskDefinitionList =
       workflowDefinition.value.taskDefinitionList.filter(
@@ -140,31 +238,21 @@ export function useTaskEdit(options: Options) {
     taskModalVisible.value = true
   }
 
-  /**
-   * Edit task
-   * @param {number} code
-   */
   function editTask(code: number) {
-    const definition = workflowDefinition.value.taskDefinitionList.find(
+    const definitionItem = workflowDefinition.value.taskDefinitionList.find(
       (t) => t.code === code
     )
-    if (definition) {
-      currTask.value = definition
+    if (definitionItem) {
+      currTask.value = definitionItem
     }
     updatePreTasks(getSources(String(code)), code)
     updatePostTasks(code)
     taskModalVisible.value = true
   }
 
-  /**
-   * The confirm event in task config modal
-   * @param formRef
-   * @param from
-   */
   function taskConfirm({ data }: any) {
     const taskDef = formatParams(data).taskDefinitionJsonObj as NodeData
 
-    // override target config
     workflowDefinition.value.taskDefinitionList =
       workflowDefinition.value.taskDefinitionList.map((task) => {
         if (task.code === currTask.value?.code) {
@@ -191,9 +279,6 @@ export function useTaskEdit(options: Options) {
     taskModalVisible.value = false
   }
 
-  /**
-   * The cancel event in task config modal
-   */
   function taskCancel() {
     taskModalVisible.value = false
     if (!currTask.value.name) {
@@ -258,7 +343,7 @@ export function useTaskEdit(options: Options) {
   })
 
   watch(definition, () => {
-    if (definition.value) workflowDefinition.value = definition.value
+    if (definition.value) workflowDefinition.value = expandDefinition(definition.value)
   })
 
   return {

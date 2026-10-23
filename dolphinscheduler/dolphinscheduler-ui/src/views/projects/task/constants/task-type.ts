@@ -31,6 +31,7 @@ export type TaskType =
   | 'CONDITIONS'
   | 'SWITCH'
   | 'SEATUNNEL'
+  | 'SEATUNNEL_COMPUTE'
   | 'EMR'
   | 'EMR_SERVERLESS'
   | 'ZEPPELIN'
@@ -109,6 +110,10 @@ export const TASK_TYPES_MAP = {
   },
   SEATUNNEL: {
     alias: 'SeaTunnel',
+    helperLinkDisable: true
+  },
+  SEATUNNEL_COMPUTE: {
+    alias: 'SeaTunnel Compute',
     helperLinkDisable: true
   },
   EMR: {

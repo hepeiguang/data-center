@@ -57,6 +57,14 @@ import { useAsyncState } from '@vueuse/core'
 import utils from '@/utils'
 import { executeTask } from '@/service/modules/executors'
 import DependenciesModal from '@/views/projects/components/dependencies/dependencies-modal'
+import {
+  assembleStockSeaTunnelConfig,
+  buildDefaultConnects,
+  isSeaTunnelChildType,
+  isSeaTunnelComputeParent,
+  parseSeaTunnelChildType,
+  type StComputeNode
+} from './seatunnel-compute-utils'
 
 const props = {
   // If this prop is passed, it means from definition detail
@@ -227,11 +235,149 @@ export default defineComponent({
         edges,
         workflowDefinition.value.taskDefinitionList as any
       )
+
+      const parentTaskIds: string[] = []
+      const subTaskIds: string[] = []
+      const parent2Sub: Record<
+        string,
+        { subIds: string[]; connects: any[] }
+      > = {}
+      const sub2Parent: Record<string, string> = {}
+
+      nodes.forEach((item: any) => {
+        if (
+          item.shape === 'dag-task' &&
+          item.children &&
+          item.children.length &&
+          isSeaTunnelComputeParent(item.data?.taskType)
+        ) {
+          parentTaskIds.push(item.id)
+          parent2Sub[item.id] = { subIds: [], connects: [] }
+          item.children.forEach((subItem: any) => {
+            if (subItem.shape === 'dag-task') {
+              subTaskIds.push(subItem.id)
+              parent2Sub[item.id].subIds.push(subItem.id)
+              sub2Parent[subItem.id] = item.id
+            }
+          })
+        }
+      })
+
+      const newConnects: any[] = []
+      connects.forEach((item: any) => {
+        const pre = String(item.preTaskCode)
+        const post = String(item.postTaskCode)
+        const preNum = Number(item.preTaskCode)
+        const postNum = Number(item.postTaskCode)
+        if (subTaskIds.indexOf(pre) < 0 && subTaskIds.indexOf(post) < 0) {
+          newConnects.push(item)
+        } else {
+          // Skip DS placeholder edges (preTaskCode=0) — they break SeaTunnel chaining
+          if (!(preNum > 0 && postNum > 0)) return
+          const pId = sub2Parent[pre] || sub2Parent[post]
+          if (pId && parent2Sub[pId]) {
+            parent2Sub[pId].connects.push(item)
+          }
+        }
+      })
+
+      const taskDefinitionObj: Record<string, any> = {}
+      workflowDefinition.value.taskDefinitionList.forEach((item: any) => {
+        taskDefinitionObj[String(item.code)] = item
+      })
+
+      const newTaskDefinitions: any[] = []
+      workflowDefinition.value.taskDefinitionList.forEach((item: any) => {
+        if (isSeaTunnelComputeParent(item.taskType)) {
+          if (parentTaskIds.indexOf(String(item.code)) >= 0) {
+            const res = { ...item }
+            const nodesGraph: StComputeNode[] = []
+            let env: Record<string, any> = {
+              'job.mode': 'BATCH',
+              parallelism: 2
+            }
+            try {
+              if (res.taskParams?.stComputeGraph) {
+                const g = JSON.parse(res.taskParams.stComputeGraph)
+                env = { ...env, ...(g.env || {}) }
+              }
+            } catch {
+              /* keep default env */
+            }
+
+            let groupConnects =
+              parent2Sub[String(item.code)].connects || []
+            parent2Sub[String(item.code)].subIds.forEach((subId: string) => {
+              const subItem = taskDefinitionObj[subId]
+              if (!subItem?.taskType) return
+              const { pluginName, kind } = parseSeaTunnelChildType(
+                subItem.taskType
+              )
+              const {
+                localParams,
+                resourceList,
+                pluginName: _pn,
+                connectorType: _ct,
+                ...params
+              } = { ...(subItem.taskParams || {}) }
+              nodesGraph.push({
+                type: kind,
+                pluginName,
+                code: Number(subId),
+                params: { ...params },
+                name: subItem.name
+              })
+            })
+            // Persist chain edges so reload shows Source→Transform→Sink links
+            if (
+              !groupConnects.some(
+                (c: any) => Number(c.preTaskCode) > 0 && Number(c.postTaskCode) > 0
+              )
+            ) {
+              groupConnects = buildDefaultConnects(nodesGraph)
+            }
+
+            if (!res.taskParams) res.taskParams = {}
+            res.taskParams.scriptType = res.taskParams.scriptType || 'visualize'
+            res.taskParams.useCustom = true
+            res.taskParams.stComputeGraph = JSON.stringify({
+              env,
+              nodes: nodesGraph
+            })
+            res.taskParams.rawScript = JSON.stringify(
+              assembleStockSeaTunnelConfig(env, nodesGraph, groupConnects),
+              null,
+              2
+            )
+            res.taskParams.relation = JSON.stringify(groupConnects)
+            newTaskDefinitions.push(res)
+          } else {
+            const res = { ...item }
+            if (!res.taskParams) res.taskParams = {}
+            if (res.taskParams.scriptType !== 'custom') {
+              res.taskParams.stComputeGraph =
+                res.taskParams.stComputeGraph ||
+                JSON.stringify({
+                  env: { 'job.mode': 'BATCH', parallelism: 2 },
+                  nodes: []
+                })
+              res.taskParams.relation = JSON.stringify([])
+            }
+            newTaskDefinitions.push(res)
+          }
+        } else if (
+          subTaskIds.indexOf(String(item.code)) < 0 &&
+          !isSeaTunnelChildType(item.taskType)
+        ) {
+          newTaskDefinitions.push(item)
+        }
+      })
+
       const locations = getLocations(nodes)
       context.emit('save', {
-        taskDefinitions: workflowDefinition.value.taskDefinitionList,
+        taskDefinitions: newTaskDefinitions,
         saveForm,
-        connects,
+        connects: newConnects,
         locations
       })
       saveModelToggle(false)

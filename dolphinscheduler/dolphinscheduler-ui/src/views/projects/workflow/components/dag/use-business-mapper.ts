@@ -103,11 +103,17 @@ export function useBusinessMapper() {
     return nodes.map((node) => {
       const code = +node.id
       const { x, y } = node.getPosition()
-      return {
+      const size = node.getSize?.()
+      const loc: any = {
         taskCode: code,
         x,
         y
       }
+      if (size?.width && size.width > 220) {
+        loc.width = size.width
+        loc.height = size.height
+      }
+      return loc
     })
   }
 

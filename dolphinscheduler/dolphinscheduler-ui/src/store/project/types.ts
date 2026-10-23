@@ -37,6 +37,7 @@ type TaskType =
   | 'CONDITIONS'
   | 'SWITCH'
   | 'SEATUNNEL'
+  | 'SEATUNNEL_COMPUTE'
   | 'EMR'
   | 'EMR_SERVERLESS'
   | 'ZEPPELIN'

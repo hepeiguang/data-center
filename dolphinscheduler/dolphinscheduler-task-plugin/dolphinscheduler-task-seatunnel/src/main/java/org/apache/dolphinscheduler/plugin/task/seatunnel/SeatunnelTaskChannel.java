@@ -21,24 +21,15 @@ import static org.apache.dolphinscheduler.plugin.task.seatunnel.Constants.STARTU
 import static org.apache.dolphinscheduler.plugin.task.seatunnel.Constants.STARTUP_SCRIPT_SEATUNNEL;
 import static org.apache.dolphinscheduler.plugin.task.seatunnel.Constants.STARTUP_SCRIPT_SPARK;
 
-import lombok.extern.slf4j.Slf4j;
 import org.apache.dolphinscheduler.common.utils.JSONUtils;
 import org.apache.dolphinscheduler.plugin.task.api.TaskChannel;
 import org.apache.dolphinscheduler.plugin.task.api.TaskExecutionContext;
 import org.apache.dolphinscheduler.plugin.task.api.parameters.AbstractParameters;
-import org.apache.dolphinscheduler.plugin.task.api.parameters.ParametersNode;
-import org.apache.dolphinscheduler.plugin.task.api.parameters.resource.ResourceParametersHelper;
 import org.apache.dolphinscheduler.plugin.task.seatunnel.flink.SeatunnelFlinkTask;
 import org.apache.dolphinscheduler.plugin.task.seatunnel.self.SeatunnelEngineTask;
 import org.apache.dolphinscheduler.plugin.task.seatunnel.spark.SeatunnelSparkTask;
 
-@Slf4j
 public class SeatunnelTaskChannel implements TaskChannel {
-
-    @Override
-    public void cancelApplication(boolean status) {
-
-    }
 
     @Override
     public SeatunnelTask createTask(TaskExecutionContext taskRequest) {
@@ -59,14 +50,7 @@ public class SeatunnelTaskChannel implements TaskChannel {
     }
 
     @Override
-    public AbstractParameters parseParameters(ParametersNode parametersNode) {
-        return JSONUtils.parseObject(parametersNode.getTaskParams(), SeatunnelParameters.class);
+    public AbstractParameters parseParameters(String taskParams) {
+        return JSONUtils.parseObject(taskParams, SeatunnelParameters.class);
     }
-
-    @Override
-    public ResourceParametersHelper getResources(String parameters) {
-        log.info("SeatunnelTaskChannel load resource :{}", parameters);
-        return JSONUtils.parseObject(parameters, SeatunnelParameters.class).getResources();
-    }
-
 }

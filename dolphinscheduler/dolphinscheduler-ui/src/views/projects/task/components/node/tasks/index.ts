@@ -28,6 +28,9 @@ import { useSql } from './use-sql'
 import { useProcedure } from './use-procedure'
 import { useSqoop } from './use-sqoop'
 import { useSeaTunnel } from './use-sea-tunnel'
+import { useSeaTunnelCompute } from './use-sea-tunnel-compute'
+import { useStConnector } from './use-st-connector'
+import { isSeaTunnelChildType } from '@/views/projects/workflow/components/dag/seatunnel-compute-utils'
 import { useSwitch } from './use-switch'
 import { useConditions } from './use-conditions'
 import { useDataX } from './use-datax'
@@ -53,7 +56,7 @@ import { useDataFactory } from './use-data-factory'
 import { useRemoteShell } from './use-remote-shell'
 import { useAliyunServerlessSpark } from './use-aliyun-serverless-spark'
 
-export default {
+const nodes: Record<string, any> = {
   SHELL: useShell,
   SUB_WORKFLOW: useSubWorkflow,
   PYTHON: usePython,
@@ -66,6 +69,7 @@ export default {
   PROCEDURE: useProcedure,
   SQOOP: useSqoop,
   SEATUNNEL: useSeaTunnel,
+  SEATUNNEL_COMPUTE: useSeaTunnelCompute,
   SWITCH: useSwitch,
   CONDITIONS: useConditions,
   DATAX: useDataX,
@@ -92,3 +96,13 @@ export default {
   REMOTESHELL: useRemoteShell,
   ALIYUN_SERVERLESS_SPARK: useAliyunServerlessSpark
 }
+
+export default new Proxy(nodes, {
+  get(target, prop: string | symbol) {
+    if (typeof prop === 'string' && target[prop]) return target[prop]
+    if (typeof prop === 'string' && isSeaTunnelChildType(prop)) {
+      return useStConnector
+    }
+    return undefined
+  }
+})

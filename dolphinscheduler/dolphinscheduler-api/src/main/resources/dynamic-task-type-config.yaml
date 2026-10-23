@@ -24,5 +24,7 @@ dynamic-task:
     - {name: SUB_WORKFLOW,icon: shell-icon.png,hover: shell-hover.png}
   dataIntegration:
     - {name: SEATUNNEL,icon: shell-icon.png,hover: shell-hover.png}
+  dataComputation:
+    - {name: SEATUNNEL_COMPUTE,icon: shell-icon.png,hover: shell-hover.png}
   machineLearning:
     - {name: JUPYTER,icon: shell-icon.png,hover: shell-hover.png}

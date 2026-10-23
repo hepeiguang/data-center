@@ -22,6 +22,7 @@ import { NODE, EDGE, X6_NODE_NAME, X6_EDGE_NAME } from './dag-config'
 import { debounce } from 'lodash'
 import { useResizeObserver } from '@vueuse/core'
 import ContextMenuTool from './dag-context-menu'
+import { isSeaTunnelChildType } from './seatunnel-compute-utils'
 
 interface Options {
   readonly: Ref<boolean>
@@ -62,6 +63,18 @@ export function useCanvasInit(options: Options) {
         min: 0.2,
         max: 2
       },
+      // Only SEATUNNEL_COMPUTE visualize group frames can be drag-resized
+      resizing: {
+        enabled(this: Graph, node: Node) {
+          if (readonly.value) return false
+          return !!node.getData?.()?.parent
+        },
+        minWidth: 400,
+        minHeight: 220,
+        orthogonal: false,
+        restrict: false,
+        preserveAspectRatio: false
+      },
       mousewheel: {
         enabled: true,
         modifiers: ['ctrl', 'meta']
@@ -70,6 +83,22 @@ export function useCanvasInit(options: Options) {
       grid: {
         size: 10,
         visible: true
+      },
+      embedding: {
+        enabled: true,
+        findParent({ node }) {
+          if (!isSeaTunnelChildType(node?.getData?.()?.taskType)) {
+            return []
+          }
+          const bbox = node.getBBox()
+          return this.getNodes().filter((n) => {
+            const data = n.getData()
+            if (data?.parent) {
+              return bbox.isIntersectWithRect(n.getBBox())
+            }
+            return false
+          })
+        }
       },
       snapline: true,
       minimap: {
@@ -207,6 +236,84 @@ export function useCanvasInit(options: Options) {
     // Remove all tools when the mouse leaving
     graph.value.on('node:mouseleave', ({ node }) => {
       node.removeTool('button')
+    })
+
+    // Keep group origin size when user drag-resizes the frame
+    graph.value.on('node:change:size', ({ node, options }) => {
+      if (options.skipParentHandler) return
+      const children = node.getChildren()
+      if (children?.length) {
+        node.prop('originSize', node.getSize())
+      }
+    })
+
+    // Auto-expand parent group when children move near the edge
+    const embedPadding = 20
+    let ctrlPressed = false
+    graph.value.on('node:embedding', ({ e }: { e: MouseEvent }) => {
+      ctrlPressed = e.metaKey || e.ctrlKey
+    })
+    graph.value.on('node:embedded', () => {
+      ctrlPressed = false
+    })
+    graph.value.on('node:change:position', ({ node, options }) => {
+      if (options.skipParentHandler || ctrlPressed) return
+
+      const children = node.getChildren()
+      if (children?.length) {
+        node.prop('originPosition', node.getPosition())
+      }
+
+      const parent = node.getParent()
+      if (!(parent && parent.isNode())) return
+
+      let originSize = parent.prop('originSize')
+      if (originSize == null) {
+        originSize = parent.getSize()
+        parent.prop('originSize', originSize)
+      }
+      let originPosition = parent.prop('originPosition')
+      if (originPosition == null) {
+        originPosition = parent.getPosition()
+        parent.prop('originPosition', originPosition)
+      }
+
+      let x = originPosition.x
+      let y = originPosition.y
+      let cornerX = originPosition.x + originSize.width
+      let cornerY = originPosition.y + originSize.height
+      let hasChange = false
+
+      parent.getChildren()?.forEach((child) => {
+        const bbox = child.getBBox().inflate(embedPadding)
+        const corner = bbox.getCorner()
+        if (bbox.x < x) {
+          x = bbox.x
+          hasChange = true
+        }
+        if (bbox.y < y) {
+          y = bbox.y
+          hasChange = true
+        }
+        if (corner.x > cornerX) {
+          cornerX = corner.x
+          hasChange = true
+        }
+        if (corner.y > cornerY) {
+          cornerY = corner.y
+          hasChange = true
+        }
+      })
+
+      if (hasChange) {
+        parent.prop(
+          {
+            position: { x, y },
+            size: { width: cornerX - x, height: cornerY - y }
+          },
+          { skipParentHandler: true }
+        )
+      }
     })
   })
 

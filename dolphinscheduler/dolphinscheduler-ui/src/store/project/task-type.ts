@@ -22,7 +22,7 @@ import type {
   TaskExecuteType
 } from './types'
 
-export const TASK_TYPES_MAP = {
+const TASK_TYPES_MAP_BASE = {
   JAVA: {
     alias: 'JAVA'
   },
@@ -75,6 +75,10 @@ export const TASK_TYPES_MAP = {
   },
   SEATUNNEL: {
     alias: 'SeaTunnel',
+    helperLinkDisable: true
+  },
+  SEATUNNEL_COMPUTE: {
+    alias: 'SeaTunnel Compute',
     helperLinkDisable: true
   },
   EMR: {
@@ -165,6 +169,30 @@ export const TASK_TYPES_MAP = {
     taskExecuteType?: TaskExecuteType
   }
 }
+
+const isSeaTunnelChildTypeKey = (type: string) =>
+  /_(SOURCE|SINK|TRANSFORM)$/.test(type)
+
+/** Resolve SeaTunnel Compute child types (Jdbc_SOURCE etc.) at runtime. */
+export const TASK_TYPES_MAP = new Proxy(TASK_TYPES_MAP_BASE as Record<string, any>, {
+  get(target, prop: string | symbol) {
+    if (typeof prop !== 'string') return undefined
+    if (prop in target) return target[prop]
+    if (isSeaTunnelChildTypeKey(prop)) {
+      return {
+        alias: prop.replace(/_(SOURCE|SINK|TRANSFORM)$/, ''),
+        helperLinkDisable: true
+      }
+    }
+    return undefined
+  },
+  has(target, prop: string | symbol) {
+    return (
+      typeof prop === 'string' &&
+      (prop in target || isSeaTunnelChildTypeKey(prop))
+    )
+  }
+}) as typeof TASK_TYPES_MAP_BASE & Record<string, { alias: string; helperLinkDisable?: boolean; taskExecuteType?: TaskExecuteType }>
 
 export const useTaskTypeStore = defineStore({
   id: 'project-task-type',

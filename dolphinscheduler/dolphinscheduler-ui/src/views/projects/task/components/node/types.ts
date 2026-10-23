@@ -431,6 +431,8 @@ interface ITaskParams {
   zkPath?: string
   executeMode?: string
   useCustom?: boolean
+  scriptType?: string
+  stComputeGraph?: string
   runMode?: string
   dvcTaskType?: string
   dvcRepository?: string

@@ -27,6 +27,10 @@ import type {
 } from './types'
 import { ref } from 'vue'
 import * as proto from 'protobufjs'
+import {
+  defaultConnectorParams,
+  type ConnectorKind
+} from '@/views/projects/workflow/components/dag/seatunnel-compute-utils'
 
 export function formatParams(data: INodeData): {
   workflowDefinitionCode: string
@@ -242,6 +246,30 @@ export function formatParams(data: INodeData): {
     if (data.startupScript === 'seatunnel.sh') {
       taskParams.deployMode = data.deployMode
       taskParams.others = data.others
+    }
+  }
+
+  if (data.taskType === 'SEATUNNEL_COMPUTE') {
+    taskParams.startupScript = data.startupScript || 'seatunnel.sh'
+    taskParams.useCustom = true
+    taskParams.scriptType = (data as any).scriptType || 'visualize'
+    taskParams.deployMode = data.deployMode || 'local'
+    taskParams.rawScript = data.rawScript
+    ;(taskParams as any).stComputeGraph = (data as any).stComputeGraph
+    ;(taskParams as any).relation = (data as any).relation
+  }
+
+  if (
+    data.taskType &&
+    /_(SOURCE|SINK|TRANSFORM)$/.test(String(data.taskType))
+  ) {
+    taskParams.pluginName = (data as any).pluginName
+    taskParams.connectorType = (data as any).connectorType
+    try {
+      const parsed = JSON.parse((data as any).connectorParams || '{}')
+      Object.assign(taskParams, parsed)
+    } catch {
+      /* keep */
     }
   }
 
@@ -554,6 +582,31 @@ export function formatModel(data: ITaskData) {
       : [],
     localParams: data.taskParams?.localParams || []
   } as INodeData
+
+  if (
+    data.taskType &&
+    /_(SOURCE|SINK|TRANSFORM)$/.test(String(data.taskType))
+  ) {
+    const tp = (data.taskParams || {}) as Record<string, any>
+    const {
+      pluginName,
+      connectorType,
+      localParams: _lp,
+      resourceList: _rl,
+      ...rest
+    } = tp
+    const m = String(data.taskType).match(/^(.*)_(SOURCE|SINK|TRANSFORM)$/)
+    const pn = pluginName || (m ? m[1] : '')
+    const ct = (connectorType || (m ? m[2] : '')) as ConnectorKind
+    ;(params as any).pluginName = pn
+    ;(params as any).connectorType = ct
+    // Seed runnable defaults when child was just dropped with empty params.
+    let connectorParams = rest || {}
+    if (!Object.keys(connectorParams).length && pn && ct) {
+      connectorParams = defaultConnectorParams(pn, ct)
+    }
+    ;(params as any).connectorParams = JSON.stringify(connectorParams, null, 2)
+  }
 
   if (data.timeoutNotifyStrategy === 'WARNFAILED') {
     params.timeoutNotifyStrategy = ['WARN', 'FAILED']

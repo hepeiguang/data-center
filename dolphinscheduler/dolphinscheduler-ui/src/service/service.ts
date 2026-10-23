@@ -83,9 +83,12 @@ const err = (error: unknown): Promise<never> => {
 }
 
 service.interceptors.request.use((config: InternalAxiosRequestConfig) => {
-  config.headers.set('sessionId', userStore.getSessionId)
+  // Prefer assignment over AxiosHeaders.set() so both axios 0.x (plain object)
+  // and 1.x (AxiosHeaders) work — stale installs may still be on 0.27.x.
+  config.headers = config.headers ?? {}
+  config.headers['sessionId'] = userStore.getSessionId
   const language = cookies.get('language')
-  if (language) config.headers.set('language', language)
+  if (language) config.headers['language'] = language
 
   return config
 }, err)

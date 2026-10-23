@@ -26,6 +26,7 @@ import {
   getDagMenu
 } from '@/service/modules/dag-menu'
 import { useI18n } from 'vue-i18n'
+import { buildDataComputationSidebarTree } from './seatunnel-compute-utils'
 
 export default defineComponent({
   name: 'workflow-dag-sidebar',
@@ -37,7 +38,7 @@ export default defineComponent({
       cloud: [],
       logic: [],
       di: [],
-      dq: [],
+      dc: [],
       ml: [],
       other: [],
       fav: []
@@ -66,6 +67,16 @@ export default defineComponent({
         variables.di = variables.dataList.filter(
           (item: any) => item.taskCategory === 'DataIntegration'
         )
+        const dcRaw = variables.dataList.filter(
+          (item: any) => item.taskCategory === 'DataComputation'
+        )
+        // Nest SeaTunnel Compute connectors like ds_ui_code seatunnel_group.
+        variables.dc = dcRaw.map((item: any) => {
+          if (item.taskType === 'SEATUNNEL_COMPUTE' || item.type === 'SEATUNNEL_COMPUTE') {
+            return buildDataComputationSidebarTree(item)
+          }
+          return item
+        })
         variables.ml = variables.dataList.filter(
           (item: any) => item.taskCategory === 'MachineLearning'
         )
@@ -341,51 +352,112 @@ export default defineComponent({
               }}
             ></NCollapseItem>
           )}
-          {variables.dq.length > 0 && (
+          {variables.dc.length > 0 && (
             <NCollapseItem
-              title={t('project.menu.dq')}
+              title={t('project.menu.dc')}
               name='5'
-              class='task-cate-dq'
+              class='task-cate-dc'
               v-slots={{
                 default: () => {
-                  return variables.dq.map((task: any) => (
-                    <div
-                      class={[styles.draggable, `task-item-${task.type}`]}
-                      draggable='true'
-                      onDragstart={(e) => {
-                        context.emit('dragStart', e, task.type as TaskType)
-                      }}
-                    >
-                      <em
-                        class={[
-                          styles['sidebar-icon'],
-                          styles['icon-' + task.type.toLocaleLowerCase()]
-                        ]}
-                      />
-                      <span>{task.taskType}</span>
+                  return variables.dc.map((group: any) => {
+                    if (group.taskType === 'seatunnel_compute_group') {
+                      return (
+                        <NCollapse default-expanded-names={['SEATUNNEL_COMPUTE']}>
+                          <NCollapseItem
+                            title={group.taskName}
+                            name='SEATUNNEL_COMPUTE'
+                            v-slots={{
+                              default: () =>
+                                (group.children || []).map((task: any) => {
+                                  if (task.leaf && task.type === 'SEATUNNEL_COMPUTE') {
+                                    return (
+                                      <div
+                                        class={[
+                                          styles.draggable,
+                                          `task-item-${task.type}`
+                                        ]}
+                                        draggable='true'
+                                        onDragstart={(e) => {
+                                          context.emit(
+                                            'dragStart',
+                                            e,
+                                            task.type as TaskType
+                                          )
+                                        }}
+                                      >
+                                        <em
+                                          class={[
+                                            styles['sidebar-icon'],
+                                            styles['icon-seatunnel_compute']
+                                          ]}
+                                        />
+                                        <span>{task.taskName || task.taskType}</span>
+                                      </div>
+                                    )
+                                  }
+                                  return (
+                                    <NCollapse>
+                                      <NCollapseItem
+                                        title={task.taskName}
+                                        name={task.taskType}
+                                        style='margin-left: 8px; border-top: 1px solid rgba(0,0,0,0.08); padding: 4px 0;'
+                                      >
+                                        {(task.children || []).map(
+                                          (stask: any) => (
+                                            <div
+                                              class={[
+                                                styles.draggable,
+                                                `task-item-${stask.type}`
+                                              ]}
+                                              draggable='true'
+                                              onDragstart={(e) => {
+                                                e.stopPropagation()
+                                                context.emit(
+                                                  'dragStart',
+                                                  e,
+                                                  stask.type as TaskType
+                                                )
+                                              }}
+                                            >
+                                              <em
+                                                class={[
+                                                  styles['sidebar-icon'],
+                                                  styles['icon-seatunnel_compute']
+                                                ]}
+                                              />
+                                              <span>{stask.taskName}</span>
+                                            </div>
+                                          )
+                                        )}
+                                      </NCollapseItem>
+                                    </NCollapse>
+                                  )
+                                })
+                            }}
+                          />
+                        </NCollapse>
+                      )
+                    }
+                    return (
                       <div
-                        class={styles.stars}
-                        onMouseenter={() => {
-                          task.starHover = true
+                        class={[styles.draggable, `task-item-${group.type}`]}
+                        draggable='true'
+                        onDragstart={(e) => {
+                          context.emit('dragStart', e, group.type as TaskType)
                         }}
-                        onMouseleave={() => {
-                          task.starHover = false
-                        }}
-                        onClick={() => handleCollection(task)}
                       >
-                        <NIcon
-                          size='20'
-                          color={
-                            task.collection || task.starHover
-                              ? '#288FFF'
-                              : '#ccc'
-                          }
-                        >
-                          {task.collection ? <StarFilled /> : <StarOutlined />}
-                        </NIcon>
+                        <em
+                          class={[
+                            styles['sidebar-icon'],
+                            styles[
+                              'icon-' + String(group.type).toLocaleLowerCase()
+                            ]
+                          ]}
+                        />
+                        <span>{group.taskType}</span>
                       </div>
-                    </div>
-                  ))
+                    )
+                  })
                 }
               }}
             ></NCollapseItem>
