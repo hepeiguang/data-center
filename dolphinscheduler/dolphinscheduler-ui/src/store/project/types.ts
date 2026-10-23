@@ -84,6 +84,8 @@ interface TaskNodeState {
   postTaskOptions: IOption[]
   preTaskOptions: IOption[]
   preTasks: number[]
+  /** Full task list of current workflow (for upstream SeaTunnel field hints). */
+  taskDefinitionList: any[]
   resources: IResource[]
   mainJars: { [key in ProgramType]?: IMainJar[] }
   name: string

@@ -19,15 +19,55 @@
   outline: 0;
 }
 
+/* Global scrollbar — soft blue to match DS primary (#1890ff / #288fff) */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(24, 144, 255, 0.35) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: rgba(24, 144, 255, 0.28);
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background-clip: padding-box;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(24, 144, 255, 0.5);
+}
+
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Naive UI custom scrollbar (layouts with native-scrollbar=false) */
+.n-scrollbar > .n-scrollbar-rail > .n-scrollbar-rail__scrollbar,
+.n-scrollbar-rail > .n-scrollbar-rail__scrollbar {
+  background-color: rgba(24, 144, 255, 0.28) !important;
+  border-radius: 6px !important;
+  width: 6px !important;
+}
+
+.n-scrollbar > .n-scrollbar-rail:hover > .n-scrollbar-rail__scrollbar,
+.n-scrollbar > .n-scrollbar-rail > .n-scrollbar-rail__scrollbar:hover,
+.n-scrollbar-rail:hover > .n-scrollbar-rail__scrollbar,
+.n-scrollbar-rail > .n-scrollbar-rail__scrollbar:hover {
+  background-color: rgba(24, 144, 255, 0.5) !important;
+}
+
 html,
 body {
   width: 100%;
   height: 100%;
-  //scrollbar-width: none;
-  //-ms-overflow-style: none;
-  //::-webkit-scrollbar {
-  //  display: none;
-  //}
 }
 
 html,

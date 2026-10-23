@@ -31,6 +31,7 @@ import {
   EDGE_SELECTED,
   EDGE_HOVER
 } from './dag-config'
+import { resolveTaskIconFile } from './seatunnel-compute-utils'
 
 interface Options {
   graph: Ref<Graph | undefined>
@@ -90,11 +91,12 @@ export function useCellActive(options: Options) {
     let portAttrs = null
 
     if (isHover || isSelected) {
-      img = `${import.meta.env.BASE_URL}images/task-icons/${(node.data
-        .taskType !== 'FLINK_STREAM'
-        ? node.data.taskType
-        : 'FLINK'
-      ).toLocaleLowerCase()}_hover.png`
+      const iconType =
+        node.data.taskType !== 'FLINK_STREAM' ? node.data.taskType : 'FLINK'
+      img = `${import.meta.env.BASE_URL}images/task-icons/${resolveTaskIconFile(
+        iconType,
+        true
+      )}`
       if (isHover) {
         nodeAttrs = nodeHover
         portAttrs = _.merge(portDefault, portHover)
@@ -103,11 +105,12 @@ export function useCellActive(options: Options) {
         portAttrs = _.merge(portDefault, portSelected)
       }
     } else {
-      img = `${import.meta.env.BASE_URL}images/task-icons/${(node.data
-        .taskType !== 'FLINK_STREAM'
-        ? node.data.taskType
-        : 'FLINK'
-      ).toLocaleLowerCase()}.png`
+      const iconType =
+        node.data.taskType !== 'FLINK_STREAM' ? node.data.taskType : 'FLINK'
+      img = `${import.meta.env.BASE_URL}images/task-icons/${resolveTaskIconFile(
+        iconType,
+        false
+      )}`
       nodeAttrs = NODE.attrs
       portAttrs = portDefault
     }

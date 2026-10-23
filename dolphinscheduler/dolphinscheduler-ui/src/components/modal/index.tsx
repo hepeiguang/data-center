@@ -68,6 +68,11 @@ const props = {
   headerLinks: {
     type: Object as PropType<Ref<Array<LinkOption>>>,
     default: [] as LinkOption[]
+  },
+  /** Wider dialog (e.g. SeaTunnel param guide + JSON editor). */
+  wide: {
+    type: Boolean as PropType<boolean>,
+    default: false
   }
 }
 
@@ -106,7 +111,7 @@ const Modal = defineComponent({
     return (
       <NModal
         v-model={[this.show, 'show']}
-        class={styles.container}
+        class={[styles.container, this.wide && styles.containerWide]}
         mask-closable={false}
         auto-focus={this.autoFocus}
         onMaskClick={onMaskClick}

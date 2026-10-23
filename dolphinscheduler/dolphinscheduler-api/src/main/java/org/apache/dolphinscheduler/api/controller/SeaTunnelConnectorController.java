@@ -24,16 +24,21 @@ import org.apache.dolphinscheduler.api.utils.Result;
 import org.apache.dolphinscheduler.common.constants.Constants;
 import org.apache.dolphinscheduler.dao.entity.User;
 
+import java.util.List;
 import java.util.Map;
 
 import javax.annotation.Resource;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -58,5 +63,27 @@ public class SeaTunnelConnectorController extends BaseController {
                                  @Parameter(hidden = true) @RequestAttribute(value = Constants.SESSION_USER) User loginUser) {
         Map<String, Object> catalog = seaTunnelConnectorService.getConnectorCatalog();
         return success(Status.SUCCESS.getMsg(), catalog);
+    }
+
+    @Operation(summary = "listUdpCodecs", description = "List UDP UDF codecs under SEATUNNEL_HOME/udf/udp-codec")
+    @GetMapping(value = "/udp-codecs")
+    @ResponseStatus(HttpStatus.OK)
+    @ApiException(Status.LIST_TASK_TYPE_ERROR)
+    public Result listUdpCodecs(
+                                @Parameter(hidden = true) @RequestAttribute(value = Constants.SESSION_USER) User loginUser) {
+        List<Map<String, Object>> list = seaTunnelConnectorService.listUdpCodecs();
+        return success(Status.SUCCESS.getMsg(), list);
+    }
+
+    @Operation(summary = "uploadUdpCodec", description = "Upload JS / offset-table JSON UDF for UDP Source")
+    @PostMapping(value = "/udp-codecs", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @ResponseStatus(HttpStatus.OK)
+    @ApiException(Status.REQUEST_PARAMS_NOT_VALID_ERROR)
+    public Result uploadUdpCodec(
+                                 @Parameter(hidden = true) @RequestAttribute(value = Constants.SESSION_USER) User loginUser,
+                                 @RequestParam("file") MultipartFile file,
+                                 @RequestParam(value = "name", required = false) String name) {
+        Map<String, Object> saved = seaTunnelConnectorService.uploadUdpCodec(file, name);
+        return success(Status.SUCCESS.getMsg(), saved);
     }
 }

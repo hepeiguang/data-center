@@ -13,6 +13,22 @@
 
     <properties>
     </properties>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <!-- seatunnel-jackson optional classifier (shaded) needed for OffsetTableParser unit tests -->
+                    <additionalClasspathElements>
+                        <additionalClasspathElement>${settings.localRepository}/org/apache/seatunnel/seatunnel-jackson/${project.version}/seatunnel-jackson-${project.version}-optional.jar</additionalClasspathElement>
+                    </additionalClasspathElements>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
     <dependencies>
         <dependency>
             <groupId>org.apache.seatunnel</groupId>
@@ -26,6 +42,32 @@
             <version>${project.version}</version>
 <!--            <scope>provided</scope>-->
         </dependency>
-
+        <dependency>
+            <groupId>org.apache.seatunnel</groupId>
+            <artifactId>seatunnel-jackson</artifactId>
+            <version>${project.version}</version>
+            <classifier>optional</classifier>
+        </dependency>
+        <!-- Netty UDP receive (transport=netty, default) -->
+        <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-transport</artifactId>
+            <version>4.1.89.Final</version>
+        </dependency>
+        <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-buffer</artifactId>
+            <version>4.1.89.Final</version>
+        </dependency>
+        <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-common</artifactId>
+            <version>4.1.89.Final</version>
+        </dependency>
+        <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-resolver</artifactId>
+            <version>4.1.89.Final</version>
+        </dependency>
     </dependencies>
 </project>

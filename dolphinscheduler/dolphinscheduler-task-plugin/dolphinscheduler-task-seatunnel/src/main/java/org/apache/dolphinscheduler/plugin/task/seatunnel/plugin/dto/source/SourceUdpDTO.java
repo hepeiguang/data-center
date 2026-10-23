@@ -23,10 +23,21 @@ public class SourceUdpDTO extends BaseSeatunnelSourceDTO {
     private Boolean replyEnabled;
     private String replyMessage;
     private String format;
-    /** none | js | offset_table */
+    /** none | js | offset_table | custom | string | bytes */
     private String parseMode;
     /** skip | fail — 单包解析失败时跳过或作业失败 */
     private String parseErrorHandleWay;
+    /** FQCN of PacketCodec / PacketCodecProvider when parseMode=custom */
+    private String decoderClass;
+    /** SPI PacketCodecProvider name (string / bytes / custom) */
+    private String decoderName;
+    /** Built-in string/bytes codecs also emit packet meta */
+    private Boolean decoderIncludeMeta;
+    /** netty (default) | jdk */
+    private String transport;
+    private Integer workerThreads;
+    private Integer receiveQueueSize;
+    private Integer soRcvBuf;
     private String scriptPath;
     private String scriptContent;
     private String offsetTable;

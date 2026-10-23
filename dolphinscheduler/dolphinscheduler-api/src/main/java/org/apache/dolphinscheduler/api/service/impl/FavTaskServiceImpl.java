@@ -25,6 +25,7 @@ import org.apache.dolphinscheduler.dao.entity.User;
 import org.apache.dolphinscheduler.dao.mapper.FavTaskMapper;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -46,10 +47,12 @@ public class FavTaskServiceImpl extends BaseServiceImpl implements FavTaskServic
 
         List<FavTaskDto> defaultTaskTypes = taskTypeConfiguration.getDefaultTaskTypes();
         List<FavTaskDto> result = new ArrayList<>();
+        Set<String> covered = new HashSet<>();
         // clone default list and modify fav task type flag
         defaultTaskTypes.forEach(e -> {
             try {
                 FavTaskDto clone = (FavTaskDto) e.clone();
+                covered.add(clone.getTaskType());
                 if (userFavTaskTypes.contains(clone.getTaskType())) {
                     clone.setCollection(true);
                 }
@@ -58,7 +61,30 @@ public class FavTaskServiceImpl extends BaseServiceImpl implements FavTaskServic
                 throw new RuntimeException(ex);
             }
         });
+        // Favourites not in default yaml (e.g. SeaTunnel Compute connectors: Jdbc_SOURCE)
+        for (String taskType : userFavTaskTypes) {
+            if (covered.contains(taskType)) {
+                continue;
+            }
+            result.add(new FavTaskDto(taskType, true, resolveExtraFavCategory(taskType)));
+        }
         return result;
+    }
+
+    private String resolveExtraFavCategory(String taskType) {
+        if (taskType == null) {
+            return "Other";
+        }
+        if (taskType.endsWith("_SOURCE")) {
+            return "Source";
+        }
+        if (taskType.endsWith("_SINK")) {
+            return "Sink";
+        }
+        if (taskType.endsWith("_TRANSFORM")) {
+            return "Transform";
+        }
+        return "Other";
     }
 
     @Override

@@ -27,7 +27,7 @@ public class UdpOptions {
             Options.key("charset")
                     .stringType()
                     .defaultValue("UTF-8")
-                    .withDescription("charset for text format / reply payload");
+                    .withDescription("udp server port.");
     public static final Option<Boolean> REPLY_ENABLED =
             Options.key("replyEnabled")
                     .booleanType()
@@ -49,14 +49,57 @@ public class UdpOptions {
             Options.key("parseMode")
                     .enumType(UdpOptions.ParseMode.class)
                     .defaultValue(UdpOptions.ParseMode.none)
-                    .withDescription("none | js | offset_table");
+                    .withDescription("none | js | offset_table | custom | string | bytes");
+
+    public static final Option<String> DECODER_CLASS =
+            Options.key("decoderClass")
+                    .stringType()
+                    .noDefaultValue()
+                    .withDescription(
+                            "FQCN of PacketCodec or PacketCodecProvider when parseMode=custom");
+
+    public static final Option<String> DECODER_NAME =
+            Options.key("decoderName")
+                    .stringType()
+                    .noDefaultValue()
+                    .withDescription(
+                            "SPI PacketCodecProvider name (e.g. string / bytes / custom id)");
+
+    public static final Option<Boolean> DECODER_INCLUDE_META =
+            Options.key("decoderIncludeMeta")
+                    .booleanType()
+                    .defaultValue(false)
+                    .withDescription("Built-in string/bytes codecs also emit packet meta fields");
 
     public static final Option<UdpOptions.ParseErrorHandleWay> PARSE_ERROR_HANDLE_WAY =
             Options.key("parseErrorHandleWay")
                     .enumType(UdpOptions.ParseErrorHandleWay.class)
-                    .defaultValue(UdpOptions.ParseErrorHandleWay.skip)
-                    .withDescription(
-                            "When codec parse fails: skip packet (default) or fail the job.");
+                    .defaultValue(UdpOptions.ParseErrorHandleWay.fail)
+                    .withDescription("skip | fail — behavior when a single packet fails to decode");
+
+    public static final Option<UdpOptions.Transport> TRANSPORT =
+            Options.key("transport")
+                    .enumType(UdpOptions.Transport.class)
+                    .defaultValue(UdpOptions.Transport.netty)
+                    .withDescription("netty (default) | jdk DatagramSocket");
+
+    public static final Option<Integer> WORKER_THREADS =
+            Options.key("workerThreads")
+                    .intType()
+                    .defaultValue(1)
+                    .withDescription("Netty EventLoop worker threads for UDP receive");
+
+    public static final Option<Integer> RECEIVE_QUEUE_SIZE =
+            Options.key("receiveQueueSize")
+                    .intType()
+                    .defaultValue(10000)
+                    .withDescription("Bounded queue between Netty IO thread and SeaTunnel poll");
+
+    public static final Option<Integer> SO_RCVBUF =
+            Options.key("soRcvBuf")
+                    .intType()
+                    .defaultValue(1024 * 1024)
+                    .withDescription("UDP socket SO_RCVBUF (bytes)");
 
     public static final Option<String> SCRIPT_PATH =
             Options.key("scriptPath")
@@ -82,13 +125,25 @@ public class UdpOptions {
                     .noDefaultValue()
                     .withDescription("Offset table JSON file path");
 
+    /**
+     * Logical UDF name under {@code $SEATUNNEL_HOME/udf/udp-codec/}. When set, resolves to
+     * {@code <name>.js} (parseMode=js) or {@code <name>.json} (parseMode=offset_table) unless an
+     * explicit scriptPath / offsetTablePath is provided.
+     */
+    public static final Option<String> UDF_NAME =
+            Options.key("udfName")
+                    .stringType()
+                    .noDefaultValue()
+                    .withDescription(
+                            "UDF name under SEATUNNEL_HOME/udf/udp-codec (without extension)");
+
     public static final Option<Integer> MAX_RETRIES =
-            Options.key("maxRetries")
+            Options.key("maxNumRetries")
                     .intType()
                     .defaultValue(3)
                     .withDescription("发送消息最大尝试次数");
     public static final Option<Integer> TIMEOUT_MS =
-            Options.key("timeoutMs")
+            Options.key("replyMessage")
                     .intType()
                     .defaultValue(1000)
                     .withDescription("发送消息超时时间");
@@ -143,13 +198,22 @@ public class UdpOptions {
     public enum ParseMode {
         none,
         js,
-        offset_table
+        offset_table,
+        /** Load decoder via decoderClass / decoderName (SPI). */
+        custom,
+        /** Built-in StringPacketCodecProvider. */
+        string,
+        /** Built-in BytesPacketCodecProvider (Base64). */
+        bytes
     }
 
     public enum ParseErrorHandleWay {
-        /** Log and drop the bad packet; keep receiving. */
         skip,
-        /** Rethrow and fail the source reader / job. */
         fail
+    }
+
+    public enum Transport {
+        netty,
+        jdk
     }
 }

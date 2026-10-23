@@ -33,6 +33,7 @@ export const useTaskNodeStore = defineStore({
     preTaskOptions: [],
     postTaskOptions: [],
     preTasks: [],
+    taskDefinitionList: [],
     resources: [],
     mainJars: {},
     name: '',
@@ -48,6 +49,9 @@ export const useTaskNodeStore = defineStore({
     },
     getPreTasks(): number[] {
       return this.preTasks
+    },
+    getTaskDefinitionList(): any[] {
+      return this.taskDefinitionList
     },
     getResources(): IResource[] {
       return this.resources
@@ -67,6 +71,8 @@ export const useTaskNodeStore = defineStore({
       if (!definition) return
       const { workflowTaskRelationList = [], taskDefinitionList = [] } =
         definition
+
+      this.taskDefinitionList = taskDefinitionList || []
 
       const preTaskOptions: { value: number; label: string }[] = []
       const tasks: { [field: number]: string } = {}
@@ -140,6 +146,7 @@ export const useTaskNodeStore = defineStore({
       this.preTaskOptions = []
       this.postTaskOptions = []
       this.preTasks = []
+      this.taskDefinitionList = []
       this.resources = []
       this.mainJars = {}
       this.name = ''

@@ -39,6 +39,7 @@ import {
 } from '@vicons/antd'
 import { NIcon } from 'naive-ui'
 import { TASK_TYPES_MAP } from '../../constants/task-type'
+import { isSeaTunnelChildType } from '@/views/projects/workflow/components/dag/seatunnel-compute-utils'
 import { Router, useRouter } from 'vue-router'
 import { querySubWorkflowInstanceByTaskCode } from '@/service/modules/workflow-instances'
 import { useTaskNodeStore } from '@/store/project/task-node'
@@ -260,6 +261,7 @@ const NodeDetailModal = defineComponent({
     return () => (
       <Modal
         show={props.show}
+        wide={isSeaTunnelChildType(props.data?.taskType)}
         title={
           props.from === 1
             ? `${t('project.task.current_task_settings')}`

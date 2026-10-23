@@ -35,6 +35,8 @@ import {
   type StComputeNode
 } from '@/views/projects/workflow/components/dag/seatunnel-compute-utils'
 import catalogFallback from './connectors-catalog.json'
+import StConnectorParamGuide from './StConnectorParamGuide'
+import StUdpUdfPanel, { isUdpPlugin } from './StUdpUdfPanel'
 import styles from './seatunnel-compute.module.scss'
 
 export type ComputeNodeType = 'SOURCE' | 'TRANSFORM' | 'SINK'
@@ -397,6 +399,25 @@ export default defineComponent({
                     syncToModel()
                   }}
                 />
+                <StConnectorParamGuide
+                  model={current as any}
+                  paramsField='paramsText'
+                  pluginName={current.pluginName}
+                  connectorType={current.type}
+                  upstreamNodes={nodes.value.slice(
+                    0,
+                    Math.max(
+                      0,
+                      nodes.value.findIndex((n) => n.code === current.code)
+                    )
+                  )}
+                />
+                {isUdpPlugin(current.pluginName, current.type) && (
+                  <StUdpUdfPanel
+                    model={current as any}
+                    paramsField='paramsText'
+                  />
+                )}
                 <NInput
                   type='textarea'
                   rows={14}

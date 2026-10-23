@@ -12,12 +12,15 @@ import org.apache.seatunnel.connectors.seatunnel.udp.codec.PacketCodecFactory;
 import org.apache.seatunnel.connectors.seatunnel.udp.codec.PacketMeta;
 import org.apache.seatunnel.connectors.seatunnel.udp.config.UdpOptions;
 import org.apache.seatunnel.connectors.seatunnel.udp.config.UdpSourceConfig;
+import org.apache.seatunnel.connectors.seatunnel.udp.source.netty.ReceivedUdpPacket;
+import org.apache.seatunnel.connectors.seatunnel.udp.source.netty.UdpNettyReceiver;
 import org.apache.seatunnel.shade.com.fasterxml.jackson.databind.node.ObjectNode;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetSocketAddress;
+import java.nio.charset.Charset;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -29,8 +32,10 @@ public class UdpSourceReader implements SourceReader<SeaTunnelRow, UdpSourceSpli
     private final SeaTunnelRowType rowType;
     private final DeserializationSchema<SeaTunnelRow> deserializationSchema;
     private final PacketCodec packetCodec;
+    private final Charset charset;
 
-    private DatagramSocket socket;
+    private UdpNettyReceiver nettyReceiver;
+    private DatagramSocket jdkSocket;
     private volatile boolean running = true;
 
     public UdpSourceReader(
@@ -42,6 +47,11 @@ public class UdpSourceReader implements SourceReader<SeaTunnelRow, UdpSourceSpli
         this.config = config;
         this.rowType = rowType;
         this.deserializationSchema = deserializationSchema;
+        this.charset =
+                Charset.forName(
+                        config.getCharset() == null || config.getCharset().isEmpty()
+                                ? "UTF-8"
+                                : config.getCharset());
         try {
             this.packetCodec = PacketCodecFactory.create(config);
         } catch (Exception e) {
@@ -51,25 +61,77 @@ public class UdpSourceReader implements SourceReader<SeaTunnelRow, UdpSourceSpli
 
     @Override
     public void open() throws Exception {
-        this.socket = new DatagramSocket(new InetSocketAddress(config.getHost(), config.getPort()));
-        socket.setReceiveBufferSize(1024 * 1024);
+        if (config.getTransport() == UdpOptions.Transport.jdk) {
+            this.jdkSocket =
+                    new DatagramSocket(new InetSocketAddress(config.getHost(), config.getPort()));
+            jdkSocket.setReceiveBufferSize(config.getSoRcvBuf());
+            log.info(
+                    "UDP source opened with JDK DatagramSocket on {}:{}",
+                    config.getHost(),
+                    config.getPort());
+            return;
+        }
+        this.nettyReceiver =
+                new UdpNettyReceiver(
+                        config.getHost(),
+                        config.getPort(),
+                        config.getBufferSize(),
+                        config.getWorkerThreads(),
+                        config.getReceiveQueueSize(),
+                        config.getSoRcvBuf(),
+                        config.isReplyEnabled(),
+                        config.getReplyMessage(),
+                        charset);
+        nettyReceiver.start();
     }
 
     @Override
     public void close() throws IOException {
         running = false;
-        if (socket != null && !socket.isClosed()) {
-            socket.close();
+        if (nettyReceiver != null) {
+            nettyReceiver.close();
+            nettyReceiver = null;
+        }
+        if (jdkSocket != null && !jdkSocket.isClosed()) {
+            jdkSocket.close();
+            jdkSocket = null;
         }
     }
 
     @Override
     public void pollNext(Collector<SeaTunnelRow> output) throws Exception {
+        if (nettyReceiver != null) {
+            pollNetty(output);
+        } else {
+            pollJdk(output);
+        }
+    }
+
+    private void pollNetty(Collector<SeaTunnelRow> output) throws Exception {
+        while (running) {
+            ReceivedUdpPacket packet = nettyReceiver.poll(1000L);
+            if (packet == null) {
+                continue;
+            }
+            InetSocketAddress sender = packet.getSender();
+            PacketMeta meta =
+                    new PacketMeta(
+                            sender != null && sender.getAddress() != null
+                                    ? sender.getAddress().getHostAddress()
+                                    : "",
+                            sender != null ? sender.getPort() : 0,
+                            packet.getPayload().length,
+                            packet.getReceiveTs());
+            handlePayload(packet.getPayload(), meta, output);
+        }
+    }
+
+    private void pollJdk(Collector<SeaTunnelRow> output) throws Exception {
         byte[] buffer = new byte[config.getBufferSize()];
         DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
 
         while (running) {
-            socket.receive(packet);
+            jdkSocket.receive(packet);
             byte[] payload = new byte[packet.getLength()];
             System.arraycopy(packet.getData(), packet.getOffset(), payload, 0, packet.getLength());
 
@@ -82,70 +144,64 @@ public class UdpSourceReader implements SourceReader<SeaTunnelRow, UdpSourceSpli
                             packet.getLength(),
                             System.currentTimeMillis());
 
-            try {
-                emitPacket(output, payload, meta);
-            } catch (Exception e) {
-                handleParseError(meta, e);
-                continue;
-            }
+            handlePayload(payload, meta, output);
 
             if (config.isReplyEnabled()) {
-                byte[] responseData = config.getReplyMessage().getBytes(config.getCharset());
+                byte[] responseData = config.getReplyMessage().getBytes(charset);
                 DatagramPacket responsePacket =
                         new DatagramPacket(
                                 responseData,
                                 responseData.length,
                                 packet.getAddress(),
                                 packet.getPort());
-                socket.send(responsePacket);
+                jdkSocket.send(responsePacket);
             }
         }
     }
 
-    private void emitPacket(Collector<SeaTunnelRow> output, byte[] payload, PacketMeta meta)
+    private void handlePayload(byte[] payload, PacketMeta meta, Collector<SeaTunnelRow> output)
             throws Exception {
-        if (packetCodec != null) {
-            List<Map<String, Object>> rows = packetCodec.decode(payload, meta);
-            for (Map<String, Object> row : rows) {
-                String json = JsonUtils.toJsonString(row);
-                byte[] bytes;
-                if (isSimpleContentSchema()) {
-                    ObjectNode node = JsonUtils.createObjectNode();
-                    node.put("content", json);
-                    bytes = JsonUtils.toJsonString(node).getBytes(config.getCharset());
-                } else {
-                    bytes = json.getBytes(config.getCharset());
+        try {
+            if (packetCodec != null) {
+                List<Map<String, Object>> rows = packetCodec.decode(payload, meta);
+                if (rows == null) {
+                    return;
                 }
-                deserializationSchema.deserialize(bytes, output);
-            }
-        } else {
-            String message = new String(payload, config.getCharset());
-            log.debug("Receive udp data: {}", message);
-            if (UdpOptions.Format.JSON.equals(config.getFormat())) {
-                deserializationSchema.deserialize(message.getBytes(config.getCharset()), output);
+                for (Map<String, Object> row : rows) {
+                    String json = JsonUtils.toJsonString(row);
+                    byte[] bytes;
+                    if (isSimpleContentSchema()) {
+                        ObjectNode node = JsonUtils.createObjectNode();
+                        node.put("content", json);
+                        bytes = JsonUtils.toJsonString(node).getBytes(charset);
+                    } else {
+                        bytes = json.getBytes(charset);
+                    }
+                    deserializationSchema.deserialize(bytes, output);
+                }
             } else {
-                ObjectNode node = JsonUtils.createObjectNode();
-                node.put("content", message);
-                deserializationSchema.deserialize(
-                        JsonUtils.toJsonString(node).getBytes(config.getCharset()), output);
+                String message = new String(payload, charset);
+                log.debug("Receive udp data: {}", message);
+                if (UdpOptions.Format.JSON.equals(config.getFormat())) {
+                    deserializationSchema.deserialize(message.getBytes(charset), output);
+                } else {
+                    ObjectNode node = JsonUtils.createObjectNode();
+                    node.put("content", message);
+                    deserializationSchema.deserialize(
+                            JsonUtils.toJsonString(node).getBytes(charset), output);
+                }
             }
-        }
-    }
-
-    private void handleParseError(PacketMeta meta, Exception e) throws Exception {
-        UdpOptions.ParseErrorHandleWay way = config.getParseErrorHandleWay();
-        if (way == null) {
-            way = UdpOptions.ParseErrorHandleWay.skip;
-        }
-        if (way == UdpOptions.ParseErrorHandleWay.fail) {
+        } catch (Exception e) {
+            if (config.getParseErrorHandleWay() == UdpOptions.ParseErrorHandleWay.skip) {
+                log.warn(
+                        "Skip UDP packet from {}:{} due to decode error: {}",
+                        meta.getRemoteHost(),
+                        meta.getRemotePort(),
+                        e.toString());
+                return;
+            }
             throw e;
         }
-        log.warn(
-                "Skip bad UDP packet from {}:{} len={}: {}",
-                meta.getRemoteHost(),
-                meta.getRemotePort(),
-                meta.getLength(),
-                e.toString());
     }
 
     @Override

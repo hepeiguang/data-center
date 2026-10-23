@@ -17,7 +17,10 @@
 
 package org.apache.dolphinscheduler.api.service;
 
+import java.util.List;
 import java.util.Map;
+
+import org.springframework.web.multipart.MultipartFile;
 
 public interface SeaTunnelConnectorService {
 
@@ -25,4 +28,16 @@ public interface SeaTunnelConnectorService {
      * @return map with keys: sources, sinks, transforms (each a list of plugin names)
      */
     Map<String, Object> getConnectorCatalog();
+
+    /**
+     * List UDF codec files under {@code $SEATUNNEL_HOME/udf/udp-codec/}.
+     */
+    List<Map<String, Object>> listUdpCodecs();
+
+    /**
+     * Upload a JS / offset-table JSON UDF into udp-codec directory.
+     *
+     * @return saved file info (name, path, size)
+     */
+    Map<String, Object> uploadUdpCodec(MultipartFile file, String name);
 }

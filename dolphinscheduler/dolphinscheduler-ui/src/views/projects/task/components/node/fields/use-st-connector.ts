@@ -15,8 +15,10 @@
  * limitations under the License.
  */
 
+import { h } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { IJsonItem } from '../types'
+import StConnectorParamPanel from './seatunnel-compute/StConnectorParamPanel'
 
 export function useStConnector(model: { [field: string]: any }): IJsonItem[] {
   const { t } = useI18n()
@@ -36,14 +38,15 @@ export function useStConnector(model: { [field: string]: any }): IJsonItem[] {
       props: { disabled: true }
     },
     {
-      type: 'editor',
+      type: 'custom',
       field: 'connectorParams',
-      name: t('project.node.st_compute_node_config'),
+      name: '',
       span: 24,
+      widget: h(StConnectorParamPanel, { model }),
       validate: {
-        trigger: ['input', 'trigger'],
+        trigger: ['input', 'blur', 'change'],
         required: true,
-        validator(validate: any, value: string) {
+        validator(_rule: any, value: string) {
           if (!value) {
             return new Error(t('project.node.st_compute_node_config'))
           }

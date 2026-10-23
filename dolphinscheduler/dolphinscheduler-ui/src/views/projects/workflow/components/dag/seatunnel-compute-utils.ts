@@ -22,6 +22,12 @@ export type ConnectorKind = 'SOURCE' | 'TRANSFORM' | 'SINK'
 
 const ST_ICON_MAP = iconMapJson as Record<string, string>
 
+/** Basenames that we know exist under public/images/task-icons (connector set). */
+const ST_ICON_FILES = new Set<string>([
+  'seatunnel',
+  ...Object.values(ST_ICON_MAP)
+])
+
 /**
  * Resolve task-icon basename (no extension) for sidebar / canvas.
  * Known connectors use dedicated assets; others fall back to seatunnel.png.
@@ -31,13 +37,39 @@ export function resolveTaskIconKey(type?: string): string {
   const key = String(type).toLocaleLowerCase()
   if (key === 'seatunnel_compute' || key === 'seatunnel') return 'seatunnel'
   if (ST_ICON_MAP[key]) return ST_ICON_MAP[key]
-  if (isSeaTunnelChildType(String(type))) return 'seatunnel'
+  // child connector without dedicated asset
+  if (/_(source|sink|transform)$/.test(key)) return 'seatunnel'
   return key
 }
 
 export function resolveTaskIconFile(type?: string, hover = false): string {
-  const base = resolveTaskIconKey(type)
-  return hover ? `${base}_hover.png` : `${base}.png`
+  let base = resolveTaskIconKey(type)
+  // Never point at a missing connector asset
+  if (/_(source|sink|transform)$/.test(String(type || '').toLowerCase())) {
+    if (!ST_ICON_FILES.has(base)) base = 'seatunnel'
+  }
+  if (hover) {
+    // Connector hover assets: prefer dedicated, else seatunnel_hover
+    if (/_(source|sink|transform)$/.test(String(type || '').toLowerCase())) {
+      return ST_ICON_FILES.has(base) ? `${base}_hover.png` : 'seatunnel_hover.png'
+    }
+    return `${base}_hover.png`
+  }
+  return `${base}.png`
+}
+
+/**
+ * CSS vars for sidebar icons. Avoids CSS-module dynamic `icon-*` class misses
+ * (which left a blank 18×18 box). Hover uses --st-icon-hover.
+ */
+export function taskIconCssVars(type?: string): Record<string, string> {
+  const base = import.meta.env.BASE_URL || '/'
+  const normal = resolveTaskIconFile(type, false)
+  const hover = resolveTaskIconFile(type, true)
+  return {
+    ['--st-icon' as string]: `url(${base}images/task-icons/${normal})`,
+    ['--st-icon-hover' as string]: `url(${base}images/task-icons/${hover})`
+  }
 }
 
 export interface StComputeNode {
@@ -101,6 +133,62 @@ export function normalizeSeaTunnelEnv(
   return next
 }
 
+/** Unbounded sources that must run as DS STREAM + SeaTunnel STREAMING. */
+export function isRealtimeSeaTunnelPlugin(pluginName?: string): boolean {
+  const p = String(pluginName || '').toUpperCase()
+  return p === 'UDP' || p === 'UDPMULTICAST' || p === 'SOCKET'
+}
+
+export function isRealtimeSeaTunnelCompute(
+  env?: Record<string, any>,
+  nodes?: Array<{ pluginName?: string; type?: string }>
+): boolean {
+  if (
+    env &&
+    String(env['job.mode'] || env.jobMode || '')
+      .toUpperCase()
+      .includes('STREAM')
+  ) {
+    return true
+  }
+  return (nodes || []).some(
+    (n) =>
+      isRealtimeSeaTunnelPlugin(n.pluginName) &&
+      String(n.type || 'SOURCE').toUpperCase() === 'SOURCE'
+  )
+}
+
+/** Force STREAMING + checkpoint when graph has realtime sources (e.g. UDP). */
+export function applyRealtimeEnvIfNeeded(
+  env: Record<string, any>,
+  nodes: Array<{ pluginName?: string; type?: string }>
+): Record<string, any> {
+  const next = normalizeSeaTunnelEnv(env)
+  if (!isRealtimeSeaTunnelCompute(next, nodes)) return next
+  next['job.mode'] = 'STREAMING'
+  if (next['checkpoint.interval'] == null) next['checkpoint.interval'] = 3000
+  return next
+}
+
+export function resolveSeaTunnelComputeExecuteType(
+  taskParams?: Record<string, any>
+): 'STREAM' | 'BATCH' {
+  if (!taskParams) return 'BATCH'
+  try {
+    const g = parseStComputeGraph(taskParams)
+    if (isRealtimeSeaTunnelCompute(g.env, g.nodes)) return 'STREAM'
+  } catch {
+    /* ignore */
+  }
+  if (
+    String(taskParams.rawScript || '').includes('"job.mode": "STREAMING"') ||
+    String(taskParams.rawScript || '').includes('"job.mode":"STREAMING"')
+  ) {
+    return 'STREAM'
+  }
+  return 'BATCH'
+}
+
 /** SeaTunnel stream / table label: letters, digits, underscore. */
 export function toSeaTunnelStreamName(
   name: string | undefined,
@@ -156,11 +244,58 @@ export function defaultConnectorParams(
   }
   if (pluginName === 'Filter' && kind === 'TRANSFORM') {
     return {
-      fields: ['id', 'name', 'age']
+      include_fields: ['msgType', 'value', 'tag', 'ts']
     }
   }
   if (pluginName === 'Console' && kind === 'SINK') {
     return {}
+  }
+  if (pluginName === 'UDP' && kind === 'SOURCE') {
+    return {
+      host: '127.0.0.1',
+      port: 19881,
+      transport: 'netty',
+      parseMode: 'js',
+      udfName: 'telemetry_struct',
+      // Fallback when connector jar does not yet resolve udfName
+      scriptPath:
+        'D:/HPG/workspace/LHYF/apache-seatunnel-3.0.0/udf/udp-codec/telemetry_struct.js',
+      parseErrorHandleWay: 'skip',
+      charset: 'UTF-8',
+      schema: {
+        fields: {
+          msgType: 'int',
+          flags: 'int',
+          value: 'int',
+          tag: 'string',
+          remoteHost: 'string',
+          remotePort: 'int',
+          pktLen: 'int',
+          ts: 'long'
+        }
+      }
+    }
+  }
+  if (pluginName === 'UDP' && kind === 'SINK') {
+    return {
+      host: '127.0.0.1',
+      port: 9999
+    }
+  }
+  if (pluginName === 'LocalFile' && kind === 'SINK') {
+    return {
+      path: 'D:/HPG/workspace/LHYF/data/udp-pipeline-out',
+      tmp_path: 'D:/HPG/workspace/LHYF/data/udp-pipeline-tmp',
+      file_format_type: 'json',
+      custom_filename: true,
+      file_name_expression: '${transactionId}_udp_${now}',
+      filename_time_format: 'yyyyMMddHHmmss',
+      encoding: 'UTF-8',
+      is_enable_transaction: true,
+      batch_size: 10,
+      schema_save_mode: 'CREATE_SCHEMA_WHEN_NOT_EXIST',
+      data_save_mode: 'APPEND_DATA'
+    }
   }
   return {}
 }
@@ -303,6 +438,7 @@ export function assembleStockSeaTunnelConfig(
   nodes: StComputeNode[],
   connects?: StComputeConnect[]
 ): Record<string, any> {
+  env = applyRealtimeEnvIfNeeded(env, nodes)
   const source: Record<string, any>[] = []
   const transform: Record<string, any>[] = []
   const sink: Record<string, any>[] = []
@@ -368,21 +504,28 @@ export function assembleStockSeaTunnelConfig(
   return config
 }
 
-export function buildDataComputationSidebarTree(parentTask: any) {
+export function buildDataComputationSidebarTree(
+  parentTask: any,
+  favSet: Set<string> = new Set()
+) {
   const catalog = catalogFallback as {
     sources: string[]
     sinks: string[]
     transforms: string[]
   }
-  const mkLeaf = (pluginName: string, kind: ConnectorKind) => ({
-    taskType: toSeaTunnelChildType(pluginName, kind),
-    type: toSeaTunnelChildType(pluginName, kind),
-    taskName: pluginName,
-    taskCategory: kind === 'SOURCE' ? 'Source' : kind === 'SINK' ? 'Sink' : 'Transform',
-    collection: false,
-    starHover: false,
-    leaf: true
-  })
+  const mkLeaf = (pluginName: string, kind: ConnectorKind) => {
+    const taskType = toSeaTunnelChildType(pluginName, kind)
+    return {
+      taskType,
+      type: taskType,
+      taskName: pluginName,
+      taskCategory:
+        kind === 'SOURCE' ? 'Source' : kind === 'SINK' ? 'Sink' : 'Transform',
+      collection: favSet.has(taskType),
+      starHover: false,
+      leaf: true
+    }
+  }
   return {
     taskType: 'seatunnel_compute_group',
     taskName: parentTask?.taskType || 'SEATUNNEL_COMPUTE',
@@ -393,6 +536,9 @@ export function buildDataComputationSidebarTree(parentTask: any) {
         type: 'SEATUNNEL_COMPUTE',
         taskType: 'SEATUNNEL_COMPUTE',
         taskName: parentTask?.taskType || 'SEATUNNEL_COMPUTE',
+        collection:
+          !!parentTask?.collection || favSet.has('SEATUNNEL_COMPUTE'),
+        starHover: false,
         leaf: true
       },
       {

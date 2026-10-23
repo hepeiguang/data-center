@@ -59,6 +59,8 @@ import { executeTask } from '@/service/modules/executors'
 import DependenciesModal from '@/views/projects/components/dependencies/dependencies-modal'
 import {
   assembleStockSeaTunnelConfig,
+  applyRealtimeEnvIfNeeded,
+  isRealtimeSeaTunnelCompute,
   buildDefaultConnects,
   isSeaTunnelChildType,
   isSeaTunnelComputeParent,
@@ -340,16 +342,28 @@ export default defineComponent({
             if (!res.taskParams) res.taskParams = {}
             res.taskParams.scriptType = res.taskParams.scriptType || 'visualize'
             res.taskParams.useCustom = true
+            const runtimeEnv = applyRealtimeEnvIfNeeded(env, nodesGraph)
             res.taskParams.stComputeGraph = JSON.stringify({
-              env,
+              env: runtimeEnv,
               nodes: nodesGraph
             })
             res.taskParams.rawScript = JSON.stringify(
-              assembleStockSeaTunnelConfig(env, nodesGraph, groupConnects),
+              assembleStockSeaTunnelConfig(
+                runtimeEnv,
+                nodesGraph,
+                groupConnects
+              ),
               null,
               2
             )
             res.taskParams.relation = JSON.stringify(groupConnects)
+            // UDP / STREAMING pipelines are DS realtime (STREAM) tasks
+            res.taskExecuteType = isRealtimeSeaTunnelCompute(
+              runtimeEnv,
+              nodesGraph
+            )
+              ? 'STREAM'
+              : res.taskExecuteType || 'BATCH'
             newTaskDefinitions.push(res)
           } else {
             const res = { ...item }

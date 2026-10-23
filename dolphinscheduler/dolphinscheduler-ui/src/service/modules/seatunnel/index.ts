@@ -23,3 +23,21 @@ export function getSeaTunnelConnectors(): any {
     method: 'get'
   })
 }
+
+export function listUdpCodecs(): any {
+  return axios({
+    url: '/seatunnel/udp-codecs',
+    method: 'get'
+  })
+}
+
+export function uploadUdpCodec(file: File, name?: string): any {
+  const form = new FormData()
+  form.append('file', file)
+  if (name) form.append('name', name)
+  return axios({
+    url: '/seatunnel/udp-codecs',
+    method: 'post',
+    data: form
+  })
+}

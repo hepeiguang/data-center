@@ -18,6 +18,10 @@
 .container {
   width: 33%;
 }
+.container.containerWide {
+  width: 88%;
+  max-width: 1480px;
+}
 .modal-card {
   max-height: 100vh;
 }

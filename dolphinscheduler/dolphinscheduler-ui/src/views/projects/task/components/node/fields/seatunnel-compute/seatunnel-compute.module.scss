@@ -1,6 +1,6 @@
 .wrap {
   display: grid;
-  grid-template-columns: 220px 1fr 280px;
+  grid-template-columns: 200px 1fr minmax(320px, 380px);
   gap: 12px;
   width: 100%;
   min-height: 420px;
@@ -26,10 +26,10 @@
 }
 
 .pluginList {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  max-height: 200px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 4px 6px;
+  max-height: 220px;
   overflow: auto;
 }
 
@@ -38,8 +38,12 @@
   border-radius: 4px;
   cursor: pointer;
   font-size: 12px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   &:hover {
-    background: rgba(40, 143, 255, 0.12);
+    background: var(--n-action-color, rgba(0, 0, 0, 0.06));
   }
 }
 
@@ -48,12 +52,13 @@
   border: 1px solid var(--n-border-color, #e0e0e6);
   border-radius: 6px;
   cursor: pointer;
-  background: var(--n-color, #fff);
+  background: var(--n-card-color, var(--n-color, #fff));
 }
 
 .nodeCardActive {
-  border-color: #288fff;
-  box-shadow: 0 0 0 1px rgba(40, 143, 255, 0.35);
+  border-color: var(--n-border-color, #c8c8d0);
+  box-shadow: inset 0 0 0 1px var(--n-border-color, #c8c8d0);
+  background: var(--n-action-color, rgba(0, 0, 0, 0.04));
 }
 
 .nodeName {
@@ -63,4 +68,133 @@
 .nodeAlias {
   color: #999;
   font-size: 12px;
+}
+
+.paramSplit {
+  display: grid;
+  grid-template-columns: minmax(360px, 1fr) minmax(420px, 1.1fr);
+  gap: 12px;
+  width: 100%;
+  min-height: 560px;
+  align-items: stretch;
+}
+
+.paramSplitLeft,
+.paramSplitRight {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--n-border-color, #e0e0e6);
+  border-radius: 6px;
+  padding: 10px;
+  box-sizing: border-box;
+  /* Do not use --n-color here: it often resolves to primary/info blue under Naive form ancestors. */
+  background: transparent;
+  color: inherit;
+}
+
+.paramSplitLeft {
+  overflow: auto;
+  max-height: 620px;
+}
+
+.paramSplitRight {
+  min-height: 560px;
+}
+
+.paramSplitTitle {
+  font-weight: 600;
+  font-size: 13px;
+  margin-bottom: 8px;
+  flex: 0 0 auto;
+}
+
+.paramGuide {
+  width: 100%;
+  margin-bottom: 0;
+  font-size: 12px;
+  flex: 1 1 auto;
+  color: var(--n-text-color, inherit);
+}
+
+.paramGuideHeader {
+  margin-bottom: 10px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--n-border-color, #e0e0e6);
+  background: var(--n-action-color, rgba(0, 0, 0, 0.04));
+  color: var(--n-text-color, inherit);
+}
+
+.paramGuideTitle {
+  font-weight: 600;
+  margin-bottom: 4px;
+  color: var(--n-text-color, inherit);
+}
+
+.paramGuideSummary {
+  color: var(--n-text-color-2, #666);
+  line-height: 1.5;
+  margin-bottom: 6px;
+}
+
+.paramGuideTips {
+  margin: 0 0 8px;
+  padding-left: 18px;
+  color: var(--n-text-color-2, #666);
+  line-height: 1.45;
+}
+
+.paramGuideSubtitle {
+  font-weight: 600;
+  margin: 4px 0 6px;
+  color: var(--n-text-color, inherit);
+}
+
+.upstreamBlock {
+  padding: 6px 8px;
+  border: 1px dashed var(--n-border-color, #e0e0e6);
+  border-radius: 4px;
+  background: var(--n-action-color, transparent);
+}
+
+.upstreamHead {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+/* 入参 / 出参并排，降低纵向高度 */
+.paramIoGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  align-items: start;
+}
+
+.paramIoCol {
+  min-width: 0;
+}
+
+.paramIoHint {
+  margin: 0 0 8px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--n-text-color-2, #666);
+}
+
+.udpUdfPanel {
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--n-border-color, #e0e0e6);
+  background: var(--n-action-color, rgba(0, 0, 0, 0.03));
+  flex: 0 0 auto;
+}
+
+@media (max-width: 1100px) {
+  .paramIoGrid {
+    grid-template-columns: 1fr;
+  }
 }
