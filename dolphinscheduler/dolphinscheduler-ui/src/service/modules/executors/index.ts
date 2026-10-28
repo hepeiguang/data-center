@@ -44,3 +44,24 @@ export function startWorkflowInstance(
     data
   })
 }
+
+/** Start a STREAM task definition (realtime), e.g. UDP SEATUNNEL_COMPUTE. */
+export function startStreamTaskInstance(
+  projectCode: number,
+  taskCode: number,
+  data: {
+    version: number
+    warningGroupId?: number
+    workerGroup?: string
+    tenantCode?: string
+    environmentCode?: number
+    startParams?: string
+    dryRun?: number
+  }
+): any {
+  return axios({
+    url: `/projects/${projectCode}/executors/task-instance/${taskCode}/start`,
+    method: 'post',
+    data
+  })
+}

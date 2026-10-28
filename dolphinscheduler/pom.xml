@@ -58,6 +58,7 @@
         <module>dolphinscheduler-authentication</module>
         <module>dolphinscheduler-eventbus</module>
         <module>dolphinscheduler-task-executor</module>
+        <module>dolphinscheduler-data-api</module>
     </modules>
 
     <properties>

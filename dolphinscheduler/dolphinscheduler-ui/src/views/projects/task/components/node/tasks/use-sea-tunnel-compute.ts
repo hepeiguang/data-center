@@ -51,6 +51,8 @@ export function useSeaTunnelCompute({
     deployMode: 'local',
     resourceFiles: [],
     timeoutNotifyStrategy: ['WARN'],
+    // User-configurable: BATCH | STREAM (UDP etc. usually STREAM)
+    taskExecuteType: (data as any)?.taskExecuteType || 'BATCH',
     stComputeGraph: JSON.stringify(
       {
         env: {
@@ -81,6 +83,7 @@ export function useSeaTunnelCompute({
       Fields.useName(from),
       ...Fields.useTaskDefinition({ projectCode, from, readonly, data, model }),
       Fields.useRunFlag(),
+      Fields.useStExecuteType(model),
       Fields.useDescription(),
       Fields.useTaskPriority(),
       Fields.useWorkerGroup(projectCode),

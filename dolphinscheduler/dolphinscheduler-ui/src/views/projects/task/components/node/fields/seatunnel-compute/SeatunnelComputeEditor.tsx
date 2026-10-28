@@ -178,7 +178,6 @@ export default defineComponent({
           params
         }
       })
-      // Pipeline order in the list implies Source → Transform → Sink chaining.
       const seatunnelConfig = assembleStockSeaTunnelConfig(env, graphNodes)
       props.model.stComputeGraph = JSON.stringify({ env, nodes: graphNodes })
       props.model.rawScript = JSON.stringify(seatunnelConfig, null, 2)

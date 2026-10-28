@@ -1,0 +1,881 @@
+2026-10-24 22:48:44.409 [main] INFO  org.apache.dolphinscheduler.dataapi.DataApiServer - Starting DataApiServer v3.4.3 using Java 11.0.25 on HPG with PID 16252 (D:\HPG\workspace\LHYF\data-center-mono\dolphinscheduler\dolphinscheduler-data-api\target\dolphinscheduler-data-api-3.4.3.jar started by 16899 in D:\HPG\workspace\LHYF\data-center-mono\dolphinscheduler\dolphinscheduler-data-api)
+2026-10-24 22:48:44.415 [main] INFO  org.apache.dolphinscheduler.dataapi.DataApiServer - The following 1 profile is active: "h2"
+2026-10-24 22:48:47.532 [main] INFO  org.eclipse.jetty.util.log - Logging initialized @5432ms to org.eclipse.jetty.util.log.Slf4jLog
+2026-10-24 22:48:47.996 [main] INFO  o.s.b.w.e.jetty.JettyServletWebServerFactory - Server initialized with port: 12346
+2026-10-24 22:48:48.001 [main] INFO  org.eclipse.jetty.server.Server - jetty-9.4.51.v20230217; built: 2023-02-17T08:19:37.309Z; git: b45c405e4544384de066f814ed42ae3dceacdd49; jvm 11.0.25+9-LTS
+2026-10-24 22:48:48.033 [main] INFO  o.e.j.server.handler.ContextHandler.application - Initializing Spring embedded WebApplicationContext
+2026-10-24 22:48:48.033 [main] INFO  o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 3531 ms
+2026-10-24 22:48:48.641 [main] INFO  org.eclipse.jetty.server.session - DefaultSessionIdManager workerName=node0
+2026-10-24 22:48:48.641 [main] INFO  org.eclipse.jetty.server.session - No SessionScavenger set, using defaults
+2026-10-24 22:48:48.641 [main] INFO  org.eclipse.jetty.server.session - node0 Scavenging every 600000ms
+2026-10-24 22:48:48.652 [main] INFO  org.eclipse.jetty.server.handler.ContextHandler - Started o.s.b.w.e.j.JettyEmbeddedWebAppContext@a619c2{application,/,[file:///C:/Users/16899/AppData/Local/Temp/jetty-docbase.12346.7682910623499238776/],AVAILABLE}
+2026-10-24 22:48:48.652 [main] INFO  org.eclipse.jetty.server.Server - Started @6546ms
+2026-10-24 22:48:48.990 [main] INFO  com.zaxxer.hikari.HikariDataSource - DataApiMeta - Starting...
+2026-10-24 22:48:49.831 [main] INFO  com.zaxxer.hikari.HikariDataSource - DataApiMeta - Start completed.
+2026-10-24 22:48:52.213 [main] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[]
+2026-10-24 22:48:52.865 [main] INFO  org.springframework.aop.framework.CglibAopProxy - Unable to proxy interface-implementing method [public final org.springframework.web.servlet.HandlerExecutionChain org.springframework.web.servlet.handler.AbstractHandlerMapping.getHandler(javax.servlet.http.HttpServletRequest) throws java.lang.Exception] because it is marked as final: Consider using interface-based JDK proxies instead!
+2026-10-24 22:48:52.866 [main] INFO  org.springframework.aop.framework.CglibAopProxy - Unable to proxy interface-implementing method [public final void org.springframework.web.context.support.WebApplicationObjectSupport.setServletContext(javax.servlet.ServletContext)] because it is marked as final: Consider using interface-based JDK proxies instead!
+2026-10-24 22:48:52.866 [main] INFO  org.springframework.aop.framework.CglibAopProxy - Unable to proxy interface-implementing method [public final void org.springframework.context.support.ApplicationObjectSupport.setApplicationContext(org.springframework.context.ApplicationContext) throws org.springframework.beans.BeansException] because it is marked as final: Consider using interface-based JDK proxies instead!
+2026-10-24 22:48:54.180 [main] INFO  o.s.m.s.boot.starter.MagicAPIAutoConfiguration - 未配置集群通知服务，本实例不会推送通知，集群环境下可能会有问题，如需开启，请引用magic-api-plugin-cluster插件
+2026-10-24 22:48:54.297 [main] INFO  o.s.m.spring.boot.starter.MagicModuleConfiguration - 未找到分页实现,采用默认分页实现,分页配置:(页码=page,页大小=size,默认首页=1,默认页大小=10,最大页大小=-1)
+2026-10-24 22:48:54.305 [main] INFO  o.s.m.spring.boot.starter.MagicModuleConfiguration - 未找到SQL缓存实现，采用默认缓存实现(LRU+TTL)，缓存配置:(容量=10000,TTL=-1)
+2026-10-24 22:48:54.547 [main] INFO  o.s.m.s.boot.starter.MagicAPIAutoConfiguration - magic-api工作目录:file://D:\HPG\workspace\LHYF\data-center-mono\dolphinscheduler\dolphinscheduler-data-api\.\data\magic-api
+2026-10-24 22:48:54.563 [main] INFO  o.s.m.s.boot.starter.MagicAPIAutoConfiguration - 注册模块:log -> interface org.slf4j.Logger
+2026-10-24 22:48:54.564 [main] INFO  o.s.m.s.boot.starter.MagicAPIAutoConfiguration - 注册模块:db -> class org.ssssssss.magicapi.modules.db.SQLModule
+2026-10-24 22:48:54.564 [main] INFO  o.s.m.s.boot.starter.MagicAPIAutoConfiguration - 注册模块:http -> class org.ssssssss.magicapi.modules.http.HttpModule
+2026-10-24 22:48:54.564 [main] INFO  o.s.m.s.boot.starter.MagicAPIAutoConfiguration - 注册模块:env -> class org.ssssssss.magicapi.modules.spring.EnvModule
+2026-10-24 22:48:54.564 [main] INFO  o.s.m.s.boot.starter.MagicAPIAutoConfiguration - 注册模块:request -> class org.ssssssss.magicapi.modules.servlet.RequestModule
+2026-10-24 22:48:54.564 [main] INFO  o.s.m.s.boot.starter.MagicAPIAutoConfiguration - 注册模块:response -> class org.ssssssss.magicapi.modules.servlet.ResponseModule
+2026-10-24 22:48:54.564 [main] INFO  o.s.m.s.boot.starter.MagicAPIAutoConfiguration - 注册模块:magic -> class org.ssssssss.magicapi.core.service.impl.DefaultMagicAPIService
+2026-10-24 22:48:54.571 [main] INFO  o.s.m.s.boot.starter.MagicAPIAutoConfiguration - 自动导入模块：db
+2026-10-24 22:48:54.572 [main] INFO  o.s.m.s.boot.starter.MagicAPIAutoConfiguration - 注册扩展:class org.ssssssss.magicapi.modules.servlet.ResponseModule -> class org.ssssssss.magicapi.servlet.javaee.MagicJavaEEResponseExtension
+2026-10-24 22:48:54.604 [main] INFO  o.s.m.s.boot.starter.MagicAPIAutoConfiguration - 注册请求拦截器：class org.apache.dolphinscheduler.dataapi.auth.DataApiRequestInterceptor
+2026-10-24 22:48:54.604 [main] ERROR o.s.m.s.boot.starter.MagicAPIAutoConfiguration - 当前备份设置未配置，强烈建议配置备份设置，以免代码丢失。
+2026-10-24 22:48:54.622 [main] INFO  o.s.b.actuate.endpoint.web.EndpointLinksResolver - Exposing 2 endpoint(s) beneath base path '/actuator'
+2026-10-24 22:48:54.725 [main] INFO  o.e.j.server.handler.ContextHandler.application - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-10-24 22:48:54.725 [main] INFO  org.springframework.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2026-10-24 22:48:54.727 [main] INFO  org.springframework.web.servlet.DispatcherServlet - Completed initialization in 1 ms
+2026-10-24 22:48:54.753 [main] INFO  org.eclipse.jetty.server.AbstractConnector - Started ServerConnector@7249dadf{HTTP/1.1, (http/1.1)}{0.0.0.0:12346}
+2026-10-24 22:48:54.753 [main] INFO  o.s.boot.web.embedded.jetty.JettyWebServer - Jetty started on port(s) 12346 (http/1.1) with context path '/'
+2026-10-24 22:48:54.785 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[]
+2026-10-24 22:48:54.797 [main] INFO  org.apache.dolphinscheduler.dataapi.DataApiServer - Started DataApiServer in 11.44 seconds (JVM running for 12.691)
+2026-10-24 22:48:54.864 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: hive
+2026-10-24 22:48:54.867 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: vertica
+2026-10-24 22:48:54.867 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: doris
+2026-10-24 22:48:54.867 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: ssh
+2026-10-24 22:48:54.871 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: databend
+2026-10-24 22:48:54.871 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: aliyun_serverless_spark
+2026-10-24 22:48:54.873 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: dolphindb
+2026-10-24 22:48:54.873 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: postgresql
+2026-10-24 22:48:54.875 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: redshift
+2026-10-24 22:48:54.875 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: sqlserver
+2026-10-24 22:48:54.878 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: spark
+2026-10-24 22:48:54.878 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: oceanbase
+2026-10-24 22:48:54.878 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: starrocks
+2026-10-24 22:48:54.880 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: mysql
+2026-10-24 22:48:54.882 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: hana
+2026-10-24 22:48:54.883 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: dameng
+2026-10-24 22:48:54.884 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: sagemaker
+2026-10-24 22:48:54.884 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: snowflake
+2026-10-24 22:48:54.884 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: kyuubi
+2026-10-24 22:48:54.884 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: oracle
+2026-10-24 22:48:54.884 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: k8s
+2026-10-24 22:48:54.884 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: zeppelin
+2026-10-24 22:48:54.884 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: trino
+2026-10-24 22:48:54.884 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: db2
+2026-10-24 22:48:54.884 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: clickhouse
+2026-10-24 22:48:54.884 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: azuresql
+2026-10-24 22:48:54.892 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: athena
+2026-10-24 22:48:54.892 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: presto
+2026-10-24 22:48:54.915 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> aliyun_serverless_spark
+2026-10-24 22:48:54.922 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> athena
+2026-10-24 22:48:54.924 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> azuresql
+2026-10-24 22:48:54.933 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> clickhouse
+2026-10-24 22:48:54.935 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> dameng
+2026-10-24 22:48:54.940 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> databend
+2026-10-24 22:48:54.945 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> db2
+2026-10-24 22:48:54.947 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> dolphindb
+2026-10-24 22:48:54.953 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> doris
+2026-10-24 22:48:54.956 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> hana
+2026-10-24 22:48:54.960 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> hive
+2026-10-24 22:48:54.963 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> k8s
+2026-10-24 22:48:54.967 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> kyuubi
+2026-10-24 22:48:54.974 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> mysql
+2026-10-24 22:48:54.978 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> oceanbase
+2026-10-24 22:48:54.978 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> oracle
+2026-10-24 22:48:54.986 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> postgresql
+2026-10-24 22:48:54.988 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> presto
+2026-10-24 22:48:54.994 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> redshift
+2026-10-24 22:48:54.999 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> sagemaker
+2026-10-24 22:48:54.999 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> snowflake
+2026-10-24 22:48:55.006 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> spark
+2026-10-24 22:48:55.020 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> sqlserver
+2026-10-24 22:48:55.035 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> ssh
+2026-10-24 22:48:55.043 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> starrocks
+2026-10-24 22:48:55.052 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> trino
+2026-10-24 22:48:55.056 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> vertica
+2026-10-24 22:48:55.060 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> zeppelin
+2026-10-24 22:48:55.064 [main] INFO  org.apache.dolphinscheduler.dataapi.DataApiServer - DataApiServer is ready (magic-api + shared DS metadata)
+2026-10-24 22:49:09.381 [qtp449338124-26] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[]
+2026-10-24 22:49:28.769 [qtp449338124-22] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[]
+2026-10-24 22:49:46.656 [qtp449338124-23] INFO  o.a.d.common.constants.SystemConstants - init timezone: sun.util.calendar.ZoneInfo[id="Asia/Shanghai",offset=28800000,dstSavings=0,useDaylight=false,transitions=31,lastRule=null]
+2026-10-24 22:49:46.735 [qtp449338124-23] ERROR com.zaxxer.hikari.HikariConfig - Failed to load driver class com.mysql.cj.jdbc.Driver from HikariConfig class classloader org.springframework.boot.loader.LaunchedURLClassLoader@29774679
+2026-10-24 22:49:46.738 [qtp449338124-23] ERROR o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Failed to register datasource key=mysql_1 id=1 name=da_test_mysql
+java.lang.RuntimeException: Failed to load driver class com.mysql.cj.jdbc.Driver in either of HikariConfig class loader or Thread context classloader
+	at com.zaxxer.hikari.HikariConfig.setDriverClassName(HikariConfig.java:491)
+	at org.apache.dolphinscheduler.dataapi.datasource.DsMagicDataSourceLoader.register(DsMagicDataSourceLoader.java:155)
+	at org.apache.dolphinscheduler.dataapi.datasource.DsMagicDataSourceLoader.reload(DsMagicDataSourceLoader.java:98)
+	at org.apache.dolphinscheduler.dataapi.controller.DataApiAdminController.reload(DataApiAdminController.java:86)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:566)
+	at org.springframework.web.method.support.InvocableHandlerMethod.doInvoke(InvocableHandlerMethod.java:205)
+	at org.springframework.web.method.support.InvocableHandlerMethod.invokeForRequest(InvocableHandlerMethod.java:150)
+	at org.springframework.web.servlet.mvc.method.annotation.ServletInvocableHandlerMethod.invokeAndHandle(ServletInvocableHandlerMethod.java:117)
+	at org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.invokeHandlerMethod(RequestMappingHandlerAdapter.java:895)
+	at org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.handleInternal(RequestMappingHandlerAdapter.java:808)
+	at org.springframework.web.servlet.mvc.method.AbstractHandlerMethodAdapter.handle(AbstractHandlerMethodAdapter.java:87)
+	at org.springframework.web.servlet.DispatcherServlet.doDispatch(DispatcherServlet.java:1072)
+	at org.springframework.web.servlet.DispatcherServlet.doService(DispatcherServlet.java:965)
+	at org.springframework.web.servlet.FrameworkServlet.processRequest(FrameworkServlet.java:1006)
+	at org.springframework.web.servlet.FrameworkServlet.doPost(FrameworkServlet.java:909)
+	at javax.servlet.http.HttpServlet.service(HttpServlet.java:517)
+	at org.springframework.web.servlet.FrameworkServlet.service(FrameworkServlet.java:883)
+	at javax.servlet.http.HttpServlet.service(HttpServlet.java:584)
+	at org.eclipse.jetty.servlet.ServletHolder.handle(ServletHolder.java:799)
+	at org.eclipse.jetty.servlet.ServletHandler$ChainEnd.doFilter(ServletHandler.java:1656)
+	at org.eclipse.jetty.websocket.server.WebSocketUpgradeFilter.doFilter(WebSocketUpgradeFilter.java:292)
+	at org.eclipse.jetty.servlet.FilterHolder.doFilter(FilterHolder.java:193)
+	at org.eclipse.jetty.servlet.ServletHandler$Chain.doFilter(ServletHandler.java:1626)
+	at org.springframework.web.filter.RequestContextFilter.doFilterInternal(RequestContextFilter.java:100)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:117)
+	at org.eclipse.jetty.servlet.FilterHolder.doFilter(FilterHolder.java:193)
+	at org.eclipse.jetty.servlet.ServletHandler$Chain.doFilter(ServletHandler.java:1626)
+	at org.springframework.web.filter.FormContentFilter.doFilterInternal(FormContentFilter.java:93)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:117)
+	at org.eclipse.jetty.servlet.FilterHolder.doFilter(FilterHolder.java:193)
+	at org.eclipse.jetty.servlet.ServletHandler$Chain.doFilter(ServletHandler.java:1626)
+	at org.springframework.boot.actuate.metrics.web.servlet.WebMvcMetricsFilter.doFilterInternal(WebMvcMetricsFilter.java:96)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:117)
+	at org.eclipse.jetty.servlet.FilterHolder.doFilter(FilterHolder.java:193)
+	at org.eclipse.jetty.servlet.ServletHandler$Chain.doFilter(ServletHandler.java:1626)
+	at org.springframework.web.filter.CharacterEncodingFilter.doFilterInternal(CharacterEncodingFilter.java:201)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:117)
+	at org.eclipse.jetty.servlet.FilterHolder.doFilter(FilterHolder.java:193)
+	at org.eclipse.jetty.servlet.ServletHandler$Chain.doFilter(ServletHandler.java:1626)
+	at org.ssssssss.magicapi.servlet.javaee.MagicJavaEECorsFilter.doFilter(MagicJavaEECorsFilter.java:15)
+	at org.eclipse.jetty.servlet.FilterHolder.doFilter(FilterHolder.java:193)
+	at org.eclipse.jetty.servlet.ServletHandler$Chain.doFilter(ServletHandler.java:1626)
+	at org.eclipse.jetty.servlet.ServletHandler.doHandle(ServletHandler.java:552)
+	at org.eclipse.jetty.server.handler.ScopedHandler.handle(ScopedHandler.java:143)
+	at org.eclipse.jetty.security.SecurityHandler.handle(SecurityHandler.java:600)
+	at org.eclipse.jetty.server.handler.HandlerWrapper.handle(HandlerWrapper.java:127)
+	at org.eclipse.jetty.server.handler.ScopedHandler.nextHandle(ScopedHandler.java:235)
+	at org.eclipse.jetty.server.session.SessionHandler.doHandle(SessionHandler.java:1624)
+	at org.eclipse.jetty.server.handler.ScopedHandler.nextHandle(ScopedHandler.java:233)
+	at org.eclipse.jetty.server.handler.ContextHandler.doHandle(ContextHandler.java:1440)
+	at org.eclipse.jetty.server.handler.ScopedHandler.nextScope(ScopedHandler.java:188)
+	at org.eclipse.jetty.servlet.ServletHandler.doScope(ServletHandler.java:505)
+	at org.eclipse.jetty.server.session.SessionHandler.doScope(SessionHandler.java:1594)
+	at org.eclipse.jetty.server.handler.ScopedHandler.nextScope(ScopedHandler.java:186)
+	at org.eclipse.jetty.server.handler.ContextHandler.doScope(ContextHandler.java:1355)
+	at org.eclipse.jetty.server.handler.ScopedHandler.handle(ScopedHandler.java:141)
+	at org.eclipse.jetty.server.handler.gzip.GzipHandler.handle(GzipHandler.java:772)
+	at org.eclipse.jetty.server.handler.HandlerWrapper.handle(HandlerWrapper.java:127)
+	at org.eclipse.jetty.server.Server.handle(Server.java:516)
+	at org.eclipse.jetty.server.HttpChannel.lambda$handle$1(HttpChannel.java:487)
+	at org.eclipse.jetty.server.HttpChannel.dispatch(HttpChannel.java:732)
+	at org.eclipse.jetty.server.HttpChannel.handle(HttpChannel.java:479)
+	at org.eclipse.jetty.server.HttpConnection.onFillable(HttpConnection.java:277)
+	at org.eclipse.jetty.io.AbstractConnection$ReadCallback.succeeded(AbstractConnection.java:311)
+	at org.eclipse.jetty.io.FillInterest.fillable(FillInterest.java:105)
+	at org.eclipse.jetty.io.ChannelEndPoint$1.run(ChannelEndPoint.java:104)
+	at org.eclipse.jetty.util.thread.strategy.EatWhatYouKill.runTask(EatWhatYouKill.java:338)
+	at org.eclipse.jetty.util.thread.strategy.EatWhatYouKill.doProduce(EatWhatYouKill.java:315)
+	at org.eclipse.jetty.util.thread.strategy.EatWhatYouKill.tryProduce(EatWhatYouKill.java:173)
+	at org.eclipse.jetty.util.thread.strategy.EatWhatYouKill.produce(EatWhatYouKill.java:137)
+	at org.eclipse.jetty.util.thread.QueuedThreadPool.runJob(QueuedThreadPool.java:883)
+	at org.eclipse.jetty.util.thread.QueuedThreadPool$Runner.run(QueuedThreadPool.java:1034)
+	at java.base/java.lang.Thread.run(Thread.java:829)
+2026-10-24 22:49:46.739 [qtp449338124-23] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[]
+2026-10-24 22:49:54.796 [scheduling-1] ERROR com.zaxxer.hikari.HikariConfig - Failed to load driver class com.mysql.cj.jdbc.Driver from HikariConfig class classloader org.springframework.boot.loader.LaunchedURLClassLoader@29774679
+2026-10-24 22:49:54.796 [scheduling-1] ERROR o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Failed to register datasource key=mysql_1 id=1 name=da_test_mysql
+java.lang.RuntimeException: Failed to load driver class com.mysql.cj.jdbc.Driver in either of HikariConfig class loader or Thread context classloader
+	at com.zaxxer.hikari.HikariConfig.setDriverClassName(HikariConfig.java:491)
+	at org.apache.dolphinscheduler.dataapi.datasource.DsMagicDataSourceLoader.register(DsMagicDataSourceLoader.java:155)
+	at org.apache.dolphinscheduler.dataapi.datasource.DsMagicDataSourceLoader.reload(DsMagicDataSourceLoader.java:98)
+	at org.apache.dolphinscheduler.dataapi.datasource.DsMagicDataSourceLoader.scheduledReload(DsMagicDataSourceLoader.java:81)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:566)
+	at org.springframework.scheduling.support.ScheduledMethodRunnable.run(ScheduledMethodRunnable.java:84)
+	at org.springframework.scheduling.support.DelegatingErrorHandlingRunnable.run(DelegatingErrorHandlingRunnable.java:54)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:515)
+	at java.base/java.util.concurrent.FutureTask.runAndReset(FutureTask.java:305)
+	at java.base/java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(ScheduledThreadPoolExecutor.java:305)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
+	at java.base/java.lang.Thread.run(Thread.java:829)
+2026-10-24 22:49:54.801 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[]
+2026-10-24 22:50:54.809 [scheduling-1] ERROR com.zaxxer.hikari.HikariConfig - Failed to load driver class com.mysql.cj.jdbc.Driver from HikariConfig class classloader org.springframework.boot.loader.LaunchedURLClassLoader@29774679
+2026-10-24 22:50:54.809 [scheduling-1] ERROR o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Failed to register datasource key=mysql_1 id=1 name=da_test_mysql
+java.lang.RuntimeException: Failed to load driver class com.mysql.cj.jdbc.Driver in either of HikariConfig class loader or Thread context classloader
+	at com.zaxxer.hikari.HikariConfig.setDriverClassName(HikariConfig.java:491)
+	at org.apache.dolphinscheduler.dataapi.datasource.DsMagicDataSourceLoader.register(DsMagicDataSourceLoader.java:155)
+	at org.apache.dolphinscheduler.dataapi.datasource.DsMagicDataSourceLoader.reload(DsMagicDataSourceLoader.java:98)
+	at org.apache.dolphinscheduler.dataapi.datasource.DsMagicDataSourceLoader.scheduledReload(DsMagicDataSourceLoader.java:81)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:566)
+	at org.springframework.scheduling.support.ScheduledMethodRunnable.run(ScheduledMethodRunnable.java:84)
+	at org.springframework.scheduling.support.DelegatingErrorHandlingRunnable.run(DelegatingErrorHandlingRunnable.java:54)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:515)
+	at java.base/java.util.concurrent.FutureTask.runAndReset(FutureTask.java:305)
+	at java.base/java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(ScheduledThreadPoolExecutor.java:305)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
+	at java.base/java.lang.Thread.run(Thread.java:829)
+2026-10-24 22:50:54.809 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[]
+2026-10-24 22:51:54.828 [scheduling-1] ERROR com.zaxxer.hikari.HikariConfig - Failed to load driver class com.mysql.cj.jdbc.Driver from HikariConfig class classloader org.springframework.boot.loader.LaunchedURLClassLoader@29774679
+2026-10-24 22:51:54.828 [scheduling-1] ERROR o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Failed to register datasource key=mysql_1 id=1 name=da_test_mysql
+java.lang.RuntimeException: Failed to load driver class com.mysql.cj.jdbc.Driver in either of HikariConfig class loader or Thread context classloader
+	at com.zaxxer.hikari.HikariConfig.setDriverClassName(HikariConfig.java:491)
+	at org.apache.dolphinscheduler.dataapi.datasource.DsMagicDataSourceLoader.register(DsMagicDataSourceLoader.java:155)
+	at org.apache.dolphinscheduler.dataapi.datasource.DsMagicDataSourceLoader.reload(DsMagicDataSourceLoader.java:98)
+	at org.apache.dolphinscheduler.dataapi.datasource.DsMagicDataSourceLoader.scheduledReload(DsMagicDataSourceLoader.java:81)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:566)
+	at org.springframework.scheduling.support.ScheduledMethodRunnable.run(ScheduledMethodRunnable.java:84)
+	at org.springframework.scheduling.support.DelegatingErrorHandlingRunnable.run(DelegatingErrorHandlingRunnable.java:54)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:515)
+	at java.base/java.util.concurrent.FutureTask.runAndReset(FutureTask.java:305)
+	at java.base/java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(ScheduledThreadPoolExecutor.java:305)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
+	at java.base/java.lang.Thread.run(Thread.java:829)
+2026-10-24 22:51:54.828 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[]
+2026-10-24 22:52:54.842 [scheduling-1] ERROR com.zaxxer.hikari.HikariConfig - Failed to load driver class com.mysql.cj.jdbc.Driver from HikariConfig class classloader org.springframework.boot.loader.LaunchedURLClassLoader@29774679
+2026-10-24 22:52:54.842 [scheduling-1] ERROR o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Failed to register datasource key=mysql_1 id=1 name=da_test_mysql
+java.lang.RuntimeException: Failed to load driver class com.mysql.cj.jdbc.Driver in either of HikariConfig class loader or Thread context classloader
+	at com.zaxxer.hikari.HikariConfig.setDriverClassName(HikariConfig.java:491)
+	at org.apache.dolphinscheduler.dataapi.datasource.DsMagicDataSourceLoader.register(DsMagicDataSourceLoader.java:155)
+	at org.apache.dolphinscheduler.dataapi.datasource.DsMagicDataSourceLoader.reload(DsMagicDataSourceLoader.java:98)
+	at org.apache.dolphinscheduler.dataapi.datasource.DsMagicDataSourceLoader.scheduledReload(DsMagicDataSourceLoader.java:81)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:566)
+	at org.springframework.scheduling.support.ScheduledMethodRunnable.run(ScheduledMethodRunnable.java:84)
+	at org.springframework.scheduling.support.DelegatingErrorHandlingRunnable.run(DelegatingErrorHandlingRunnable.java:54)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:515)
+	at java.base/java.util.concurrent.FutureTask.runAndReset(FutureTask.java:305)
+	at java.base/java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(ScheduledThreadPoolExecutor.java:305)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
+	at java.base/java.lang.Thread.run(Thread.java:829)
+2026-10-24 22:52:54.842 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[]
+2026-10-24 22:53:54.864 [scheduling-1] ERROR com.zaxxer.hikari.HikariConfig - Failed to load driver class com.mysql.cj.jdbc.Driver from HikariConfig class classloader org.springframework.boot.loader.LaunchedURLClassLoader@29774679
+2026-10-24 22:53:54.868 [scheduling-1] ERROR o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Failed to register datasource key=mysql_1 id=1 name=da_test_mysql
+java.lang.RuntimeException: Failed to load driver class com.mysql.cj.jdbc.Driver in either of HikariConfig class loader or Thread context classloader
+	at com.zaxxer.hikari.HikariConfig.setDriverClassName(HikariConfig.java:491)
+	at org.apache.dolphinscheduler.dataapi.datasource.DsMagicDataSourceLoader.register(DsMagicDataSourceLoader.java:155)
+	at org.apache.dolphinscheduler.dataapi.datasource.DsMagicDataSourceLoader.reload(DsMagicDataSourceLoader.java:98)
+	at org.apache.dolphinscheduler.dataapi.datasource.DsMagicDataSourceLoader.scheduledReload(DsMagicDataSourceLoader.java:81)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:566)
+	at org.springframework.scheduling.support.ScheduledMethodRunnable.run(ScheduledMethodRunnable.java:84)
+	at org.springframework.scheduling.support.DelegatingErrorHandlingRunnable.run(DelegatingErrorHandlingRunnable.java:54)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:515)
+	at java.base/java.util.concurrent.FutureTask.runAndReset(FutureTask.java:305)
+	at java.base/java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(ScheduledThreadPoolExecutor.java:305)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
+	at java.base/java.lang.Thread.run(Thread.java:829)
+2026-10-24 22:53:54.868 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[]
+2026-10-24 22:54:54.879 [scheduling-1] ERROR com.zaxxer.hikari.HikariConfig - Failed to load driver class com.mysql.cj.jdbc.Driver from HikariConfig class classloader org.springframework.boot.loader.LaunchedURLClassLoader@29774679
+2026-10-24 22:54:54.879 [scheduling-1] ERROR o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Failed to register datasource key=mysql_1 id=1 name=da_test_mysql
+java.lang.RuntimeException: Failed to load driver class com.mysql.cj.jdbc.Driver in either of HikariConfig class loader or Thread context classloader
+	at com.zaxxer.hikari.HikariConfig.setDriverClassName(HikariConfig.java:491)
+	at org.apache.dolphinscheduler.dataapi.datasource.DsMagicDataSourceLoader.register(DsMagicDataSourceLoader.java:155)
+	at org.apache.dolphinscheduler.dataapi.datasource.DsMagicDataSourceLoader.reload(DsMagicDataSourceLoader.java:98)
+	at org.apache.dolphinscheduler.dataapi.datasource.DsMagicDataSourceLoader.scheduledReload(DsMagicDataSourceLoader.java:81)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:566)
+	at org.springframework.scheduling.support.ScheduledMethodRunnable.run(ScheduledMethodRunnable.java:84)
+	at org.springframework.scheduling.support.DelegatingErrorHandlingRunnable.run(DelegatingErrorHandlingRunnable.java:54)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:515)
+	at java.base/java.util.concurrent.FutureTask.runAndReset(FutureTask.java:305)
+	at java.base/java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(ScheduledThreadPoolExecutor.java:305)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
+	at java.base/java.lang.Thread.run(Thread.java:829)
+2026-10-24 22:54:54.881 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[]
+2026-10-24 22:56:51.606 [main] INFO  org.apache.dolphinscheduler.dataapi.DataApiServer - Starting DataApiServer v3.4.3 using Java 11.0.25 on HPG with PID 28788 (D:\HPG\workspace\LHYF\data-center-mono\dolphinscheduler\dolphinscheduler-data-api\target\dolphinscheduler-data-api-3.4.3.jar started by 16899 in D:\HPG\workspace\LHYF\data-center-mono\dolphinscheduler\dolphinscheduler-data-api)
+2026-10-24 22:56:51.617 [main] INFO  org.apache.dolphinscheduler.dataapi.DataApiServer - The following 1 profile is active: "h2"
+2026-10-24 22:56:55.002 [main] INFO  org.eclipse.jetty.util.log - Logging initialized @5885ms to org.eclipse.jetty.util.log.Slf4jLog
+2026-10-24 22:56:55.492 [main] INFO  o.s.b.w.e.jetty.JettyServletWebServerFactory - Server initialized with port: 12346
+2026-10-24 22:56:55.495 [main] INFO  org.eclipse.jetty.server.Server - jetty-9.4.51.v20230217; built: 2023-02-17T08:19:37.309Z; git: b45c405e4544384de066f814ed42ae3dceacdd49; jvm 11.0.25+9-LTS
+2026-10-24 22:56:55.525 [main] INFO  o.e.j.server.handler.ContextHandler.application - Initializing Spring embedded WebApplicationContext
+2026-10-24 22:56:55.525 [main] INFO  o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 3818 ms
+2026-10-24 22:56:56.166 [main] INFO  org.eclipse.jetty.server.session - DefaultSessionIdManager workerName=node0
+2026-10-24 22:56:56.166 [main] INFO  org.eclipse.jetty.server.session - No SessionScavenger set, using defaults
+2026-10-24 22:56:56.166 [main] INFO  org.eclipse.jetty.server.session - node0 Scavenging every 660000ms
+2026-10-24 22:56:56.178 [main] INFO  org.eclipse.jetty.server.handler.ContextHandler - Started o.s.b.w.e.j.JettyEmbeddedWebAppContext@a619c2{application,/,[file:///C:/Users/16899/AppData/Local/Temp/jetty-docbase.12346.12187883364438104511/],AVAILABLE}
+2026-10-24 22:56:56.178 [main] INFO  org.eclipse.jetty.server.Server - Started @7058ms
+2026-10-24 22:56:56.505 [main] INFO  com.zaxxer.hikari.HikariDataSource - DataApiMeta - Starting...
+2026-10-24 22:56:57.489 [main] INFO  com.zaxxer.hikari.HikariDataSource - DataApiMeta - Start completed.
+2026-10-24 22:57:00.044 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: hive
+2026-10-24 22:57:00.046 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: vertica
+2026-10-24 22:57:00.046 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: doris
+2026-10-24 22:57:00.048 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: ssh
+2026-10-24 22:57:00.048 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: databend
+2026-10-24 22:57:00.050 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: aliyun_serverless_spark
+2026-10-24 22:57:00.050 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: dolphindb
+2026-10-24 22:57:00.050 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: postgresql
+2026-10-24 22:57:00.050 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: redshift
+2026-10-24 22:57:00.050 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: sqlserver
+2026-10-24 22:57:00.050 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: spark
+2026-10-24 22:57:00.050 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: oceanbase
+2026-10-24 22:57:00.055 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: starrocks
+2026-10-24 22:57:00.055 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: mysql
+2026-10-24 22:57:00.055 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: hana
+2026-10-24 22:57:00.055 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: dameng
+2026-10-24 22:57:00.058 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: sagemaker
+2026-10-24 22:57:00.058 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: snowflake
+2026-10-24 22:57:00.058 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: kyuubi
+2026-10-24 22:57:00.058 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: oracle
+2026-10-24 22:57:00.058 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: k8s
+2026-10-24 22:57:00.058 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: zeppelin
+2026-10-24 22:57:00.058 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: trino
+2026-10-24 22:57:00.058 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: db2
+2026-10-24 22:57:00.058 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: clickhouse
+2026-10-24 22:57:00.065 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: azuresql
+2026-10-24 22:57:00.065 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: athena
+2026-10-24 22:57:00.065 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: presto
+2026-10-24 22:57:00.083 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> aliyun_serverless_spark
+2026-10-24 22:57:00.086 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> athena
+2026-10-24 22:57:00.090 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> azuresql
+2026-10-24 22:57:00.090 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> clickhouse
+2026-10-24 22:57:00.090 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> dameng
+2026-10-24 22:57:00.096 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> databend
+2026-10-24 22:57:00.097 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> db2
+2026-10-24 22:57:00.099 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> dolphindb
+2026-10-24 22:57:00.099 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> doris
+2026-10-24 22:57:00.099 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> hana
+2026-10-24 22:57:00.099 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> hive
+2026-10-24 22:57:00.107 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> k8s
+2026-10-24 22:57:00.108 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> kyuubi
+2026-10-24 22:57:00.108 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> mysql
+2026-10-24 22:57:00.108 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> oceanbase
+2026-10-24 22:57:00.108 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> oracle
+2026-10-24 22:57:00.108 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> postgresql
+2026-10-24 22:57:00.119 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> presto
+2026-10-24 22:57:00.121 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> redshift
+2026-10-24 22:57:00.123 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> sagemaker
+2026-10-24 22:57:00.123 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> snowflake
+2026-10-24 22:57:00.127 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> spark
+2026-10-24 22:57:00.129 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> sqlserver
+2026-10-24 22:57:00.131 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> ssh
+2026-10-24 22:57:00.133 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> starrocks
+2026-10-24 22:57:00.135 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> trino
+2026-10-24 22:57:00.137 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> vertica
+2026-10-24 22:57:00.138 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> zeppelin
+2026-10-24 22:57:00.144 [main] INFO  o.a.d.common.constants.SystemConstants - init timezone: sun.util.calendar.ZoneInfo[id="Asia/Shanghai",offset=28800000,dstSavings=0,useDaylight=false,transitions=31,lastRule=null]
+2026-10-24 22:57:00.257 [main] ERROR com.zaxxer.hikari.HikariConfig - Failed to load driver class com.mysql.cj.jdbc.Driver from HikariConfig class classloader org.springframework.boot.loader.LaunchedURLClassLoader@29774679
+2026-10-24 22:57:00.257 [main] ERROR o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Failed to register datasource key=mysql_1 id=1 name=da_test_mysql
+java.lang.RuntimeException: Failed to load driver class com.mysql.cj.jdbc.Driver in either of HikariConfig class loader or Thread context classloader
+	at com.zaxxer.hikari.HikariConfig.setDriverClassName(HikariConfig.java:491)
+	at org.apache.dolphinscheduler.dataapi.datasource.DsMagicDataSourceLoader.register(DsMagicDataSourceLoader.java:155)
+	at org.apache.dolphinscheduler.dataapi.datasource.DsMagicDataSourceLoader.reload(DsMagicDataSourceLoader.java:98)
+	at org.apache.dolphinscheduler.dataapi.datasource.DsMagicDataSourceLoader.init(DsMagicDataSourceLoader.java:76)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:566)
+	at org.springframework.beans.factory.annotation.InitDestroyAnnotationBeanPostProcessor$LifecycleElement.invoke(InitDestroyAnnotationBeanPostProcessor.java:389)
+	at org.springframework.beans.factory.annotation.InitDestroyAnnotationBeanPostProcessor$LifecycleMetadata.invokeInitMethods(InitDestroyAnnotationBeanPostProcessor.java:333)
+	at org.springframework.beans.factory.annotation.InitDestroyAnnotationBeanPostProcessor.postProcessBeforeInitialization(InitDestroyAnnotationBeanPostProcessor.java:157)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.applyBeanPostProcessorsBeforeInitialization(AbstractAutowireCapableBeanFactory.java:440)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.initializeBean(AbstractAutowireCapableBeanFactory.java:1796)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:620)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:542)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$0(AbstractBeanFactory.java:335)
+	at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:234)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:333)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:208)
+	at org.springframework.beans.factory.config.DependencyDescriptor.resolveCandidate(DependencyDescriptor.java:276)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.doResolveDependency(DefaultListableBeanFactory.java:1391)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.resolveDependency(DefaultListableBeanFactory.java:1311)
+	at org.springframework.beans.factory.support.ConstructorResolver.resolveAutowiredArgument(ConstructorResolver.java:887)
+	at org.springframework.beans.factory.support.ConstructorResolver.createArgumentArray(ConstructorResolver.java:791)
+	at org.springframework.beans.factory.support.ConstructorResolver.autowireConstructor(ConstructorResolver.java:229)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.autowireConstructor(AbstractAutowireCapableBeanFactory.java:1372)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBeanInstance(AbstractAutowireCapableBeanFactory.java:1222)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:582)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:542)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$0(AbstractBeanFactory.java:335)
+	at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:234)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:333)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:208)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.preInstantiateSingletons(DefaultListableBeanFactory.java:955)
+	at org.springframework.context.support.AbstractApplicationContext.finishBeanFactoryInitialization(AbstractApplicationContext.java:920)
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:583)
+	at org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext.refresh(ServletWebServerApplicationContext.java:147)
+	at org.springframework.boot.SpringApplication.refresh(SpringApplication.java:731)
+	at org.springframework.boot.SpringApplication.refreshContext(SpringApplication.java:408)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:307)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1303)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1292)
+	at org.apache.dolphinscheduler.dataapi.DataApiServer.main(DataApiServer.java:47)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:566)
+	at org.springframework.boot.loader.MainMethodRunner.run(MainMethodRunner.java:49)
+	at org.springframework.boot.loader.Launcher.launch(Launcher.java:108)
+	at org.springframework.boot.loader.Launcher.launch(Launcher.java:58)
+	at org.springframework.boot.loader.JarLauncher.main(JarLauncher.java:88)
+2026-10-24 22:57:00.257 [main] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[]
+2026-10-24 22:57:00.931 [main] INFO  org.springframework.aop.framework.CglibAopProxy - Unable to proxy interface-implementing method [public final org.springframework.web.servlet.HandlerExecutionChain org.springframework.web.servlet.handler.AbstractHandlerMapping.getHandler(javax.servlet.http.HttpServletRequest) throws java.lang.Exception] because it is marked as final: Consider using interface-based JDK proxies instead!
+2026-10-24 22:57:00.936 [main] INFO  org.springframework.aop.framework.CglibAopProxy - Unable to proxy interface-implementing method [public final void org.springframework.web.context.support.WebApplicationObjectSupport.setServletContext(javax.servlet.ServletContext)] because it is marked as final: Consider using interface-based JDK proxies instead!
+2026-10-24 22:57:00.936 [main] INFO  org.springframework.aop.framework.CglibAopProxy - Unable to proxy interface-implementing method [public final void org.springframework.context.support.ApplicationObjectSupport.setApplicationContext(org.springframework.context.ApplicationContext) throws org.springframework.beans.BeansException] because it is marked as final: Consider using interface-based JDK proxies instead!
+2026-10-24 22:57:02.263 [main] INFO  o.s.m.s.boot.starter.MagicAPIAutoConfiguration - 未配置集群通知服务，本实例不会推送通知，集群环境下可能会有问题，如需开启，请引用magic-api-plugin-cluster插件
+2026-10-24 22:57:02.380 [main] INFO  o.s.m.spring.boot.starter.MagicModuleConfiguration - 未找到分页实现,采用默认分页实现,分页配置:(页码=page,页大小=size,默认首页=1,默认页大小=10,最大页大小=-1)
+2026-10-24 22:57:02.393 [main] INFO  o.s.m.spring.boot.starter.MagicModuleConfiguration - 未找到SQL缓存实现，采用默认缓存实现(LRU+TTL)，缓存配置:(容量=10000,TTL=-1)
+2026-10-24 22:57:02.688 [main] INFO  o.s.m.s.boot.starter.MagicAPIAutoConfiguration - magic-api工作目录:file://D:\HPG\workspace\LHYF\data-center-mono\dolphinscheduler\dolphinscheduler-data-api\.\data\magic-api
+2026-10-24 22:57:02.704 [main] INFO  o.s.m.s.boot.starter.MagicAPIAutoConfiguration - 注册模块:log -> interface org.slf4j.Logger
+2026-10-24 22:57:02.708 [main] INFO  o.s.m.s.boot.starter.MagicAPIAutoConfiguration - 注册模块:db -> class org.ssssssss.magicapi.modules.db.SQLModule
+2026-10-24 22:57:02.711 [main] INFO  o.s.m.s.boot.starter.MagicAPIAutoConfiguration - 注册模块:http -> class org.ssssssss.magicapi.modules.http.HttpModule
+2026-10-24 22:57:02.711 [main] INFO  o.s.m.s.boot.starter.MagicAPIAutoConfiguration - 注册模块:env -> class org.ssssssss.magicapi.modules.spring.EnvModule
+2026-10-24 22:57:02.711 [main] INFO  o.s.m.s.boot.starter.MagicAPIAutoConfiguration - 注册模块:request -> class org.ssssssss.magicapi.modules.servlet.RequestModule
+2026-10-24 22:57:02.711 [main] INFO  o.s.m.s.boot.starter.MagicAPIAutoConfiguration - 注册模块:response -> class org.ssssssss.magicapi.modules.servlet.ResponseModule
+2026-10-24 22:57:02.711 [main] INFO  o.s.m.s.boot.starter.MagicAPIAutoConfiguration - 注册模块:magic -> class org.ssssssss.magicapi.core.service.impl.DefaultMagicAPIService
+2026-10-24 22:57:02.711 [main] INFO  o.s.m.s.boot.starter.MagicAPIAutoConfiguration - 自动导入模块：db
+2026-10-24 22:57:02.711 [main] INFO  o.s.m.s.boot.starter.MagicAPIAutoConfiguration - 注册扩展:class org.ssssssss.magicapi.modules.servlet.ResponseModule -> class org.ssssssss.magicapi.servlet.javaee.MagicJavaEEResponseExtension
+2026-10-24 22:57:02.756 [main] INFO  o.s.m.s.boot.starter.MagicAPIAutoConfiguration - 注册请求拦截器：class org.apache.dolphinscheduler.dataapi.auth.DataApiRequestInterceptor
+2026-10-24 22:57:02.756 [main] ERROR o.s.m.s.boot.starter.MagicAPIAutoConfiguration - 当前备份设置未配置，强烈建议配置备份设置，以免代码丢失。
+2026-10-24 22:57:02.771 [main] INFO  o.s.b.actuate.endpoint.web.EndpointLinksResolver - Exposing 2 endpoint(s) beneath base path '/actuator'
+2026-10-24 22:57:02.871 [main] INFO  o.e.j.server.handler.ContextHandler.application - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-10-24 22:57:02.873 [main] INFO  org.springframework.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2026-10-24 22:57:02.874 [main] INFO  org.springframework.web.servlet.DispatcherServlet - Completed initialization in 1 ms
+2026-10-24 22:57:02.902 [main] INFO  org.eclipse.jetty.server.AbstractConnector - Started ServerConnector@7249dadf{HTTP/1.1, (http/1.1)}{0.0.0.0:12346}
+2026-10-24 22:57:02.902 [main] INFO  o.s.boot.web.embedded.jetty.JettyWebServer - Jetty started on port(s) 12346 (http/1.1) with context path '/'
+2026-10-24 22:57:02.924 [scheduling-1] ERROR com.zaxxer.hikari.HikariConfig - Failed to load driver class com.mysql.cj.jdbc.Driver from HikariConfig class classloader org.springframework.boot.loader.LaunchedURLClassLoader@29774679
+2026-10-24 22:57:02.924 [scheduling-1] ERROR o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Failed to register datasource key=mysql_1 id=1 name=da_test_mysql
+java.lang.RuntimeException: Failed to load driver class com.mysql.cj.jdbc.Driver in either of HikariConfig class loader or Thread context classloader
+	at com.zaxxer.hikari.HikariConfig.setDriverClassName(HikariConfig.java:491)
+	at org.apache.dolphinscheduler.dataapi.datasource.DsMagicDataSourceLoader.register(DsMagicDataSourceLoader.java:155)
+	at org.apache.dolphinscheduler.dataapi.datasource.DsMagicDataSourceLoader.reload(DsMagicDataSourceLoader.java:98)
+	at org.apache.dolphinscheduler.dataapi.datasource.DsMagicDataSourceLoader.scheduledReload(DsMagicDataSourceLoader.java:81)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:566)
+	at org.springframework.scheduling.support.ScheduledMethodRunnable.run(ScheduledMethodRunnable.java:84)
+	at org.springframework.scheduling.support.DelegatingErrorHandlingRunnable.run(DelegatingErrorHandlingRunnable.java:54)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:515)
+	at java.base/java.util.concurrent.FutureTask.runAndReset(FutureTask.java:305)
+	at java.base/java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(ScheduledThreadPoolExecutor.java:305)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
+	at java.base/java.lang.Thread.run(Thread.java:829)
+2026-10-24 22:57:02.935 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[]
+2026-10-24 22:57:02.935 [main] INFO  org.apache.dolphinscheduler.dataapi.DataApiServer - Started DataApiServer in 12.688 seconds (JVM running for 13.815)
+2026-10-24 22:57:02.956 [main] INFO  org.apache.dolphinscheduler.dataapi.DataApiServer - DataApiServer is ready (magic-api + shared DS metadata)
+2026-10-24 22:58:53.857 [main] INFO  org.apache.dolphinscheduler.dataapi.DataApiServer - Starting DataApiServer v3.4.3 using Java 11.0.25 on HPG with PID 28808 (D:\HPG\workspace\LHYF\data-center-mono\dolphinscheduler\dolphinscheduler-data-api\target\dolphinscheduler-data-api-3.4.3.jar started by 16899 in D:\HPG\workspace\LHYF\data-center-mono\dolphinscheduler\dolphinscheduler-data-api)
+2026-10-24 22:58:53.868 [main] INFO  org.apache.dolphinscheduler.dataapi.DataApiServer - The following 1 profile is active: "h2"
+2026-10-24 22:58:57.020 [main] INFO  org.eclipse.jetty.util.log - Logging initialized @5178ms to org.eclipse.jetty.util.log.Slf4jLog
+2026-10-24 22:58:57.575 [main] INFO  o.s.b.w.e.jetty.JettyServletWebServerFactory - Server initialized with port: 12346
+2026-10-24 22:58:57.584 [main] INFO  org.eclipse.jetty.server.Server - jetty-9.4.51.v20230217; built: 2023-02-17T08:19:37.309Z; git: b45c405e4544384de066f814ed42ae3dceacdd49; jvm 11.0.25+9-LTS
+2026-10-24 22:58:57.626 [main] INFO  o.e.j.server.handler.ContextHandler.application - Initializing Spring embedded WebApplicationContext
+2026-10-24 22:58:57.627 [main] INFO  o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 3674 ms
+2026-10-24 22:58:58.335 [main] INFO  org.eclipse.jetty.server.session - DefaultSessionIdManager workerName=node0
+2026-10-24 22:58:58.335 [main] INFO  org.eclipse.jetty.server.session - No SessionScavenger set, using defaults
+2026-10-24 22:58:58.338 [main] INFO  org.eclipse.jetty.server.session - node0 Scavenging every 600000ms
+2026-10-24 22:58:58.350 [main] INFO  org.eclipse.jetty.server.handler.ContextHandler - Started o.s.b.w.e.j.JettyEmbeddedWebAppContext@a619c2{application,/,[file:///C:/Users/16899/AppData/Local/Temp/jetty-docbase.12346.16885638024607704923/],AVAILABLE}
+2026-10-24 22:58:58.351 [main] INFO  org.eclipse.jetty.server.Server - Started @6508ms
+2026-10-24 22:58:58.742 [main] INFO  com.zaxxer.hikari.HikariDataSource - DataApiMeta - Starting...
+2026-10-24 22:58:59.756 [main] INFO  com.zaxxer.hikari.HikariDataSource - DataApiMeta - Start completed.
+2026-10-24 22:59:02.576 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: hive
+2026-10-24 22:59:02.576 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: vertica
+2026-10-24 22:59:02.582 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: doris
+2026-10-24 22:59:02.582 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: ssh
+2026-10-24 22:59:02.582 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: databend
+2026-10-24 22:59:02.582 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: aliyun_serverless_spark
+2026-10-24 22:59:02.585 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: dolphindb
+2026-10-24 22:59:02.587 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: postgresql
+2026-10-24 22:59:02.589 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: redshift
+2026-10-24 22:59:02.589 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: sqlserver
+2026-10-24 22:59:02.589 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: spark
+2026-10-24 22:59:02.589 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: oceanbase
+2026-10-24 22:59:02.589 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: starrocks
+2026-10-24 22:59:02.593 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: mysql
+2026-10-24 22:59:02.593 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: hana
+2026-10-24 22:59:02.593 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: dameng
+2026-10-24 22:59:02.593 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: sagemaker
+2026-10-24 22:59:02.593 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: snowflake
+2026-10-24 22:59:02.593 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: kyuubi
+2026-10-24 22:59:02.593 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: oracle
+2026-10-24 22:59:02.593 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: k8s
+2026-10-24 22:59:02.593 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: zeppelin
+2026-10-24 22:59:02.593 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: trino
+2026-10-24 22:59:02.593 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: db2
+2026-10-24 22:59:02.593 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: clickhouse
+2026-10-24 22:59:02.593 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: azuresql
+2026-10-24 22:59:02.602 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: athena
+2026-10-24 22:59:02.603 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: presto
+2026-10-24 22:59:02.625 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> aliyun_serverless_spark
+2026-10-24 22:59:02.625 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> athena
+2026-10-24 22:59:02.625 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> azuresql
+2026-10-24 22:59:02.625 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> clickhouse
+2026-10-24 22:59:02.637 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> dameng
+2026-10-24 22:59:02.637 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> databend
+2026-10-24 22:59:02.637 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> db2
+2026-10-24 22:59:02.644 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> dolphindb
+2026-10-24 22:59:02.644 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> doris
+2026-10-24 22:59:02.646 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> hana
+2026-10-24 22:59:02.646 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> hive
+2026-10-24 22:59:02.646 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> k8s
+2026-10-24 22:59:02.653 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> kyuubi
+2026-10-24 22:59:02.657 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> mysql
+2026-10-24 22:59:02.659 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> oceanbase
+2026-10-24 22:59:02.661 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> oracle
+2026-10-24 22:59:02.661 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> postgresql
+2026-10-24 22:59:02.661 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> presto
+2026-10-24 22:59:02.668 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> redshift
+2026-10-24 22:59:02.670 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> sagemaker
+2026-10-24 22:59:02.670 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> snowflake
+2026-10-24 22:59:02.670 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> spark
+2026-10-24 22:59:02.678 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> sqlserver
+2026-10-24 22:59:02.678 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> ssh
+2026-10-24 22:59:02.678 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> starrocks
+2026-10-24 22:59:02.683 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> trino
+2026-10-24 22:59:02.687 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> vertica
+2026-10-24 22:59:02.689 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> zeppelin
+2026-10-24 22:59:02.689 [main] INFO  o.a.d.common.constants.SystemConstants - init timezone: sun.util.calendar.ZoneInfo[id="Asia/Shanghai",offset=28800000,dstSavings=0,useDaylight=false,transitions=31,lastRule=null]
+2026-10-24 22:59:02.810 [main] INFO  com.zaxxer.hikari.HikariDataSource - da-mysql_1 - Starting...
+2026-10-24 22:59:02.833 [main] INFO  com.zaxxer.hikari.HikariDataSource - da-mysql_1 - Start completed.
+2026-10-24 22:59:02.833 [main] INFO  o.s.m.datasource.model.MagicDynamicDataSource - 注册数据源：mysql_1
+2026-10-24 22:59:02.849 [main] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Registered magic datasource key=mysql_1 type=MYSQL url=jdbc:mysql://127.0.0.1:3306/test
+2026-10-24 22:59:02.849 [main] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[mysql_1]
+2026-10-24 22:59:03.615 [main] INFO  org.springframework.aop.framework.CglibAopProxy - Unable to proxy interface-implementing method [public final org.springframework.web.servlet.HandlerExecutionChain org.springframework.web.servlet.handler.AbstractHandlerMapping.getHandler(javax.servlet.http.HttpServletRequest) throws java.lang.Exception] because it is marked as final: Consider using interface-based JDK proxies instead!
+2026-10-24 22:59:03.616 [main] INFO  org.springframework.aop.framework.CglibAopProxy - Unable to proxy interface-implementing method [public final void org.springframework.web.context.support.WebApplicationObjectSupport.setServletContext(javax.servlet.ServletContext)] because it is marked as final: Consider using interface-based JDK proxies instead!
+2026-10-24 22:59:03.617 [main] INFO  org.springframework.aop.framework.CglibAopProxy - Unable to proxy interface-implementing method [public final void org.springframework.context.support.ApplicationObjectSupport.setApplicationContext(org.springframework.context.ApplicationContext) throws org.springframework.beans.BeansException] because it is marked as final: Consider using interface-based JDK proxies instead!
+2026-10-24 22:59:05.059 [main] INFO  o.s.m.s.boot.starter.MagicAPIAutoConfiguration - 未配置集群通知服务，本实例不会推送通知，集群环境下可能会有问题，如需开启，请引用magic-api-plugin-cluster插件
+2026-10-24 22:59:05.197 [main] INFO  o.s.m.spring.boot.starter.MagicModuleConfiguration - 未找到分页实现,采用默认分页实现,分页配置:(页码=page,页大小=size,默认首页=1,默认页大小=10,最大页大小=-1)
+2026-10-24 22:59:05.204 [main] INFO  o.s.m.spring.boot.starter.MagicModuleConfiguration - 未找到SQL缓存实现，采用默认缓存实现(LRU+TTL)，缓存配置:(容量=10000,TTL=-1)
+2026-10-24 22:59:05.222 [main] WARN  o.s.b.w.s.c.AnnotationConfigServletWebServerApplicationContext - Exception encountered during context initialization - cancelling refresh attempt: org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'magicSqlModule' defined in class path resource [org/ssssssss/magicapi/spring/boot/starter/MagicModuleConfiguration.class]: Bean instantiation via factory method failed; nested exception is org.springframework.beans.BeanInstantiationException: Failed to instantiate [org.ssssssss.magicapi.modules.db.SQLModule]: Factory method 'magicSqlModule' threw exception; nested exception is org.ssssssss.magicapi.core.exception.MagicAPIException: 找不到数据源
+2026-10-24 22:59:05.230 [main] INFO  com.zaxxer.hikari.HikariDataSource - DataApiMeta - Shutdown initiated...
+2026-10-24 22:59:05.245 [main] INFO  com.zaxxer.hikari.HikariDataSource - DataApiMeta - Shutdown completed.
+2026-10-24 22:59:05.253 [main] INFO  org.eclipse.jetty.server.session - node0 Stopped scavenging
+2026-10-24 22:59:05.257 [main] INFO  org.eclipse.jetty.server.handler.ContextHandler - Stopped o.s.b.w.e.j.JettyEmbeddedWebAppContext@a619c2{application,/,[file:///C:/Users/16899/AppData/Local/Temp/jetty-docbase.12346.16885638024607704923/],STOPPED}
+2026-10-24 22:59:05.275 [main] INFO  o.s.b.a.l.ConditionEvaluationReportLoggingListener - 
+
+Error starting ApplicationContext. To display the conditions report re-run your application with 'debug' enabled.
+2026-10-24 22:59:05.340 [main] ERROR org.springframework.boot.SpringApplication - Application run failed
+org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'magicSqlModule' defined in class path resource [org/ssssssss/magicapi/spring/boot/starter/MagicModuleConfiguration.class]: Bean instantiation via factory method failed; nested exception is org.springframework.beans.BeanInstantiationException: Failed to instantiate [org.ssssssss.magicapi.modules.db.SQLModule]: Factory method 'magicSqlModule' threw exception; nested exception is org.ssssssss.magicapi.core.exception.MagicAPIException: 找不到数据源
+	at org.springframework.beans.factory.support.ConstructorResolver.instantiate(ConstructorResolver.java:658)
+	at org.springframework.beans.factory.support.ConstructorResolver.instantiateUsingFactoryMethod(ConstructorResolver.java:638)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.instantiateUsingFactoryMethod(AbstractAutowireCapableBeanFactory.java:1352)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBeanInstance(AbstractAutowireCapableBeanFactory.java:1195)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:582)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:542)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$0(AbstractBeanFactory.java:335)
+	at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:234)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:333)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:208)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.preInstantiateSingletons(DefaultListableBeanFactory.java:955)
+	at org.springframework.context.support.AbstractApplicationContext.finishBeanFactoryInitialization(AbstractApplicationContext.java:920)
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:583)
+	at org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext.refresh(ServletWebServerApplicationContext.java:147)
+	at org.springframework.boot.SpringApplication.refresh(SpringApplication.java:731)
+	at org.springframework.boot.SpringApplication.refreshContext(SpringApplication.java:408)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:307)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1303)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1292)
+	at org.apache.dolphinscheduler.dataapi.DataApiServer.main(DataApiServer.java:47)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:566)
+	at org.springframework.boot.loader.MainMethodRunner.run(MainMethodRunner.java:49)
+	at org.springframework.boot.loader.Launcher.launch(Launcher.java:108)
+	at org.springframework.boot.loader.Launcher.launch(Launcher.java:58)
+	at org.springframework.boot.loader.JarLauncher.main(JarLauncher.java:88)
+Caused by: org.springframework.beans.BeanInstantiationException: Failed to instantiate [org.ssssssss.magicapi.modules.db.SQLModule]: Factory method 'magicSqlModule' threw exception; nested exception is org.ssssssss.magicapi.core.exception.MagicAPIException: 找不到数据源
+	at org.springframework.beans.factory.support.SimpleInstantiationStrategy.instantiate(SimpleInstantiationStrategy.java:185)
+	at org.springframework.beans.factory.support.ConstructorResolver.instantiate(ConstructorResolver.java:653)
+	... 27 common frames omitted
+Caused by: org.ssssssss.magicapi.core.exception.MagicAPIException: 找不到数据源
+	at org.ssssssss.magicapi.utils.Assert.isNotNull(Assert.java:18)
+	at org.ssssssss.magicapi.datasource.model.MagicDynamicDataSource.getDataSource(MagicDynamicDataSource.java:138)
+	at org.ssssssss.magicapi.datasource.model.MagicDynamicDataSource.getDataSource(MagicDynamicDataSource.java:125)
+	at org.ssssssss.magicapi.spring.boot.starter.MagicModuleConfiguration.magicSqlModule(MagicModuleConfiguration.java:137)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:566)
+	at org.springframework.beans.factory.support.SimpleInstantiationStrategy.instantiate(SimpleInstantiationStrategy.java:154)
+	... 28 common frames omitted
+2026-10-24 23:04:24.529 [main] INFO  org.apache.dolphinscheduler.dataapi.DataApiServer - Starting DataApiServer v3.4.3 using Java 11.0.25 on HPG with PID 28464 (D:\HPG\workspace\LHYF\data-center-mono\dolphinscheduler\dolphinscheduler-data-api\target\dolphinscheduler-data-api-3.4.3.jar started by 16899 in D:\HPG\workspace\LHYF\data-center-mono\dolphinscheduler\dolphinscheduler-data-api)
+2026-10-24 23:04:24.535 [main] INFO  org.apache.dolphinscheduler.dataapi.DataApiServer - The following 1 profile is active: "h2"
+2026-10-24 23:04:29.788 [main] INFO  org.eclipse.jetty.util.log - Logging initialized @7520ms to org.eclipse.jetty.util.log.Slf4jLog
+2026-10-24 23:04:30.433 [main] INFO  o.s.b.w.e.jetty.JettyServletWebServerFactory - Server initialized with port: 12346
+2026-10-24 23:04:30.436 [main] INFO  org.eclipse.jetty.server.Server - jetty-9.4.51.v20230217; built: 2023-02-17T08:19:37.309Z; git: b45c405e4544384de066f814ed42ae3dceacdd49; jvm 11.0.25+9-LTS
+2026-10-24 23:04:30.486 [main] INFO  o.e.j.server.handler.ContextHandler.application - Initializing Spring embedded WebApplicationContext
+2026-10-24 23:04:30.486 [main] INFO  o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 5867 ms
+2026-10-24 23:04:31.318 [main] INFO  org.eclipse.jetty.server.session - DefaultSessionIdManager workerName=node0
+2026-10-24 23:04:31.318 [main] INFO  org.eclipse.jetty.server.session - No SessionScavenger set, using defaults
+2026-10-24 23:04:31.331 [main] INFO  org.eclipse.jetty.server.session - node0 Scavenging every 600000ms
+2026-10-24 23:04:31.340 [main] INFO  org.eclipse.jetty.server.handler.ContextHandler - Started o.s.b.w.e.j.JettyEmbeddedWebAppContext@a619c2{application,/,[file:///C:/Users/16899/AppData/Local/Temp/jetty-docbase.12346.8381597406924334001/],AVAILABLE}
+2026-10-24 23:04:31.340 [main] INFO  org.eclipse.jetty.server.Server - Started @9075ms
+2026-10-24 23:04:31.756 [main] INFO  com.zaxxer.hikari.HikariDataSource - DataApiMeta - Starting...
+2026-10-24 23:04:32.862 [main] INFO  com.zaxxer.hikari.HikariDataSource - DataApiMeta - Start completed.
+2026-10-24 23:04:36.044 [main] INFO  o.s.m.datasource.model.MagicDynamicDataSource - 注册数据源：default
+2026-10-24 23:04:36.268 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: hive
+2026-10-24 23:04:36.268 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: vertica
+2026-10-24 23:04:36.268 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: doris
+2026-10-24 23:04:36.268 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: ssh
+2026-10-24 23:04:36.268 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: databend
+2026-10-24 23:04:36.268 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: aliyun_serverless_spark
+2026-10-24 23:04:36.268 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: dolphindb
+2026-10-24 23:04:36.279 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: postgresql
+2026-10-24 23:04:36.279 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: redshift
+2026-10-24 23:04:36.281 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: sqlserver
+2026-10-24 23:04:36.282 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: spark
+2026-10-24 23:04:36.283 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: oceanbase
+2026-10-24 23:04:36.283 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: starrocks
+2026-10-24 23:04:36.283 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: mysql
+2026-10-24 23:04:36.283 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: hana
+2026-10-24 23:04:36.283 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: dameng
+2026-10-24 23:04:36.283 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: sagemaker
+2026-10-24 23:04:36.283 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: snowflake
+2026-10-24 23:04:36.289 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: kyuubi
+2026-10-24 23:04:36.289 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: oracle
+2026-10-24 23:04:36.289 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: k8s
+2026-10-24 23:04:36.289 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: zeppelin
+2026-10-24 23:04:36.289 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: trino
+2026-10-24 23:04:36.289 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: db2
+2026-10-24 23:04:36.289 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: clickhouse
+2026-10-24 23:04:36.289 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: azuresql
+2026-10-24 23:04:36.289 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: athena
+2026-10-24 23:04:36.289 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: presto
+2026-10-24 23:04:36.316 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> aliyun_serverless_spark
+2026-10-24 23:04:36.321 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> athena
+2026-10-24 23:04:36.321 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> azuresql
+2026-10-24 23:04:36.326 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> clickhouse
+2026-10-24 23:04:36.326 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> dameng
+2026-10-24 23:04:36.331 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> databend
+2026-10-24 23:04:36.333 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> db2
+2026-10-24 23:04:36.333 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> dolphindb
+2026-10-24 23:04:36.337 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> doris
+2026-10-24 23:04:36.337 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> hana
+2026-10-24 23:04:36.337 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> hive
+2026-10-24 23:04:36.343 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> k8s
+2026-10-24 23:04:36.343 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> kyuubi
+2026-10-24 23:04:36.348 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> mysql
+2026-10-24 23:04:36.349 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> oceanbase
+2026-10-24 23:04:36.353 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> oracle
+2026-10-24 23:04:36.353 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> postgresql
+2026-10-24 23:04:36.353 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> presto
+2026-10-24 23:04:36.353 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> redshift
+2026-10-24 23:04:36.353 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> sagemaker
+2026-10-24 23:04:36.353 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> snowflake
+2026-10-24 23:04:36.365 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> spark
+2026-10-24 23:04:36.366 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> sqlserver
+2026-10-24 23:04:36.366 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> ssh
+2026-10-24 23:04:36.366 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> starrocks
+2026-10-24 23:04:36.375 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> trino
+2026-10-24 23:04:36.375 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> vertica
+2026-10-24 23:04:36.375 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> zeppelin
+2026-10-24 23:04:36.385 [main] INFO  o.a.d.common.constants.SystemConstants - init timezone: sun.util.calendar.ZoneInfo[id="Asia/Shanghai",offset=28800000,dstSavings=0,useDaylight=false,transitions=31,lastRule=null]
+2026-10-24 23:04:36.509 [main] INFO  com.zaxxer.hikari.HikariDataSource - da-mysql_1 - Starting...
+2026-10-24 23:04:36.537 [main] INFO  com.zaxxer.hikari.HikariDataSource - da-mysql_1 - Start completed.
+2026-10-24 23:04:36.537 [main] INFO  o.s.m.datasource.model.MagicDynamicDataSource - 注册数据源：mysql_1
+2026-10-24 23:04:36.537 [main] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Registered magic datasource key=mysql_1 type=MYSQL url=jdbc:mysql://127.0.0.1:3306/test
+2026-10-24 23:04:36.537 [main] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[mysql_1]
+2026-10-24 23:04:37.466 [main] INFO  org.springframework.aop.framework.CglibAopProxy - Unable to proxy interface-implementing method [public final org.springframework.web.servlet.HandlerExecutionChain org.springframework.web.servlet.handler.AbstractHandlerMapping.getHandler(javax.servlet.http.HttpServletRequest) throws java.lang.Exception] because it is marked as final: Consider using interface-based JDK proxies instead!
+2026-10-24 23:04:37.473 [main] INFO  org.springframework.aop.framework.CglibAopProxy - Unable to proxy interface-implementing method [public final void org.springframework.web.context.support.WebApplicationObjectSupport.setServletContext(javax.servlet.ServletContext)] because it is marked as final: Consider using interface-based JDK proxies instead!
+2026-10-24 23:04:37.473 [main] INFO  org.springframework.aop.framework.CglibAopProxy - Unable to proxy interface-implementing method [public final void org.springframework.context.support.ApplicationObjectSupport.setApplicationContext(org.springframework.context.ApplicationContext) throws org.springframework.beans.BeansException] because it is marked as final: Consider using interface-based JDK proxies instead!
+2026-10-24 23:04:39.150 [main] INFO  o.s.m.s.boot.starter.MagicAPIAutoConfiguration - 未配置集群通知服务，本实例不会推送通知，集群环境下可能会有问题，如需开启，请引用magic-api-plugin-cluster插件
+2026-10-24 23:04:39.283 [main] INFO  o.s.m.spring.boot.starter.MagicModuleConfiguration - 未找到分页实现,采用默认分页实现,分页配置:(页码=page,页大小=size,默认首页=1,默认页大小=10,最大页大小=-1)
+2026-10-24 23:04:39.287 [main] INFO  o.s.m.spring.boot.starter.MagicModuleConfiguration - 未找到SQL缓存实现，采用默认缓存实现(LRU+TTL)，缓存配置:(容量=10000,TTL=-1)
+2026-10-24 23:04:39.620 [main] INFO  o.s.m.s.boot.starter.MagicAPIAutoConfiguration - magic-api工作目录:file://D:\HPG\workspace\LHYF\data-center-mono\dolphinscheduler\dolphinscheduler-data-api\.\data\magic-api
+2026-10-24 23:04:39.639 [main] INFO  o.s.m.s.boot.starter.MagicAPIAutoConfiguration - 注册模块:log -> interface org.slf4j.Logger
+2026-10-24 23:04:39.644 [main] INFO  o.s.m.s.boot.starter.MagicAPIAutoConfiguration - 注册模块:db -> class org.ssssssss.magicapi.modules.db.SQLModule
+2026-10-24 23:04:39.644 [main] INFO  o.s.m.s.boot.starter.MagicAPIAutoConfiguration - 注册模块:http -> class org.ssssssss.magicapi.modules.http.HttpModule
+2026-10-24 23:04:39.647 [main] INFO  o.s.m.s.boot.starter.MagicAPIAutoConfiguration - 注册模块:env -> class org.ssssssss.magicapi.modules.spring.EnvModule
+2026-10-24 23:04:39.648 [main] INFO  o.s.m.s.boot.starter.MagicAPIAutoConfiguration - 注册模块:request -> class org.ssssssss.magicapi.modules.servlet.RequestModule
+2026-10-24 23:04:39.648 [main] INFO  o.s.m.s.boot.starter.MagicAPIAutoConfiguration - 注册模块:response -> class org.ssssssss.magicapi.modules.servlet.ResponseModule
+2026-10-24 23:04:39.649 [main] INFO  o.s.m.s.boot.starter.MagicAPIAutoConfiguration - 注册模块:magic -> class org.ssssssss.magicapi.core.service.impl.DefaultMagicAPIService
+2026-10-24 23:04:39.650 [main] INFO  o.s.m.s.boot.starter.MagicAPIAutoConfiguration - 自动导入模块：db
+2026-10-24 23:04:39.655 [main] INFO  o.s.m.s.boot.starter.MagicAPIAutoConfiguration - 注册扩展:class org.ssssssss.magicapi.modules.servlet.ResponseModule -> class org.ssssssss.magicapi.servlet.javaee.MagicJavaEEResponseExtension
+2026-10-24 23:04:39.704 [main] INFO  o.s.m.s.boot.starter.MagicAPIAutoConfiguration - 注册请求拦截器：class org.apache.dolphinscheduler.dataapi.auth.DataApiRequestInterceptor
+2026-10-24 23:04:39.708 [main] ERROR o.s.m.s.boot.starter.MagicAPIAutoConfiguration - 当前备份设置未配置，强烈建议配置备份设置，以免代码丢失。
+2026-10-24 23:04:39.724 [main] INFO  o.s.b.actuate.endpoint.web.EndpointLinksResolver - Exposing 2 endpoint(s) beneath base path '/actuator'
+2026-10-24 23:04:39.866 [main] INFO  o.e.j.server.handler.ContextHandler.application - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-10-24 23:04:39.867 [main] INFO  org.springframework.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2026-10-24 23:04:39.869 [main] INFO  org.springframework.web.servlet.DispatcherServlet - Completed initialization in 2 ms
+2026-10-24 23:04:39.905 [main] INFO  org.eclipse.jetty.server.AbstractConnector - Started ServerConnector@7249dadf{HTTP/1.1, (http/1.1)}{0.0.0.0:12346}
+2026-10-24 23:04:39.905 [main] INFO  o.s.boot.web.embedded.jetty.JettyWebServer - Jetty started on port(s) 12346 (http/1.1) with context path '/'
+2026-10-24 23:04:39.939 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[mysql_1]
+2026-10-24 23:04:39.947 [main] INFO  org.apache.dolphinscheduler.dataapi.DataApiServer - Started DataApiServer in 16.671 seconds (JVM running for 17.677)
+2026-10-24 23:04:39.970 [main] INFO  org.apache.dolphinscheduler.dataapi.DataApiServer - DataApiServer is ready (magic-api + shared DS metadata)
+2026-10-24 23:04:40.705 [qtp449338124-22] INFO  com.zaxxer.hikari.HikariDataSource - da-doris_2 - Starting...
+2026-10-24 23:04:40.705 [qtp449338124-22] INFO  com.zaxxer.hikari.HikariDataSource - da-doris_2 - Start completed.
+2026-10-24 23:04:40.705 [qtp449338124-22] INFO  o.s.m.datasource.model.MagicDynamicDataSource - 注册数据源：doris_2
+2026-10-24 23:04:40.705 [qtp449338124-22] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Registered magic datasource key=doris_2 type=DORIS url=jdbc:mysql:loadbalance://127.0.0.1:9030/demo
+2026-10-24 23:04:40.705 [qtp449338124-22] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[doris_2, mysql_1]
+2026-10-24 23:05:22.555 [qtp449338124-22] WARN  o.s.w.s.m.support.DefaultHandlerExceptionResolver - Resolved [org.springframework.web.HttpRequestMethodNotSupportedException: Request method 'GET' not supported]
+2026-10-24 23:05:39.950 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[doris_2, mysql_1]
+2026-10-24 23:06:39.965 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[doris_2, mysql_1]
+2026-10-24 23:07:49.767 [main] INFO  org.apache.dolphinscheduler.dataapi.DataApiServer - Starting DataApiServer v3.4.3 using Java 11.0.25 on HPG with PID 10488 (D:\HPG\workspace\LHYF\data-center-mono\dolphinscheduler\dolphinscheduler-data-api\target\dolphinscheduler-data-api-3.4.3.jar started by 16899 in D:\HPG\workspace\LHYF\data-center-mono\dolphinscheduler\dolphinscheduler-data-api)
+2026-10-24 23:07:49.783 [main] INFO  org.apache.dolphinscheduler.dataapi.DataApiServer - The following 1 profile is active: "h2"
+2026-10-24 23:07:53.932 [main] INFO  org.eclipse.jetty.util.log - Logging initialized @6753ms to org.eclipse.jetty.util.log.Slf4jLog
+2026-10-24 23:07:54.531 [main] INFO  o.s.b.w.e.jetty.JettyServletWebServerFactory - Server initialized with port: 12346
+2026-10-24 23:07:54.531 [main] INFO  org.eclipse.jetty.server.Server - jetty-9.4.51.v20230217; built: 2023-02-17T08:19:37.309Z; git: b45c405e4544384de066f814ed42ae3dceacdd49; jvm 11.0.25+9-LTS
+2026-10-24 23:07:54.577 [main] INFO  o.e.j.server.handler.ContextHandler.application - Initializing Spring embedded WebApplicationContext
+2026-10-24 23:07:54.578 [main] INFO  o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 4680 ms
+2026-10-24 23:07:55.430 [main] INFO  org.eclipse.jetty.server.session - DefaultSessionIdManager workerName=node0
+2026-10-24 23:07:55.430 [main] INFO  org.eclipse.jetty.server.session - No SessionScavenger set, using defaults
+2026-10-24 23:07:55.430 [main] INFO  org.eclipse.jetty.server.session - node0 Scavenging every 660000ms
+2026-10-24 23:07:55.446 [main] INFO  org.eclipse.jetty.server.handler.ContextHandler - Started o.s.b.w.e.j.JettyEmbeddedWebAppContext@a619c2{application,/,[file:///C:/Users/16899/AppData/Local/Temp/jetty-docbase.12346.12128016426514985362/],AVAILABLE}
+2026-10-24 23:07:55.447 [main] INFO  org.eclipse.jetty.server.Server - Started @8270ms
+2026-10-24 23:07:55.852 [main] INFO  com.zaxxer.hikari.HikariDataSource - DataApiMeta - Starting...
+2026-10-24 23:07:56.897 [main] INFO  com.zaxxer.hikari.HikariDataSource - DataApiMeta - Start completed.
+2026-10-24 23:07:59.735 [main] INFO  o.s.m.datasource.model.MagicDynamicDataSource - 注册数据源：default
+2026-10-24 23:07:59.963 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: hive
+2026-10-24 23:07:59.964 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: vertica
+2026-10-24 23:07:59.965 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: doris
+2026-10-24 23:07:59.966 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: ssh
+2026-10-24 23:07:59.967 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: databend
+2026-10-24 23:07:59.968 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: aliyun_serverless_spark
+2026-10-24 23:07:59.969 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: dolphindb
+2026-10-24 23:07:59.970 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: postgresql
+2026-10-24 23:07:59.971 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: redshift
+2026-10-24 23:07:59.972 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: sqlserver
+2026-10-24 23:07:59.973 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: spark
+2026-10-24 23:07:59.973 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: oceanbase
+2026-10-24 23:07:59.974 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: starrocks
+2026-10-24 23:07:59.975 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: mysql
+2026-10-24 23:07:59.976 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: hana
+2026-10-24 23:07:59.976 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: dameng
+2026-10-24 23:07:59.978 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: sagemaker
+2026-10-24 23:07:59.980 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: snowflake
+2026-10-24 23:07:59.980 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: kyuubi
+2026-10-24 23:07:59.982 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: oracle
+2026-10-24 23:07:59.982 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: k8s
+2026-10-24 23:07:59.982 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: zeppelin
+2026-10-24 23:07:59.982 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: trino
+2026-10-24 23:07:59.982 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: db2
+2026-10-24 23:07:59.982 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: clickhouse
+2026-10-24 23:07:59.982 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: azuresql
+2026-10-24 23:07:59.982 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: athena
+2026-10-24 23:07:59.982 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: presto
+2026-10-24 23:08:00.001 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> aliyun_serverless_spark
+2026-10-24 23:08:00.012 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> athena
+2026-10-24 23:08:00.012 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> azuresql
+2026-10-24 23:08:00.023 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> clickhouse
+2026-10-24 23:08:00.023 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> dameng
+2026-10-24 23:08:00.030 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> databend
+2026-10-24 23:08:00.033 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> db2
+2026-10-24 23:08:00.034 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> dolphindb
+2026-10-24 23:08:00.038 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> doris
+2026-10-24 23:08:00.046 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> hana
+2026-10-24 23:08:00.051 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> hive
+2026-10-24 23:08:00.051 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> k8s
+2026-10-24 23:08:00.055 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> kyuubi
+2026-10-24 23:08:00.055 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> mysql
+2026-10-24 23:08:00.062 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> oceanbase
+2026-10-24 23:08:00.065 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> oracle
+2026-10-24 23:08:00.065 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> postgresql
+2026-10-24 23:08:00.065 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> presto
+2026-10-24 23:08:00.065 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> redshift
+2026-10-24 23:08:00.073 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> sagemaker
+2026-10-24 23:08:00.078 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> snowflake
+2026-10-24 23:08:00.080 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> spark
+2026-10-24 23:08:00.082 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> sqlserver
+2026-10-24 23:08:00.086 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> ssh
+2026-10-24 23:08:00.086 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> starrocks
+2026-10-24 23:08:00.086 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> trino
+2026-10-24 23:08:00.094 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> vertica
+2026-10-24 23:08:00.096 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> zeppelin
+2026-10-24 23:08:00.102 [main] INFO  o.a.d.common.constants.SystemConstants - init timezone: sun.util.calendar.ZoneInfo[id="Asia/Shanghai",offset=28800000,dstSavings=0,useDaylight=false,transitions=31,lastRule=null]
+2026-10-24 23:08:00.228 [main] INFO  com.zaxxer.hikari.HikariDataSource - da-mysql_1 - Starting...
+2026-10-24 23:08:00.246 [main] INFO  com.zaxxer.hikari.HikariDataSource - da-mysql_1 - Start completed.
+2026-10-24 23:08:00.246 [main] INFO  o.s.m.datasource.model.MagicDynamicDataSource - 注册数据源：mysql_1
+2026-10-24 23:08:00.257 [main] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Registered magic datasource key=mysql_1 type=MYSQL url=jdbc:mysql://127.0.0.1:3306/test
+2026-10-24 23:08:00.261 [main] INFO  com.zaxxer.hikari.HikariDataSource - da-doris_2 - Starting...
+2026-10-24 23:08:00.262 [main] INFO  com.zaxxer.hikari.HikariDataSource - da-doris_2 - Start completed.
+2026-10-24 23:08:00.263 [main] INFO  o.s.m.datasource.model.MagicDynamicDataSource - 注册数据源：doris_2
+2026-10-24 23:08:00.263 [main] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Registered magic datasource key=doris_2 type=DORIS url=jdbc:mysql:loadbalance://127.0.0.1:9030/demo
+2026-10-24 23:08:00.263 [main] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[doris_2, mysql_1]
+2026-10-24 23:08:01.147 [main] INFO  org.springframework.aop.framework.CglibAopProxy - Unable to proxy interface-implementing method [public final org.springframework.web.servlet.HandlerExecutionChain org.springframework.web.servlet.handler.AbstractHandlerMapping.getHandler(javax.servlet.http.HttpServletRequest) throws java.lang.Exception] because it is marked as final: Consider using interface-based JDK proxies instead!
+2026-10-24 23:08:01.153 [main] INFO  org.springframework.aop.framework.CglibAopProxy - Unable to proxy interface-implementing method [public final void org.springframework.web.context.support.WebApplicationObjectSupport.setServletContext(javax.servlet.ServletContext)] because it is marked as final: Consider using interface-based JDK proxies instead!
+2026-10-24 23:08:01.153 [main] INFO  org.springframework.aop.framework.CglibAopProxy - Unable to proxy interface-implementing method [public final void org.springframework.context.support.ApplicationObjectSupport.setApplicationContext(org.springframework.context.ApplicationContext) throws org.springframework.beans.BeansException] because it is marked as final: Consider using interface-based JDK proxies instead!
+2026-10-24 23:08:02.972 [main] INFO  o.s.m.s.boot.starter.MagicAPIAutoConfiguration - 未配置集群通知服务，本实例不会推送通知，集群环境下可能会有问题，如需开启，请引用magic-api-plugin-cluster插件
+2026-10-24 23:08:03.201 [main] INFO  o.s.m.spring.boot.starter.MagicModuleConfiguration - 未找到分页实现,采用默认分页实现,分页配置:(页码=page,页大小=size,默认首页=1,默认页大小=10,最大页大小=-1)
+2026-10-24 23:08:03.212 [main] INFO  o.s.m.spring.boot.starter.MagicModuleConfiguration - 未找到SQL缓存实现，采用默认缓存实现(LRU+TTL)，缓存配置:(容量=10000,TTL=-1)
+2026-10-24 23:08:03.564 [main] INFO  o.s.m.s.boot.starter.MagicAPIAutoConfiguration - magic-api工作目录:file://D:\HPG\workspace\LHYF\data-center-mono\dolphinscheduler\dolphinscheduler-data-api\.\data\magic-api
+2026-10-24 23:08:03.585 [main] INFO  o.s.m.s.boot.starter.MagicAPIAutoConfiguration - 注册模块:log -> interface org.slf4j.Logger
+2026-10-24 23:08:03.585 [main] INFO  o.s.m.s.boot.starter.MagicAPIAutoConfiguration - 注册模块:db -> class org.ssssssss.magicapi.modules.db.SQLModule
+2026-10-24 23:08:03.585 [main] INFO  o.s.m.s.boot.starter.MagicAPIAutoConfiguration - 注册模块:http -> class org.ssssssss.magicapi.modules.http.HttpModule
+2026-10-24 23:08:03.595 [main] INFO  o.s.m.s.boot.starter.MagicAPIAutoConfiguration - 注册模块:env -> class org.ssssssss.magicapi.modules.spring.EnvModule
+2026-10-24 23:08:03.596 [main] INFO  o.s.m.s.boot.starter.MagicAPIAutoConfiguration - 注册模块:request -> class org.ssssssss.magicapi.modules.servlet.RequestModule
+2026-10-24 23:08:03.596 [main] INFO  o.s.m.s.boot.starter.MagicAPIAutoConfiguration - 注册模块:response -> class org.ssssssss.magicapi.modules.servlet.ResponseModule
+2026-10-24 23:08:03.596 [main] INFO  o.s.m.s.boot.starter.MagicAPIAutoConfiguration - 注册模块:magic -> class org.ssssssss.magicapi.core.service.impl.DefaultMagicAPIService
+2026-10-24 23:08:03.596 [main] INFO  o.s.m.s.boot.starter.MagicAPIAutoConfiguration - 自动导入模块：db
+2026-10-24 23:08:03.596 [main] INFO  o.s.m.s.boot.starter.MagicAPIAutoConfiguration - 注册扩展:class org.ssssssss.magicapi.modules.servlet.ResponseModule -> class org.ssssssss.magicapi.servlet.javaee.MagicJavaEEResponseExtension
+2026-10-24 23:08:03.657 [main] INFO  o.s.m.s.boot.starter.MagicAPIAutoConfiguration - 注册请求拦截器：class org.apache.dolphinscheduler.dataapi.auth.DataApiRequestInterceptor
+2026-10-24 23:08:03.661 [main] ERROR o.s.m.s.boot.starter.MagicAPIAutoConfiguration - 当前备份设置未配置，强烈建议配置备份设置，以免代码丢失。
+2026-10-24 23:08:03.687 [main] INFO  o.s.b.actuate.endpoint.web.EndpointLinksResolver - Exposing 2 endpoint(s) beneath base path '/actuator'
+2026-10-24 23:08:03.830 [main] INFO  o.e.j.server.handler.ContextHandler.application - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-10-24 23:08:03.831 [main] INFO  org.springframework.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2026-10-24 23:08:03.834 [main] INFO  org.springframework.web.servlet.DispatcherServlet - Completed initialization in 3 ms
+2026-10-24 23:08:03.863 [main] INFO  org.eclipse.jetty.server.AbstractConnector - Started ServerConnector@7249dadf{HTTP/1.1, (http/1.1)}{0.0.0.0:12346}
+2026-10-24 23:08:03.870 [main] INFO  o.s.boot.web.embedded.jetty.JettyWebServer - Jetty started on port(s) 12346 (http/1.1) with context path '/'
+2026-10-24 23:08:03.905 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[doris_2, mysql_1]
+2026-10-24 23:08:03.913 [main] INFO  org.apache.dolphinscheduler.dataapi.DataApiServer - Started DataApiServer in 15.414 seconds (JVM running for 16.738)
+2026-10-24 23:08:04.097 [main] INFO  org.apache.dolphinscheduler.dataapi.DataApiServer - DataApiServer is ready (magic-api + shared DS metadata)
+2026-10-24 23:08:05.496 [qtp449338124-20] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[doris_2, mysql_1]
+2026-10-24 23:08:15.712 [qtp449338124-26] INFO  /smoke/select1(/smoke/select1) - 执行SQL：select 1 as n
+2026-10-24 23:09:03.911 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[doris_2, mysql_1]
+2026-10-24 23:10:03.926 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[doris_2, mysql_1]
+2026-10-24 23:11:03.942 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[doris_2, mysql_1]
+2026-10-24 23:12:03.957 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[doris_2, mysql_1]
+2026-10-24 23:13:03.974 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[doris_2, mysql_1]
+2026-10-24 23:14:03.987 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[doris_2, mysql_1]
+2026-10-24 23:15:04.003 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[doris_2, mysql_1]
+2026-10-24 23:16:04.018 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[doris_2, mysql_1]
+2026-10-24 23:17:04.036 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[doris_2, mysql_1]
+2026-10-24 23:18:04.050 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[doris_2, mysql_1]
+2026-10-24 23:19:04.065 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[doris_2, mysql_1]
+2026-10-24 23:20:04.081 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[doris_2, mysql_1]
+2026-10-24 23:21:04.098 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[doris_2, mysql_1]
+2026-10-24 23:22:04.113 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[doris_2, mysql_1]
+2026-10-24 23:23:04.128 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[doris_2, mysql_1]
+2026-10-24 23:24:04.144 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[doris_2, mysql_1]
+2026-10-24 23:25:04.159 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[doris_2, mysql_1]
+2026-10-24 23:26:04.176 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[doris_2, mysql_1]
+2026-10-24 23:27:04.191 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[doris_2, mysql_1]
+2026-10-24 23:28:04.206 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[doris_2, mysql_1]
+2026-10-24 23:29:04.223 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[doris_2, mysql_1]
+2026-10-24 23:30:04.236 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[doris_2, mysql_1]
+2026-10-24 23:31:04.250 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[doris_2, mysql_1]
+2026-10-24 23:32:04.253 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[doris_2, mysql_1]
+2026-10-24 23:33:04.268 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[doris_2, mysql_1]
+2026-10-24 23:34:04.283 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[doris_2, mysql_1]
+2026-10-24 23:35:04.300 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[doris_2, mysql_1]
+2026-10-24 23:36:04.314 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[doris_2, mysql_1]
+2026-10-24 23:37:04.331 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[doris_2, mysql_1]
+2026-10-24 23:38:04.347 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[doris_2, mysql_1]
+2026-10-24 23:39:04.361 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[doris_2, mysql_1]
+2026-10-24 23:40:04.377 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[doris_2, mysql_1]
+2026-10-24 23:41:04.393 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[doris_2, mysql_1]
+2026-10-24 23:42:04.408 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[doris_2, mysql_1]
+2026-10-24 23:43:04.424 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[doris_2, mysql_1]
+2026-10-24 23:44:04.440 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[doris_2, mysql_1]
+2026-10-24 23:45:04.455 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[doris_2, mysql_1]
+2026-10-24 23:46:04.472 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[doris_2, mysql_1]
+2026-10-24 23:47:04.487 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[doris_2, mysql_1]
+2026-10-24 23:48:04.502 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[doris_2, mysql_1]
+2026-10-24 23:49:04.516 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[doris_2, mysql_1]
+2026-10-24 23:50:04.533 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[doris_2, mysql_1]
+2026-10-24 23:51:04.549 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[doris_2, mysql_1]
+2026-10-24 23:52:04.564 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[doris_2, mysql_1]
+2026-10-24 23:53:04.580 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[doris_2, mysql_1]
+2026-10-24 23:54:04.596 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[doris_2, mysql_1]
+2026-10-24 23:55:04.611 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[doris_2, mysql_1]
+2026-10-24 23:56:04.628 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[doris_2, mysql_1]
+2026-10-24 23:57:04.643 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[doris_2, mysql_1]
+2026-10-24 23:58:04.656 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[doris_2, mysql_1]
+2026-10-24 23:59:04.660 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[doris_2, mysql_1]

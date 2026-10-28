@@ -21,6 +21,7 @@ import utils from '@/utils'
 import projectsPage from './modules/projects'
 import resourcesPage from './modules/resources'
 import datasourcePage from './modules/datasource'
+import dataApiPage from './modules/data-api'
 import monitorPage from './modules/monitor'
 import securityPage from './modules/security'
 // todo: why is it throwing cannot find module and its corresponding type, but the render is working?
@@ -82,6 +83,7 @@ const basePage: RouteRecordRaw[] = [
   projectsPage,
   resourcesPage,
   datasourcePage,
+  dataApiPage,
   monitorPage,
   securityPage,
   uiSettingPage

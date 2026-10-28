@@ -32,6 +32,7 @@ import theme from '@/locales/zh_CN/theme'
 import user_dropdown from '@/locales/zh_CN/user-dropdown'
 import ui_setting from '@/locales/zh_CN/ui_setting'
 import about from '@/locales/zh_CN/about'
+import data_api from '@/locales/zh_CN/data-api'
 
 export default {
   login,
@@ -50,5 +51,6 @@ export default {
   datasource,
   crontab,
   ui_setting,
-  input_search
+  input_search,
+  data_api
 }

@@ -907,6 +907,11 @@ export default {
     st_param_output: '出参（供下游使用）',
     st_param_process: '处理参数（本组件配置）',
     st_param_fill_example: '填入示例 JSON',
+    st_execute_type: '执行类型',
+    st_execute_type_batch: '批处理任务',
+    st_execute_type_stream: '实时任务（STREAM）',
+    st_execute_type_tip:
+      '含 UDP 等无界源时建议选实时；FakeSource 等批链路选批处理。可手动切换。',
     st_udp_udf_title: 'UDP 解码 UDF',
     st_udp_udf_hint:
       '选择 parseMode；js / offset_table 可从已上传脚本中指定 udfName（对应 SEATUNNEL_HOME/udf/udp-codec）。',

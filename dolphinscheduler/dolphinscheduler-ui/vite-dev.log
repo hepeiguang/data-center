@@ -1,0 +1,292 @@
+
+> dolphinscheduler-ui@0.0.0 dev
+> vite
+
+
+  [32m[1mVITE[22m v6.4.5[39m  [2mready in [0m[1m11280[22m[2m[0m ms[22m
+
+  [32m➜[39m  [1mLocal[22m:   [36mhttp://localhost:[1m5173[22m/[39m
+  [32m➜[39m  [1mNetwork[22m: [36mhttp://172.16.51.165:[1m5173[22m/[39m
+[2m[32m  ➜[39m[22m[2m  press [22m[1mh + enter[22m[2m to show help[22m
+[2m10:26:23[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /magic/web/config-js[39m
+Error: connect ECONNREFUSED 127.0.0.1:12346
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m10:26:23[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /magic/web/classes[39m
+Error: connect ECONNREFUSED 127.0.0.1:12346
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m10:26:23[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /magic/web/classes.txt[39m
+Error: connect ECONNREFUSED 127.0.0.1:12346
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m10:26:23[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /magic/web/plugins[39m
+Error: connect ECONNREFUSED 127.0.0.1:12346
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m10:26:23[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /magic/web/options[39m
+Error: connect ECONNREFUSED 127.0.0.1:12346
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m10:26:23[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /magic/web/assets/editor.worker.3a89906b.js[39m
+Error: connect ECONNREFUSED 127.0.0.1:12346
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m10:26:23[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /magic/web/assets/json.worker.69e5d80a.js[39m
+Error: connect ECONNREFUSED 127.0.0.1:12346
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m10:26:23[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /magic/web/config.json[39m
+Error: connect ECONNREFUSED 127.0.0.1:12346
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m10:26:23[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /magic/web/assets/JetBrainsMono-Regular.bceff071.woff2[39m
+Error: connect ECONNREFUSED 127.0.0.1:12346
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m10:26:33[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /magic/web/config-js[39m
+Error: connect ECONNREFUSED 127.0.0.1:12346
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m10:26:33[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /magic/web/classes[39m
+Error: connect ECONNREFUSED 127.0.0.1:12346
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m10:26:33[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /magic/web/classes.txt[39m
+Error: connect ECONNREFUSED 127.0.0.1:12346
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m10:26:33[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /magic/web/plugins[39m
+Error: connect ECONNREFUSED 127.0.0.1:12346
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m10:26:33[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /magic/web/options[39m
+Error: connect ECONNREFUSED 127.0.0.1:12346
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m10:26:33[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /magic/web/assets/editor.worker.3a89906b.js[39m
+Error: connect ECONNREFUSED 127.0.0.1:12346
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m10:26:33[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /magic/web/config.json[39m
+Error: connect ECONNREFUSED 127.0.0.1:12346
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m10:26:33[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /magic/web/assets/JetBrainsMono-Regular.bceff071.woff2[39m
+Error: connect ECONNREFUSED 127.0.0.1:12346
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m10:26:33[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /magic/web/assets/json.worker.69e5d80a.js[39m
+Error: connect ECONNREFUSED 127.0.0.1:12346
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m10:26:41[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /magic/web/config-js[39m
+Error: connect ECONNREFUSED 127.0.0.1:12346
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m10:26:41[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /magic/web/classes[39m
+Error: connect ECONNREFUSED 127.0.0.1:12346
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m10:26:41[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /magic/web/classes.txt[39m
+Error: connect ECONNREFUSED 127.0.0.1:12346
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m10:26:41[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /magic/web/plugins[39m
+Error: connect ECONNREFUSED 127.0.0.1:12346
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m10:26:41[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /magic/web/options[39m
+Error: connect ECONNREFUSED 127.0.0.1:12346
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m10:26:41[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /magic/web/assets/editor.worker.3a89906b.js[39m
+Error: connect ECONNREFUSED 127.0.0.1:12346
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m10:26:41[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /magic/web/assets/json.worker.69e5d80a.js[39m
+Error: connect ECONNREFUSED 127.0.0.1:12346
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m10:26:41[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /magic/web/config.json[39m
+Error: connect ECONNREFUSED 127.0.0.1:12346
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m10:26:41[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /magic/web/assets/JetBrainsMono-Regular.bceff071.woff2[39m
+Error: connect ECONNREFUSED 127.0.0.1:12346
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m10:26:43[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /data-api/datasources[39m
+Error: connect ECONNREFUSED 127.0.0.1:12346
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m10:26:44[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /data-api/acl[39m
+Error: connect ECONNREFUSED 127.0.0.1:12346
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m10:26:44[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /data-api/acl/apis[39m
+Error: connect ECONNREFUSED 127.0.0.1:12346
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m10:30:20[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /magic/web/config-js[39m
+Error: connect ECONNREFUSED 127.0.0.1:12346
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m10:30:20[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /magic/web/classes[39m
+Error: connect ECONNREFUSED 127.0.0.1:12346
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m10:30:20[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /magic/web/classes.txt[39m
+Error: connect ECONNREFUSED 127.0.0.1:12346
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m10:30:20[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /magic/web/plugins[39m
+Error: connect ECONNREFUSED 127.0.0.1:12346
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m10:30:20[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /magic/web/options[39m
+Error: connect ECONNREFUSED 127.0.0.1:12346
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m10:30:20[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /magic/web/assets/editor.worker.3a89906b.js[39m
+Error: connect ECONNREFUSED 127.0.0.1:12346
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m10:30:20[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /magic/web/assets/json.worker.69e5d80a.js[39m
+Error: connect ECONNREFUSED 127.0.0.1:12346
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m10:30:20[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /magic/web/config.json[39m
+Error: connect ECONNREFUSED 127.0.0.1:12346
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m10:30:20[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /magic/web/assets/JetBrainsMono-Regular.bceff071.woff2[39m
+Error: connect ECONNREFUSED 127.0.0.1:12346
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m10:30:26[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /dolphinscheduler/access-tokens?pageSize=10&pageNo=1&searchVal=[39m
+Error: connect ECONNREFUSED 127.0.0.1:12345
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m10:30:27[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /magic/web/config-js[39m
+Error: connect ECONNREFUSED 127.0.0.1:12346
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m10:30:27[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /magic/web/classes[39m
+Error: connect ECONNREFUSED 127.0.0.1:12346
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m10:30:27[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /magic/web/classes.txt[39m
+Error: connect ECONNREFUSED 127.0.0.1:12346
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m10:30:27[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /magic/web/plugins[39m
+Error: connect ECONNREFUSED 127.0.0.1:12346
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m10:30:27[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /magic/web/options[39m
+Error: connect ECONNREFUSED 127.0.0.1:12346
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m10:30:27[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /magic/web/assets/editor.worker.3a89906b.js[39m
+Error: connect ECONNREFUSED 127.0.0.1:12346
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m10:30:27[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /magic/web/assets/json.worker.69e5d80a.js[39m
+Error: connect ECONNREFUSED 127.0.0.1:12346
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m10:30:27[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /magic/web/config.json[39m
+Error: connect ECONNREFUSED 127.0.0.1:12346
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m10:30:27[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /magic/web/assets/JetBrainsMono-Regular.bceff071.woff2[39m
+Error: connect ECONNREFUSED 127.0.0.1:12346
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m10:30:47[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /magic/web/index.html[39m
+Error: connect ECONNREFUSED 127.0.0.1:12346
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m10:30:54[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /dolphinscheduler/access-tokens?pageSize=10&pageNo=1&searchVal=[39m
+Error: connect ECONNREFUSED 127.0.0.1:12345
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m10:30:55[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /data-api/datasources[39m
+Error: connect ECONNREFUSED 127.0.0.1:12346
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m10:30:56[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /magic/web/index.html[39m
+Error: connect ECONNREFUSED 127.0.0.1:12346
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m10:30:57[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /data-api/datasources[39m
+Error: connect ECONNREFUSED 127.0.0.1:12346
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m10:30:58[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /data-api/datasources/reload[39m
+Error: connect ECONNREFUSED 127.0.0.1:12346
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m10:31:01[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /data-api/datasources[39m
+Error: connect ECONNREFUSED 127.0.0.1:12346
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m10:31:03[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /magic/web/index.html[39m
+Error: connect ECONNREFUSED 127.0.0.1:12346
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m10:31:04[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /dolphinscheduler/projects/analysis/define-user-count[39m
+Error: connect ECONNREFUSED 127.0.0.1:12345
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m10:31:04[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /dolphinscheduler/projects/analysis/task-state-count?startDate=2026-10-28%2000%3A00%3A00&endDate=2026-10-28%2010%3A31%3A04[39m
+Error: connect ECONNREFUSED 127.0.0.1:12345
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m10:31:04[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /dolphinscheduler/projects/analysis/workflow-state-count?startDate=2026-10-28%2000%3A00%3A00&endDate=2026-10-28%2010%3A31%3A04[39m
+Error: connect ECONNREFUSED 127.0.0.1:12345
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m10:31:07[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /dolphinscheduler/users/get-user-info[39m
+Error: connect ECONNREFUSED 127.0.0.1:12345
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m10:31:09[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /dolphinscheduler/signOut[39m
+Error: connect ECONNREFUSED 127.0.0.1:12345
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m10:31:16[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /dolphinscheduler/oauth2-provider[39m
+Error: connect ECONNREFUSED 127.0.0.1:12345
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m10:31:16[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /dolphinscheduler/oidc-providers[39m
+Error: connect ECONNREFUSED 127.0.0.1:12345
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m10:31:16[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /dolphinscheduler/login/sso[39m
+Error: connect ECONNREFUSED 127.0.0.1:12345
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m10:31:17[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /dolphinscheduler/login[39m
+Error: connect ECONNREFUSED 127.0.0.1:12345
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m10:31:18[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /dolphinscheduler/login[39m
+Error: connect ECONNREFUSED 127.0.0.1:12345
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m10:31:19[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /dolphinscheduler/login[39m
+Error: connect ECONNREFUSED 127.0.0.1:12345
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m10:31:27[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /dolphinscheduler/login[39m
+Error: connect ECONNREFUSED 127.0.0.1:12345
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m10:31:43[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /dolphinscheduler/login[39m
+Error: connect ECONNREFUSED 127.0.0.1:12345
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m10:32:36[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /dolphinscheduler/access-tokens?pageSize=10&pageNo=1&searchVal=[39m
+Error: connect ECONNREFUSED 127.0.0.1:12345
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m10:32:38[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /dolphinscheduler/users/list[39m
+Error: connect ECONNREFUSED 127.0.0.1:12345
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m10:32:38[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /dolphinscheduler/access-tokens?pageNo=1&pageSize=100[39m
+Error: connect ECONNREFUSED 127.0.0.1:12345
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m10:32:38[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /dolphinscheduler/users/list[39m
+Error: connect ECONNREFUSED 127.0.0.1:12345
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m10:32:38[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /dolphinscheduler/access-tokens?pageNo=1&pageSize=100[39m
+Error: connect ECONNREFUSED 127.0.0.1:12345
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m10:32:40[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /dolphinscheduler/users/list[39m
+Error: connect ECONNREFUSED 127.0.0.1:12345
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m10:32:40[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /dolphinscheduler/access-tokens?pageNo=1&pageSize=100[39m
+Error: connect ECONNREFUSED 127.0.0.1:12345
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m10:32:41[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /dolphinscheduler/users/list[39m
+Error: connect ECONNREFUSED 127.0.0.1:12345
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m10:32:41[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /dolphinscheduler/access-tokens?pageNo=1&pageSize=100[39m
+Error: connect ECONNREFUSED 127.0.0.1:12345
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m10:32:43[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /dolphinscheduler/users/list[39m
+Error: connect ECONNREFUSED 127.0.0.1:12345
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m10:32:43[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /dolphinscheduler/access-tokens?pageNo=1&pageSize=100[39m
+Error: connect ECONNREFUSED 127.0.0.1:12345
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m10:32:43[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /dolphinscheduler/access-tokens?pageNo=1&pageSize=100[39m
+Error: connect ECONNREFUSED 127.0.0.1:12345
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m10:32:45[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /dolphinscheduler/signOut[39m
+Error: connect ECONNREFUSED 127.0.0.1:12345
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m10:32:48[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /dolphinscheduler/signOut[39m
+Error: connect ECONNREFUSED 127.0.0.1:12345
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m10:32:50[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /dolphinscheduler/worker-groups/all[39m
+Error: connect ECONNREFUSED 127.0.0.1:12345
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m10:32:50[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /dolphinscheduler/projects?pageSize=10&pageNo=1&searchVal=[39m
+Error: connect ECONNREFUSED 127.0.0.1:12345
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m10:32:50[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /dolphinscheduler/projects/analysis/task-state-count?startDate=2026-10-28%2000%3A00%3A00&endDate=2026-10-28%2010%3A32%3A50[39m
+Error: connect ECONNREFUSED 127.0.0.1:12345
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m10:32:50[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /dolphinscheduler/projects/analysis/define-user-count[39m
+Error: connect ECONNREFUSED 127.0.0.1:12345
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m10:32:50[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /dolphinscheduler/projects/analysis/workflow-state-count?startDate=2026-10-28%2000%3A00%3A00&endDate=2026-10-28%2010%3A32%3A50[39m
+Error: connect ECONNREFUSED 127.0.0.1:12345
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m10:32:55[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /dolphinscheduler/login[39m
+Error: connect ECONNREFUSED 127.0.0.1:12345
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m10:37:57[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /dolphinscheduler/login[39m
+Error: connect ECONNREFUSED 127.0.0.1:12345
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m10:37:58[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /dolphinscheduler/login[39m
+Error: connect ECONNREFUSED 127.0.0.1:12345
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m10:38:22[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /dolphinscheduler/login[39m
+Error: connect ECONNREFUSED 127.0.0.1:12345
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[2m10:41:23[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /dolphinscheduler/login[39m
+Error: connect ECONNREFUSED 127.0.0.1:12345
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)

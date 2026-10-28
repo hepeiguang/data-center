@@ -1,0 +1,1195 @@
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+ :: Spring Boot ::               (v2.7.11)
+
+2026-10-25 17:36:28.074 [main] INFO  org.apache.dolphinscheduler.dataapi.DataApiServer - Starting DataApiServer v3.4.3 using Java 11.0.25 on HPG with PID 16964 (D:\HPG\workspace\LHYF\data-center-mono\dolphinscheduler\dolphinscheduler-data-api\target\dolphinscheduler-data-api-3.4.3.jar started by 16899 in D:\HPG\workspace\LHYF\data-center-mono\dolphinscheduler\dolphinscheduler-data-api)
+2026-10-25 17:36:28.079 [main] INFO  org.apache.dolphinscheduler.dataapi.DataApiServer - The following 1 profile is active: "h2"
+2026-10-25 17:36:32.539 [main] INFO  org.eclipse.jetty.util.log - Logging initialized @7241ms to org.eclipse.jetty.util.log.Slf4jLog
+2026-10-25 17:36:33.239 [main] INFO  o.s.b.w.e.jetty.JettyServletWebServerFactory - Server initialized with port: 12346
+2026-10-25 17:36:33.245 [main] INFO  org.eclipse.jetty.server.Server - jetty-9.4.51.v20230217; built: 2023-02-17T08:19:37.309Z; git: b45c405e4544384de066f814ed42ae3dceacdd49; jvm 11.0.25+9-LTS
+2026-10-25 17:36:33.301 [main] INFO  o.e.j.server.handler.ContextHandler.application - Initializing Spring embedded WebApplicationContext
+2026-10-25 17:36:33.301 [main] INFO  o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 5120 ms
+2026-10-25 17:36:34.158 [main] INFO  org.eclipse.jetty.server.session - DefaultSessionIdManager workerName=node0
+2026-10-25 17:36:34.158 [main] INFO  org.eclipse.jetty.server.session - No SessionScavenger set, using defaults
+2026-10-25 17:36:34.160 [main] INFO  org.eclipse.jetty.server.session - node0 Scavenging every 660000ms
+2026-10-25 17:36:34.169 [main] INFO  org.eclipse.jetty.server.handler.ContextHandler - Started o.s.b.w.e.j.JettyEmbeddedWebAppContext@56781d96{application,/,[file:///C:/Users/16899/AppData/Local/Temp/jetty-docbase.12346.4258519058732278191/],AVAILABLE}
+2026-10-25 17:36:34.169 [main] INFO  org.eclipse.jetty.server.Server - Started @8878ms
+2026-10-25 17:36:34.192 [main] INFO  com.zaxxer.hikari.HikariDataSource - DataApiMeta - Starting...
+2026-10-25 17:36:35.267 [main] INFO  com.zaxxer.hikari.HikariDataSource - DataApiMeta - Start completed.
+2026-10-25 17:36:38.725 [main] INFO  o.s.m.datasource.model.MagicDynamicDataSource - 注册数据源：default
+2026-10-25 17:36:38.958 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: hive
+2026-10-25 17:36:38.958 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: vertica
+2026-10-25 17:36:38.960 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: doris
+2026-10-25 17:36:38.960 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: ssh
+2026-10-25 17:36:38.962 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: databend
+2026-10-25 17:36:38.962 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: aliyun_serverless_spark
+2026-10-25 17:36:38.962 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: dolphindb
+2026-10-25 17:36:38.964 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: postgresql
+2026-10-25 17:36:38.964 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: redshift
+2026-10-25 17:36:38.964 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: sqlserver
+2026-10-25 17:36:38.964 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: spark
+2026-10-25 17:36:38.964 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: oceanbase
+2026-10-25 17:36:38.968 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: starrocks
+2026-10-25 17:36:38.970 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: mysql
+2026-10-25 17:36:38.972 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: hana
+2026-10-25 17:36:38.973 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: dameng
+2026-10-25 17:36:38.973 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: sagemaker
+2026-10-25 17:36:38.973 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: snowflake
+2026-10-25 17:36:38.973 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: kyuubi
+2026-10-25 17:36:38.973 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: oracle
+2026-10-25 17:36:38.973 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: k8s
+2026-10-25 17:36:38.973 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: zeppelin
+2026-10-25 17:36:38.979 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: trino
+2026-10-25 17:36:38.979 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: db2
+2026-10-25 17:36:38.979 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: clickhouse
+2026-10-25 17:36:38.979 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: azuresql
+2026-10-25 17:36:38.979 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: athena
+2026-10-25 17:36:38.979 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Registered datasource channel: presto
+2026-10-25 17:36:39.006 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> aliyun_serverless_spark
+2026-10-25 17:36:39.008 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> athena
+2026-10-25 17:36:39.011 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> azuresql
+2026-10-25 17:36:39.011 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> clickhouse
+2026-10-25 17:36:39.011 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> dameng
+2026-10-25 17:36:39.011 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> databend
+2026-10-25 17:36:39.021 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> db2
+2026-10-25 17:36:39.023 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> dolphindb
+2026-10-25 17:36:39.023 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> doris
+2026-10-25 17:36:39.023 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> hana
+2026-10-25 17:36:39.023 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> hive
+2026-10-25 17:36:39.033 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> k8s
+2026-10-25 17:36:39.038 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> kyuubi
+2026-10-25 17:36:39.039 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> mysql
+2026-10-25 17:36:39.043 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> oceanbase
+2026-10-25 17:36:39.043 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> oracle
+2026-10-25 17:36:39.043 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> postgresql
+2026-10-25 17:36:39.043 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> presto
+2026-10-25 17:36:39.054 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> redshift
+2026-10-25 17:36:39.056 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> sagemaker
+2026-10-25 17:36:39.056 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> snowflake
+2026-10-25 17:36:39.063 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> spark
+2026-10-25 17:36:39.065 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> sqlserver
+2026-10-25 17:36:39.065 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> ssh
+2026-10-25 17:36:39.069 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> starrocks
+2026-10-25 17:36:39.073 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> trino
+2026-10-25 17:36:39.075 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> vertica
+2026-10-25 17:36:39.077 [main] INFO  o.a.d.p.d.api.plugin.DataSourcePluginManager - Success register datasource processor -> zeppelin
+2026-10-25 17:36:39.088 [main] INFO  o.a.d.common.constants.SystemConstants - init timezone: sun.util.calendar.ZoneInfo[id="Asia/Shanghai",offset=28800000,dstSavings=0,useDaylight=false,transitions=31,lastRule=null]
+2026-10-25 17:36:39.229 [main] INFO  com.zaxxer.hikari.HikariDataSource - da-da_test_mysql - Starting...
+2026-10-25 17:36:39.262 [main] INFO  com.zaxxer.hikari.HikariDataSource - da-da_test_mysql - Start completed.
+2026-10-25 17:36:39.262 [main] INFO  o.s.m.datasource.model.MagicDynamicDataSource - 注册数据源：da_test_mysql
+2026-10-25 17:36:39.264 [main] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Registered magic datasource key=da_test_mysql name=da_test_mysql type=MYSQL db=test url=jdbc:mysql://127.0.0.1:3306/test
+2026-10-25 17:36:39.267 [main] INFO  com.zaxxer.hikari.HikariDataSource - da-da_test_doris - Starting...
+2026-10-25 17:36:39.267 [main] INFO  com.zaxxer.hikari.HikariDataSource - da-da_test_doris - Start completed.
+2026-10-25 17:36:39.267 [main] INFO  o.s.m.datasource.model.MagicDynamicDataSource - 注册数据源：da_test_doris
+2026-10-25 17:36:39.267 [main] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Registered magic datasource key=da_test_doris name=da_test_doris type=DORIS db=demo url=jdbc:mysql:loadbalance://127.0.0.1:9030/demo
+2026-10-25 17:36:39.269 [main] INFO  com.zaxxer.hikari.HikariDataSource - da-osint_mysql - Starting...
+2026-10-25 17:36:39.269 [main] INFO  com.zaxxer.hikari.HikariDataSource - da-osint_mysql - Start completed.
+2026-10-25 17:36:39.270 [main] INFO  o.s.m.datasource.model.MagicDynamicDataSource - 注册数据源：osint_mysql
+2026-10-25 17:36:39.271 [main] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Registered magic datasource key=osint_mysql name=osint_mysql type=MYSQL db=osint url=jdbc:mysql://123.57.2.64:3306/osint
+2026-10-25 17:36:39.271 [main] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 17:36:39.329 [main] INFO  org.springframework.aop.framework.CglibAopProxy - Unable to proxy interface-implementing method [public final org.springframework.web.servlet.HandlerExecutionChain org.springframework.web.servlet.handler.AbstractHandlerMapping.getHandler(javax.servlet.http.HttpServletRequest) throws java.lang.Exception] because it is marked as final: Consider using interface-based JDK proxies instead!
+2026-10-25 17:36:39.331 [main] INFO  org.springframework.aop.framework.CglibAopProxy - Unable to proxy interface-implementing method [public final void org.springframework.web.context.support.WebApplicationObjectSupport.setServletContext(javax.servlet.ServletContext)] because it is marked as final: Consider using interface-based JDK proxies instead!
+2026-10-25 17:36:39.333 [main] INFO  org.springframework.aop.framework.CglibAopProxy - Unable to proxy interface-implementing method [public final void org.springframework.context.support.ApplicationObjectSupport.setApplicationContext(org.springframework.context.ApplicationContext) throws org.springframework.beans.BeansException] because it is marked as final: Consider using interface-based JDK proxies instead!
+2026-10-25 17:36:41.815 [main] INFO  o.s.m.s.boot.starter.MagicAPIAutoConfiguration - 未配置集群通知服务，本实例不会推送通知，集群环境下可能会有问题，如需开启，请引用magic-api-plugin-cluster插件
+2026-10-25 17:36:41.962 [main] INFO  o.s.m.spring.boot.starter.MagicModuleConfiguration - 未找到分页实现,采用默认分页实现,分页配置:(页码=page,页大小=size,默认首页=1,默认页大小=10,最大页大小=-1)
+2026-10-25 17:36:41.966 [main] INFO  o.s.m.spring.boot.starter.MagicModuleConfiguration - 未找到SQL缓存实现，采用默认缓存实现(LRU+TTL)，缓存配置:(容量=10000,TTL=-1)
+2026-10-25 17:36:42.227 [main] INFO  o.s.m.s.boot.starter.MagicAPIAutoConfiguration - magic-api工作目录:file://D:\HPG\workspace\LHYF\data-center-mono\dolphinscheduler\dolphinscheduler-data-api\.\data\magic-api
+2026-10-25 17:36:42.243 [main] INFO  o.s.m.s.boot.starter.MagicAPIAutoConfiguration - 注册模块:log -> interface org.slf4j.Logger
+2026-10-25 17:36:42.251 [main] INFO  o.s.m.s.boot.starter.MagicAPIAutoConfiguration - 注册模块:db -> class org.ssssssss.magicapi.modules.db.SQLModule
+2026-10-25 17:36:42.254 [main] INFO  o.s.m.s.boot.starter.MagicAPIAutoConfiguration - 注册模块:http -> class org.ssssssss.magicapi.modules.http.HttpModule
+2026-10-25 17:36:42.254 [main] INFO  o.s.m.s.boot.starter.MagicAPIAutoConfiguration - 注册模块:env -> class org.ssssssss.magicapi.modules.spring.EnvModule
+2026-10-25 17:36:42.254 [main] INFO  o.s.m.s.boot.starter.MagicAPIAutoConfiguration - 注册模块:request -> class org.ssssssss.magicapi.modules.servlet.RequestModule
+2026-10-25 17:36:42.254 [main] INFO  o.s.m.s.boot.starter.MagicAPIAutoConfiguration - 注册模块:response -> class org.ssssssss.magicapi.modules.servlet.ResponseModule
+2026-10-25 17:36:42.254 [main] INFO  o.s.m.s.boot.starter.MagicAPIAutoConfiguration - 注册模块:magic -> class org.ssssssss.magicapi.core.service.impl.DefaultMagicAPIService
+2026-10-25 17:36:42.254 [main] INFO  o.s.m.s.boot.starter.MagicAPIAutoConfiguration - 自动导入模块：db
+2026-10-25 17:36:42.254 [main] INFO  o.s.m.s.boot.starter.MagicAPIAutoConfiguration - 注册扩展:class org.ssssssss.magicapi.modules.servlet.ResponseModule -> class org.ssssssss.magicapi.servlet.javaee.MagicJavaEEResponseExtension
+2026-10-25 17:36:42.307 [main] INFO  o.s.m.s.boot.starter.MagicAPIAutoConfiguration - 注册请求拦截器：class org.apache.dolphinscheduler.dataapi.auth.DataApiRequestInterceptor
+  __  __                _           _     ____  ___ 
+ |  \/  |  __ _   __ _ (_)  ___    / \   |  _ \|_ _|
+ | |\/| | / _` | / _` || | / __|  / _ \  | |_) || | 
+ | |  | || (_| || (_| || || (__  / ___ \ |  __/ | | 
+ |_|  |_| \__,_| \__, ||_| \___|/_/   \_\|_|   |___|
+                  |___/                        2.2.2
+2026-10-25 17:36:42.316 [main] ERROR o.s.m.s.boot.starter.MagicAPIAutoConfiguration - 当前备份设置未配置，强烈建议配置备份设置，以免代码丢失。
+2026-10-25 17:36:42.328 [main] INFO  o.s.b.actuate.endpoint.web.EndpointLinksResolver - Exposing 2 endpoint(s) beneath base path '/actuator'
+2026-10-25 17:36:42.460 [main] INFO  o.e.j.server.handler.ContextHandler.application - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-10-25 17:36:42.460 [main] INFO  org.springframework.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2026-10-25 17:36:42.462 [main] INFO  org.springframework.web.servlet.DispatcherServlet - Completed initialization in 0 ms
+2026-10-25 17:36:42.499 [main] INFO  org.eclipse.jetty.server.AbstractConnector - Started ServerConnector@f8908f6{HTTP/1.1, (http/1.1)}{0.0.0.0:12346}
+2026-10-25 17:36:42.499 [main] INFO  o.s.boot.web.embedded.jetty.JettyWebServer - Jetty started on port(s) 12346 (http/1.1) with context path '/'
+2026-10-25 17:36:42.531 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 17:36:42.539 [main] INFO  org.apache.dolphinscheduler.dataapi.DataApiServer - Started DataApiServer in 15.911 seconds (JVM running for 17.244)
+********************************************当前服务相关地址********************************************
+服务启动成功，magic-api已内置启动! Access URLs:
+	接口本地地址: 		http://localhost:12346/data-api/gateway/
+	接口外部地址: 		http://192.168.0.7:12346/data-api/gateway/
+	接口配置平台: 		http://192.168.0.7:12346/magic/web/index.html
+	可通过配置关闭输出: 	magic-api.show-url=false
+********************************************当前服务相关地址********************************************
+2026-10-25 17:36:42.769 [main] INFO  org.apache.dolphinscheduler.dataapi.DataApiServer - DataApiServer is ready (magic-api + shared DS metadata)
+2026-10-25 17:37:13.646 [qtp1917562344-19] INFO  /smoke/select1(/smoke/select1) - 执行SQL：select 1 as n
+2026-10-25 17:37:33.288 [qtp1917562344-44] INFO  /smoke/select1(/smoke/select1) - 执行SQL：select 1 as n
+2026-10-25 17:37:42.539 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 17:37:55.537 [qtp1917562344-22] INFO  /smoke/select1(/smoke/select1) - 执行SQL：select 1 as n
+2026-10-25 17:38:15.374 [qtp1917562344-21] INFO  /smoke/select1(/smoke/select1) - 执行SQL：select 1 as n
+2026-10-25 17:38:36.501 [qtp1917562344-47] INFO  /smoke/select1(/smoke/select1) - 执行SQL：select 1 as n
+2026-10-25 17:38:42.556 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 17:39:42.569 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 17:40:42.587 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 17:41:42.600 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 17:42:42.614 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 17:43:42.620 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 17:44:42.630 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 17:45:42.635 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 17:46:42.647 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 17:47:42.650 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 17:48:42.659 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 17:49:42.674 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 17:50:42.692 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 17:51:42.708 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 17:52:42.722 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 17:53:42.737 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 17:54:42.753 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 17:55:42.767 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 17:56:42.784 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 17:57:42.798 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 17:58:42.814 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 17:59:42.830 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 18:00:42.845 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 18:01:42.861 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 18:02:42.875 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 18:03:42.886 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 18:04:42.894 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 18:05:42.908 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 18:06:42.926 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 18:07:42.939 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 18:08:42.941 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 18:09:42.958 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 18:10:42.972 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 18:11:42.988 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 18:12:43.004 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 18:13:43.007 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 18:14:43.022 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 18:15:43.031 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 18:16:43.034 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 18:17:43.045 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 18:18:43.048 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 18:19:43.064 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 18:20:43.079 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 18:21:43.095 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 18:22:43.111 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 18:23:43.112 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 18:24:43.118 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 18:25:43.136 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 18:26:43.151 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 18:27:43.162 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 18:28:43.166 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 18:29:43.184 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 18:30:43.197 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 18:30:51.022 [qtp1917562344-21] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 18:30:52.590 [qtp1917562344-19] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 18:31:43.213 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 18:31:44.198 [qtp1917562344-67] WARN  org.eclipse.jetty.io.AbstractConnection - 
+java.lang.NullPointerException: null
+	at org.eclipse.jetty.io.AbstractConnection.lambda$failedCallback$0(AbstractConnection.java:92)
+	at org.eclipse.jetty.util.thread.QueuedThreadPool.runJob(QueuedThreadPool.java:883)
+	at org.eclipse.jetty.util.thread.QueuedThreadPool$Runner.run(QueuedThreadPool.java:1034)
+	at java.base/java.lang.Thread.run(Thread.java:829)
+2026-10-25 18:31:44.198 [qtp1917562344-46] ERROR o.ssssssss.magicapi.core.web.MagicExceptionHandler - magic-api调用接口出错
+java.io.IOException: java.util.concurrent.TimeoutException: Idle timeout expired: 30007/30000 ms
+	at org.eclipse.jetty.util.SharedBlockingCallback$Blocker.block(SharedBlockingCallback.java:257)
+	at org.eclipse.jetty.server.HttpOutput.channelWrite(HttpOutput.java:270)
+	at org.eclipse.jetty.server.HttpOutput.write(HttpOutput.java:873)
+	at java.base/sun.nio.cs.StreamEncoder.writeBytes(StreamEncoder.java:233)
+	at java.base/sun.nio.cs.StreamEncoder.implWrite(StreamEncoder.java:303)
+	at java.base/sun.nio.cs.StreamEncoder.implWrite(StreamEncoder.java:281)
+	at java.base/sun.nio.cs.StreamEncoder.write(StreamEncoder.java:125)
+	at java.base/sun.nio.cs.StreamEncoder.write(StreamEncoder.java:135)
+	at java.base/java.io.OutputStreamWriter.write(OutputStreamWriter.java:226)
+	at java.base/java.io.Writer.write(Writer.java:249)
+	at org.springframework.util.StreamUtils.copy(StreamUtils.java:147)
+	at org.springframework.http.converter.StringHttpMessageConverter.writeInternal(StringHttpMessageConverter.java:126)
+	at org.springframework.http.converter.StringHttpMessageConverter.writeInternal(StringHttpMessageConverter.java:44)
+	at org.springframework.http.converter.AbstractHttpMessageConverter.write(AbstractHttpMessageConverter.java:227)
+	at org.springframework.web.servlet.mvc.method.annotation.AbstractMessageConverterMethodProcessor.writeWithMessageConverters(AbstractMessageConverterMethodProcessor.java:293)
+	at org.springframework.web.servlet.mvc.method.annotation.RequestResponseBodyMethodProcessor.handleReturnValue(RequestResponseBodyMethodProcessor.java:183)
+	at org.springframework.web.method.support.HandlerMethodReturnValueHandlerComposite.handleReturnValue(HandlerMethodReturnValueHandlerComposite.java:78)
+	at org.springframework.web.servlet.mvc.method.annotation.ServletInvocableHandlerMethod.invokeAndHandle(ServletInvocableHandlerMethod.java:135)
+	at org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.invokeHandlerMethod(RequestMappingHandlerAdapter.java:895)
+	at org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.handleInternal(RequestMappingHandlerAdapter.java:808)
+	at org.springframework.web.servlet.mvc.method.AbstractHandlerMethodAdapter.handle(AbstractHandlerMethodAdapter.java:87)
+	at org.springframework.web.servlet.DispatcherServlet.doDispatch(DispatcherServlet.java:1072)
+	at org.springframework.web.servlet.DispatcherServlet.doService(DispatcherServlet.java:965)
+	at org.springframework.web.servlet.FrameworkServlet.processRequest(FrameworkServlet.java:1006)
+	at org.springframework.web.servlet.FrameworkServlet.doGet(FrameworkServlet.java:898)
+	at javax.servlet.http.HttpServlet.service(HttpServlet.java:497)
+	at org.springframework.web.servlet.FrameworkServlet.service(FrameworkServlet.java:883)
+	at javax.servlet.http.HttpServlet.service(HttpServlet.java:584)
+	at org.eclipse.jetty.servlet.ServletHolder.handle(ServletHolder.java:799)
+	at org.eclipse.jetty.servlet.ServletHandler$ChainEnd.doFilter(ServletHandler.java:1656)
+	at org.eclipse.jetty.websocket.server.WebSocketUpgradeFilter.doFilter(WebSocketUpgradeFilter.java:292)
+	at org.eclipse.jetty.servlet.FilterHolder.doFilter(FilterHolder.java:193)
+	at org.eclipse.jetty.servlet.ServletHandler$Chain.doFilter(ServletHandler.java:1626)
+	at org.springframework.web.filter.RequestContextFilter.doFilterInternal(RequestContextFilter.java:100)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:117)
+	at org.eclipse.jetty.servlet.FilterHolder.doFilter(FilterHolder.java:193)
+	at org.eclipse.jetty.servlet.ServletHandler$Chain.doFilter(ServletHandler.java:1626)
+	at org.springframework.web.filter.FormContentFilter.doFilterInternal(FormContentFilter.java:93)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:117)
+	at org.eclipse.jetty.servlet.FilterHolder.doFilter(FilterHolder.java:193)
+	at org.eclipse.jetty.servlet.ServletHandler$Chain.doFilter(ServletHandler.java:1626)
+	at org.springframework.boot.actuate.metrics.web.servlet.WebMvcMetricsFilter.doFilterInternal(WebMvcMetricsFilter.java:96)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:117)
+	at org.eclipse.jetty.servlet.FilterHolder.doFilter(FilterHolder.java:193)
+	at org.eclipse.jetty.servlet.ServletHandler$Chain.doFilter(ServletHandler.java:1626)
+	at org.springframework.web.filter.CharacterEncodingFilter.doFilterInternal(CharacterEncodingFilter.java:201)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:117)
+	at org.eclipse.jetty.servlet.FilterHolder.doFilter(FilterHolder.java:193)
+	at org.eclipse.jetty.servlet.ServletHandler$Chain.doFilter(ServletHandler.java:1626)
+	at org.ssssssss.magicapi.servlet.javaee.MagicJavaEECorsFilter.doFilter(MagicJavaEECorsFilter.java:15)
+	at org.eclipse.jetty.servlet.FilterHolder.doFilter(FilterHolder.java:193)
+	at org.eclipse.jetty.servlet.ServletHandler$Chain.doFilter(ServletHandler.java:1626)
+	at org.eclipse.jetty.servlet.ServletHandler.doHandle(ServletHandler.java:552)
+	at org.eclipse.jetty.server.handler.ScopedHandler.handle(ScopedHandler.java:143)
+	at org.eclipse.jetty.security.SecurityHandler.handle(SecurityHandler.java:600)
+	at org.eclipse.jetty.server.handler.HandlerWrapper.handle(HandlerWrapper.java:127)
+	at org.eclipse.jetty.server.handler.ScopedHandler.nextHandle(ScopedHandler.java:235)
+	at org.eclipse.jetty.server.session.SessionHandler.doHandle(SessionHandler.java:1624)
+	at org.eclipse.jetty.server.handler.ScopedHandler.nextHandle(ScopedHandler.java:233)
+	at org.eclipse.jetty.server.handler.ContextHandler.doHandle(ContextHandler.java:1440)
+	at org.eclipse.jetty.server.handler.ScopedHandler.nextScope(ScopedHandler.java:188)
+	at org.eclipse.jetty.servlet.ServletHandler.doScope(ServletHandler.java:505)
+	at org.eclipse.jetty.server.session.SessionHandler.doScope(SessionHandler.java:1594)
+	at org.eclipse.jetty.server.handler.ScopedHandler.nextScope(ScopedHandler.java:186)
+	at org.eclipse.jetty.server.handler.ContextHandler.doScope(ContextHandler.java:1355)
+	at org.eclipse.jetty.server.handler.ScopedHandler.handle(ScopedHandler.java:141)
+	at org.eclipse.jetty.server.handler.gzip.GzipHandler.handle(GzipHandler.java:772)
+	at org.eclipse.jetty.server.handler.HandlerWrapper.handle(HandlerWrapper.java:127)
+	at org.eclipse.jetty.server.Server.handle(Server.java:516)
+	at org.eclipse.jetty.server.HttpChannel.lambda$handle$1(HttpChannel.java:487)
+	at org.eclipse.jetty.server.HttpChannel.dispatch(HttpChannel.java:732)
+	at org.eclipse.jetty.server.HttpChannel.handle(HttpChannel.java:479)
+	at org.eclipse.jetty.server.HttpConnection.onFillable(HttpConnection.java:277)
+	at org.eclipse.jetty.io.AbstractConnection$ReadCallback.succeeded(AbstractConnection.java:311)
+	at org.eclipse.jetty.io.FillInterest.fillable(FillInterest.java:105)
+	at org.eclipse.jetty.io.ChannelEndPoint$1.run(ChannelEndPoint.java:104)
+	at org.eclipse.jetty.util.thread.strategy.EatWhatYouKill.runTask(EatWhatYouKill.java:338)
+	at org.eclipse.jetty.util.thread.strategy.EatWhatYouKill.doProduce(EatWhatYouKill.java:315)
+	at org.eclipse.jetty.util.thread.strategy.EatWhatYouKill.tryProduce(EatWhatYouKill.java:173)
+	at org.eclipse.jetty.util.thread.strategy.EatWhatYouKill.run(EatWhatYouKill.java:131)
+	at org.eclipse.jetty.util.thread.ReservedThreadExecutor$ReservedThread.run(ReservedThreadExecutor.java:409)
+	at org.eclipse.jetty.util.thread.QueuedThreadPool.runJob(QueuedThreadPool.java:883)
+	at org.eclipse.jetty.util.thread.QueuedThreadPool$Runner.run(QueuedThreadPool.java:1034)
+	at java.base/java.lang.Thread.run(Thread.java:829)
+Caused by: java.util.concurrent.TimeoutException: Idle timeout expired: 30007/30000 ms
+	at org.eclipse.jetty.io.IdleTimeout.checkIdleTimeout(IdleTimeout.java:171)
+	at org.eclipse.jetty.io.IdleTimeout.idleCheck(IdleTimeout.java:113)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:515)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+	at java.base/java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(ScheduledThreadPoolExecutor.java:304)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
+	... 1 common frames omitted
+2026-10-25 18:31:44.198 [qtp1917562344-46] WARN  o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - Failure in @ExceptionHandler org.ssssssss.magicapi.core.web.MagicWorkbenchController#exceptionHandler(Exception)
+org.eclipse.jetty.io.EofException: Closed
+	at org.eclipse.jetty.server.HttpOutput.checkWritable(HttpOutput.java:771)
+	at org.eclipse.jetty.server.HttpOutput.write(HttpOutput.java:795)
+	at org.springframework.util.StreamUtils$NonClosingOutputStream.write(StreamUtils.java:287)
+	at com.fasterxml.jackson.core.json.UTF8JsonGenerator._flushBuffer(UTF8JsonGenerator.java:2171)
+	at com.fasterxml.jackson.core.json.UTF8JsonGenerator.flush(UTF8JsonGenerator.java:1184)
+	at com.fasterxml.jackson.databind.ObjectWriter.writeValue(ObjectWriter.java:1009)
+	at org.springframework.http.converter.json.AbstractJackson2HttpMessageConverter.writeInternal(AbstractJackson2HttpMessageConverter.java:456)
+	at org.springframework.http.converter.AbstractGenericHttpMessageConverter.write(AbstractGenericHttpMessageConverter.java:104)
+	at org.springframework.web.servlet.mvc.method.annotation.AbstractMessageConverterMethodProcessor.writeWithMessageConverters(AbstractMessageConverterMethodProcessor.java:290)
+	at org.springframework.web.servlet.mvc.method.annotation.RequestResponseBodyMethodProcessor.handleReturnValue(RequestResponseBodyMethodProcessor.java:183)
+	at org.springframework.web.method.support.HandlerMethodReturnValueHandlerComposite.handleReturnValue(HandlerMethodReturnValueHandlerComposite.java:78)
+	at org.springframework.web.servlet.mvc.method.annotation.ServletInvocableHandlerMethod.invokeAndHandle(ServletInvocableHandlerMethod.java:135)
+	at org.springframework.web.servlet.mvc.method.annotation.ExceptionHandlerExceptionResolver.doResolveHandlerMethodException(ExceptionHandlerExceptionResolver.java:428)
+	at org.springframework.web.servlet.handler.AbstractHandlerMethodExceptionResolver.doResolveException(AbstractHandlerMethodExceptionResolver.java:75)
+	at org.springframework.web.servlet.handler.AbstractHandlerExceptionResolver.resolveException(AbstractHandlerExceptionResolver.java:142)
+	at org.springframework.web.servlet.handler.HandlerExceptionResolverComposite.resolveException(HandlerExceptionResolverComposite.java:80)
+	at org.springframework.web.servlet.DispatcherServlet.processHandlerException(DispatcherServlet.java:1332)
+	at org.springframework.web.servlet.DispatcherServlet.processDispatchResult(DispatcherServlet.java:1143)
+	at org.springframework.web.servlet.DispatcherServlet.doDispatch(DispatcherServlet.java:1089)
+	at org.springframework.web.servlet.DispatcherServlet.doService(DispatcherServlet.java:965)
+	at org.springframework.web.servlet.FrameworkServlet.processRequest(FrameworkServlet.java:1006)
+	at org.springframework.web.servlet.FrameworkServlet.doGet(FrameworkServlet.java:898)
+	at javax.servlet.http.HttpServlet.service(HttpServlet.java:497)
+	at org.springframework.web.servlet.FrameworkServlet.service(FrameworkServlet.java:883)
+	at javax.servlet.http.HttpServlet.service(HttpServlet.java:584)
+	at org.eclipse.jetty.servlet.ServletHolder.handle(ServletHolder.java:799)
+	at org.eclipse.jetty.servlet.ServletHandler$ChainEnd.doFilter(ServletHandler.java:1656)
+	at org.eclipse.jetty.websocket.server.WebSocketUpgradeFilter.doFilter(WebSocketUpgradeFilter.java:292)
+	at org.eclipse.jetty.servlet.FilterHolder.doFilter(FilterHolder.java:193)
+	at org.eclipse.jetty.servlet.ServletHandler$Chain.doFilter(ServletHandler.java:1626)
+	at org.springframework.web.filter.RequestContextFilter.doFilterInternal(RequestContextFilter.java:100)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:117)
+	at org.eclipse.jetty.servlet.FilterHolder.doFilter(FilterHolder.java:193)
+	at org.eclipse.jetty.servlet.ServletHandler$Chain.doFilter(ServletHandler.java:1626)
+	at org.springframework.web.filter.FormContentFilter.doFilterInternal(FormContentFilter.java:93)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:117)
+	at org.eclipse.jetty.servlet.FilterHolder.doFilter(FilterHolder.java:193)
+	at org.eclipse.jetty.servlet.ServletHandler$Chain.doFilter(ServletHandler.java:1626)
+	at org.springframework.boot.actuate.metrics.web.servlet.WebMvcMetricsFilter.doFilterInternal(WebMvcMetricsFilter.java:96)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:117)
+	at org.eclipse.jetty.servlet.FilterHolder.doFilter(FilterHolder.java:193)
+	at org.eclipse.jetty.servlet.ServletHandler$Chain.doFilter(ServletHandler.java:1626)
+	at org.springframework.web.filter.CharacterEncodingFilter.doFilterInternal(CharacterEncodingFilter.java:201)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:117)
+	at org.eclipse.jetty.servlet.FilterHolder.doFilter(FilterHolder.java:193)
+	at org.eclipse.jetty.servlet.ServletHandler$Chain.doFilter(ServletHandler.java:1626)
+	at org.ssssssss.magicapi.servlet.javaee.MagicJavaEECorsFilter.doFilter(MagicJavaEECorsFilter.java:15)
+	at org.eclipse.jetty.servlet.FilterHolder.doFilter(FilterHolder.java:193)
+	at org.eclipse.jetty.servlet.ServletHandler$Chain.doFilter(ServletHandler.java:1626)
+	at org.eclipse.jetty.servlet.ServletHandler.doHandle(ServletHandler.java:552)
+	at org.eclipse.jetty.server.handler.ScopedHandler.handle(ScopedHandler.java:143)
+	at org.eclipse.jetty.security.SecurityHandler.handle(SecurityHandler.java:600)
+	at org.eclipse.jetty.server.handler.HandlerWrapper.handle(HandlerWrapper.java:127)
+	at org.eclipse.jetty.server.handler.ScopedHandler.nextHandle(ScopedHandler.java:235)
+	at org.eclipse.jetty.server.session.SessionHandler.doHandle(SessionHandler.java:1624)
+	at org.eclipse.jetty.server.handler.ScopedHandler.nextHandle(ScopedHandler.java:233)
+	at org.eclipse.jetty.server.handler.ContextHandler.doHandle(ContextHandler.java:1440)
+	at org.eclipse.jetty.server.handler.ScopedHandler.nextScope(ScopedHandler.java:188)
+	at org.eclipse.jetty.servlet.ServletHandler.doScope(ServletHandler.java:505)
+	at org.eclipse.jetty.server.session.SessionHandler.doScope(SessionHandler.java:1594)
+	at org.eclipse.jetty.server.handler.ScopedHandler.nextScope(ScopedHandler.java:186)
+	at org.eclipse.jetty.server.handler.ContextHandler.doScope(ContextHandler.java:1355)
+	at org.eclipse.jetty.server.handler.ScopedHandler.handle(ScopedHandler.java:141)
+	at org.eclipse.jetty.server.handler.gzip.GzipHandler.handle(GzipHandler.java:772)
+	at org.eclipse.jetty.server.handler.HandlerWrapper.handle(HandlerWrapper.java:127)
+	at org.eclipse.jetty.server.Server.handle(Server.java:516)
+	at org.eclipse.jetty.server.HttpChannel.lambda$handle$1(HttpChannel.java:487)
+	at org.eclipse.jetty.server.HttpChannel.dispatch(HttpChannel.java:732)
+	at org.eclipse.jetty.server.HttpChannel.handle(HttpChannel.java:479)
+	at org.eclipse.jetty.server.HttpConnection.onFillable(HttpConnection.java:277)
+	at org.eclipse.jetty.io.AbstractConnection$ReadCallback.succeeded(AbstractConnection.java:311)
+	at org.eclipse.jetty.io.FillInterest.fillable(FillInterest.java:105)
+	at org.eclipse.jetty.io.ChannelEndPoint$1.run(ChannelEndPoint.java:104)
+	at org.eclipse.jetty.util.thread.strategy.EatWhatYouKill.runTask(EatWhatYouKill.java:338)
+	at org.eclipse.jetty.util.thread.strategy.EatWhatYouKill.doProduce(EatWhatYouKill.java:315)
+	at org.eclipse.jetty.util.thread.strategy.EatWhatYouKill.tryProduce(EatWhatYouKill.java:173)
+	at org.eclipse.jetty.util.thread.strategy.EatWhatYouKill.run(EatWhatYouKill.java:131)
+	at org.eclipse.jetty.util.thread.ReservedThreadExecutor$ReservedThread.run(ReservedThreadExecutor.java:409)
+	at org.eclipse.jetty.util.thread.QueuedThreadPool.runJob(QueuedThreadPool.java:883)
+	at org.eclipse.jetty.util.thread.QueuedThreadPool$Runner.run(QueuedThreadPool.java:1034)
+	at java.base/java.lang.Thread.run(Thread.java:829)
+2026-10-25 18:31:44.198 [qtp1917562344-46] WARN  org.eclipse.jetty.server.HttpChannel - handleException /magic/web/classes.txt java.io.IOException: java.util.concurrent.TimeoutException: Idle timeout expired: 30007/30000 ms
+2026-10-25 18:32:43.230 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 18:33:43.245 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 18:34:43.257 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 18:35:43.276 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 18:36:43.284 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 18:37:43.291 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 18:38:43.300 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 18:39:43.305 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 18:40:43.320 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 18:41:43.335 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 18:42:43.352 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 18:43:43.368 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 18:44:43.371 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 18:45:43.382 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 18:46:43.398 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 18:47:43.409 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 18:48:43.412 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 18:49:43.428 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 18:50:43.443 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 18:51:43.459 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 18:52:43.475 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 18:53:43.477 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 18:54:43.489 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 18:55:43.505 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 18:56:43.518 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 18:57:43.536 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 18:58:43.551 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 18:59:43.568 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 19:00:43.583 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 19:01:43.599 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 19:02:43.614 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 19:03:43.630 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 19:04:43.642 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 19:05:43.646 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 19:06:43.660 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 19:07:43.667 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 19:08:43.675 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 19:09:43.690 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 19:10:43.706 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 19:11:43.722 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 19:12:43.737 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 19:13:43.753 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 19:14:43.768 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 19:15:43.784 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 19:16:43.800 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 19:17:43.810 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 19:18:43.814 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 19:19:43.831 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 19:20:43.846 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 19:21:43.861 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 19:22:43.877 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 19:23:43.893 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 19:24:43.908 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 19:25:43.924 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 19:26:43.939 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 19:27:43.955 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 19:28:43.971 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 19:29:43.986 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 19:30:44.001 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 19:31:44.017 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 19:32:44.025 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 19:33:44.031 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 19:34:44.046 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 19:35:44.059 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 19:36:44.074 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 19:37:44.089 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 19:38:44.106 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 19:39:44.119 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 19:40:44.133 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 19:41:44.138 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 19:42:44.149 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 19:43:44.158 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 19:44:44.173 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 19:45:44.186 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 19:46:44.198 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 19:47:44.209 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 19:48:44.211 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 19:49:44.220 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 19:50:44.229 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 19:51:44.239 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 19:52:44.250 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 19:53:44.264 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 19:54:44.276 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 19:55:44.286 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 19:56:44.297 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 19:57:44.312 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 19:58:44.323 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 19:59:44.336 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 20:00:44.346 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 20:01:44.351 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 20:02:44.366 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 20:03:44.383 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 20:04:44.392 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 20:05:44.404 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 20:06:44.421 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 20:07:44.430 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 20:08:44.439 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 20:09:44.448 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 20:10:44.449 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 20:11:44.458 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 20:12:44.472 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 20:13:44.481 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 20:14:44.489 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 20:15:44.503 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 20:16:44.519 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 20:17:44.527 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 20:18:44.531 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 20:19:44.542 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 20:20:44.552 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 20:21:44.561 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 20:22:44.573 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 20:23:44.581 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 20:24:44.597 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 20:25:44.609 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 20:26:44.616 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 20:27:44.616 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 20:28:44.621 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 20:29:44.624 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 20:30:44.636 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 20:31:44.646 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 20:32:44.659 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 20:33:44.665 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 20:34:44.683 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 20:35:44.692 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 20:36:44.704 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 20:37:44.713 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 20:38:44.730 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 20:39:44.747 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 20:40:44.762 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 20:41:44.778 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 20:42:44.794 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 20:43:44.810 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 20:44:44.825 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 20:45:44.841 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 20:46:44.856 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 20:47:44.872 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 20:48:44.888 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 20:49:44.903 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 20:50:44.921 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 20:51:44.926 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 20:52:44.933 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 20:53:44.948 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 20:54:44.965 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 20:55:44.980 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 20:56:44.996 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 20:57:45.007 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 20:58:45.011 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 20:59:45.026 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 21:00:45.042 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 21:01:45.057 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 21:02:45.064 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 21:03:45.072 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 21:04:45.087 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 21:05:45.103 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 21:06:45.119 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 21:07:45.135 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 21:08:45.139 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 21:09:45.149 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 21:10:45.165 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 21:11:45.181 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 21:12:45.196 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 21:13:45.211 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 21:14:45.213 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 21:15:45.226 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 21:16:45.227 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 21:17:45.243 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 21:18:45.247 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 21:19:45.257 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 21:20:45.273 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 21:21:45.277 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 21:22:45.287 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 21:23:45.302 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 21:24:45.318 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 21:25:45.331 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 21:26:45.333 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 21:27:45.336 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 21:28:45.347 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 21:29:45.348 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 21:30:45.363 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 21:31:45.378 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 21:32:45.393 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 21:33:45.409 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 21:34:45.425 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 21:35:45.440 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 21:36:45.455 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 21:37:45.473 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 21:38:45.485 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 21:39:45.502 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 21:40:45.518 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 21:41:45.534 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 21:42:45.550 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 21:43:45.563 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 21:44:45.579 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 21:45:45.595 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 21:46:45.611 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 21:47:45.626 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 21:48:45.640 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 21:49:45.656 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 21:50:45.671 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 21:51:45.675 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 21:52:45.686 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 21:53:45.704 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 21:54:45.718 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 21:55:45.733 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 21:56:45.748 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 21:57:45.765 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 21:58:45.768 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 21:59:45.773 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 22:00:45.790 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 22:01:45.807 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 22:02:45.811 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 22:03:45.814 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 22:04:45.828 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 22:05:45.844 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 22:06:45.857 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 22:07:45.869 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 22:08:45.875 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 22:09:45.890 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 22:10:45.906 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 22:11:45.917 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 22:12:45.934 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 22:13:45.936 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 22:14:45.944 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 22:15:45.951 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 22:16:45.955 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 22:17:45.966 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 22:18:45.975 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 22:19:45.990 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 22:20:46.009 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 22:21:46.023 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 22:22:46.040 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 22:23:46.056 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 22:24:46.070 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 22:25:46.085 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 22:26:46.102 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 22:27:46.118 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 22:28:46.134 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 22:29:46.150 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 22:30:46.164 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 22:31:46.180 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 22:32:46.194 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 22:33:46.197 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 22:34:46.211 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 22:35:46.225 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 22:36:46.241 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 22:37:46.257 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 22:38:46.273 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 22:39:46.275 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 22:40:46.289 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 22:41:46.303 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 22:42:46.317 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 22:43:46.326 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 22:44:46.333 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 22:45:46.347 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 22:46:46.361 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 22:47:46.363 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 22:48:46.380 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 22:49:46.396 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 22:50:46.398 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 22:51:46.410 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 22:52:46.421 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 22:53:46.431 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 22:54:46.441 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 22:55:46.457 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 22:56:46.473 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 22:57:46.487 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 22:58:46.502 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 22:59:46.517 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 23:00:46.533 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 23:01:46.549 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 23:02:46.561 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 23:03:46.565 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 23:04:46.579 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 23:05:46.596 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 23:06:46.612 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 23:07:46.627 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 23:08:46.643 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 23:09:46.646 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 23:10:46.657 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 23:11:46.673 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 23:12:46.689 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 23:13:46.703 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 23:14:46.704 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 23:15:46.720 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 23:16:46.723 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 23:17:46.733 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 23:18:46.749 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 23:19:46.765 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 23:20:46.779 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 23:21:46.796 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 23:22:46.812 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 23:23:46.816 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 23:24:46.825 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 23:25:46.827 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 23:26:46.841 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 23:27:46.851 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 23:28:46.854 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 23:29:46.870 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 23:30:46.885 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 23:31:46.901 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 23:32:46.914 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 23:33:46.919 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 23:34:46.925 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 23:35:46.931 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 23:36:46.933 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 23:37:46.948 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 23:38:46.961 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 23:39:46.963 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 23:40:46.976 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 23:41:46.978 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 23:42:46.993 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 23:43:47.007 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 23:44:47.025 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 23:45:47.039 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 23:46:47.056 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 23:47:47.069 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 23:48:47.082 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 23:49:47.099 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 23:50:47.114 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 23:51:47.131 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 23:52:47.144 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 23:53:47.162 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 23:54:47.176 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 23:55:47.193 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 23:56:47.209 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 23:57:47.224 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 23:58:47.239 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-25 23:59:47.255 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 00:00:47.271 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 00:01:47.286 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 00:02:47.303 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 00:03:47.317 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 00:04:47.334 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 00:05:47.348 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 00:06:47.364 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 00:07:47.380 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 00:08:47.396 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 00:09:47.408 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 00:10:47.425 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 00:11:47.443 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 00:12:47.459 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 00:13:47.474 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 00:14:47.490 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 00:15:47.505 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 00:16:47.519 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 00:17:47.520 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 00:18:47.534 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 00:19:47.551 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 00:20:47.567 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 00:21:47.580 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 00:22:47.583 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 00:23:47.597 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 00:24:47.612 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 00:25:47.629 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 00:26:47.642 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 00:27:47.658 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 00:28:47.675 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 00:29:47.690 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 00:30:47.706 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 00:31:47.722 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 00:32:47.738 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 00:33:47.751 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 00:34:47.769 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 00:35:47.784 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 00:36:47.800 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 00:37:47.816 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 00:38:47.831 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 00:39:47.844 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 00:40:47.846 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 00:41:47.862 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 00:42:47.877 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 00:43:47.893 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 00:44:47.906 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 00:45:47.922 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 00:46:47.940 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 00:47:47.955 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 00:48:47.969 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 00:49:47.987 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 00:50:48.003 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 00:51:48.018 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 00:52:48.033 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 00:53:48.049 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 00:54:48.065 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 00:55:48.081 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 00:56:48.096 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 00:57:48.112 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 00:58:48.126 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 00:59:48.143 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 01:00:48.155 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 01:01:48.157 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 01:02:48.173 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 01:03:48.188 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 01:04:48.204 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 01:05:48.220 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 01:06:48.234 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 01:07:48.251 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 01:08:48.267 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 01:09:48.282 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 01:10:48.298 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 01:11:48.314 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 01:12:48.330 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 01:13:48.345 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 01:14:48.358 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 01:15:48.360 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 01:16:48.375 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 01:17:48.388 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 01:18:48.390 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 01:19:48.404 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 01:20:48.421 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 01:21:48.434 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 01:22:48.450 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 01:23:48.454 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 01:24:48.469 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 01:25:48.485 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 01:26:48.500 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 01:27:48.514 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 01:28:48.516 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 01:29:48.532 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 01:30:48.546 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 01:31:48.561 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 01:32:48.577 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 01:33:48.591 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 01:34:48.606 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 01:35:48.608 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 01:36:48.622 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 01:37:48.623 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 01:38:48.640 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 01:39:48.655 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 01:40:48.668 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 01:41:48.685 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 01:42:48.700 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 01:43:48.701 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 01:44:48.716 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 01:45:48.732 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 01:46:48.748 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 01:47:48.763 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 01:48:48.774 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 01:49:48.790 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 01:50:48.793 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 01:51:48.808 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 01:52:48.824 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 01:53:48.836 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 01:54:48.852 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 01:55:48.868 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 01:56:48.883 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 01:57:48.899 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 01:58:48.914 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 01:59:48.930 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 02:00:48.946 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 02:01:48.962 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 02:02:48.977 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 02:03:48.993 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 02:04:49.009 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 02:05:49.023 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 02:06:49.039 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 02:07:49.054 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 02:08:49.068 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 02:09:49.070 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 02:10:49.086 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 02:11:49.101 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 02:12:49.115 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 02:13:49.133 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 02:14:49.147 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 02:15:49.163 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 02:16:49.179 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 02:17:49.195 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 02:18:49.211 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 02:19:49.226 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 02:20:49.241 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 02:21:49.256 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 02:22:49.273 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 02:23:49.289 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 02:24:49.304 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 02:25:49.320 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 02:26:49.334 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 02:27:49.351 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 02:28:49.367 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 02:29:49.382 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 02:30:49.397 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 02:31:49.414 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 02:32:49.429 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 02:33:49.445 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 02:34:49.460 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 02:35:49.476 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 02:36:49.492 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 02:37:49.507 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 02:38:49.523 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 02:39:49.539 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 02:40:49.554 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 02:41:49.570 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 02:42:49.587 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 02:43:49.601 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 02:44:49.615 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 02:45:49.632 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 02:46:49.648 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 02:47:49.663 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 02:48:49.680 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 02:49:49.695 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 02:50:49.711 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 02:51:49.726 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 02:52:49.742 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 02:53:49.755 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 02:54:49.774 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 02:55:49.789 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 02:56:49.814 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 02:57:49.820 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 02:58:49.846 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 02:59:49.862 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 03:00:49.877 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 03:01:49.882 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 03:02:49.898 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 03:03:49.914 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 03:04:49.930 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 03:05:49.946 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 03:06:49.961 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 03:07:49.977 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 03:08:49.992 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 03:09:50.006 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 03:10:50.023 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 03:11:50.038 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 03:12:50.054 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 03:13:50.069 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 03:14:50.085 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 03:15:50.101 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 03:16:50.116 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 03:17:50.133 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 03:18:50.149 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 03:19:50.164 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 03:20:50.179 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 03:21:50.194 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 03:22:50.211 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 03:23:50.225 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 03:24:50.242 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 03:25:50.257 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 03:26:50.273 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 03:27:50.289 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 03:28:50.305 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 03:29:50.319 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 03:30:50.335 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 03:31:50.352 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 03:32:50.367 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 03:33:50.383 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 03:34:50.399 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 03:35:50.413 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 03:36:50.430 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 03:37:50.446 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 03:38:50.461 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 03:39:50.477 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 03:40:50.492 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 03:41:50.508 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 03:42:50.523 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 03:43:50.538 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 03:44:50.555 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 03:45:50.569 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 03:46:50.585 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 03:47:50.602 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 03:48:50.618 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 03:49:50.633 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 03:50:50.649 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 03:51:50.663 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 03:52:50.679 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 03:53:50.696 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 03:54:50.711 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 03:55:50.727 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 03:56:50.743 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 03:57:50.757 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 03:58:50.772 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 03:59:50.790 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 04:00:50.806 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 04:01:50.820 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 04:02:50.836 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 04:03:50.852 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 04:04:50.867 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 04:05:50.883 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 04:06:50.899 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 04:07:50.913 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 04:08:50.929 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 04:09:50.945 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 04:10:50.959 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 04:11:50.977 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 04:12:50.992 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 04:13:51.008 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 04:14:51.022 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 04:15:51.039 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 04:16:51.053 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 04:17:51.071 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 04:18:51.086 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 04:19:51.101 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 04:20:51.118 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 04:21:51.131 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 04:22:51.146 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 04:23:51.148 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 04:24:51.163 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 04:25:51.178 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 04:26:51.195 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 04:27:51.211 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 04:28:51.226 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 04:29:51.242 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 04:30:51.257 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 04:31:51.271 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 04:32:51.285 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 04:33:51.287 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 04:34:51.303 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 04:35:51.318 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 04:36:51.333 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 04:37:51.349 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 04:38:51.365 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 04:39:51.379 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 04:40:51.397 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 04:41:51.412 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 04:42:51.427 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 04:43:51.444 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 04:44:51.460 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 04:45:51.463 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 04:46:51.469 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 04:47:51.474 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 04:48:51.492 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 04:49:51.507 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 04:50:51.511 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 04:51:51.528 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 04:52:51.537 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 04:53:51.550 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 04:54:51.552 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 04:55:51.567 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 04:56:51.583 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 04:57:51.598 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 04:58:51.612 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 04:59:51.627 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 05:00:51.644 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 05:01:51.650 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 05:02:51.658 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 05:03:51.672 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 05:04:51.675 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 05:05:51.690 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 05:06:51.706 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 05:07:51.720 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 05:08:51.734 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 05:09:51.736 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 05:10:51.752 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 05:11:51.766 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 05:12:51.783 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 05:13:51.795 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 05:14:51.811 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 05:15:51.827 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 05:16:51.841 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 05:17:51.846 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 05:18:51.857 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 05:19:51.871 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 05:20:51.889 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 05:21:51.904 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 05:22:51.919 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 05:23:51.935 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 05:24:51.951 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 05:25:51.965 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 05:26:51.982 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 05:27:51.997 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 05:28:52.011 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 05:29:52.029 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 05:30:52.044 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 05:31:52.060 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 05:32:52.076 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 05:33:52.091 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 05:34:52.107 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 05:35:52.123 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 05:36:52.138 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 05:37:52.153 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 05:38:52.168 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 05:39:52.185 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 05:40:52.202 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 05:41:52.216 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 05:42:52.233 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 05:43:52.248 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 05:44:52.263 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 05:45:52.278 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 05:46:52.294 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 05:47:52.311 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 05:48:52.325 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 05:49:52.342 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 05:50:52.357 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 05:51:52.372 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 05:52:52.388 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 05:53:52.404 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 05:54:52.419 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 05:55:52.434 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 05:56:52.451 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 05:57:52.467 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 05:58:52.483 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 05:59:52.497 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 06:00:52.512 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 06:01:52.528 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 06:02:52.544 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 06:03:52.559 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 06:04:52.575 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 06:05:52.589 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 06:06:52.607 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 06:07:52.623 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 06:08:52.638 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 06:09:52.653 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 06:10:52.667 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 06:11:52.668 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 06:12:52.684 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 06:13:52.700 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 06:14:52.716 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 06:15:52.731 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 06:16:52.747 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 06:17:52.763 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 06:18:52.777 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 06:19:52.793 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 06:20:52.809 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 06:21:52.821 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 06:22:52.824 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 06:23:52.839 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 06:24:52.855 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 06:25:52.870 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 06:26:52.886 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 06:27:52.900 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 06:28:52.915 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 06:29:52.933 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 06:30:52.948 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 06:31:52.965 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 06:32:52.978 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 06:33:52.995 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 06:34:53.012 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 06:35:53.043 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 06:36:53.058 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 06:37:53.075 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 06:38:53.088 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 06:39:53.105 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 06:40:53.121 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 06:41:53.138 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 06:42:53.153 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 06:43:53.169 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 06:44:53.183 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 06:45:53.200 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 06:46:53.216 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 06:47:53.230 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 06:48:53.247 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 06:49:53.261 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 06:50:53.277 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 06:51:53.293 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 06:52:53.308 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 06:53:53.325 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 06:54:53.338 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 06:55:53.340 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 06:56:53.354 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 06:57:53.371 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 06:58:53.386 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 06:59:53.401 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 07:00:53.417 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 07:01:53.433 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 07:02:53.449 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 07:03:53.461 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 07:04:53.477 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 07:05:53.479 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 07:06:53.494 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 07:07:53.508 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 07:08:53.525 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 07:09:53.539 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 07:10:53.541 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 07:11:53.556 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 07:12:53.572 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 07:13:53.585 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 07:14:53.603 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 07:15:53.618 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 07:16:53.635 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 07:17:53.650 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 07:18:53.665 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 07:19:53.681 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 07:20:53.694 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 07:21:53.696 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 07:22:53.710 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 07:23:53.727 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 07:24:53.742 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 07:25:53.757 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 07:26:53.774 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 07:27:53.789 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 07:28:53.803 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 07:29:53.805 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 07:30:53.820 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 07:31:53.833 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 07:32:53.850 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 07:33:53.866 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 07:34:53.882 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 07:35:53.898 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 07:36:53.914 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 07:37:53.930 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 07:38:53.945 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 07:39:53.951 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 07:40:53.959 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 07:41:53.976 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 07:42:53.989 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 07:43:53.990 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 07:44:53.996 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 07:45:54.005 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 07:46:54.009 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 07:47:54.019 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 07:48:54.025 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 07:49:54.034 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 07:50:54.041 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 07:51:54.049 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 07:52:54.064 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 07:53:54.069 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 07:54:54.078 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 07:55:54.093 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 07:56:54.109 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 07:57:54.125 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 07:58:54.141 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 07:59:54.156 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 08:00:54.171 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 08:01:54.186 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 08:02:54.203 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 08:03:54.219 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 08:04:54.231 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]
+2026-10-26 08:05:54.233 [scheduling-1] INFO  o.a.d.dataapi.datasource.DsMagicDataSourceLoader - Magic datasources refreshed, active=[da_test_mysql, da_test_doris, osint_mysql]

@@ -92,7 +92,9 @@ export function useCustomCellBuilder() {
         taskType: type,
         taskName: taskName || id,
         flag: flag,
-        taskExecuteType: TASK_TYPES_MAP[type]?.taskExecuteType,
+        taskExecuteType:
+          TASK_TYPES_MAP[type]?.taskExecuteType ||
+          (type === 'SEATUNNEL_COMPUTE' ? 'BATCH' : undefined),
         useCustom,
         scriptType
       },
@@ -158,10 +160,12 @@ export function useCustomCellBuilder() {
         node.children = []
         if (location.width) node.width = location.width
         if (location.height) node.height = location.height
+        const graph = parseStComputeGraph(params)
+        if (node.data) {
+          node.data.taskExecuteType = task.taskExecuteType || 'BATCH'
+        }
         nodes.push(node)
         taskTypeMap[String(task.code)] = task.taskType
-
-        const graph = parseStComputeGraph(params)
         graph.nodes.forEach((subItem) => {
           const subLoc: any =
             locations.find((l: any) => l.taskCode === Number(subItem.code)) ||
@@ -228,10 +232,17 @@ export function useCustomCellBuilder() {
       }
     })
 
+    const streamCodes = new Set(
+      tasks
+        .filter((t: any) => t.taskExecuteType === 'STREAM')
+        .map((t: any) => String(t.code))
+    )
     connects
       .filter((r) => !!r.preTaskCode)
       .forEach((c) => {
         const isStream =
+          streamCodes.has(String(c.preTaskCode)) ||
+          streamCodes.has(String(c.postTaskCode)) ||
           TASK_TYPES_MAP[taskTypeMap[c.preTaskCode]]?.taskExecuteType ===
             'STREAM' ||
           TASK_TYPES_MAP[taskTypeMap[c.postTaskCode]]?.taskExecuteType ===

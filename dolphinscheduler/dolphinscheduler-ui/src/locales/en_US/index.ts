@@ -32,6 +32,7 @@ import theme from '@/locales/en_US/theme'
 import user_dropdown from '@/locales/en_US/user-dropdown'
 import ui_setting from '@/locales/en_US/ui_setting'
 import about from '@/locales/en_US/about'
+import data_api from '@/locales/en_US/data-api'
 
 export default {
   login,
@@ -50,5 +51,6 @@ export default {
   datasource,
   crontab,
   ui_setting,
-  input_search
+  input_search,
+  data_api
 }

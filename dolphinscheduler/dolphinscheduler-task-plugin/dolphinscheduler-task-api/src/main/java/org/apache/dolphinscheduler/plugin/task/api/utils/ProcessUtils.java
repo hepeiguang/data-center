@@ -45,15 +45,18 @@ import org.apache.commons.lang3.SystemUtils;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.ServiceLoader;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
@@ -117,6 +120,11 @@ public final class ProcessUtils {
                 return true;
             }
 
+            // Windows: pstree/kill -N unavailable; taskkill + command-line orphan sweep
+            if (SystemUtils.IS_OS_WINDOWS) {
+                return killProcessTreeWindows(processId, request);
+            }
+
             // Get all child processes
             List<Integer> pidList = getPidList(processId);
 
@@ -148,6 +156,147 @@ public final class ProcessUtils {
         } catch (Exception e) {
             log.error("Kill task instance error, processId: {}", request.getProcessId(), e);
             return false;
+        }
+    }
+
+    /**
+     * Kill a process tree on Windows.
+     * <p>
+     * Git-Bash/MSYS often breaks Windows parent/child links, so SeaTunnel java may survive
+     * {@code taskkill /T} on the wrapper bash. After taskkill, sweep all processes whose
+     * command line contains the task {@code executePath} (or taskAppId).
+     */
+    private static boolean killProcessTreeWindows(int processId, TaskExecutionContext request) {
+        Optional<ProcessHandle> rootOpt = ProcessHandle.of(processId);
+        List<ProcessHandle> snapshot = new ArrayList<>();
+        if (rootOpt.isPresent()) {
+            ProcessHandle root = rootOpt.get();
+            try (Stream<ProcessHandle> descendants = root.descendants()) {
+                snapshot.addAll(descendants.collect(Collectors.toList()));
+            }
+            snapshot.add(root);
+            snapshot.sort(Comparator.comparingLong(ProcessHandle::pid).reversed());
+        }
+
+        log.info("Windows killing process tree for rootPid={}, handleSnapshot={}", processId, snapshot.size());
+
+        try {
+            String cmd = String.format("cmd.exe /c taskkill /F /T /PID %d", processId);
+            log.info("Executing: {}", cmd);
+            OSUtils.exeCmd(cmd);
+        } catch (Exception e) {
+            log.warn("taskkill returned error for processId={} (may already be gone): {}", processId, e.getMessage());
+        }
+
+        for (ProcessHandle ph : snapshot) {
+            if (ph.isAlive()) {
+                try {
+                    ph.destroyForcibly();
+                } catch (Exception e) {
+                    log.warn("destroyForcibly() failed for pid={}", ph.pid(), e);
+                }
+            }
+        }
+
+        // Orphan sweep: match execute path / taskAppId in command line (Git-Bash reparent gap)
+        final String marker;
+        if (StringUtils.isNotBlank(request.getExecutePath())) {
+            marker = request.getExecutePath();
+        } else if (StringUtils.isNotBlank(request.getTaskAppId())) {
+            marker = request.getTaskAppId();
+        } else {
+            marker = null;
+        }
+        if (marker != null) {
+            log.info("Windows orphan sweep by command-line marker: {}", marker);
+            destroyWindowsOrphansByMarker(marker);
+        }
+
+        long timeoutMillis = TimeUnit.SECONDS.toMillis(SHELL_KILL_WAIT_TIMEOUT);
+        long start = System.currentTimeMillis();
+        while (System.currentTimeMillis() - start < timeoutMillis) {
+            boolean rootAlive = ProcessHandle.of(processId).map(ProcessHandle::isAlive).orElse(false);
+            boolean snapAlive = snapshot.stream().anyMatch(ProcessHandle::isAlive);
+            boolean orphanAlive = marker != null && anyWindowsOrphanAlive(marker);
+            if (!rootAlive && !snapAlive && !orphanAlive) {
+                log.info("Successfully killed Windows process tree, processId: {}", processId);
+                return true;
+            }
+            if (marker != null && orphanAlive) {
+                destroyWindowsOrphansByMarker(marker);
+            }
+            ThreadUtils.sleep(SLEEP_TIME_MILLIS);
+        }
+
+        boolean rootAlive = ProcessHandle.of(processId).map(ProcessHandle::isAlive).orElse(false);
+        List<Long> alive = snapshot.stream().filter(ProcessHandle::isAlive).map(ProcessHandle::pid)
+                .collect(Collectors.toList());
+        boolean orphanAlive = marker != null && anyWindowsOrphanAlive(marker);
+        if (!rootAlive && alive.isEmpty() && !orphanAlive) {
+            log.info("Successfully killed Windows process tree, processId: {}", processId);
+            return true;
+        }
+        log.error("Failed to kill Windows process tree, processId: {}, rootAlive={}, snapshotAlive={}, orphanAlive={}",
+                processId, rootAlive, alive, orphanAlive);
+        return false;
+    }
+
+    /**
+     * Windows: {@link ProcessHandle.Info#commandLine()} is often empty; use WMI via PowerShell.
+     */
+    private static void destroyWindowsOrphansByMarker(String marker) {
+        runWindowsOrphanPowerShell(marker, true);
+    }
+
+    private static boolean anyWindowsOrphanAlive(String marker) {
+        String out = runWindowsOrphanPowerShell(marker, false);
+        return StringUtils.isNotBlank(out) && out.chars().anyMatch(Character::isDigit);
+    }
+
+    /**
+     * @param kill when true, Stop-Process matching CommandLine; otherwise only print ProcessIds
+     * @return powershell stdout (PIDs when listing)
+     */
+    private static String runWindowsOrphanPowerShell(String marker, boolean kill) {
+        if (StringUtils.isBlank(marker)) {
+            return "";
+        }
+        String fwd = marker.replace('\\', '/').replace("'", "''");
+        String bak = marker.replace('/', '\\').replace("'", "''");
+        String action = kill
+                ? "Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue; $_.ProcessId"
+                : "$_.ProcessId";
+        String script = "$m1='" + fwd + "';$m2='" + bak + "';"
+                + "Get-CimInstance Win32_Process | Where-Object {"
+                + " $_.CommandLine -and ("
+                + " $_.CommandLine.Contains($m1) -or $_.CommandLine.Contains($m2)"
+                + ") -and $_.ProcessId -ne " + ProcessHandle.current().pid()
+                + " } | ForEach-Object { " + action + " }";
+        try {
+            ProcessBuilder pb = new ProcessBuilder("powershell.exe", "-NoProfile", "-NonInteractive", "-Command",
+                    script);
+            pb.redirectErrorStream(true);
+            Process p = pb.start();
+            StringBuilder sb = new StringBuilder();
+            try (java.io.BufferedReader reader =
+                    new java.io.BufferedReader(new java.io.InputStreamReader(p.getInputStream()))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    sb.append(line).append('\n');
+                    if (kill && StringUtils.isNotBlank(line)) {
+                        log.info("Windows orphan {} pid={}", kill ? "killed" : "found", line.trim());
+                    }
+                }
+            }
+            boolean finished = p.waitFor(SHELL_KILL_WAIT_TIMEOUT, TimeUnit.SECONDS);
+            if (!finished) {
+                p.destroyForcibly();
+                log.warn("Windows orphan PowerShell timed out for marker={}", marker);
+            }
+            return sb.toString();
+        } catch (Exception e) {
+            log.warn("Windows orphan PowerShell failed for marker={}: {}", marker, e.getMessage());
+            return "";
         }
     }
 

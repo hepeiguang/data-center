@@ -29,7 +29,6 @@ import { ref } from 'vue'
 import * as proto from 'protobufjs'
 import {
   defaultConnectorParams,
-  resolveSeaTunnelComputeExecuteType,
   type ConnectorKind
 } from '@/views/projects/workflow/components/dag/seatunnel-compute-utils'
 
@@ -258,8 +257,7 @@ export function formatParams(data: INodeData): {
     taskParams.rawScript = data.rawScript
     ;(taskParams as any).stComputeGraph = (data as any).stComputeGraph
     ;(taskParams as any).relation = (data as any).relation
-    // UDP / STREAMING graph → DS realtime task
-    data.taskExecuteType = resolveSeaTunnelComputeExecuteType(taskParams)
+    // taskExecuteType is set by user on the form (BATCH / STREAM); do not auto-override
   }
 
   if (

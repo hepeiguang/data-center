@@ -942,6 +942,11 @@ export default {
     st_param_output: 'Outputs (for downstream)',
     st_param_process: 'Process options (this connector)',
     st_param_fill_example: 'Fill example JSON',
+    st_execute_type: 'Execute type',
+    st_execute_type_batch: 'Batch task',
+    st_execute_type_stream: 'Realtime task (STREAM)',
+    st_execute_type_tip:
+      'Prefer realtime for unbounded sources (e.g. UDP); use batch for FakeSource-style jobs. You can override.',
     st_udp_udf_title: 'UDP decode UDF',
     st_udp_udf_hint:
       'Pick parseMode; for js / offset_table select an uploaded udfName under SEATUNNEL_HOME/udf/udp-codec.',

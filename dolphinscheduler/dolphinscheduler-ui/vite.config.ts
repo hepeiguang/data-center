@@ -48,6 +48,19 @@ export default defineConfig({
       '/dolphinscheduler': {
         target: loadEnv('development', './').VITE_APP_DEV_WEB_URL,
         changeOrigin: true
+      },
+      // data-api microservice (magic-api console + admin/gateway)
+      '/magic': {
+        target:
+          loadEnv('development', './').VITE_APP_DATA_API_URL ||
+          'http://127.0.0.1:12346',
+        changeOrigin: true
+      },
+      '/data-api': {
+        target:
+          loadEnv('development', './').VITE_APP_DATA_API_URL ||
+          'http://127.0.0.1:12346',
+        changeOrigin: true
       }
     }
   }

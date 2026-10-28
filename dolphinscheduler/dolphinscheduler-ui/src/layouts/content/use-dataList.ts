@@ -44,7 +44,8 @@ import {
   SafetyOutlined,
   GroupOutlined,
   CloudServerOutlined,
-  ClusterOutlined
+  ClusterOutlined,
+  ApiOutlined
 } from '@vicons/antd'
 import { useRoute } from 'vue-router'
 import { useUserStore } from '@/store/user/user'
@@ -195,6 +196,33 @@ export function useDataList() {
         key: 'datasource',
         icon: renderIcon(DatabaseOutlined),
         children: []
+      },
+      {
+        label: () => h(NEllipsis, null, { default: () => t('menu.data_api') }),
+        key: 'dataservice',
+        icon: renderIcon(ApiOutlined),
+        children: [
+          {
+            label: t('menu.data_api_studio'),
+            key: '/dataservice/studio',
+            icon: renderIcon(ApiOutlined)
+          },
+          {
+            label: t('menu.data_api_token'),
+            key: '/dataservice/token',
+            icon: renderIcon(SafetyOutlined)
+          },
+          {
+            label: t('menu.data_api_datasources'),
+            key: '/dataservice/datasources',
+            icon: renderIcon(DatabaseOutlined)
+          },
+          {
+            label: t('menu.data_api_acl'),
+            key: '/dataservice/acl',
+            icon: renderIcon(SafetyOutlined)
+          }
+        ]
       },
       {
         label: () => h(NEllipsis, null, { default: () => t('menu.monitor') }),

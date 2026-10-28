@@ -1,0 +1,159 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+server:
+  port: 12346
+  servlet:
+    context-path: /
+  compression:
+    enabled: true
+
+spring:
+  application:
+    name: data-api-server
+  task:
+    scheduling:
+      pool:
+        # health checks can block ~10s per datasource; keep them off the refresh thread
+        size: 4
+  profiles:
+    active: postgresql
+  jackson:
+    time-zone: UTC
+    date-format: "yyyy-MM-dd HH:mm:ss"
+  banner:
+    charset: UTF-8
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://127.0.0.1:5432/dolphinscheduler
+    username: root
+    password: root
+    hikari:
+      connection-test-query: select 1
+      pool-name: DataApiMeta
+  mvc:
+    pathmatch:
+      matching-strategy: ANT_PATH_MATCHER
+
+# Same metadata DB as api-server — override via profile / env
+mybatis-plus:
+  mapper-locations: classpath:org/apache/dolphinscheduler/dao/mapper/*Mapper.xml
+  type-aliases-package: org.apache.dolphinscheduler.dao.entity
+  configuration:
+    cache-enabled: false
+    call-setters-on-nulls: true
+    map-underscore-to-camel-case: true
+    jdbc-type-for-null: NULL
+  global-config:
+    db-config:
+      id-type: auto
+    banner: false
+
+magic-api:
+  web: /magic/web
+  prefix: /data-api/gateway
+  resource:
+    # file storage avoids magic-api requiring a named JDBC resource bean at boot
+    type: file
+    location: ./data/magic-api
+    readonly: false
+  sql-column-case: camel
+  # CORS is terminated by nginx or WebCorsConfiguration allow-list, never wide open here
+  support-cross-domain: false
+  auto-import-module: db
+  show-sql: true
+  throw-exception: false
+
+data-api:
+  max-rows: 1000
+  datasource-refresh-ms: 60000
+  load-db-types: DORIS,MYSQL
+  pool-maximum-pool-size: 5
+  pool-minimum-idle: 1
+  query-timeout-seconds: 60
+  reject-dml: true
+  # off | optional | enforce
+  acl-mode: optional
+  acl-cache-ms: 10000
+  invoke-log-enabled: true
+  invoke-log-queue-size: 5000
+  read-only-connections: true
+  # Per-dbType session init SQL (Hikari runs it on every new connection).
+  # Defaults: MYSQL -> max_execution_time (ms), DORIS -> query_timeout (s), POSTGRESQL -> statement_timeout (ms).
+  # Override a type here; an empty value disables the default for that type.
+  # session-init-sql:
+  #   DORIS: SET query_timeout = {timeoutSeconds}
+  # browser origins allowed to call /data-api/**; empty = same-origin only
+  cors-allowed-origins: []
+  app-auth-enabled: true
+  rate-limit-permits-per-minute: 600
+  rate-limit-burst: 120
+  response-max-bytes: 2097152
+  mask-fields: password,passwd,pwd,secret,appsecret,token,phone,idcard,id_card
+  datasource-health-enabled: true
+  datasource-health-interval-ms: 60000
+  audit-retention-days: 30
+  console-token-ttl-minutes: 480
+  console-token-max: 1000
+  open-api-public: false
+  open-api-server-url: ""
+  lineage-enabled: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
+
+---
+spring:
+  config:
+    activate:
+      on-profile: mysql
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://127.0.0.1:3306/dolphinscheduler?useUnicode=true&characterEncoding=UTF-8&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    username: root
+    password: root
+
+---
+spring:
+  config:
+    activate:
+      on-profile: postgresql
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://127.0.0.1:5432/dolphinscheduler
+    username: root
+    password: root
+
+---
+spring:
+  config:
+    activate:
+      on-profile: h2
+  datasource:
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:file:D:/HPG/workspace/LHYF/data/dsdb;MODE=MySQL;AUTO_SERVER=TRUE;DB_CLOSE_DELAY=-1;DATABASE_TO_LOWER=true
+    username: sa
+    password: ""
+    hikari:
+      connection-test-query: select 1
+      pool-name: DataApiMeta

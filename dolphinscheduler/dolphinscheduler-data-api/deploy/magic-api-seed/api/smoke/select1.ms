@@ -1,0 +1,3 @@
+{"id":"smoke_select1","method":"GET","path":"/select1","groupId":"smoke_group","name":"select1","createTime":1729770000000,"updateTime":1729770000000,"lock":null,"createBy":"admin","updateBy":"admin","parameters":[],"options":[],"requestBody":"","headers":[],"paths":[],"responseBody":null,"description":"smoke select 1 on default meta DS","requestBodyDefinition":null,"responseBodyDefinition":null}
+================================
+return db.select('select 1 as n')

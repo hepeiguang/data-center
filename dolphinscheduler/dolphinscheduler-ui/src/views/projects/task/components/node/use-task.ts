@@ -19,7 +19,6 @@ import nodes from './tasks'
 import getElementByJson from '@/components/form/get-elements-by-json'
 import { useTaskNodeStore } from '@/store/project/task-node'
 import { TASK_TYPES_MAP } from '@/store/project/task-type'
-import { resolveSeaTunnelComputeExecuteType } from '@/views/projects/workflow/components/dag/seatunnel-compute-utils'
 import type {
   EditWorkflowDefinition,
   FormRules,
@@ -71,10 +70,9 @@ export function useTask({
   model.preTasks = taskStore.getPreTasks
   model.name = taskStore.getName
   model.taskExecuteType =
-    TASK_TYPES_MAP[taskType]?.taskExecuteType || 'BATCH'
-  if (taskType === 'SEATUNNEL_COMPUTE') {
-    model.taskExecuteType = resolveSeaTunnelComputeExecuteType(model as any)
-  }
+    data.taskExecuteType ||
+    TASK_TYPES_MAP[taskType]?.taskExecuteType ||
+    'BATCH'
 
   const getElements = () => {
     const { rules, elements } = getElementByJson(jsonRef.value, model)

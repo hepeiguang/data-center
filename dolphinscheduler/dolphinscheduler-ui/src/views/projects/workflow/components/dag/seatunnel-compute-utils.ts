@@ -133,62 +133,6 @@ export function normalizeSeaTunnelEnv(
   return next
 }
 
-/** Unbounded sources that must run as DS STREAM + SeaTunnel STREAMING. */
-export function isRealtimeSeaTunnelPlugin(pluginName?: string): boolean {
-  const p = String(pluginName || '').toUpperCase()
-  return p === 'UDP' || p === 'UDPMULTICAST' || p === 'SOCKET'
-}
-
-export function isRealtimeSeaTunnelCompute(
-  env?: Record<string, any>,
-  nodes?: Array<{ pluginName?: string; type?: string }>
-): boolean {
-  if (
-    env &&
-    String(env['job.mode'] || env.jobMode || '')
-      .toUpperCase()
-      .includes('STREAM')
-  ) {
-    return true
-  }
-  return (nodes || []).some(
-    (n) =>
-      isRealtimeSeaTunnelPlugin(n.pluginName) &&
-      String(n.type || 'SOURCE').toUpperCase() === 'SOURCE'
-  )
-}
-
-/** Force STREAMING + checkpoint when graph has realtime sources (e.g. UDP). */
-export function applyRealtimeEnvIfNeeded(
-  env: Record<string, any>,
-  nodes: Array<{ pluginName?: string; type?: string }>
-): Record<string, any> {
-  const next = normalizeSeaTunnelEnv(env)
-  if (!isRealtimeSeaTunnelCompute(next, nodes)) return next
-  next['job.mode'] = 'STREAMING'
-  if (next['checkpoint.interval'] == null) next['checkpoint.interval'] = 3000
-  return next
-}
-
-export function resolveSeaTunnelComputeExecuteType(
-  taskParams?: Record<string, any>
-): 'STREAM' | 'BATCH' {
-  if (!taskParams) return 'BATCH'
-  try {
-    const g = parseStComputeGraph(taskParams)
-    if (isRealtimeSeaTunnelCompute(g.env, g.nodes)) return 'STREAM'
-  } catch {
-    /* ignore */
-  }
-  if (
-    String(taskParams.rawScript || '').includes('"job.mode": "STREAMING"') ||
-    String(taskParams.rawScript || '').includes('"job.mode":"STREAMING"')
-  ) {
-    return 'STREAM'
-  }
-  return 'BATCH'
-}
-
 /** SeaTunnel stream / table label: letters, digits, underscore. */
 export function toSeaTunnelStreamName(
   name: string | undefined,
@@ -438,7 +382,6 @@ export function assembleStockSeaTunnelConfig(
   nodes: StComputeNode[],
   connects?: StComputeConnect[]
 ): Record<string, any> {
-  env = applyRealtimeEnvIfNeeded(env, nodes)
   const source: Record<string, any>[] = []
   const transform: Record<string, any>[] = []
   const sink: Record<string, any>[] = []

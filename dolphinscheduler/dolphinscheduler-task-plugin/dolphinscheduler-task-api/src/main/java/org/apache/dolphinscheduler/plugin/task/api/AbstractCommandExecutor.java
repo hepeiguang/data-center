@@ -266,18 +266,30 @@ public abstract class AbstractCommandExecutor {
      * @return process id
      */
     private int getProcessId(Process process) {
-        int processId = 0;
+        if (process == null) {
+            return 0;
+        }
+
+        // JDK 9+: works on Windows/Linux/macOS (Windows ProcessImpl has no "pid" field)
+        try {
+            long pid = process.pid();
+            if (pid > 0 && pid <= Integer.MAX_VALUE) {
+                return (int) pid;
+            }
+        } catch (UnsupportedOperationException e) {
+            log.warn("Process.pid() unsupported, fallback to reflection: {}", e.getMessage());
+        } catch (Exception e) {
+            log.warn("Process.pid() failed, fallback to reflection", e);
+        }
 
         try {
             Field f = process.getClass().getDeclaredField(TaskConstants.PID);
             f.setAccessible(true);
-
-            processId = f.getInt(process);
+            return f.getInt(process);
         } catch (Exception e) {
             log.error("Get task pid failed", e);
+            return 0;
         }
-
-        return processId;
     }
 
 }
