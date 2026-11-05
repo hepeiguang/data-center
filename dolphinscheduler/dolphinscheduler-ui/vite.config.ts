@@ -61,6 +61,13 @@ export default defineConfig({
           loadEnv('development', './').VITE_APP_DATA_API_URL ||
           'http://127.0.0.1:12346',
         changeOrigin: true
+      },
+      // data-asset service (asset catalog, browsing, lineage)
+      '/data-asset': {
+        target:
+          loadEnv('development', './').VITE_APP_DATA_ASSET_URL ||
+          'http://127.0.0.1:12347',
+        changeOrigin: true
       }
     }
   }

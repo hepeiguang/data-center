@@ -16,7 +16,7 @@
  */
 
 import { reactive, h } from 'vue'
-import { NEllipsis, NIcon } from 'naive-ui'
+import { NIcon } from 'naive-ui'
 import { useI18n } from 'vue-i18n'
 import {
   HomeOutlined,
@@ -76,29 +76,17 @@ export function useDataList() {
     timezoneList.map((item) => ({ label: item, value: item }))
 
   const state = reactive({
-    isShowSide: false,
     localesOptions,
     timezoneOptions: timezoneOptions(),
     userDropdownOptions: [],
-    menuOptions: [],
-    headerMenuOptions: [],
-    sideMenuOptions: []
+    menuOptions: []
   })
 
   const changeMenuOption = (state: any) => {
     const projectCode = route.params.projectCode || ''
     const projectName = route.query.projectName || ''
-    state.menuOptions = [
-      {
-        label: () => h(NEllipsis, null, { default: () => t('menu.home') }),
-        key: 'home',
-        icon: renderIcon(HomeOutlined)
-      },
-      {
-        label: () => h(NEllipsis, null, { default: () => t('menu.project') }),
-        key: 'projects',
-        icon: renderIcon(ProfileOutlined),
-        children: [
+    const projectMenuOptions = projectCode
+      ? [
           {
             label: t('menu.project') + (projectName ? `[${projectName}]` : ''),
             key: `/projects/${projectCode}`,
@@ -162,9 +150,29 @@ export function useDataList() {
             ]
           }
         ]
+      : []
+
+    state.menuOptions = [
+      {
+        label: t('menu.home'),
+        key: '/home',
+        icon: renderIcon(HomeOutlined)
       },
       {
-        label: () => h(NEllipsis, null, { default: () => t('menu.resources') }),
+        label: t('menu.project'),
+        key: 'projects',
+        icon: renderIcon(ProfileOutlined),
+        children: [
+          {
+            label: t('menu.project_list'),
+            key: '/projects/list',
+            icon: renderIcon(AppstoreOutlined)
+          },
+          ...projectMenuOptions
+        ]
+      },
+      {
+        label: t('menu.resources'),
         key: 'resource',
         icon: renderIcon(FolderOutlined),
         children: [
@@ -191,14 +199,12 @@ export function useDataList() {
         ]
       },
       {
-        label: () =>
-          h(NEllipsis, null, { default: () => t('menu.datasource') }),
-        key: 'datasource',
-        icon: renderIcon(DatabaseOutlined),
-        children: []
+        label: t('menu.datasource'),
+        key: '/datasource',
+        icon: renderIcon(DatabaseOutlined)
       },
       {
-        label: () => h(NEllipsis, null, { default: () => t('menu.data_api') }),
+        label: t('menu.data_api'),
         key: 'dataservice',
         icon: renderIcon(ApiOutlined),
         children: [
@@ -225,7 +231,29 @@ export function useDataList() {
         ]
       },
       {
-        label: () => h(NEllipsis, null, { default: () => t('menu.monitor') }),
+        label: t('menu.data_asset'),
+        key: 'data-asset',
+        icon: renderIcon(DatabaseOutlined),
+        children: [
+          {
+            label: t('menu.data_asset_catalog'),
+            key: '/asset/catalog',
+            icon: renderIcon(AppstoreOutlined)
+          },
+          {
+            label: t('menu.data_asset_lineage'),
+            key: '/asset/lineage',
+            icon: renderIcon(PartitionOutlined)
+          },
+          {
+            label: t('menu.data_asset_governance'),
+            key: '/asset/governance',
+            icon: renderIcon(SafetyOutlined)
+          }
+        ]
+      },
+      {
+        label: t('menu.monitor'),
         key: 'monitor',
         icon: renderIcon(DesktopOutlined),
         children: [
@@ -270,7 +298,7 @@ export function useDataList() {
         ]
       },
       {
-        label: () => h(NEllipsis, null, { default: () => t('menu.security') }),
+        label: t('menu.security'),
         key: 'security',
         icon: renderIcon(SafetyCertificateOutlined),
         children:
@@ -338,18 +366,6 @@ export function useDataList() {
     ]
   }
 
-  const changeHeaderMenuOptions = (state: any) => {
-    state.headerMenuOptions = state.menuOptions.map(
-      (item: { label: string; key: string; icon: any }) => {
-        return {
-          label: item.label,
-          key: item.key,
-          icon: item.icon
-        }
-      }
-    )
-  }
-
   const changeUserDropdown = (state: any) => {
     state.userDropdownOptions = [
       {
@@ -378,7 +394,6 @@ export function useDataList() {
 
   return {
     state,
-    changeHeaderMenuOptions,
     changeMenuOption,
     changeUserDropdown
   }

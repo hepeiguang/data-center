@@ -23,8 +23,9 @@ export function useMenuClick() {
   const router: Router = useRouter()
 
   const handleMenuClick = (key: string, menuOption: MenuOption) => {
+    if (!key.startsWith('/')) return
     router.push({
-      path: `${key}`,
+      path: key,
       query: menuOption.payload ? (menuOption.payload as LocationQueryRaw) : {}
     })
   }

@@ -81,7 +81,9 @@ magic-api:
 data-api:
   max-rows: 1000
   datasource-refresh-ms: 60000
-  load-db-types: DORIS,MYSQL
+  # POSTGRESQL is loaded because the agriculture sample source (agri_sat) lives on PG;
+  # the osint MySQL was retired when that host was consolidated onto PostgreSQL only.
+  load-db-types: DORIS,MYSQL,POSTGRESQL
   pool-maximum-pool-size: 5
   pool-minimum-idle: 1
   query-timeout-seconds: 60

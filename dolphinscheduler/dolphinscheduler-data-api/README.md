@@ -8,7 +8,7 @@ DolphinScheduler 体系内的数据服务微服务（Phase 1）：基于 **magic
 |------|------|
 | 元数据库 | 与 api-server 同一 `spring.datasource` |
 | Token | Header `token`，校验 `t_ds_access_token` / `t_ds_user` |
-| 源中心 | 读取 `t_ds_datasource`，Doris/MySQL 注册到 magic 动态数据源 |
+| 源中心 | 读取 `t_ds_datasource`，按 `data-api.load-db-types`（默认 `DORIS,MYSQL,POSTGRESQL`）注册到 magic 动态数据源 |
 | 插件 | 复用 `DorisDataSourceProcessor` 等 |
 
 独立端口默认 **12346**，不参与 Master/Worker 调度。
@@ -18,18 +18,26 @@ DolphinScheduler 体系内的数据服务微服务（Phase 1）：基于 **magic
 1. 元库执行 DDL（任选其一）：
    - `src/main/resources/sql/da_tables_mysql.sql`
    - `src/main/resources/sql/da_tables_postgresql.sql`
-2. 在 DS 源中心登记 **DORIS**（或 MYSQL）数据源。
+2. 在 DS 源中心登记 **POSTGRESQL / DORIS / MYSQL** 数据源。本机演示用的是 `agri_sat`（POSTGRESQL，库 `agri_sat`，只读账号 `data_asset_ro`）；原 `osint_mysql` 已随线上机器收敛为"只留 PostgreSQL"而删除（DS 软删，可重建）。
 3. 在 DS 安全中心为用户创建 **Access Token**。
-4. 修改 `application.yaml`（或 `--spring.profiles.active=mysql`）指向真实元库。
+4. 指定元库 profile：本机 H2 用 `h2`；生产 PostgreSQL 用 `postgresql`（需先部署 PG 并改连接串）。
 
 ## 构建与运行
 
 ```bash
 cd dolphinscheduler
 ./mvnw -pl dolphinscheduler-data-api -am -DskipTests -Dspotless.skip=true package
+# 本机/单机（H2，与 DS standalone 共用一个库文件）
 java -jar dolphinscheduler-data-api/target/dolphinscheduler-data-api-3.4.3.jar \
-  --spring.profiles.active=mysql
+  --spring.profiles.active=h2
+
+# 生产（需先部署 PostgreSQL 并改 application.yaml 中的连接串）
+java -jar dolphinscheduler-data-api/target/dolphinscheduler-data-api-3.4.3.jar \
+  --spring.profiles.active=postgresql
 ```
+
+> 注意：`application.yaml` 的默认 profile 是 `postgresql`，但当前环境没有 PG 实例；
+> 不显式指定 `h2` 会尝试连接 `127.0.0.1:5432` 并启动失败。
 
 IDE 直接运行主类：`org.apache.dolphinscheduler.dataapi.DataApiServer`
 
@@ -50,12 +58,36 @@ IDE 直接运行主类：`org.apache.dolphinscheduler.dataapi.DataApiServer`
 | `GET/POST /data-api/apps/**` | 外部应用凭证（app_key/secret） |
 | `GET /data-api/datasources/health` | 数据源探活结果 |
 
-数据源 key 规则：优先复用源中心 **名称**（清洗为合法标识符，如 `osint_mysql`）；重名/非法名时追加 `_{id}`；完全无法清洗时回退 `{dbType}_{id}`。  
+数据源 key 规则：优先复用源中心 **名称**（清洗为合法标识符，如 `agri_sat`）；重名/非法名时追加 `_{id}`；完全无法清洗时回退 `{dbType}_{id}`。  
 控制台显示名：`{名称} [{TYPE}#{id} / {database}]`，便于与源中心对照。
 
 ```js
-return db.osint_mysql.select('select * from demo limit 10');
+return db.agri_sat.select('select scene_id, cloud_cover_pct from ods_satellite_scene limit 10');
 ```
+
+### 示例接口（2026-11-05 起改为 PostgreSQL `agri_sat`）
+
+| 方法 | gateway 路径 | 说明 |
+|---|---|---|
+| GET | `/smoke/select1` | 只读连通性探针 |
+| GET | `/smoke/tables` | 列出 `public` 下 7 张表与列数 |
+| GET | `/smoke/query?sql=...` | 只读 SELECT 透传（非 select 直接 400） |
+| GET | `/agri/scenes` | 卫星场景分页：`regionId/satelliteId/maxCloudCover/from/to` |
+| GET | `/agri/crop-growth?region=R001&crop=CORN` | 长势时间序列 + P10/P90 参考带（缺 region 返回 400） |
+| GET | `/agri/health?region=R001` | 分区健康度 + 等级面积分布 |
+
+脚本文件同时放两处：`data/magic-api/api/`（运行时存储）与 `deploy/magic-api-seed/api/`（仓库里的版本源）。两者由同一生成器维护：
+
+```bash
+node scripts/gen-agri-apis.mjs        # 生成/重生成，写两处目录
+node scripts/verify-agri-apis.mjs     # 登录 DS -> reload -> 逐个走网关实测（9 正例 + 2 个 400 守卫）
+node scripts/dump-magic.mjs           # 打印每个 .ms 的脚本正文
+```
+
+> 注意：`.ms` 头部 JSON 里参数的 `dataType` 必须落在 magic 的 `DataType` 枚举内
+> （`String/Integer/Long/Double/Float/Short/Byte/Boolean/Date/Array/Object/Any/MultipartFile(s)`，**没有 `Number`**）。
+> 写错会让整个资源加载在启动时抛 NPE，**所有** gateway 路由一起变 404，而不只是那一个接口——
+> 生成器里已加白名单校验。新增分组目录的文件不会被 `/magic/web/reload` 识别（只重扫已知目录），需要重启 data-api。
 
 调用业务 API 时请携带与 DS 相同的 Header：`token: <access-token>`。
 
@@ -111,6 +143,12 @@ return db.osint_mysql.select('select * from demo limit 10');
   本机用 `D:\HPG\workspace\LHYF\tools\jdk-11\jdk-11.0.2` 启动。
 - 本模块未打进 `dolphinscheduler-dist`，也不由 DS standalone 脚本拉起，需单独 `java -jar` 启动。
 - `magic-api` 资源为**本地文件存储**（`./data/magic-api`），多实例部署时各自一份，需改为共享存储或数据库存储。
+
+## 部署形态
+
+- 单容器 Docker（演示/一体化）：[`deploy/all-in-one/README.md`](../../deploy/all-in-one/README.md)
+- 单机最小化（本机）：[`deploy/local/README.md`](../../deploy/local/README.md)
+- 双实例 + Nginx（生产）：[`deploy/README.md`](deploy/README.md)
 
 ## 集群与网关
 

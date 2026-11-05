@@ -91,3 +91,27 @@ export function listDataApiPublishedApis(headers: AuthHeaders) {
     .get('/acl/apis')
     .then((r) => r.data)
 }
+
+export function listDataApiReleases(headers: AuthHeaders, apiPath?: string) {
+  return client(headers)
+    .get('/releases', { params: apiPath ? { apiPath } : {} })
+    .then((r) => r.data)
+}
+
+export function snapshotDataApiRelease(headers: AuthHeaders, remark: string) {
+  return client(headers)
+    .post('/releases/snapshot', { remark })
+    .then((r) => r.data)
+}
+
+export function rollbackDataApiRelease(headers: AuthHeaders, id: number) {
+  return client(headers)
+    .post(`/releases/${id}/rollback`)
+    .then((r) => r.data)
+}
+
+export function offlineDataApiRelease(headers: AuthHeaders, id: number) {
+  return client(headers)
+    .post(`/releases/${id}/offline`)
+    .then((r) => r.data)
+}

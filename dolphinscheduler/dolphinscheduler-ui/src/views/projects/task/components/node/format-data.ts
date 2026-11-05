@@ -120,6 +120,26 @@ export function formatParams(data: INodeData): {
     taskParams.socketTimeout = data.socketTimeout
   }
 
+  if (data.taskType === 'OPENMETADATA') {
+    taskParams.openMetadataUrl = data.openMetadataUrl
+    taskParams.token = data.token
+    taskParams.fromFqn = data.fromFqn
+    taskParams.toFqn = data.toFqn
+    taskParams.fromType = data.fromType || 'table'
+    taskParams.toType = data.toType || 'table'
+    taskParams.sql = data.sql
+    taskParams.seatunnelConfig = data.seatunnelConfig
+    taskParams.parseSql = data.parseSql !== false
+    taskParams.description = data.edgeDescription
+    if (data.columnsLineage) {
+      try {
+        taskParams.columnsLineage = JSON.parse(data.columnsLineage)
+      } catch {
+        taskParams.columnsLineage = []
+      }
+    }
+  }
+
   if (data.taskType === 'SQOOP') {
     taskParams.jobType = data.isCustomTask ? 'CUSTOM' : 'TEMPLATE'
     taskParams.localParams = data.localParams

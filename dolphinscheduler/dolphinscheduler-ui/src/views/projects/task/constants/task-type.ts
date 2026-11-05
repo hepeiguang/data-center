@@ -26,6 +26,7 @@ export type TaskType =
   | 'DEPENDENT'
   | 'GRPC'
   | 'HTTP'
+  | 'OPENMETADATA'
   | 'DATAX'
   | 'SQOOP'
   | 'CONDITIONS'
@@ -94,6 +95,10 @@ export const TASK_TYPES_MAP = {
   },
   HTTP: {
     alias: 'HTTP'
+  },
+  OPENMETADATA: {
+    alias: 'OpenMetadata',
+    helperLinkDisable: true
   },
   DATAX: {
     alias: 'DataX'

@@ -61,11 +61,11 @@ public class DynamicTaskTypeConfiguration {
             case Constants.TYPE_UNIVERSAL:
                 return universal;
             case Constants.TYPE_DATA_INTEGRATION:
-                return cloud;
-            case Constants.TYPE_CLOUD:
-                return logic;
-            case Constants.TYPE_LOGIC:
                 return dataIntegration;
+            case Constants.TYPE_CLOUD:
+                return cloud;
+            case Constants.TYPE_LOGIC:
+                return logic;
             case Constants.TYPE_OTHER:
                 return other;
             case Constants.TYPE_MACHINE_LEARNING:

@@ -55,6 +55,7 @@ const DataApiDatasources = defineComponent({
       items: [] as DsItem[],
       loadDbTypes: [] as string[],
       maxRows: 0,
+      error: '',
       pingResult: '' as string
     })
 
@@ -64,7 +65,18 @@ const DataApiDatasources = defineComponent({
     })
 
     const applyRes = (res: any) => {
-      state.items = res.items || (res.keys || []).map((key: string) => ({ key }))
+      // 401 answers a bare string, other failures an envelope; neither may look like "no datasources"
+      if (
+        typeof res === 'string' ||
+        (res?.message && !res?.items && !res?.keys)
+      ) {
+        state.error = String(res.message || res)
+        state.items = []
+        return
+      }
+      state.error = ''
+      state.items =
+        res.items || (res.keys || []).map((key: string) => ({ key }))
       state.loadDbTypes = res.loadDbTypes || []
       state.maxRows = res.maxRows || 0
     }
@@ -75,6 +87,7 @@ const DataApiDatasources = defineComponent({
         const res: any = await listDataApiDatasources(authHeaders())
         applyRes(res)
       } catch (e: any) {
+        state.error = e.message || 'load failed'
         message.error(e.message || 'load failed')
       } finally {
         state.loading = false
@@ -88,6 +101,7 @@ const DataApiDatasources = defineComponent({
         applyRes(res)
         message.success(t('data_api.datasources.reload_ok'))
       } catch (e: any) {
+        state.error = e.message || 'reload failed'
         message.error(e.message || 'reload failed')
       } finally {
         state.loading = false
@@ -120,7 +134,7 @@ const DataApiDatasources = defineComponent({
     }
   },
   render() {
-    const { t, items, loadDbTypes, maxRows, loading, pingResult } = this
+    const { t, items, loadDbTypes, maxRows, loading, pingResult, error } = this
     const columns = [
       {
         title: t('data_api.datasources.key'),
@@ -149,7 +163,10 @@ const DataApiDatasources = defineComponent({
         title: t('data_api.datasources.script'),
         key: 'scriptHint',
         render: (row: DsItem) => (
-          <NCode code={row.scriptHint || `db.${row.key}.select('select 1')`} language='js' />
+          <NCode
+            code={row.scriptHint || `db.${row.key}.select('select 1')`}
+            language='js'
+          />
         )
       },
       {
@@ -173,7 +190,9 @@ const DataApiDatasources = defineComponent({
               <NButton type='primary' loading={loading} onClick={this.onReload}>
                 {t('data_api.datasources.reload')}
               </NButton>
-              <NButton onClick={this.load}>{t('data_api.datasources.refresh')}</NButton>
+              <NButton onClick={this.load}>
+                {t('data_api.datasources.refresh')}
+              </NButton>
               <NTag>maxRows={maxRows}</NTag>
               {(loadDbTypes || []).map((tp: string) => (
                 <NTag key={tp} type='success'>
@@ -181,7 +200,12 @@ const DataApiDatasources = defineComponent({
                 </NTag>
               ))}
             </NSpace>
-            <NDataTable loading={loading} columns={columns} data={items || []} />
+            <NDataTable
+              loading={loading}
+              columns={columns}
+              data={items || []}
+            />
+            {error ? <NAlert type='error'>{error}</NAlert> : null}
             {pingResult ? <NAlert type='default'>{pingResult}</NAlert> : null}
           </NSpace>
         </Card>

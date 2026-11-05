@@ -113,7 +113,9 @@ const DataApiAcl = defineComponent({
       }
       try {
         const users: any = await listUser()
-        const list = Array.isArray(users) ? users : users?.totalList || users || []
+        const list = Array.isArray(users)
+          ? users
+          : users?.totalList || users || []
         state.userOptions = list.map((u: any) => ({
           label: `${u.userName} (#${u.id})`,
           value: String(u.id)
@@ -122,7 +124,10 @@ const DataApiAcl = defineComponent({
         /* ignore */
       }
       try {
-        const tokens: any = await queryAccessTokenList({ pageNo: 1, pageSize: 100 })
+        const tokens: any = await queryAccessTokenList({
+          pageNo: 1,
+          pageSize: 100
+        })
         const list = tokens?.totalList || []
         state.tokenOptions = list.map((tk: any) => ({
           label: `${tk.userName || ''} ${String(tk.token).slice(0, 8)}…`,
@@ -214,8 +219,8 @@ const DataApiAcl = defineComponent({
       form.subjectType === 'TOKEN'
         ? tokenOptions
         : form.subjectType === 'USER'
-          ? userOptions
-          : []
+        ? userOptions
+        : []
 
     const columns = [
       { title: 'ID', key: 'id', width: 70 },
@@ -236,7 +241,10 @@ const DataApiAcl = defineComponent({
         key: 'effectName',
         width: 90,
         render: (row: AclRow) => (
-          <NTag type={row.effectName === 'ALLOW' ? 'success' : 'error'} size='small'>
+          <NTag
+            type={row.effectName === 'ALLOW' ? 'success' : 'error'}
+            size='small'
+          >
             {row.effectName}
           </NTag>
         )
@@ -247,7 +255,11 @@ const DataApiAcl = defineComponent({
         key: 'actions',
         width: 100,
         render: (row: AclRow) => (
-          <NButton size='small' type='error' onClick={() => this.onDelete(row.id)}>
+          <NButton
+            size='small'
+            type='error'
+            onClick={() => this.onDelete(row.id)}
+          >
             {t('data_api.acl.delete')}
           </NButton>
         )

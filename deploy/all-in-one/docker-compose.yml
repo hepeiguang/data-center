@@ -1,0 +1,40 @@
+name: data-center
+
+services:
+  all-in-one:
+    image: data-center-all-in-one:3.4.3
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: data-center-all-in-one
+    restart: unless-stopped
+    ports:
+      - "8088:8088"
+      # uncomment for direct debugging (bypassing nginx)
+      # - "12345:12345"
+      # - "12346:12346"
+    environment:
+      TZ: Asia/Shanghai
+    volumes:
+      - ds-data:/opt/ds/data
+      - ds-logs:/opt/ds/logs
+      - api-logs:/opt/data-api/logs
+      - st-checkpoint:/opt/seatunnel/checkpoint
+      - st-logs:/opt/seatunnel/logs
+    shm_size: "256m"
+    stop_grace_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: "8"
+          memory: 16G
+        reservations:
+          cpus: "4"
+          memory: 8G
+
+volumes:
+  ds-data:
+  ds-logs:
+  api-logs:
+  st-checkpoint:
+  st-logs:

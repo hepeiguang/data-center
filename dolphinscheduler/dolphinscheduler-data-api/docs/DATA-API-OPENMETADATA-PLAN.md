@@ -3,12 +3,12 @@
 | 项目 | 内容 |
 |---|---|
 | 文档名称 | 数据服务（magic-api）现状梳理与 OpenMetadata 集成待实施说明 |
-| 版本 | V0.1 |
-| 日期 | 2026-10-27 |
+| 版本 | V0.3（2026-11-05 增补 5.4 服务定义页失败可见性、5.5 数据源切换 PG 与接口重写） |
+| 日期 | 2026-11-05 |
 | 代码基线 | `data-center-mono`，分支 `chore/upgrade-ds-seatunnel`；DS 3.4.3 / SeaTunnel 3.0.0 / magic-api 2.2.2 |
 | 涉及模块 | `dolphinscheduler/dolphinscheduler-data-api`、`dolphinscheduler-ui` 的 `data-api` 视图 |
 | 编写目的 | 说清"现在是什么、跑在哪、怎么和 OpenMetadata 结合、还差什么"；magic-api 结合层的优化项本轮直接落地，OpenMetadata 相关按分期实施 |
-| 证据口径 | 代码为当前工作区实测；运行数据来自本机 H2 元库与 2026-10-26 服务日志；未部署 OpenMetadata，相关内容为方案设计，接口路径以目标版本 OpenAPI 为准 |
+| 证据口径 | 代码为当前工作区实测；运行数据来自本机 H2 元库与 2026-10-26 服务日志；OpenMetadata 已于 2026-10-29 在本机裸装、2026-11-01 升级到 2.1.0-rc1（OpenSearch 3.4.0 单节点），接口路径以目标版本 OpenAPI 为准 |
 
 ---
 
@@ -43,7 +43,25 @@ Nginx 作为统一前置网关；双实例共享 magic 脚本库。全部条目�
 | M25 | `/data-api/openapi.json` | 输出 OpenAPI 3.0.1，包含网关全路径 |
 | M26 | nginx 8088 + 双实例 12346/12347 + systemd/Windows 启动脚本 | `nginx -t` 通过；停掉 12346 后经 8088 连续 5 次仍 200 |
 
-部署与验证步骤见 `deploy/README.md`。仍**未落地**的是 OpenMetadata 本体（P0 起）与 Redis 版严格配额。
+部署与验证步骤见 `deploy/README.md`。OpenMetadata 与 OpenSearch 均已在同一台机器裸装（见“零之三”）；仍**未落地**的是 Redis 版严格配额。
+
+## 零之三、OpenMetadata 本机裸装与升级（2026-10-29 安装 / 2026-11-01 升级）
+
+| 项 | 现状 |
+|---|---|
+| 安装方式 | Windows 原生（无 Docker）：Temurin JRE 21 + OM 2.0.7 |
+| 元数据库 | PostgreSQL 16.15 @ `123.57.2.64:5432/osint`（`osint` 用户） |
+| 搜索组件 | **OpenSearch 3.4.0** 本机单节点（`127.0.0.1:9200`，security 关闭；非 Elasticsearch） |
+| 服务 | `http://127.0.0.1:8585/`，UI 200、`/api/v1/system/health` = OK、admin 登录成功 |
+| 数据 | 远端库已建 202 张 OM 表、17 个种子用户 |
+| 搜索 | 67 个索引模板全部成功；`search/query` 返回 200；单节点 `yellow` 属正常 |
+| 安装说明 | `D:\HPG\workspace\LHYF\openmetadata\README.md`、`D:\HPG\workspace\LHYF\opensearch\README.md`（在仓库外） |
+| 2026-11-01 升级 | 2.0.7 → **2.1.0-rc1**；迁移 2.0.8/2.1.0 已应用；升级前整库快照 `osint_om207_backup` 保留用于回滚 |
+| 列级血缘 | 2.1 需把 `lineageSettings.lineageLayer` 设为 `ColumnLevelLineage`，UI 才渲染列级连线；实测 DS 插件写入的 2 条列映射正常展示 |
+
+搜索已可用；OpenSearch 仅绑本机且关闭安全插件，生产需迁到内网 HTTPS/认证集群。
+DS 与 OM 的账号/Token/角色不同步问题及集成方案见
+`D:\HPG\workspace\LHYF\openmetadata\AUTH-INTEGRATION.md`（统一 IdP、专用服务 Token、DS 项目↔OM Domain 映射、周期对账）。
 
 ## 一、当前代码与运行方式
 
@@ -244,7 +262,7 @@ CREATE TABLE da_api_om_sync (
 
 | # | 风险/待确认 | 影响 | 建议 |
 |---|---|---|---|
-| 1 | 现场无 OM 部署、无 ES 资源 | 方案无法落地 | 先确认机器与内存预算；或采用外部已有 OM |
+| 1 | 本机已有 OM 裸装但无搜索组件；生产落点与 ES 资源未定 | 搜索/目录/血缘检索不可用 | 先确认 ES/OpenSearch 资源，再决定本机补装或迁到远端 Linux |
 | 2 | OM 版本与 Doris 连接器兼容性 | 采不到 Doris 表 | 锁版本 + 先做连通性验证；必要时用 MySQL 协议采集 |
 | 3 | magic 脚本里的表名可能是动态拼接/变量 | 血缘解析错误 | 解析不确定不写边；人工确认入口 |
 | 4 | API 与表是多对多（一个 API 读多表、多 API 读同表） | 血缘膨胀 | 以"API 直接引用表"为准，不做字段级血缘（P2 再评估） |
@@ -314,6 +332,50 @@ CREATE TABLE da_api_om_sync (
 - `POST /acl` 从"纯新增"变为"幂等 upsert"，对原 UI 兼容（返回结构不变）。
 - `/health` 字段 `loadedDatasources` 改为 `loadedDatasourceCount`，**这是一处不兼容变更**；仓库内无调用方，外部若有监控需一并改。
 - 回滚：仅回退 `dolphinscheduler-data-api` 源码与 jar；无数据库结构变更，回滚无需 DDL。
+
+### 5.4 服务定义页失败可见性（2026-11-05，前端）
+
+用户反馈"API 开发切换 tab 报错、整块内容空白"。实测到的接口契约与改动：
+
+| 事实 | 判据 |
+|---|---|
+| magic 控制台接口在**鉴权失败时仍返回 HTTP 200**，包体是 `{code:401, message:"token invalid or expired"}` | `magic-api-2.2.2` 源码 `MagicController.invalidLogin()` → `new JsonBean<>(401, msg)`；本机浏览器 Network 面板 `/magic/web/resource` 200 + 页面告警文案一致 |
+| `/data-api/**` 管理接口在鉴权失败时返回 **HTTP 401 + 纯字符串** `token required`（不是 JSON 包体） | `DataApiAdminController.listDatasources()` 的 `ResponseEntity...body("token required")`；Network 面板 401 |
+| 两者都与 magic 走同一份凭据（DS sessionId 可用 `sessionId`/`token`/`magic-token` 任一 header） | `DsTokenAuthorizationInterceptor.resolveDsUser()`：临时 token → Access Token → sessionId |
+
+改动（只动自有文件，未改开源代码）：
+
+| 文件 | 改动 |
+|---|---|
+| `service/modules/data-api/magic.ts` | `unwrap()` 识别包体 `code=401/403` → 抛 `MAGIC_UNAUTHORIZED`，页面才能命中已有的"登录态无效或已过期"友好提示 |
+| `views/data-api/studio/index.tsx` | 辅助数据（数据源清单、接口选项）与目录刷新失败改为页面内黄色告警（`sideError`/`refreshError`），不再覆盖 `serviceError` 把目录+编辑器整块换成一条告警（即"整块空白"）；新增 `errorTip()` 统一三类错误文案 |
+| `views/data-api/datasources/index.tsx` | 401 字符串/错误包体不再被当成"没有数据源"，改为显式红色告警 |
+| `views/data-api/studio/section-card.tsx`、`studio/index.tsx` | `contentStyle` 改传 CSS 字符串，消除共享 `Card`（声明 `type: String`）的 2 条 Vue prop 校验告警 |
+
+验证：`/dataservice/studio` 在无登录态下刷新，Console 由"2 条 contentStyle 告警 + 裸文案 token invalid or expired"变为"0 条告警 + 登录态提示"；`vue-tsc` 1547 条与基线逐条相同（新增 0 条）；`eslint` 对 `src/views/data-api`、`src/service/modules/data-api` 零问题。有登录态下的"辅助接口失败不再清空页面"只做了代码路径核对，未实测（本机浏览器无法注入会话）。
+
+### 5.5 数据源切到 PostgreSQL 与示例接口重写（2026-11-05）
+
+线上 2C2G 收敛为"只留 PostgreSQL"后，data-api 的业务数据源随之切换。实测判据：
+
+| 事实 | 判据 |
+|---|---|
+| PG 上没有 osint 业务表 | JDBC 实查 `information_schema.tables`：`osint_article/osint_entity/osint_ioc/osint_article_entity` 命中数 **0**；PG 共 4 库，`osint` 是 OM 元库（231 表含 Flowable），`agri_sat` 有 7 张农业样本表（3~8 行/表） |
+| 原 7 个接口全部依赖 MySQL 业务表 | `grep -r db.osint_mysql data/magic-api` → 15 处引用、7 个文件 |
+| PG 驱动可用 | fat jar 内含 `BOOT-INF/lib/postgresql-42.4.4.jar`；loader 已有 `case POSTGRESQL` 会话超时 SQL 分支 |
+| 切换后生效 | DS 源中心 `agri_sat(POSTGRESQL)` 建成（id=2）→ `POST /data-api/datasources/reload` → `active=[agri_sat]`；`ping agri_sat` → `{"ok":true,"result":1}` |
+
+改动：`application.yaml` 的 `load-db-types` 加 `POSTGRESQL`；新增 `scripts/gen-agri-apis.mjs`（生成 6 个接口，实时存储与 `deploy/magic-api-seed` 双写，并校验 `dataType` 白名单）、`scripts/verify-agri-apis.mjs`、`scripts/dump-magic.mjs`；删除 `intel/*` 与 `smoke/osint_*`。
+
+`verify-agri-apis.mjs` 实测（经网关，非直连 magic）：9 个正例全 200 —— `select1` 返回 `[{n:1}]`；`tables` 正好 7 张表带列数；`query` 计数 `scenes=6`；`scenes` `total=6`（含真实中文区域名"阿克苏地区/塔里木盆地北缘"）；`crop-growth?region=R001` `points=2, avgNdvi=0.7195`；`crop-growth?...&crop=CORN` `points=1, avgNdvi=0.738`；`health` 与 `health?region=R002` 有行且带建议。2 个守卫用例按预期 400（`region is required`、`only SELECT allowed`）。输出 `ALL GREEN`。
+
+踩到的坑（已写进 README 与生成器）：
+
+1. **参数 `dataType` 用了 `Number` → magic 的 `DataType` 枚举无此值**，`.ms` 反序列化失败使资源服务启动抛 NPE，**所有** gateway 路由一起 404（连未改动的老接口也挂），日志为 `启动过程中发生异常` + `InvalidFormatException ... "Number"`。枚举合法值：String/Integer/Long/Double/Float/Short/Byte/Boolean/Date/Array/Object/Any/MultipartFile(s)。
+2. **`/magic/web/reload` 只重扫已知目录**：新建目录下的文件不会被发现（组节点在、子节点 0），必须重启 data-api。
+3. `da_api_release` 无删除接口：旧 8 条快照里 7 条指向已删除路径，回滚它们会恢复出绑定 `osint_mysql` 的脚本。已用一次带备注的快照把现状 6 个接口写入账本（现 14 条），历史条目保留未清。
+
+OpenSearch 迁到线上：余量已到位（MySQL 停后 available **1014MB**，OS `-Xmx448m` 预估 ~800MB），但**分发通道全部不可用** —— Docker Hub 直连超时、机上 mirror 对 `opensearchproject/opensearch` 拉取不完成、`artifacts.opensearch.org` tar 包从本机与服务器两侧均 403。`/opt/search/docker-compose.yml` 已写好并通过 `config` 校验，待通道打通即可 `up -d`。
 
 ---
 

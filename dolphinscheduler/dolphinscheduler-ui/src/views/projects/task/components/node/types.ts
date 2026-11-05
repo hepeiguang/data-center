@@ -534,6 +534,16 @@ interface INodeData
   customConfig?: boolean
   mapping_columns?: object[]
   taskExecuteType?: TaskExecuteType
+  openMetadataUrl?: string
+  token?: string
+  fromFqn?: string
+  toFqn?: string
+  fromType?: string
+  toType?: string
+  seatunnelConfig?: string
+  columnsLineage?: string
+  edgeDescription?: string
+  parseSql?: boolean
 }
 
 interface ITaskData

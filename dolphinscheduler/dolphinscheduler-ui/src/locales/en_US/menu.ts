@@ -18,6 +18,7 @@
 export default {
   home: 'Home',
   project: 'Project',
+  project_list: 'Project List',
   resources: 'Resources',
   datasource: 'Datasource',
   monitor: 'Monitor',
@@ -58,10 +59,15 @@ export default {
   data_api_token: 'Token Config',
   data_api_datasources: 'Datasource Status',
   data_api_acl: 'API ACL',
+  data_asset: 'Data Assets',
+  data_asset_catalog: 'Asset Catalog',
+  data_asset_lineage: 'Data Lineage',
+  data_asset_governance: 'Governance',
   task_group_manage: 'Task Group Manage',
   task_group_option: 'Task Group Option',
   task_group_queue: 'Task Group Queue',
   task_result: 'Task Result',
   rule: 'Rule management',
-  ui_setting: 'UI Setting'
+  ui_setting: 'UI Setting',
+  settings: 'Settings'
 }

@@ -24,6 +24,7 @@ import { useSpark } from './use-spark'
 import { useMr } from './use-mr'
 import { useGrpc } from './use-grpc'
 import { useHttp } from './use-http'
+import { useOpenMetadata } from './use-openmetadata'
 import { useSql } from './use-sql'
 import { useProcedure } from './use-procedure'
 import { useSqoop } from './use-sqoop'
@@ -65,6 +66,7 @@ const nodes: Record<string, any> = {
   FLINK: useFlink,
   GRPC: useGrpc,
   HTTP: useHttp,
+  OPENMETADATA: useOpenMetadata,
   SQL: useSql,
   PROCEDURE: useProcedure,
   SQOOP: useSqoop,
