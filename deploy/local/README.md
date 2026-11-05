@@ -233,7 +233,24 @@ systemctl unmask fwupd.service fwupd-refresh.timer
 # 接口要退回 MySQL：DS 源中心重建 osint_mysql，并把 magic 脚本键改回 db.osint_mysql
 ```
 
-**OpenSearch 搬迁：2026-11-05 实测装不上，原因不是内存。** 余量已够（1014MB vs `-Xmx448m` 时 OS 约 800MB），但三条分发路径全断：Docker Hub 直连超时（`registry-1.docker.io` → 000）；机器上已配的 mirror（`docker.1ms.run`/`docker.m.daocloud.io`/`mirror.ccs.tencentyun.com`）对该仓库停在 `Already exists` 不完成；`artifacts.opensearch.org` 的 tar **从本机和服务器两侧都返 403**（换浏览器 UA、去掉 Range 都一样）。`/opt/search/docker-compose.yml` 已写好并 `config` 校验通过，任一通道打通后 `docker compose -f /opt/search/docker-compose.yml up -d` 即可。compose 里 9200 是 `0.0.0.0` 发布：要么开 security 插件（HTTPS+口令，且 demo 证书 SAN 需含公网 IP），要么先安全组锁 IP，**别裸挂公网**。
+**OpenSearch 搬迁：已装好并"停用待条件"，不是没装。** 2026-11-05 实测结论：
+
+| 步骤 | 结果 |
+|---|---|
+| 取镜像 | 阿里 ACR **不代理** Docker Hub 任意镜像（`opensearchproject/opensearch` 杭州 404、北京 401，`library/nginx` 匿名也不放行）；最终经 `docker.1panel.live` 拉到 `opensearchproject/opensearch:3.4.0`（2.89GB） |
+| 配置 | `/opt/search/docker-compose.yml`：单节点、`-Xms192m -Xmx320m`、`mem_limit 1g`、security 插件开启（TLS + admin 口令）、数据卷 `./data` |
+| 启动 | 修掉数据目录属主（容器内 uid 1000）后 **40s 转 green**，`curl -k -u admin:... https://127.0.0.1:9200` 返回 200 |
+| 内存 | 容器 **687MB**，主机 available 从 1014MB 掉到 **203MB**；把堆 448m→320m **只省 8MB** |
+| 处置 | **已 `docker compose down` 并把 compose 改成 `restart: "no"`**，镜像与 `/opt/search/data` 保留；available 回到 1035MB，PG 正常 |
+
+根因不是堆：security 插件的 netty/TLS + Metaspace/CodeCache/Direct 约 **500MB 固定开销**，在这台 1.6GB 实际内存的机器上与 PG 抢不到安全余量。恢复条件二选一：**升到 4G**，或**给该 ECS 的 SSH 权限**改走隧道（`ports: "127.0.0.1:9200:9200"` + 本机 `ssh -N -L 9200:127.0.0.1:9200`，OM 仍连 `127.0.0.1:9200`，9200 不出网）。
+
+要接 OM 还有一步：OM 2.1 的索引配置只有 `truststorePath`，**没有 verifySSL 开关**，而 demo 证书 SAN 不含公网 IP——走 HTTPS 必须用自建 CA 重签带 `IP:123.57.2.64` 的证书并给 OM 配 truststore；走隧道则无需处理证书。
+
+```bash
+# 条件满足后恢复
+cd /opt/search && sed -i 's/restart: "no"/restart: unless-stopped/' docker-compose.yml && docker compose up -d
+```
 
 三个遗留风险（要在控制台/SSH 里处理，不归本脚本管）：
 
