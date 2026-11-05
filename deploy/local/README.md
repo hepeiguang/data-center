@@ -1,12 +1,12 @@
 # 单机最小化部署
 
-不引入 Docker / K8s，直接在本机把整套跑起来。**默认 `-Profile all` 起全栈**；OM + OpenSearch 两个进程就吃 ~1.4GB 常驻，所以按手上的活分档：
+不引入 Docker / K8s，直接在本机把整套跑起来。**默认 `-Profile api`（DS + data-api + UI）**：本地开发已不需要 OpenMetadata/OpenSearch 常驻，这两个进程单是它们就吃 ~1.4GB。按手上的活分档：
 
 | Profile | 起哪些 | 用在 |
 |---|---|---|
-| `all`（默认） | 六个全起 | 全链路联调 |
-| `api` | DS + data-api + DS UI | 做 API 开发/网关/ACL，不碰资产页 |
+| `api`（默认） | DS + data-api + DS UI | 做 API 开发/网关/ACL，不碰资产页 |
 | `asset` | DS + data-asset + OpenMetadata + OpenSearch + DS UI | 做目录/血缘/治理，不碰 magic |
+| `all` | 六个全起 | 全链路联调 |
 
 DS 与 UI 在两档里都在：UI 需要 DS 登录才能进任何页面，而 data-api 与 DS 共用同一个 H2 元库文件（`AUTO_SERVER` 只在本机有意义），**不能把 DS 和 data-api 拆到两台机器**。
 
@@ -52,9 +52,9 @@ cd dolphinscheduler
 
 ```powershell
 cd deploy\local
-.\start-local.ps1                    # 全栈：OS -> OM -> DS -> data-api -> data-asset -> UI
-.\start-local.ps1 -Profile api       # 只做起 API 开发需要的三个（省 ~1.4GB）
-.\start-local.ps1 -Profile asset     # 只做资产/血缘（不起 data-api）
+.\start-local.ps1                    # 默认档：DS + data-api + DS UI
+.\start-local.ps1 -Profile asset     # 需要资产页时：再拉 OM + OpenSearch + data-asset
+.\start-local.ps1 -Profile all       # 六个全起
 .\start-local.ps1 -WithNginx         # 额外起 8088 网关
 .\start-local.ps1 -Force             # 端口被占用时直接报错，而不是跳过
 ```

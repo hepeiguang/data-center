@@ -48,9 +48,9 @@ docker compose up -d
 
 ```powershell
 cd deploy/local
-.\start-local.ps1                # 全栈：OpenSearch -> OM -> DS -> data-api -> data-asset -> UI
-.\start-local.ps1 -Profile api   # 只做 API 开发：DS + data-api + UI（不拉 OM/OpenSearch）
-.\start-local.ps1 -Profile asset # 只做资产/血缘：DS + data-asset + OM + OpenSearch + UI
+.\start-local.ps1                # 默认档：DS + data-api + UI（不拉 OM/OpenSearch）
+.\start-local.ps1 -Profile asset # 需要资产页：DS + data-asset + OM + OpenSearch + UI
+.\start-local.ps1 -Profile all   # 六个全起
 .\start-local.ps1 -WithNginx
 .\status.ps1                     # 端口 / PID / HTTP 体检
 .\stop-local.ps1 -OnlyPorts 12346        # 只重启 data-api 时用；-DryRun 先看不动手

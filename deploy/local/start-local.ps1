@@ -14,9 +14,11 @@ param(
     [int]$AssetPort = 12347,
     [int]$UiPort = 5173,
     # all   = six services; api = DS + data-api + UI (no OM/OpenSearch);
-    # asset = DS + data-asset + OM + OpenSearch + UI (no data-api)
+    # asset = DS + data-asset + OM + OpenSearch + UI (no data-api).
+    # Default is api: local dev no longer needs OpenMetadata/OpenSearch running,
+    # and that pair alone is ~1.4GB RSS.
     [ValidateSet("all", "api", "asset")]
-    [string]$Profile = "all",
+    [string]$Profile = "api",
     # sized from jstat -gc live sets measured on this box (see README "内存预算")
     [string]$DsJvmOpts = "-Xms256m -Xmx512m -Xss512k -XX:MaxMetaspaceSize=256m",
     [string]$ApiJvmOpts = "-Xms128m -Xmx256m -Xss512k -XX:MaxMetaspaceSize=192m",
@@ -36,6 +38,8 @@ param(
 # script tops up a partially started stack. -Force turns an occupied port into
 # an error. -Profile picks which services are needed so a 2C-class dev box does
 # not have to hold the whole stack (OM + OpenSearch alone are ~1.4GB RSS).
+# Default is -Profile api (DS + data-api + UI); pass -Profile asset when the
+# catalog/lineage/governance pages need OpenMetadata, or -Profile all for both.
 # DS and the UI are always started: the UI requires a DS login, and data-api
 # shares DS's H2 metadata file, so they cannot live on different hosts.
 # ---------------------------------------------------------------------------
