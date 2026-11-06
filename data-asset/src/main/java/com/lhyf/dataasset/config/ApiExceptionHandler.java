@@ -25,9 +25,10 @@ public class ApiExceptionHandler {
 
     @ExceptionHandler(ResponseStatusException.class)
     public ResponseEntity<Map<String, Object>> forwarded(ResponseStatusException e) {
-        String reason = e.getReason() == null || e.getReason().isEmpty() ? e.getStatus().getReasonPhrase()
+        String reason = e.getReason() == null || e.getReason().isEmpty()
+                ? HttpStatus.valueOf(e.getStatusCode().value()).getReasonPhrase()
                 : e.getReason();
-        return ResponseEntity.status(e.getStatus())
-                .body(Map.of("code", e.getStatus().value(), "message", reason));
+        return ResponseEntity.status(e.getStatusCode())
+                .body(Map.of("code", e.getStatusCode().value(), "message", reason));
     }
 }

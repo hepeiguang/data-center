@@ -16,7 +16,6 @@ import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.lhyf.dataasset.browse.BrowseService;
-import com.lhyf.dataasset.browse.QueryBuilder;
 import com.lhyf.dataasset.config.BusinessDataSources;
 import com.lhyf.dataasset.om.OmClient;
 import com.lhyf.dataasset.util.TtlCache;
@@ -295,24 +294,25 @@ public class RowLineageService {
         if (selected.isEmpty()) {
             throw new IllegalArgumentException("no column to select for " + fqn);
         }
+        com.lhyf.dataasset.browse.SqlDialect dialect = dataSources.dialect(table.datasource);
         Map<String, String> types = columnTypes(fqn);
         StringBuilder sql = new StringBuilder("select ");
         for (int i = 0; i < selected.size(); i++) {
             if (i > 0) {
                 sql.append(", ");
             }
-            sql.append(QueryBuilder.quote(selected.get(i)));
+            sql.append(dialect.quote(selected.get(i)));
         }
-        sql.append(" from ").append(QueryBuilder.quote(table.schema)).append('.')
-                .append(QueryBuilder.quote(table.table));
+        sql.append(" from ").append(dialect.quote(table.schema)).append('.')
+                .append(dialect.quote(table.table));
         List<Object> params = new ArrayList<>();
         List<String> where = new ArrayList<>();
         for (Map.Entry<String, String> entry : conditions.entrySet()) {
-            where.add(QueryBuilder.quote(entry.getKey()) + " = "
+            where.add(dialect.quote(entry.getKey()) + " = "
                     + placeholder(types.get(entry.getKey().toLowerCase())));
             params.add(entry.getValue());
         }
-        sql.append(" where ").append(String.join(" and ", where)).append(" limit ? offset ?");
+        sql.append(" where ").append(String.join(" and ", where)).append(dialect.limitOffset());
         params.add(MAX_ROWS_PER_EDGE);
         params.add(0);
         return new Lookup(sql.toString(), params);

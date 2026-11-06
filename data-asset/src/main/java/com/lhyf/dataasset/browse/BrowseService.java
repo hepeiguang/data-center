@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.http.HttpStatus;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -28,16 +27,16 @@ public class BrowseService {
     private final BusinessDataSources dataSources;
     private final AuditService audit;
     private final DataAssetProperties properties;
-    private final JdbcTemplate configJdbc;
+    private final UserAttrRepository userAttrs;
 
     public BrowseService(WhitelistService whitelist, OmClient omClient, BusinessDataSources dataSources,
-                         AuditService audit, DataAssetProperties properties, JdbcTemplate configJdbc) {
+                         AuditService audit, DataAssetProperties properties, UserAttrRepository userAttrs) {
         this.whitelist = whitelist;
         this.omClient = omClient;
         this.dataSources = dataSources;
         this.audit = audit;
         this.properties = properties;
-        this.configJdbc = configJdbc;
+        this.userAttrs = userAttrs;
     }
 
     public Map<String, Object> browse(String user, boolean admin, String fqn, int page, int size,
@@ -59,7 +58,8 @@ public class BrowseService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "paging exceeds maxRows=" + entry.getMaxRows() + "; use a narrower filter");
         }
-        QueryBuilder.SqlQuery query = QueryBuilder.build(table.schema, table.table, visible, filters,
+        QueryBuilder.SqlQuery query = QueryBuilder.build(dataSources.dialect(entry.getDatasource()),
+                table.schema, table.table, visible, filters,
                 orderBy, ascending, effectiveSize + 1, offset, entry.getRowPolicy(), userAttributes(user, admin));
 
         List<Object[]> rows = new ArrayList<>();
@@ -132,7 +132,8 @@ public class BrowseService {
         TableRef table = TableRef.parse(fqn);
         List<String> visible = visibleColumns(entry, table, fqn);
         int limit = Math.min(entry.getMaxRows(), 10_000);
-        QueryBuilder.SqlQuery query = QueryBuilder.build(table.schema, table.table, visible, List.of(),
+        QueryBuilder.SqlQuery query = QueryBuilder.build(dataSources.dialect(entry.getDatasource()),
+                table.schema, table.table, visible, List.of(),
                 null, true, limit, 0, entry.getRowPolicy(), userAttributes(user, admin));
         StringBuilder csv = new StringBuilder();
         csv.append(String.join(",", visible)).append('\n');
@@ -189,10 +190,7 @@ public class BrowseService {
         attrs.put("name", user);
         attrs.put("user", user);
         attrs.put("admin", Boolean.toString(admin));
-        configJdbc.query("select attr_key, attr_value from user_attr where username = ?",
-                (ResultSet rs) -> {
-                    attrs.put(rs.getString(1), rs.getString(2));
-                }, user);
+        attrs.putAll(userAttrs.findAttributes(user));
         return attrs;
     }
 
