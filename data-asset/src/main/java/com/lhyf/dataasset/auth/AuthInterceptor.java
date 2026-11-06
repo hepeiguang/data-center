@@ -1,11 +1,12 @@
 package com.lhyf.dataasset.auth;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -48,7 +49,7 @@ public class AuthInterceptor implements HandlerInterceptor {
             }
             request.setAttribute(ATTR_USER, user);
             request.setAttribute(ATTR_ADMIN, true);
-            return true;
+            return adminGate(request, response, handler);
         }
         String sessionId = header(request, "sessionId");
         String token = header(request, "token");
@@ -83,11 +84,31 @@ public class AuthInterceptor implements HandlerInterceptor {
             }
             request.setAttribute(ATTR_USER, userName);
             request.setAttribute(ATTR_ADMIN, userType.toUpperCase().contains("ADMIN"));
-            return true;
+            return adminGate(request, response, handler);
         } catch (Exception e) {
             unauthorized(response, "cannot validate DS session: " + e.getClass().getSimpleName());
             return false;
         }
+    }
+
+    /**
+     * Enforces {@link RequireAdmin} before the handler runs. Exceptions thrown in preHandle would
+     * bypass the controller advice, so the 403 JSON body is written directly here.
+     */
+    private boolean adminGate(HttpServletRequest request, HttpServletResponse response, Object handler)
+            throws Exception {
+        if (!(handler instanceof HandlerMethod method)) {
+            return true;
+        }
+        RequireAdmin require = method.getMethodAnnotation(RequireAdmin.class);
+        if (require == null) {
+            require = method.getBeanType().getAnnotation(RequireAdmin.class);
+        }
+        if (require == null || Boolean.TRUE.equals(request.getAttribute(ATTR_ADMIN))) {
+            return true;
+        }
+        forbidden(response, require.value());
+        return false;
     }
 
     private static String header(HttpServletRequest request, String name) {
@@ -96,9 +117,21 @@ public class AuthInterceptor implements HandlerInterceptor {
     }
 
     private static void unauthorized(HttpServletResponse response, String message) throws Exception {
-        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        write(response, HttpServletResponse.SC_UNAUTHORIZED, message);
+    }
+
+    private static void forbidden(HttpServletResponse response, String message) throws Exception {
+        write(response, HttpServletResponse.SC_FORBIDDEN, message);
+    }
+
+    private static void write(HttpServletResponse response, int status, String message) throws Exception {
+        response.setStatus(status);
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setCharacterEncoding("UTF-8");
-        response.getWriter().write("{\"code\":401,\"message\":\"" + message + "\"}");
+        response.getWriter().write("{\"code\":" + status + ",\"message\":\"" + escape(message) + "\"}");
+    }
+
+    private static String escape(String message) {
+        return message == null ? "" : message.replace("\\", "\\\\").replace("\"", "\\\"");
     }
 }

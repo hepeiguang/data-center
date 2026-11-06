@@ -8,7 +8,6 @@ import java.util.regex.Pattern;
 /** Builds parameterized, whitelist-constrained SELECT statements. Never concatenates user values. */
 public final class QueryBuilder {
 
-    private static final Pattern IDENTIFIER = Pattern.compile("^[A-Za-z_][A-Za-z0-9_]{0,127}$");
     private static final Pattern PLACEHOLDER = Pattern.compile("\\$\\{user\\.([A-Za-z0-9_]+)}");
     private static final List<String> OPS = List.of("=", "!=", ">", ">=", "<", "<=", "like");
 
@@ -37,8 +36,8 @@ public final class QueryBuilder {
         }
     }
 
-    public static SqlQuery build(String schema, String table, List<String> columns, List<Filter> filters,
-                                 String orderBy, boolean ascending, int limit, int offset,
+    public static SqlQuery build(SqlDialect dialect, String schema, String table, List<String> columns,
+                                 List<Filter> filters, String orderBy, boolean ascending, int limit, int offset,
                                  String rowPolicy, Map<String, String> userAttributes) {
         if (columns == null || columns.isEmpty()) {
             throw new IllegalArgumentException("no visible columns");
@@ -48,9 +47,9 @@ public final class QueryBuilder {
             if (i > 0) {
                 sql.append(", ");
             }
-            sql.append(quote(columns.get(i)));
+            sql.append(dialect.quote(columns.get(i)));
         }
-        sql.append(" from ").append(quote(schema)).append('.').append(quote(table));
+        sql.append(" from ").append(dialect.quote(schema)).append('.').append(dialect.quote(table));
 
         List<Object> params = new ArrayList<>();
         List<String> conditions = new ArrayList<>();
@@ -68,7 +67,7 @@ public final class QueryBuilder {
                 if (!OPS.contains(filter.op)) {
                     throw new IllegalArgumentException("unsupported operator: " + filter.op);
                 }
-                conditions.add(quote(filter.column) + " " + filter.op + " ?");
+                conditions.add(dialect.quote(filter.column) + " " + filter.op + " ?");
                 params.add(filter.value);
             }
         }
@@ -79,9 +78,9 @@ public final class QueryBuilder {
             if (!columns.contains(orderBy)) {
                 throw new IllegalArgumentException("order column not visible: " + orderBy);
             }
-            sql.append(" order by ").append(quote(orderBy)).append(ascending ? " asc" : " desc");
+            sql.append(" order by ").append(dialect.quote(orderBy)).append(ascending ? " asc" : " desc");
         }
-        sql.append(" limit ? offset ?");
+        sql.append(dialect.limitOffset());
         params.add(limit);
         params.add(offset);
         return new SqlQuery(sql.toString(), params);
@@ -104,12 +103,5 @@ public final class QueryBuilder {
         }
         matcher.appendTail(out);
         return out.toString();
-    }
-
-    public static String quote(String identifier) {
-        if (identifier == null || !IDENTIFIER.matcher(identifier).matches()) {
-            throw new IllegalArgumentException("invalid identifier: " + identifier);
-        }
-        return "\"" + identifier + "\"";
     }
 }

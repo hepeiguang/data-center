@@ -8,6 +8,7 @@ import java.util.concurrent.TimeUnit;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
+import com.lhyf.dataasset.browse.SqlDialect;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 
@@ -20,9 +21,12 @@ public class BusinessDataSources {
 
     private final Map<String, HikariDataSource> pools = new LinkedHashMap<>();
     private final Map<String, JdbcTemplate> templates = new LinkedHashMap<>();
+    private final Map<String, String> jdbcUrls = new LinkedHashMap<>();
+    private final Map<String, SqlDialect> dialects = new LinkedHashMap<>();
 
     public BusinessDataSources(DataAssetProperties properties) {
         properties.getDatasources().forEach((name, cfg) -> {
+            jdbcUrls.put(name, cfg.getUrl());
             HikariConfig hikari = new HikariConfig();
             hikari.setPoolName("asset-" + name);
             hikari.setJdbcUrl(cfg.getUrl());
@@ -51,6 +55,12 @@ public class BusinessDataSources {
             throw new IllegalArgumentException("unknown datasource: " + name);
         }
         return template;
+    }
+
+    /** SQL dialect for one configured datasource, derived from its JDBC url. */
+    public SqlDialect dialect(String name) {
+        get(name);
+        return dialects.computeIfAbsent(name, n -> SqlDialect.forJdbcUrl(jdbcUrls.get(n)));
     }
 
     public Map<String, String> health() {
