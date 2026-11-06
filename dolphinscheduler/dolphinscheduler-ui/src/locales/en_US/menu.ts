@@ -59,6 +59,7 @@ export default {
   data_api_token: 'Token Config',
   data_api_datasources: 'Datasource Status',
   data_api_acl: 'API ACL',
+  data_api_console: 'Query Console',
   data_asset: 'Data Assets',
   data_asset_catalog: 'Asset Catalog',
   data_asset_lineage: 'Data Lineage',

@@ -115,3 +115,58 @@ export function offlineDataApiRelease(headers: AuthHeaders, id: number) {
     .post(`/releases/${id}/offline`)
     .then((r) => r.data)
 }
+
+// ---------- business query console (plan §7.1) ----------
+
+export function listConsoleDatasources(headers: AuthHeaders) {
+  return client(headers)
+    .get('/console/datasources')
+    .then((r) => r.data)
+}
+
+export function listConsoleHistory(headers: AuthHeaders, limit?: number) {
+  return client(headers)
+    .get('/console/history', { params: limit ? { limit } : {} })
+    .then((r) => r.data)
+}
+
+export function executeConsoleSql(
+  headers: AuthHeaders,
+  body: { datasourceId: number; sql: string }
+) {
+  return client(headers)
+    .post('/console/execute', body, { timeout: 120000 })
+    .then((r) => r.data)
+}
+
+export function cancelConsoleQuery(headers: AuthHeaders, queryId: string) {
+  return client(headers)
+    .post('/console/cancel', { queryId })
+    .then((r) => r.data)
+}
+
+/**
+ * Streaming CSV export. Errors arrive as JSON in the same blob channel
+ * (validateStatus never rejects), so callers get either a Blob or the parsed
+ * `{code, message}` envelope.
+ */
+export async function exportConsoleCsv(
+  headers: AuthHeaders,
+  body: { datasourceId: number; sql: string }
+): Promise<Blob | { code: number; message: string }> {
+  const res = await client(headers).post('/console/export', body, {
+    responseType: 'blob',
+    timeout: 600000
+  })
+  const blob: Blob = res.data
+  const type = String(blob.type || '')
+  if (res.status >= 400 || type.includes('application/json')) {
+    const text = await blob.text()
+    try {
+      return JSON.parse(text)
+    } catch (e) {
+      return { code: res.status, message: text || 'export failed' }
+    }
+  }
+  return blob
+}

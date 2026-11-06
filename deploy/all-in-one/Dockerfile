@@ -3,8 +3,10 @@
 FROM eclipse-temurin:11-jre-jammy
 
 ARG DEBIAN_FRONTEND=noninteractive
+# data-api is Spring Boot 3.0.13 now and needs JDK 17+; DS/SeaTunnel stay on the temurin-11
+# default, so install the 17 JRE side by side and let run-data-api.sh pick it explicitly.
 RUN apt-get update \
- && apt-get install -y --no-install-recommends nginx supervisor curl tzdata procps \
+ && apt-get install -y --no-install-recommends nginx supervisor curl tzdata procps openjdk-17-jre-headless \
  && rm -rf /var/lib/apt/lists/* \
  && rm -f /etc/nginx/sites-enabled/default
 

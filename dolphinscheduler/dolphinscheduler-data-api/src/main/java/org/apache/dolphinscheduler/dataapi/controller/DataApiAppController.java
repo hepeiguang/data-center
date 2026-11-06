@@ -17,9 +17,9 @@
 
 package org.apache.dolphinscheduler.dataapi.controller;
 
-import org.apache.dolphinscheduler.common.enums.Flag;
-import org.apache.dolphinscheduler.common.enums.UserType;
-import org.apache.dolphinscheduler.dao.entity.User;
+import org.apache.dolphinscheduler.dataapi.meta.Flag;
+import org.apache.dolphinscheduler.dataapi.meta.UserType;
+import org.apache.dolphinscheduler.dataapi.meta.User;
 import org.apache.dolphinscheduler.dataapi.auth.DsTokenAuthorizationInterceptor;
 import org.apache.dolphinscheduler.dataapi.security.AppCredentialService;
 

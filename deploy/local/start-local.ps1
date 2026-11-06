@@ -2,6 +2,8 @@ param(
     [string]$JavaHome = "D:\HPG\workspace\LHYF\tools\jdk-11\jdk-11.0.2",
     # data-asset is Spring Boot 3.0 since 2026-11-06: it needs JDK 17+, the rest of the stack stays on 11
     [string]$AssetJavaHome = "D:\HPG\workspace\LHYF\tools\jdk-17",
+    # data-api moved to Spring Boot 3.0.13 as well: it needs JDK 17+, override with -ApiJavaHome
+    [string]$ApiJavaHome = "D:\HPG\workspace\LHYF\tools\jdk-17",
     [string]$LhyfRoot = "D:\HPG\workspace\LHYF",
     [string]$DsHome = "D:\HPG\workspace\LHYF\apache-dolphinscheduler-3.4.3-bin",
     [string]$StHome = "D:\HPG\workspace\LHYF\apache-seatunnel-3.0.0",
@@ -113,6 +115,9 @@ foreach ($p in @("$JavaHome\bin\java.exe", "$DsHome\standalone-server\libs", "$S
 if ($WantAsset -and -not (Test-Path "$AssetJavaHome\bin\java.exe")) {
     throw "missing JDK 17 for data-asset: $AssetJavaHome (Spring Boot 3 needs 17+; override with -AssetJavaHome)"
 }
+if ($WantApi -and -not (Test-Path "$ApiJavaHome\bin\java.exe")) {
+    throw "missing JDK 17 for data-api: $ApiJavaHome (Spring Boot 3 needs 17+; override with -ApiJavaHome)"
+}
 
 $env:JAVA_HOME = $JavaHome
 $env:SEATUNNEL_HOME = $StHome
@@ -201,7 +206,7 @@ if ($WantApi) {
     Ensure-Service "data-api" $ApiPort {
         $env:SPRING_DATASOURCE_URL = $dbUrl
         try {
-            $api = Start-Process -FilePath "$JavaHome\bin\java.exe" `
+            $api = Start-Process -FilePath "$ApiJavaHome\bin\java.exe" `
                 -ArgumentList (@($ApiJvmOpts.Split(" ", [System.StringSplitOptions]::RemoveEmptyEntries)) +
                     @("-jar", $DataApiJar, "--spring.profiles.active=h2", "--server.port=$ApiPort")) `
                 -WorkingDirectory (Join-Path $Root "dolphinscheduler\dolphinscheduler-data-api") `

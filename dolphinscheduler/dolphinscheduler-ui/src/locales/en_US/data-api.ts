@@ -283,5 +283,24 @@ export default {
     reload: 'Reload from center',
     refresh: 'Refresh',
     reload_ok: 'Reloaded'
+  },
+  console: {
+    title: 'Query Console',
+    pick_datasource: 'Select a console-enabled datasource',
+    empty_sql: 'Enter a SQL statement',
+    run: 'Run (Ctrl+Enter)',
+    run_tips: 'Only a single SELECT / WITH / EXPLAIN statement is allowed',
+    cancel: 'Cancel',
+    cancel_ok: 'Cancel requested',
+    cancel_miss: 'Query already finished',
+    export: 'Export CSV',
+    export_ok: 'Export finished, check your downloads',
+    rows: 'Rows',
+    elapsed: 'Elapsed',
+    truncated: 'Result truncated at the row limit',
+    no_result: 'No result yet — run a query',
+    max_rows: 'Row limit',
+    history: 'Query History',
+    history_empty: 'No records'
   }
 }

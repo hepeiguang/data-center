@@ -18,7 +18,8 @@
 package org.apache.dolphinscheduler.dataapi.datasource;
 
 import org.apache.dolphinscheduler.dataapi.config.DataApiProperties;
-import org.apache.dolphinscheduler.spi.enums.DbType;
+import org.apache.dolphinscheduler.dataapi.meta.DbType;
+import org.apache.dolphinscheduler.dataapi.registry.DatasourceTypeRegistry;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -39,7 +40,8 @@ class DsMagicDataSourceLoaderPoolTest {
     void buildsDialectSpecificSessionTimeoutSql() {
         DataApiProperties properties = new DataApiProperties();
         properties.setQueryTimeoutSeconds(30);
-        DsMagicDataSourceLoader loader = new DsMagicDataSourceLoader(null, properties, null);
+        DsMagicDataSourceLoader loader =
+                new DsMagicDataSourceLoader(null, new DatasourceTypeRegistry(), properties, null);
 
         Assertions.assertEquals("SET SESSION max_execution_time = 30000",
                 loader.resolveSessionInitSql(DbType.MYSQL));
@@ -55,7 +57,8 @@ class DsMagicDataSourceLoaderPoolTest {
         properties.setQueryTimeoutSeconds(15);
         properties.getSessionInitSql().put("DORIS", "SET query_timeout = {timeoutSeconds}");
         properties.getSessionInitSql().put("MYSQL", "");
-        DsMagicDataSourceLoader loader = new DsMagicDataSourceLoader(null, properties, null);
+        DsMagicDataSourceLoader loader =
+                new DsMagicDataSourceLoader(null, new DatasourceTypeRegistry(), properties, null);
 
         Assertions.assertEquals("SET query_timeout = 15", loader.resolveSessionInitSql(DbType.DORIS));
         Assertions.assertNull(loader.resolveSessionInitSql(DbType.MYSQL));

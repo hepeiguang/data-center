@@ -61,6 +61,7 @@ export default {
   data_api_token: 'Token 配置',
   data_api_datasources: '数据源状态',
   data_api_acl: '接口授权',
+  data_api_console: '业务查询台',
   data_asset: '数据资产',
   data_asset_catalog: '资产目录',
   data_asset_lineage: '数据血缘',

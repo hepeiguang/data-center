@@ -17,14 +17,14 @@
 
 package org.apache.dolphinscheduler.dataapi.datasource;
 
-import org.apache.dolphinscheduler.dao.entity.DataSource;
-import org.apache.dolphinscheduler.dao.mapper.DataSourceMapper;
 import org.apache.dolphinscheduler.dataapi.config.DataApiProperties;
-import org.apache.dolphinscheduler.plugin.datasource.api.utils.DataSourceUtils;
-import org.apache.dolphinscheduler.plugin.datasource.api.utils.PasswordUtils;
-import org.apache.dolphinscheduler.spi.datasource.BaseConnectionParam;
-import org.apache.dolphinscheduler.spi.datasource.ConnectionParam;
-import org.apache.dolphinscheduler.spi.enums.DbType;
+import org.apache.dolphinscheduler.dataapi.meta.ConnectionParams;
+import org.apache.dolphinscheduler.dataapi.meta.DataSourceRepository;
+import org.apache.dolphinscheduler.dataapi.meta.DbType;
+import org.apache.dolphinscheduler.dataapi.meta.DsDataSource;
+import org.apache.dolphinscheduler.dataapi.meta.DsPasswordCodec;
+import org.apache.dolphinscheduler.dataapi.registry.DatasourceTypeDescriptor;
+import org.apache.dolphinscheduler.dataapi.registry.DatasourceTypeRegistry;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -39,8 +39,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -48,12 +48,14 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.ssssssss.magicapi.datasource.model.MagicDynamicDataSource;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 
 /**
- * Loads DolphinScheduler datasource center entries (Doris/MySQL by default) into magic-api dynamic datasources.
+ * Loads DolphinScheduler datasource center entries into magic-api dynamic datasources.
+ * <p>
+ * Pools are built from the type descriptor registry (datasource-types.yaml) instead of the DS
+ * plugin manager, so the Boot 3 module no longer depends on dolphinscheduler-datasource-*.
  * <p>
  * Magic key prefers sanitized DS {@code name} for readability (e.g. {@code osint_mysql});
  * console display name keeps original name + type/id/database for mapping back to 源中心.
@@ -62,7 +64,8 @@ import com.zaxxer.hikari.HikariDataSource;
 @Component
 public class DsMagicDataSourceLoader {
 
-    private final DataSourceMapper dataSourceMapper;
+    private final DataSourceRepository dataSourceRepository;
+    private final DatasourceTypeRegistry typeRegistry;
     private final DataApiProperties properties;
     private final MagicDynamicDataSource magicDynamicDataSource;
 
@@ -70,13 +73,17 @@ public class DsMagicDataSourceLoader {
     private final Map<String, String> fingerprints = new ConcurrentHashMap<>();
     /** magic key → DS center id (for permission / UI mapping) */
     private final Map<String, Integer> keyToDatasourceId = new ConcurrentHashMap<>();
+    /** DS center id → magic key (reverse index for the query console) */
+    private final Map<Integer, String> datasourceIdToKey = new ConcurrentHashMap<>();
     /** magic key → snapshot for admin UI */
     private final Map<String, LoadedDatasourceView> loadedViews = new ConcurrentHashMap<>();
 
-    public DsMagicDataSourceLoader(DataSourceMapper dataSourceMapper,
+    public DsMagicDataSourceLoader(DataSourceRepository dataSourceRepository,
+                                   DatasourceTypeRegistry typeRegistry,
                                    DataApiProperties properties,
                                    MagicDynamicDataSource magicDynamicDataSource) {
-        this.dataSourceMapper = dataSourceMapper;
+        this.dataSourceRepository = dataSourceRepository;
+        this.typeRegistry = typeRegistry;
         this.properties = properties;
         this.magicDynamicDataSource = magicDynamicDataSource;
     }
@@ -93,11 +100,11 @@ public class DsMagicDataSourceLoader {
 
     public synchronized void reload() {
         Set<String> desiredKeys = new HashSet<>();
-        List<DataSource> sources = listTargetSources();
+        List<DsDataSource> sources = listTargetSources();
         // first pass: assign unique keys from names
         Map<Integer, String> idToKey = assignKeys(sources);
 
-        for (DataSource source : sources) {
+        for (DsDataSource source : sources) {
             if (source.getType() == null || StringUtils.isBlank(source.getConnectionParams())) {
                 continue;
             }
@@ -143,24 +150,40 @@ public class DsMagicDataSourceLoader {
         return keyToDatasourceId.get(magicKey);
     }
 
+    /** Console lookup: the live pool for a DS-center datasource id, or null when not loaded. */
+    public HikariDataSource poolByDatasourceId(int datasourceId) {
+        String key = datasourceIdToKey.get(datasourceId);
+        return key == null ? null : pools.get(key);
+    }
+
+    public String magicKeyOf(int datasourceId) {
+        return datasourceIdToKey.get(datasourceId);
+    }
+
     public List<LoadedDatasourceView> loadedViews() {
         return new ArrayList<>(loadedViews.values());
     }
 
-    private List<DataSource> listTargetSources() {
-        List<DataSource> all = dataSourceMapper.selectList(new QueryWrapper<>());
+    private List<DsDataSource> listTargetSources() {
+        List<DsDataSource> all = dataSourceRepository.selectAll();
         if (all == null || all.isEmpty()) {
             return Collections.emptyList();
         }
-        List<DataSource> filtered = new ArrayList<>();
-        for (DataSource source : all) {
+        List<DsDataSource> filtered = new ArrayList<>();
+        for (DsDataSource source : all) {
             if (source.getType() == null) {
                 continue;
             }
             String typeName = source.getType().name().toUpperCase(Locale.ROOT);
-            if (properties.getLoadDbTypes().contains(typeName)) {
-                filtered.add(source);
+            if (!properties.getLoadDbTypes().contains(typeName)) {
+                continue;
             }
+            if (typeRegistry.find(typeName) == null) {
+                log.warn("skip datasource id={} type={}: no descriptor in datasource-types.yaml",
+                        source.getId(), typeName);
+                continue;
+            }
+            filtered.add(source);
         }
         return filtered;
     }
@@ -168,10 +191,10 @@ public class DsMagicDataSourceLoader {
     /**
      * Prefer sanitized DS name as magic key; on collision / invalid name append {@code _id}.
      */
-    static Map<Integer, String> assignKeys(List<DataSource> sources) {
+    static Map<Integer, String> assignKeys(List<DsDataSource> sources) {
         Map<Integer, String> idToKey = new LinkedHashMap<>();
         Set<String> used = new HashSet<>();
-        for (DataSource source : sources) {
+        for (DsDataSource source : sources) {
             if (source.getType() == null || source.getId() == null) {
                 continue;
             }
@@ -207,14 +230,14 @@ public class DsMagicDataSourceLoader {
         return StringUtils.isNotBlank(key) && key.matches("^[a-zA-Z][a-zA-Z0-9_]*$");
     }
 
-    static String fallbackTypeIdKey(DataSource source) {
+    static String fallbackTypeIdKey(DsDataSource source) {
         DbType type = source.getType();
         String prefix = type == null ? "ds" : type.getName().toLowerCase(Locale.ROOT);
         return prefix + "_" + source.getId();
     }
 
     /** @deprecated use {@link #assignKeys(List)} ; kept for tests/compat */
-    public static String buildKey(DataSource source) {
+    public static String buildKey(DsDataSource source) {
         String candidate = sanitizeKeyCandidate(source.getName());
         if (isValidIdentifier(candidate)) {
             return candidate;
@@ -222,31 +245,30 @@ public class DsMagicDataSourceLoader {
         return fallbackTypeIdKey(source);
     }
 
-    private void register(DataSource source, String key, String fingerprint) {
-        ConnectionParam connectionParam =
-                DataSourceUtils.buildConnectionParams(source.getType(), source.getConnectionParams());
-        if (!(connectionParam instanceof BaseConnectionParam)) {
-            throw new IllegalStateException("unsupported connection param for " + source.getType());
+    private void register(DsDataSource source, String key, String fingerprint) {
+        DatasourceTypeDescriptor descriptor = typeRegistry.find(source.getType().name());
+        ConnectionParams params = ConnectionParams.parse(source.getConnectionParams());
+        if (params == null) {
+            throw new IllegalStateException("unsupported connection params for " + source.getType());
         }
-        BaseConnectionParam base = (BaseConnectionParam) connectionParam;
-        String jdbcUrl = DataSourceUtils.getJdbcUrl(source.getType(), connectionParam);
-        String driver = DataSourceUtils.getDatasourceDriver(source.getType());
-        String password = PasswordUtils.decodePassword(base.getPassword());
-        String database = StringUtils.defaultString(base.getDatabase(), "");
+        String jdbcUrl = params.effectiveJdbcUrl();
+        String password = DsPasswordCodec.decodePassword(params.getPassword());
+        String database = StringUtils.defaultString(params.getDatabase(), "");
 
         HikariConfig config = new HikariConfig();
         config.setPoolName("da-" + key);
         config.setJdbcUrl(jdbcUrl);
-        config.setUsername(base.getUser());
+        config.setUsername(params.getUser());
         config.setPassword(password);
-        config.setDriverClassName(StringUtils.defaultIfBlank(base.getDriverClassName(), driver));
+        config.setDriverClassName(StringUtils.defaultIfBlank(descriptor.getDriver(),
+                StringUtils.defaultString(params.getDriverClassName())));
         config.setMaximumPoolSize(properties.getPoolMaximumPoolSize());
         config.setMinimumIdle(properties.getPoolMinimumIdle());
         config.setConnectionTimeout(10000);
         // do not fail service boot/reload when remote FE/DB is temporarily down
         config.setInitializationFailTimeout(-1);
         config.setConnectionTestQuery(
-                StringUtils.defaultIfBlank(base.getValidationQuery(), "select 1"));
+                StringUtils.defaultIfBlank(params.getValidationQuery(), descriptor.getValidationQuery()));
         String initSql = resolveSessionInitSql(source.getType());
         if (StringUtils.isNotBlank(initSql)) {
             config.setConnectionInitSql(initSql);
@@ -262,6 +284,7 @@ public class DsMagicDataSourceLoader {
                 properties.getMaxRows());
 
         keyToDatasourceId.put(key, source.getId());
+        datasourceIdToKey.put(source.getId(), key);
         String safeUrl = maskJdbcUrl(jdbcUrl);
         loadedViews.put(key, new LoadedDatasourceView(
                 key,
@@ -282,7 +305,7 @@ public class DsMagicDataSourceLoader {
 
     /**
      * Session-level query timeout per dialect; {@code data-api.session-init-sql.<TYPE>} overrides,
-     * an empty override disables it.
+     * an empty override disables it. Defaults come from the type descriptor.
      */
     String resolveSessionInitSql(DbType type) {
         if (type == null) {
@@ -295,28 +318,17 @@ public class DsMagicDataSourceLoader {
                 return StringUtils.isBlank(override) ? null : applyTimeout(override);
             }
         }
-        return defaultSessionInitSql(type);
-    }
-
-    private String defaultSessionInitSql(DbType type) {
-        int seconds = properties.getQueryTimeoutSeconds();
-        if (seconds <= 0) {
+        DatasourceTypeDescriptor descriptor = typeRegistry.find(name);
+        if (descriptor == null || StringUtils.isBlank(descriptor.getSessionInitSql())) {
             return null;
         }
-        switch (type) {
-            case MYSQL:
-                return "SET SESSION max_execution_time = " + (seconds * 1000L);
-            case DORIS:
-                return "SET query_timeout = " + seconds;
-            case POSTGRESQL:
-                return "SET statement_timeout = " + (seconds * 1000L);
-            default:
-                return null;
-        }
+        return applyTimeout(descriptor.getSessionInitSql());
     }
 
     private String applyTimeout(String sql) {
-        return sql.replace("{timeoutSeconds}", String.valueOf(properties.getQueryTimeoutSeconds()));
+        int seconds = properties.getQueryTimeoutSeconds();
+        return sql.replace("{timeoutSeconds}", String.valueOf(seconds))
+                .replace("{timeoutMillis}", String.valueOf(seconds * 1000L));
     }
 
     /** Hide credentials that occasionally travel inside JDBC URLs before logging / exposing them. */
@@ -339,10 +351,11 @@ public class DsMagicDataSourceLoader {
         pools.clear();
         fingerprints.clear();
         keyToDatasourceId.clear();
+        datasourceIdToKey.clear();
         loadedViews.clear();
     }
 
-    static String buildDisplayName(DataSource source, String database) {
+    static String buildDisplayName(DsDataSource source, String database) {
         String name = StringUtils.defaultIfBlank(source.getName(), "ds");
         String type = source.getType() == null ? "?" : source.getType().name();
         if (StringUtils.isNotBlank(database)) {
@@ -353,7 +366,10 @@ public class DsMagicDataSourceLoader {
 
     private void unregister(String key) {
         fingerprints.remove(key);
-        keyToDatasourceId.remove(key);
+        Integer dsId = keyToDatasourceId.remove(key);
+        if (dsId != null) {
+            datasourceIdToKey.remove(dsId);
+        }
         loadedViews.remove(key);
         HikariDataSource old = pools.remove(key);
         removeFromMagic(key);

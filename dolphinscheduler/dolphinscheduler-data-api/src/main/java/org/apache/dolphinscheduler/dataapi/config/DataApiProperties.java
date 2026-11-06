@@ -188,4 +188,35 @@ public class DataApiProperties {
      * 0 disables (single instance).
      */
     private long magicResourceRefreshMs = 0L;
+
+    /**
+     * Read-only business query console (DATA-API-BOOT3-CONSOLE-PLAN §7). Disabled by default:
+     * the console must not be exposed until datasources are registered in {@code da_datasource_ext}.
+     */
+    private Console console = new Console();
+
+    @Data
+    public static class Console {
+
+        /** Master switch; when false all {@code /data-api/console/**} mappings are absent (404). */
+        private boolean enabled = false;
+
+        /** Rows returned to the result grid. */
+        private int maxDisplayRows = 1000;
+
+        /** Rows allowed through the streaming CSV export. */
+        private int maxExportRows = 100_000;
+
+        /** Statement timeout seconds. */
+        private int timeoutSeconds = 60;
+
+        /** Upper bound of the submitted SQL text, in bytes (UTF-8). */
+        private int maxSqlBytes = 20 * 1024;
+
+        /** Concurrent running queries per user. */
+        private int perUserConcurrency = 1;
+
+        /** Rows kept per history page. */
+        private int historyPageSize = 50;
+    }
 }

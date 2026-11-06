@@ -17,8 +17,8 @@
 
 package org.apache.dolphinscheduler.dataapi.acl;
 
-import org.apache.dolphinscheduler.common.enums.UserType;
-import org.apache.dolphinscheduler.dao.entity.User;
+import org.apache.dolphinscheduler.dataapi.meta.UserType;
+import org.apache.dolphinscheduler.dataapi.meta.User;
 import org.apache.dolphinscheduler.dataapi.config.DataApiProperties;
 
 import org.apache.commons.lang3.StringUtils;
@@ -34,7 +34,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
-import javax.annotation.PostConstruct;
+import jakarta.annotation.PostConstruct;
 import javax.sql.DataSource;
 
 import lombok.extern.slf4j.Slf4j;

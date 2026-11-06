@@ -17,40 +17,37 @@
 
 package org.apache.dolphinscheduler.dataapi;
 
-import org.apache.dolphinscheduler.common.CommonConfiguration;
-import org.apache.dolphinscheduler.common.lifecycle.ServerLifeCycleManager;
-import org.apache.dolphinscheduler.common.thread.DefaultUncaughtExceptionHandler;
-import org.apache.dolphinscheduler.dao.DaoConfiguration;
-import org.apache.dolphinscheduler.plugin.datasource.api.plugin.DataSourcePluginManager;
-
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.context.annotation.Import;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
  * DolphinScheduler data-api microservice entry.
- * Shares metadata DB / token / datasource center with api-server; publishes SQL as HTTP via magic-api.
+ * Shares metadata DB / token / datasource center with api-server (read-only);
+ * publishes SQL as HTTP via magic-api and serves the read-only query console.
+ * <p>
+ * Runs on Spring Boot 3 outside the DS reactor: the former {@code @Import(DaoConfiguration,
+ * CommonConfiguration)} and {@code ServerLifeCycleManager}/{@code DataSourcePluginManager}
+ * bootstrap steps are replaced by the self-built {@code dataapi.meta} access layer and the
+ * descriptor-driven datasource registry.
  */
 @Slf4j
 @EnableScheduling
-@Import({DaoConfiguration.class, CommonConfiguration.class})
 @SpringBootApplication
 public class DataApiServer {
 
     public static void main(String[] args) {
-        Thread.setDefaultUncaughtExceptionHandler(DefaultUncaughtExceptionHandler.getInstance());
+        Thread.setDefaultUncaughtExceptionHandler(
+                (thread, error) -> log.error("Uncaught exception in thread {}", thread.getName(), error));
         SpringApplication.run(DataApiServer.class, args);
     }
 
     @EventListener
     public void onReady(ApplicationReadyEvent event) {
-        ServerLifeCycleManager.toRunning();
-        DataSourcePluginManager.loadDataSourcePlugin();
         log.info("DataApiServer is ready (magic-api + shared DS metadata)");
     }
 }
