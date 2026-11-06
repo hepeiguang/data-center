@@ -1,5 +1,7 @@
 param(
     [string]$JavaHome = "D:\HPG\workspace\LHYF\tools\jdk-11\jdk-11.0.2",
+    # data-asset is Spring Boot 3.0 since 2026-11-06: it needs JDK 17+, the rest of the stack stays on 11
+    [string]$AssetJavaHome = "D:\HPG\workspace\LHYF\tools\jdk-17",
     [string]$LhyfRoot = "D:\HPG\workspace\LHYF",
     [string]$DsHome = "D:\HPG\workspace\LHYF\apache-dolphinscheduler-3.4.3-bin",
     [string]$StHome = "D:\HPG\workspace\LHYF\apache-seatunnel-3.0.0",
@@ -107,6 +109,9 @@ function Ensure-Service([string]$Name, [int]$Port, [scriptblock]$Start, [int]$Ti
 
 foreach ($p in @("$JavaHome\bin\java.exe", "$DsHome\standalone-server\libs", "$StHome\bin\seatunnel.sh", $DataApiJar)) {
     if (-not (Test-Path $p)) { throw "missing prerequisite: $p" }
+}
+if ($WantAsset -and -not (Test-Path "$AssetJavaHome\bin\java.exe")) {
+    throw "missing JDK 17 for data-asset: $AssetJavaHome (Spring Boot 3 needs 17+; override with -AssetJavaHome)"
 }
 
 $env:JAVA_HOME = $JavaHome
@@ -218,7 +223,7 @@ if ($WantAsset) {
         # absolute config-DB path: the default is relative to the process cwd and would move with it
         $assetHome = Join-Path $Root "data-asset"
         $assetDb = Join-Path $assetHome "data\data-asset"
-        $asset = Start-Process -FilePath "$JavaHome\bin\java.exe" `
+        $asset = Start-Process -FilePath "$AssetJavaHome\bin\java.exe" `
             -ArgumentList (@($AssetJvmOpts.Split(" ", [System.StringSplitOptions]::RemoveEmptyEntries)) +
                 @("-jar", $AssetJar, "--server.port=$AssetPort",
                     "--spring.datasource.url=jdbc:h2:file:$($assetDb.Replace('\','/'));MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH")) `

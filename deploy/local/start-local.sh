@@ -4,6 +4,8 @@
 set -euo pipefail
 
 JAVA_HOME="${JAVA_HOME:-/opt/jdk-11}"
+# data-asset is Spring Boot 3.0 (JDK 17+); DS and data-api stay on JAVA_HOME (11)
+ASSET_JAVA_HOME="${ASSET_JAVA_HOME:-/opt/jdk-17}"
 DS_HOME="${DS_HOME:-/opt/apache-dolphinscheduler-3.4.3-bin}"
 ST_HOME="${ST_HOME:-/opt/apache-seatunnel-3.0.0}"
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
@@ -23,7 +25,7 @@ DS_OPTS="${DS_OPTS:--Xms256m -Xmx512m -Xss512k -XX:MaxMetaspaceSize=256m}"
 API_OPTS="${API_OPTS:--Xms128m -Xmx256m -Xss512k -XX:MaxMetaspaceSize=192m}"
 ASSET_OPTS="${ASSET_OPTS:--Xms64m -Xmx256m -Xss512k -XX:MaxMetaspaceSize=192m}"
 
-for p in "$JAVA_HOME/bin/java" "$DS_HOME/standalone-server/libs" "$ST_HOME/bin/seatunnel.sh" "$DATA_API_JAR"; do
+for p in "$JAVA_HOME/bin/java" "$ASSET_JAVA_HOME/bin/java" "$DS_HOME/standalone-server/libs" "$ST_HOME/bin/seatunnel.sh" "$DATA_API_JAR"; do
     [ -e "$p" ] || { echo "missing prerequisite: $p" >&2; exit 1; }
 done
 
@@ -99,7 +101,7 @@ export DS_BASE_URL="${DS_BASE_URL:-http://127.0.0.1:$DS_PORT/dolphinscheduler}"
 export ASSET_AUTH_MODE="${ASSET_AUTH_MODE:-ds}"
 cd "$(dirname "$ASSET_JAR")/.."
 ASSET_DB="$(cd "$(dirname "$ASSET_JAR")/.." && pwd)/data/data-asset"
-nohup "$JAVA_HOME/bin/java" $ASSET_OPTS \
+nohup "$ASSET_JAVA_HOME/bin/java" $ASSET_OPTS \
     -jar "$ASSET_JAR" --server.port="$ASSET_PORT" \
     --spring.datasource.url="jdbc:h2:file:$ASSET_DB;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH" \
     > "$RUN/data-asset.out.log" 2>&1 &
