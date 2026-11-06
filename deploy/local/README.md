@@ -1,18 +1,20 @@
 # 单机最小化部署
 
-不引入 Docker / K8s，直接在本机把整套跑起来。**默认 `-Profile all` 起全栈**；OM + OpenSearch 两个进程就吃 ~1.4GB 常驻，所以按手上的活分档：
+不引入 Docker / K8s，直接在本机把整套跑起来。**默认 `-Profile api`（DS + data-api + UI）**：本地开发已不需要 OpenMetadata/OpenSearch 常驻，这两个进程单是它们就吃 ~1.4GB。按手上的活分档：
+
+> 检索索引现在跑在服务器（`123.57.2.64:9200`，见 §4.1），**本机默认不再启动 OpenSearch**；需要本机索引时加 `-WithLocalIndex`。
 
 | Profile | 起哪些 | 用在 |
 |---|---|---|
-| `all`（默认） | 六个全起 | 全链路联调 |
-| `api` | DS + data-api + DS UI | 做 API 开发/网关/ACL，不碰资产页 |
-| `asset` | DS + data-asset + OpenMetadata + OpenSearch + DS UI | 做目录/血缘/治理，不碰 magic |
+| `api`（默认） | DS + data-api + DS UI | 做 API 开发/网关/ACL，不碰资产页 |
+| `asset` | DS + data-asset + OpenMetadata + DS UI（索引在远端） | 做目录/血缘/治理，不碰 magic |
+| `all` | 同上 + data-api | 全链路联调 |
 
 DS 与 UI 在两档里都在：UI 需要 DS 登录才能进任何页面，而 data-api 与 DS 共用同一个 H2 元库文件（`AUTO_SERVER` 只在本机有意义），**不能把 DS 和 data-api 拆到两台机器**。
 
 | 进程 | 端口 | 说明 |
 |---|---:|---|
-| OpenSearch | 9200 | OM 的检索后端（本机裸装，非容器） |
+| OpenSearch | 9200 | OM 的检索后端，默认在**服务器**（`123.57.2.64`，容器 `om-opensearch`）；本机仅在使用 `-WithLocalIndex` 时启动 |
 | OpenMetadata | 8585 | 治理主库：目录、标签/分级、血缘、质量定义 |
 | DolphinScheduler standalone | 12345 | 含 API / Master / Worker / Alert / UI，注册中心为 JDBC，元库 H2 |
 | data-api | 12346 | magic 发布、ACL、审计、OpenAPI |
@@ -43,7 +45,8 @@ DS 与 UI 在两档里都在：UI 需要 DS 登录才能进任何页面，而 da
 
 ```bash
 cd dolphinscheduler
-./mvnw -pl dolphinscheduler-data-api -am -DskipTests -Dspotless.skip=true -Djacoco.skip=true package
+# data-api 已脱离 DS 反应堆，独立 Spring Boot 3.0.13 工程，需 JDK 17 构建
+JAVA_HOME=<jdk17> mvn -f dolphinscheduler-data-api/pom.xml -DskipTests -Dspotless.skip=true -Djacoco.skip=true package
 ```
 
 ## 2. 启动
@@ -52,9 +55,10 @@ cd dolphinscheduler
 
 ```powershell
 cd deploy\local
-.\start-local.ps1                    # 全栈：OS -> OM -> DS -> data-api -> data-asset -> UI
-.\start-local.ps1 -Profile api       # 只做起 API 开发需要的三个（省 ~1.4GB）
-.\start-local.ps1 -Profile asset     # 只做资产/血缘（不起 data-api）
+.\start-local.ps1                    # 默认档：DS + data-api + DS UI
+.\start-local.ps1 -Profile asset     # 需要资产页时：OM + data-asset（索引走服务器，不拉本机 OS）
+.\start-local.ps1 -WithLocalIndex    # 例外：临时用本机 OpenSearch（9200）
+.\start-local.ps1 -Profile all       # 六个全起
 .\start-local.ps1 -WithNginx         # 额外起 8088 网关
 .\start-local.ps1 -Force             # 端口被占用时直接报错，而不是跳过
 ```
@@ -233,24 +237,36 @@ systemctl unmask fwupd.service fwupd-refresh.timer
 # 接口要退回 MySQL：DS 源中心重建 osint_mysql，并把 magic 脚本键改回 db.osint_mysql
 ```
 
-**OpenSearch 搬迁：已装好并"停用待条件"，不是没装。** 2026-11-05 实测结论：
+**OpenSearch 已上线并接管 OM 索引（2026-11-06）。** 形态与实测：
 
-| 步骤 | 结果 |
+| 项 | 值 |
 |---|---|
-| 取镜像 | 阿里 ACR **不代理** Docker Hub 任意镜像（`opensearchproject/opensearch` 杭州 404、北京 401，`library/nginx` 匿名也不放行）；最终经 `docker.1panel.live` 拉到 `opensearchproject/opensearch:3.4.0`（2.89GB） |
-| 配置 | `/opt/search/docker-compose.yml`：单节点、`-Xms192m -Xmx320m`、`mem_limit 1g`、security 插件开启（TLS + admin 口令）、数据卷 `./data` |
-| 启动 | 修掉数据目录属主（容器内 uid 1000）后 **40s 转 green**，`curl -k -u admin:... https://127.0.0.1:9200` 返回 200 |
-| 内存 | 容器 **687MB**，主机 available 从 1014MB 掉到 **203MB**；把堆 448m→320m **只省 8MB** |
-| 处置 | **已 `docker compose down` 并把 compose 改成 `restart: "no"`**，镜像与 `/opt/search/data` 保留；available 回到 1035MB，PG 正常 |
+| 位置 | 服务器 `123.57.2.64:9200`，容器 `om-opensearch`（`/opt/search/docker-compose.yml`，仓库副本 `deploy/server/search/docker-compose.yml`），`restart: unless-stopped` |
+| 安全 | **security 插件关闭**（`DISABLE_SECURITY_PLUGIN=true`，纯 HTTP、无账号）；9200 仅靠 **ECS 安全组**限制来源，别放开 0.0.0.0/0 |
+| JVM | `-Xms256m -Xmx256m -XX:MaxDirectMemorySize=192m -XX:ActiveProcessorCount=2`，`mem_limit 900m` |
+| 实测占用 | 容器 ~650MB；主机 available 1031MB → ~440MB |
+| 单节点设置 | 所有索引 `number_of_replicas=0`（否则副本永远 UNASSIGNED、健康变 red），并装了模板 `om_single_node` 让新建的 `*_search_index`/`*_data_index` 默认 0 副本 |
+| OM 侧 | `openmetadata/env.sh`：`ELASTICSEARCH_HOST=123.57.2.64`、`SCHEME=http`、无 user/password；无证书/SAN 问题 |
+| 索引现状 | 74 个索引；`table=16`、`tag=23`、`user=19`、`glossary_term=8`、`classification=7`、`data_product=2` |
 
-根因不是堆：security 插件的 netty/TLS + Metaspace/CodeCache/Direct 约 **500MB 固定开销**，在这台 1.6GB 实际内存的机器上与 PG 抢不到安全余量。恢复条件二选一：**升到 4G**，或**给该 ECS 的 SSH 权限**改走隧道（`ports: "127.0.0.1:9200:9200"` + 本机 `ssh -N -L 9200:127.0.0.1:9200`，OM 仍连 `127.0.0.1:9200`，9200 不出网）。
+踩过的两个坑（都记在这里，避免重犯）：
 
-要接 OM 还有一步：OM 2.1 的索引配置只有 `truststorePath`，**没有 verifySSL 开关**，而 demo 证书 SAN 不含公网 IP——走 HTTPS 必须用自建 CA 重签带 `IP:123.57.2.64` 的证书并给 OM 配 truststore；走隧道则无需处理证书。
+1. **`mem_limit 700m` 会把 OpenSearch OOM 循环重启**：堆 320m + 默认 `MaxDirectMemorySize=320m` + Metaspace 170m > 700m，OM 建完 70 多个分片后进程被 cgroup 杀掉 4 次（`dmesg` 里 `Memory cgroup out of memory ... java`）。必须显式限 `MaxDirectMemorySize` 并给到 900m 限额。
+2. **单节点别留副本**：OM 建索引默认 1 副本 → 单节点下副本永远分配不出去，集群/索引变 red，OM 日志刷 `Failed to fetch cluster health`。`PUT /*/_settings {"index":{"number_of_replicas":0}}` + 索引模板解决。
+
+重建索引（OM 2.1 的接口必须是**实体清单**，不能空）：
 
 ```bash
-# 条件满足后恢复
-cd /opt/search && sed -i 's/restart: "no"/restart: unless-stopped/' docker-compose.yml && docker compose up -d
+# 1) 取实体引用（各资源列表接口，type 用 OM 的单数名）
+#    database/databaseSchema/table/glossary/glossaryTerm/classification/tag/domain/
+#    dataProduct/team/user/policy/role/bot/app 等，本机现状共 127 个
+# 2) POST，timeoutMinutes 上限是 10
+curl -X POST "http://127.0.0.1:8585/api/v1/search/reindexEntities?timeoutMinutes=10" \
+  -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \
+  -d '[{"id":"<uuid>","type":"table"}, ...]'
 ```
+
+**中文检索不支持**（实测）：`q=ads_crop_health` / `q=health` 都有结果，`q=作物` 返回 0 条——索引用的是标准分析器，没有 `ik`/`smartcn`。要支持中文得装分析插件并改 OM 的索引 mapping（等于跟 OM 升级对着干），不建议；中文名请用列表接口 + 客户端过滤。
 
 三个遗留风险（要在控制台/SSH 里处理，不归本脚本管）：
 

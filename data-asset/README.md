@@ -18,8 +18,8 @@
 ## 运行（本地阶段：jar）
 
 ```bash
-# JDK 11 + Maven 3.9
-export JAVA_HOME=D:/HPG/workspace/LHYF/tools/jdk-11/jdk-11.0.2
+# JDK 17 + Maven 3.9（Spring Boot 3.0 要求 17+；DS/data-api 仍是 JDK 11，别混用）
+export JAVA_HOME=D:/HPG/workspace/LHYF/tools/jdk-17
 cd data-asset
 "$JAVA_HOME/bin/java" -version
 

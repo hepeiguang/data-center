@@ -25,7 +25,8 @@
 
 ```bash
 cd dolphinscheduler
-./mvnw -pl dolphinscheduler-data-api -am -DskipTests -Dspotless.skip=true -Djacoco.skip=true package
+# data-api 已脱离 DS 反应堆，独立 Spring Boot 3.0.13 工程，需 JDK 17 构建
+JAVA_HOME=<jdk17> mvn -f dolphinscheduler-data-api/pom.xml -DskipTests -Dspotless.skip=true -Djacoco.skip=true package
 ```
 
 ## 2. 构建与启动

@@ -26,13 +26,14 @@ DolphinScheduler 体系内的数据服务微服务（Phase 1）：基于 **magic
 
 ```bash
 cd dolphinscheduler
-./mvnw -pl dolphinscheduler-data-api -am -DskipTests -Dspotless.skip=true package
+# 本模块已脱离 DS 反应堆，是独立的 Spring Boot 3.0.13 工程：构建与运行均需 JDK 17
+JAVA_HOME=<jdk17> mvn -f dolphinscheduler-data-api/pom.xml -DskipTests -Dspotless.skip=true package
 # 本机/单机（H2，与 DS standalone 共用一个库文件）
-java -jar dolphinscheduler-data-api/target/dolphinscheduler-data-api-3.4.3.jar \
+<jdk17>/bin/java -jar dolphinscheduler-data-api/target/dolphinscheduler-data-api-3.4.3.jar \
   --spring.profiles.active=h2
 
 # 生产（需先部署 PostgreSQL 并改 application.yaml 中的连接串）
-java -jar dolphinscheduler-data-api/target/dolphinscheduler-data-api-3.4.3.jar \
+<jdk17>/bin/java -jar dolphinscheduler-data-api/target/dolphinscheduler-data-api-3.4.3.jar \
   --spring.profiles.active=postgresql
 ```
 

@@ -1,0 +1,49 @@
+# data-api datasource type descriptors (DATA-API-BOOT3-CONSOLE-PLAN S3 / §6.2).
+# One row per DS DbType name. Adding a JDBC source type = descriptor entry + driver jar
+# + a da_datasource_ext row; no Java changes.
+#
+# quote:         identifier quote character (" | ` | [])
+# limitOffset:   paging template ({limit} / {offset})
+# catalogMode:   catalog (MySQL-style) | schema (PG-style) | schema-as-user (Oracle-style)
+# readOnlyTx:    statement opening a dialect read-only transaction; empty = rely on setReadOnly only
+# sessionInitSql:template executed on every pooled connection; {timeoutMillis}/{timeoutSeconds} substituted;
+#                data-api.session-init-sql.<TYPE> in application.yaml still overrides (empty disables)
+types:
+  POSTGRESQL:
+    driver: org.postgresql.Driver
+    validationQuery: "select 1"
+    quote: '"'
+    limitOffset: "LIMIT {limit} OFFSET {offset}"
+    catalogMode: schema
+    readOnlyTx: SET TRANSACTION READ ONLY
+    metadataStrategy: jdbc
+    sessionInitSql: "SET statement_timeout = {timeoutMillis}"
+    systemSchemas:
+      - pg_catalog
+      - information_schema
+  MYSQL:
+    driver: com.mysql.cj.jdbc.Driver
+    validationQuery: "select 1"
+    quote: '`'
+    limitOffset: "LIMIT {limit} OFFSET {offset}"
+    catalogMode: catalog
+    readOnlyTx: START TRANSACTION READ ONLY
+    metadataStrategy: jdbc
+    sessionInitSql: "SET SESSION max_execution_time = {timeoutMillis}"
+    systemSchemas:
+      - information_schema
+      - mysql
+      - performance_schema
+      - sys
+  DORIS:
+    # Doris speaks the MySQL protocol; no dialect read-only transaction, query_timeout guard only.
+    driver: com.mysql.cj.jdbc.Driver
+    validationQuery: "select 1"
+    quote: '`'
+    limitOffset: "LIMIT {limit} OFFSET {offset}"
+    catalogMode: catalog
+    readOnlyTx: ""
+    metadataStrategy: jdbc
+    sessionInitSql: "SET query_timeout = {timeoutSeconds}"
+    systemSchemas:
+      - information_schema

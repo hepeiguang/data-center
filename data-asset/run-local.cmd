@@ -1,6 +1,6 @@
 @echo off
 setlocal
-set "JAVA_HOME=D:\HPG\workspace\LHYF\tools\jdk-11\jdk-11.0.2"
+set "JAVA_HOME=D:\HPG\workspace\LHYF\tools\jdk-17"
 cd /d "%~dp0"
 if not exist "target\data-asset-service.jar" (
   echo target\data-asset-service.jar not found, run build.cmd first

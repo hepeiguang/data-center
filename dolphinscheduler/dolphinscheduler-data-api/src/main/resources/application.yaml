@@ -39,30 +39,15 @@ spring:
     charset: UTF-8
   datasource:
     driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://127.0.0.1:5432/dolphinscheduler
-    username: root
-    password: root
+    url: ${DA_META_JDBC_URL:jdbc:postgresql://127.0.0.1:5432/dolphinscheduler}
+    username: ${DA_META_USER:root}
+    password: ${DA_META_PASSWORD:root}
     hikari:
+      maximum-pool-size: 5
       connection-test-query: select 1
       pool-name: DataApiMeta
-  mvc:
-    pathmatch:
-      matching-strategy: ANT_PATH_MATCHER
 
 # Same metadata DB as api-server — override via profile / env
-mybatis-plus:
-  mapper-locations: classpath:org/apache/dolphinscheduler/dao/mapper/*Mapper.xml
-  type-aliases-package: org.apache.dolphinscheduler.dao.entity
-  configuration:
-    cache-enabled: false
-    call-setters-on-nulls: true
-    map-underscore-to-camel-case: true
-    jdbc-type-for-null: NULL
-  global-config:
-    db-config:
-      id-type: auto
-    banner: false
-
 magic-api:
   web: /magic/web
   prefix: /data-api/gateway
@@ -114,6 +99,15 @@ data-api:
   open-api-public: false
   open-api-server-url: ""
   lineage-enabled: true
+  # 业务查询台（DATA-API-BOOT3-CONSOLE-PLAN §7）：默认关闭，dev profile 显式开启；
+  # 开启后仍需 da_datasource_ext.console_enabled=1 的源才可见
+  console:
+    enabled: false
+    max-display-rows: 1000
+    max-export-rows: 100000
+    timeout-seconds: 60
+    max-sql-bytes: 20480
+    per-user-concurrency: 1
 
 management:
   endpoints:
@@ -131,9 +125,9 @@ spring:
       on-profile: mysql
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://127.0.0.1:3306/dolphinscheduler?useUnicode=true&characterEncoding=UTF-8&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
-    username: root
-    password: root
+    url: ${DA_META_JDBC_URL:jdbc:mysql://127.0.0.1:3306/dolphinscheduler?useUnicode=true&characterEncoding=UTF-8&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true}
+    username: ${DA_META_USER:root}
+    password: ${DA_META_PASSWORD:root}
 
 ---
 spring:
@@ -142,9 +136,9 @@ spring:
       on-profile: postgresql
   datasource:
     driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://127.0.0.1:5432/dolphinscheduler
-    username: root
-    password: root
+    url: ${DA_META_JDBC_URL:jdbc:postgresql://127.0.0.1:5432/dolphinscheduler}
+    username: ${DA_META_USER:root}
+    password: ${DA_META_PASSWORD:root}
 
 ---
 spring:

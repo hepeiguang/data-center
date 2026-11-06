@@ -278,5 +278,24 @@ export default {
     reload: '从源中心重新加载',
     refresh: '刷新列表',
     reload_ok: '已重新加载'
+  },
+  console: {
+    title: '业务查询台',
+    pick_datasource: '请选择已开启查询台的数据源',
+    empty_sql: '请输入 SQL 语句',
+    run: '执行 (Ctrl+Enter)',
+    run_tips: '仅允许单条 SELECT / WITH / EXPLAIN 查询',
+    cancel: '取消',
+    cancel_ok: '已发送取消请求',
+    cancel_miss: '查询已结束，无法取消',
+    export: '导出 CSV',
+    export_ok: '导出完成，请查看下载文件',
+    rows: '行数',
+    elapsed: '耗时',
+    truncated: '结果已截断（达到行数上限）',
+    no_result: '暂无结果，执行一条查询后展示',
+    max_rows: '行上限',
+    history: '查询历史',
+    history_empty: '暂无记录'
   }
 }

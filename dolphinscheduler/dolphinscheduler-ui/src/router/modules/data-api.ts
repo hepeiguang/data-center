@@ -72,6 +72,17 @@ export default {
         showSide: true,
         auth: []
       }
+    },
+    {
+      path: '/dataservice/console',
+      name: 'data-api-console',
+      component: components['data-api-console'],
+      meta: {
+        title: '业务查询台',
+        activeMenu: 'dataservice',
+        showSide: true,
+        auth: []
+      }
     }
   ]
 }

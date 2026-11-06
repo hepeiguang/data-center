@@ -1,5 +1,9 @@
 param(
     [string]$JavaHome = "D:\HPG\workspace\LHYF\tools\jdk-11\jdk-11.0.2",
+    # data-asset is Spring Boot 3.0 since 2026-11-06: it needs JDK 17+, the rest of the stack stays on 11
+    [string]$AssetJavaHome = "D:\HPG\workspace\LHYF\tools\jdk-17",
+    # data-api moved to Spring Boot 3.0.13 as well: it needs JDK 17+, override with -ApiJavaHome
+    [string]$ApiJavaHome = "D:\HPG\workspace\LHYF\tools\jdk-17",
     [string]$LhyfRoot = "D:\HPG\workspace\LHYF",
     [string]$DsHome = "D:\HPG\workspace\LHYF\apache-dolphinscheduler-3.4.3-bin",
     [string]$StHome = "D:\HPG\workspace\LHYF\apache-seatunnel-3.0.0",
@@ -14,15 +18,20 @@ param(
     [int]$AssetPort = 12347,
     [int]$UiPort = 5173,
     # all   = six services; api = DS + data-api + UI (no OM/OpenSearch);
-    # asset = DS + data-asset + OM + OpenSearch + UI (no data-api)
+    # asset = DS + data-asset + OM + OpenSearch + UI (no data-api).
+    # Default is api: local dev no longer needs OpenMetadata/OpenSearch running,
+    # and that pair alone is ~1.4GB RSS.
     [ValidateSet("all", "api", "asset")]
-    [string]$Profile = "all",
+    [string]$Profile = "api",
     # sized from jstat -gc live sets measured on this box (see README "内存预算")
     [string]$DsJvmOpts = "-Xms256m -Xmx512m -Xss512k -XX:MaxMetaspaceSize=256m",
     [string]$ApiJvmOpts = "-Xms128m -Xmx256m -Xss512k -XX:MaxMetaspaceSize=192m",
     [string]$AssetJvmOpts = "-Xms64m -Xmx256m -Xss512k -XX:MaxMetaspaceSize=192m",
     [string]$OmJvmOpts = "-Xms512m -Xmx1024m -Xss512k -XX:MaxMetaspaceSize=320m",
     [string]$OsJvmOpts = "-Xms512m -Xmx640m -Xss512k -XX:MaxMetaspaceSize=256m",
+    # the index normally runs on the 2C2G server (see env.sh ELASTICSEARCH_HOST);
+    # pass -WithLocalIndex to start a local OpenSearch instead
+    [switch]$WithLocalIndex,
     [switch]$Force,
     [switch]$WithNginx,
     [string]$NginxExe = "D:\HPG\software\nginx-1.26.1\nginx-1.26.1\nginx.exe"
@@ -30,12 +39,16 @@ param(
 
 # ---------------------------------------------------------------------------
 # One command for the local stack, in dependency order:
-#   OpenSearch :9200 -> OpenMetadata :8585 -> DS standalone :12345
+#   [OpenSearch :9200] -> OpenMetadata :8585 -> DS standalone :12345
 #   -> data-api :12346 -> data-asset :12347 -> DS UI dev :5173 (-> nginx :8088)
-# Services whose port is already listening are skipped, so re-running this
-# script tops up a partially started stack. -Force turns an occupied port into
-# an error. -Profile picks which services are needed so a 2C-class dev box does
-# not have to hold the whole stack (OM + OpenSearch alone are ~1.4GB RSS).
+# The search index normally runs on the 2C2G server (openmetadata/env.sh points at
+# http://123.57.2.64:9200), so OpenSearch is NOT started here by default; pass
+# -WithLocalIndex if you want the old local one. Services whose port is already
+# listening are skipped, so re-running this script tops up a partial stack.
+# -Force turns an occupied port into an error. -Profile picks which services are
+# needed so a 2C-class dev box does not have to hold the whole stack.
+# Default is -Profile api (DS + data-api + UI); pass -Profile asset when the
+# catalog/lineage/governance pages need OpenMetadata, or -Profile all for both.
 # DS and the UI are always started: the UI requires a DS login, and data-api
 # shares DS's H2 metadata file, so they cannot live on different hosts.
 # ---------------------------------------------------------------------------
@@ -54,7 +67,8 @@ if (-not $UiHome) {
 $Run = Join-Path $PSScriptRoot "run"
 New-Item -ItemType Directory -Path $Run -Force | Out-Null
 
-$WantIndex = $Profile -in @("all", "asset")   # OpenSearch + OpenMetadata
+$WantIndex = $Profile -in @("all", "asset")   # OpenMetadata (its index lives on the server)
+$WantLocalOs = $WithLocalIndex                # local OpenSearch is opt-in
 $WantApi = $Profile -in @("all", "api")       # data-api (magic console)
 $WantAsset = $Profile -in @("all", "asset")   # data-asset
 
@@ -98,6 +112,12 @@ function Ensure-Service([string]$Name, [int]$Port, [scriptblock]$Start, [int]$Ti
 foreach ($p in @("$JavaHome\bin\java.exe", "$DsHome\standalone-server\libs", "$StHome\bin\seatunnel.sh", $DataApiJar)) {
     if (-not (Test-Path $p)) { throw "missing prerequisite: $p" }
 }
+if ($WantAsset -and -not (Test-Path "$AssetJavaHome\bin\java.exe")) {
+    throw "missing JDK 17 for data-asset: $AssetJavaHome (Spring Boot 3 needs 17+; override with -AssetJavaHome)"
+}
+if ($WantApi -and -not (Test-Path "$ApiJavaHome\bin\java.exe")) {
+    throw "missing JDK 17 for data-api: $ApiJavaHome (Spring Boot 3 needs 17+; override with -ApiJavaHome)"
+}
 
 $env:JAVA_HOME = $JavaHome
 $env:SEATUNNEL_HOME = $StHome
@@ -112,7 +132,7 @@ if (Test-Path $HadoopHome) {
 $dbFile = Join-Path $DataDir "dsdb.mv.db"
 $dbUrl = "jdbc:h2:file:$($DataDir.Replace('\','/'))/dsdb;MODE=MySQL;AUTO_SERVER=TRUE;DB_CLOSE_DELAY=-1;DATABASE_TO_LOWER=true"
 
-if ($WantIndex) {
+if ($WantLocalOs) {
     Ensure-Service "OpenSearch" $OsPort {
         # launch opensearch.bat directly: the .cmd wrapper uses `start`, which dies when this
         # process already owns redirected stdout/stderr handles
@@ -134,7 +154,9 @@ if ($WantIndex) {
             Remove-Item Env:OPENSEARCH_JAVA_OPTS -ErrorAction SilentlyContinue
         }
     } 300 "$Run\opensearch.out.log"
+}
 
+if ($WantIndex) {
     Ensure-Service "OpenMetadata" $OmPort {
         $launch = Join-Path $LhyfRoot "openmetadata\start-om.cmd"
         if (-not (Test-Path $launch)) { throw "missing $launch" }
@@ -184,7 +206,7 @@ if ($WantApi) {
     Ensure-Service "data-api" $ApiPort {
         $env:SPRING_DATASOURCE_URL = $dbUrl
         try {
-            $api = Start-Process -FilePath "$JavaHome\bin\java.exe" `
+            $api = Start-Process -FilePath "$ApiJavaHome\bin\java.exe" `
                 -ArgumentList (@($ApiJvmOpts.Split(" ", [System.StringSplitOptions]::RemoveEmptyEntries)) +
                     @("-jar", $DataApiJar, "--spring.profiles.active=h2", "--server.port=$ApiPort")) `
                 -WorkingDirectory (Join-Path $Root "dolphinscheduler\dolphinscheduler-data-api") `
@@ -206,7 +228,7 @@ if ($WantAsset) {
         # absolute config-DB path: the default is relative to the process cwd and would move with it
         $assetHome = Join-Path $Root "data-asset"
         $assetDb = Join-Path $assetHome "data\data-asset"
-        $asset = Start-Process -FilePath "$JavaHome\bin\java.exe" `
+        $asset = Start-Process -FilePath "$AssetJavaHome\bin\java.exe" `
             -ArgumentList (@($AssetJvmOpts.Split(" ", [System.StringSplitOptions]::RemoveEmptyEntries)) +
                 @("-jar", $AssetJar, "--server.port=$AssetPort",
                     "--spring.datasource.url=jdbc:h2:file:$($assetDb.Replace('\','/'));MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH")) `

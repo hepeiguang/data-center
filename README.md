@@ -48,9 +48,9 @@ docker compose up -d
 
 ```powershell
 cd deploy/local
-.\start-local.ps1                # 全栈：OpenSearch -> OM -> DS -> data-api -> data-asset -> UI
-.\start-local.ps1 -Profile api   # 只做 API 开发：DS + data-api + UI（不拉 OM/OpenSearch）
-.\start-local.ps1 -Profile asset # 只做资产/血缘：DS + data-asset + OM + OpenSearch + UI
+.\start-local.ps1                # 默认档：DS + data-api + UI（不拉 OM/OpenSearch）
+.\start-local.ps1 -Profile asset # 需要资产页：DS + data-asset + OM + OpenSearch + UI
+.\start-local.ps1 -Profile all   # 六个全起
 .\start-local.ps1 -WithNginx
 .\status.ps1                     # 端口 / PID / HTTP 体检
 .\stop-local.ps1 -OnlyPorts 12346        # 只重启 data-api 时用；-DryRun 先看不动手
@@ -91,5 +91,6 @@ K8s HA 建议 **3 × 8C16G**（requests 约 16C/24G，limits 约 30C/60G），�
 
 ```bash
 cd dolphinscheduler
-./mvnw -pl dolphinscheduler-data-api -am -DskipTests -Dspotless.skip=true -Djacoco.skip=true package
+# data-api 已脱离 DS 反应堆，独立 Spring Boot 3.0.13 工程，需 JDK 17 构建
+JAVA_HOME=<jdk17> mvn -f dolphinscheduler-data-api/pom.xml -DskipTests -Dspotless.skip=true -Djacoco.skip=true package
 ```

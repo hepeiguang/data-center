@@ -17,12 +17,11 @@
 
 package org.apache.dolphinscheduler.dataapi.auth;
 
-import org.apache.dolphinscheduler.common.enums.Flag;
-import org.apache.dolphinscheduler.common.enums.UserType;
-import org.apache.dolphinscheduler.dao.entity.DataSource;
-import org.apache.dolphinscheduler.dao.entity.User;
-import org.apache.dolphinscheduler.dao.mapper.DataSourceMapper;
-import org.apache.dolphinscheduler.dao.repository.UserDao;
+import org.apache.dolphinscheduler.dataapi.meta.DataSourceRepository;
+import org.apache.dolphinscheduler.dataapi.meta.Flag;
+import org.apache.dolphinscheduler.dataapi.meta.User;
+import org.apache.dolphinscheduler.dataapi.meta.UserRepository;
+import org.apache.dolphinscheduler.dataapi.meta.UserType;
 import org.apache.dolphinscheduler.dataapi.acl.DataApiAclService;
 import org.apache.dolphinscheduler.dataapi.config.DataApiProperties;
 import org.apache.dolphinscheduler.dataapi.datasource.DsMagicDataSourceLoader;
@@ -35,7 +34,6 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.util.Collection;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -97,28 +95,28 @@ public class DataApiRequestInterceptor implements RequestInterceptor {
     }
 
     private final DsTokenAuthorizationInterceptor authorizationInterceptor;
-    private final DataSourceMapper dataSourceMapper;
+    private final DataSourceRepository dataSourceRepository;
     private final DsMagicDataSourceLoader dataSourceLoader;
     private final DataApiAclService aclService;
     private final DataApiProperties properties;
     private final DataApiInvokeLogService invokeLogService;
-    private final UserDao userDao;
+    private final UserRepository userDao;
     private final AppCredentialService appCredentialService;
     private final RateLimitService rateLimitService;
     private final ResponseGovernor responseGovernor;
 
     public DataApiRequestInterceptor(DsTokenAuthorizationInterceptor authorizationInterceptor,
-                                     DataSourceMapper dataSourceMapper,
+                                     DataSourceRepository dataSourceRepository,
                                      DsMagicDataSourceLoader dataSourceLoader,
                                      DataApiAclService aclService,
                                      DataApiProperties properties,
                                      DataApiInvokeLogService invokeLogService,
-                                     UserDao userDao,
+                                     UserRepository userDao,
                                      AppCredentialService appCredentialService,
                                      RateLimitService rateLimitService,
                                      ResponseGovernor responseGovernor) {
         this.authorizationInterceptor = authorizationInterceptor;
-        this.dataSourceMapper = dataSourceMapper;
+        this.dataSourceRepository = dataSourceRepository;
         this.dataSourceLoader = dataSourceLoader;
         this.aclService = aclService;
         this.properties = properties;
@@ -264,8 +262,8 @@ public class DataApiRequestInterceptor implements RequestInterceptor {
         }
         try {
             Object raw = response.getResponse();
-            if (raw instanceof javax.servlet.http.HttpServletResponse) {
-                ((javax.servlet.http.HttpServletResponse) raw).setStatus(code);
+            if (raw instanceof jakarta.servlet.http.HttpServletResponse) {
+                ((jakarta.servlet.http.HttpServletResponse) raw).setStatus(code);
             }
         } catch (Exception ignored) {
             // response may already be committed; body still carries the magic code
@@ -327,9 +325,7 @@ public class DataApiRequestInterceptor implements RequestInterceptor {
     }
 
     private boolean canAccessDatasource(int userId, int datasourceId) {
-        List<DataSource> authorized =
-                dataSourceMapper.listAuthorizedDataSource(userId, new Integer[]{datasourceId});
-        return authorized != null && !authorized.isEmpty();
+        return dataSourceRepository.canAccess(userId, false, datasourceId);
     }
 
     private static Integer parseDatasourceId(String key) {
