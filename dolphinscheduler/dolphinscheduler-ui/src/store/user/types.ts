@@ -21,9 +21,7 @@ interface UserState {
   sessionId: string
   securityConfigType: string
   baseResDir: string
-  baseUdfDir: string
   userInfo: UserInfoRes | {}
-  logoutUrl: string
 }
 
 export { UserState }

@@ -107,9 +107,9 @@ const alarmGroupManage = defineComponent({
       <NSpace vertical>
         <Card>
           <NSpace justify='space-between'>
-            {/* <NButton size='small' type='primary' onClick={handleModalChange}>
+            <NButton size='small' type='primary' onClick={handleModalChange}>
               {t('security.alarm_group.create_alarm_group')}
-            </NButton> */}
+            </NButton>
             <NSpace>
               <Search
                 v-model:value={this.searchVal}
@@ -125,34 +125,25 @@ const alarmGroupManage = defineComponent({
           </NSpace>
         </Card>
         <Card title={t('menu.alarm_group_manage')}>
-          {{
-            default: () => (
-              <NSpace vertical>
-                <NDataTable
-                  loading={loadingRef}
-                  columns={this.columns}
-                  data={this.tableData}
-                />
-                <NSpace justify='center'>
-                  <NPagination
-                    v-model:page={this.page}
-                    v-model:page-size={this.pageSize}
-                    page-count={this.totalPage}
-                    show-size-picker
-                    page-sizes={[10, 30, 50]}
-                    show-quick-jumper
-                    onUpdatePage={requestData}
-                    onUpdatePageSize={onUpdatePageSize}
-                  />
-                </NSpace>
-              </NSpace>
-            ),
-            'header-extra': () => (
-              <NButton size='small' type='primary' onClick={handleModalChange}>
-                {t('security.alarm_group.create_alarm_group')}
-              </NButton>
-            )
-          }}
+          <NSpace vertical>
+            <NDataTable
+              loading={loadingRef}
+              columns={this.columns}
+              data={this.tableData}
+            />
+            <NSpace justify='center'>
+              <NPagination
+                v-model:page={this.page}
+                v-model:page-size={this.pageSize}
+                page-count={this.totalPage}
+                show-size-picker
+                page-sizes={[10, 30, 50]}
+                show-quick-jumper
+                onUpdatePage={requestData}
+                onUpdatePageSize={onUpdatePageSize}
+              />
+            </NSpace>
+          </NSpace>
         </Card>
         <AlarmGroupModal
           showModalRef={this.showModalRef}

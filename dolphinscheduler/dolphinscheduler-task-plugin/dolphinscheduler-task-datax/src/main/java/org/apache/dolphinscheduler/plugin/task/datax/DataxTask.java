@@ -20,7 +20,6 @@ package org.apache.dolphinscheduler.plugin.task.datax;
 import static org.apache.dolphinscheduler.plugin.datasource.api.utils.PasswordUtils.decodePassword;
 import static org.apache.dolphinscheduler.plugin.task.api.TaskConstants.EXIT_CODE_FAILURE;
 
-import org.apache.dolphinscheduler.common.log.SensitiveDataConverter;
 import org.apache.dolphinscheduler.common.utils.JSONUtils;
 import org.apache.dolphinscheduler.plugin.datasource.api.plugin.DataSourceClientProvider;
 import org.apache.dolphinscheduler.plugin.datasource.api.utils.DataSourceUtils;
@@ -29,9 +28,12 @@ import org.apache.dolphinscheduler.plugin.task.api.ShellCommandExecutor;
 import org.apache.dolphinscheduler.plugin.task.api.TaskCallBack;
 import org.apache.dolphinscheduler.plugin.task.api.TaskException;
 import org.apache.dolphinscheduler.plugin.task.api.TaskExecutionContext;
+import org.apache.dolphinscheduler.plugin.task.api.log.SensitiveDataConverter;
 import org.apache.dolphinscheduler.plugin.task.api.model.Property;
+import org.apache.dolphinscheduler.plugin.task.api.model.ResourceInfo;
 import org.apache.dolphinscheduler.plugin.task.api.model.TaskResponse;
 import org.apache.dolphinscheduler.plugin.task.api.parameters.AbstractParameters;
+import org.apache.dolphinscheduler.plugin.task.api.resource.ResourceContext;
 import org.apache.dolphinscheduler.plugin.task.api.shell.IShellInterceptorBuilder;
 import org.apache.dolphinscheduler.plugin.task.api.shell.ShellInterceptorBuilderFactory;
 import org.apache.dolphinscheduler.plugin.task.api.utils.ParameterUtils;
@@ -41,6 +43,7 @@ import org.apache.dolphinscheduler.spi.enums.Flag;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
 import java.nio.charset.StandardCharsets;
@@ -54,6 +57,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 
 import lombok.extern.slf4j.Slf4j;
@@ -89,46 +93,23 @@ public class DataxTask extends AbstractTask {
      */
     private static final String SELECT_ALL_CHARACTER = "*";
 
-    /**
-     * post jdbc info regex
-     */
     private static final String POST_JDBC_INFO_REGEX = "(?<=(post jdbc info:)).*(?=)";
     /**
      * datax path
      */
     private static final String DATAX_LAUNCHER = "${DATAX_LAUNCHER}";
-    /**
-     * datax channel count
-     */
     private static final int DATAX_CHANNEL_COUNT = 1;
 
-    /**
-     * datax parameters
-     */
     private DataxParameters dataXParameters;
 
-    /**
-     * shell command executor
-     */
-    private ShellCommandExecutor shellCommandExecutor;
-
-    /**
-     * taskExecutionContext
-     */
-    private TaskExecutionContext taskExecutionContext;
+    private final ShellCommandExecutor shellCommandExecutor;
 
     private DataxTaskExecutionContext dataxTaskExecutionContext;
 
-    /**
-     * constructor
-     *
-     * @param taskExecutionContext taskExecutionContext
-     */
     public DataxTask(TaskExecutionContext taskExecutionContext) {
         super(taskExecutionContext);
-        this.taskExecutionContext = taskExecutionContext;
 
-        this.shellCommandExecutor = new ShellCommandExecutor(this::logHandle, taskExecutionContext);
+        this.shellCommandExecutor = new ShellCommandExecutor(taskExecutionContext);
     }
 
     /**
@@ -136,7 +117,7 @@ public class DataxTask extends AbstractTask {
      */
     @Override
     public void init() {
-        dataXParameters = JSONUtils.parseObject(taskExecutionContext.getTaskParams(), DataxParameters.class);
+        dataXParameters = JSONUtils.parseObject(taskRequest.getTaskParams(), DataxParameters.class);
         log.info("Initialize datax task params {}", JSONUtils.toPrettyJsonString(dataXParameters));
 
         if (dataXParameters == null || !dataXParameters.checkParameters()) {
@@ -144,7 +125,7 @@ public class DataxTask extends AbstractTask {
         }
         SensitiveDataConverter.addMaskPattern(POST_JDBC_INFO_REGEX);
         dataxTaskExecutionContext =
-                dataXParameters.generateExtendedContext(taskExecutionContext.getResourceParametersHelper());
+                dataXParameters.generateExtendedContext(taskRequest.getResourceParametersHelper());
     }
 
     @SuppressWarnings("unchecked")
@@ -152,7 +133,7 @@ public class DataxTask extends AbstractTask {
     public void handle(TaskCallBack taskCallBack) throws TaskException {
         try {
             // replace placeholder,and combine local and global parameters
-            Map<String, Property> paramsMap = taskExecutionContext.getPrepareParamsMap();
+            Map<String, Property> paramsMap = taskRequest.getPrepareParamsMap();
 
             IShellInterceptorBuilder<?, ?> shellActuatorBuilder = ShellInterceptorBuilderFactory.newBuilder()
                     .properties(ParameterUtils.convert(paramsMap))
@@ -190,6 +171,18 @@ public class DataxTask extends AbstractTask {
     }
 
     /**
+     * Reads the DataX job definition from the designated json resource file. The worker has
+     * already downloaded resources into the execution directory by the time the task runs.
+     */
+    private String readJsonFromResourceFile(ResourceInfo jobResource) throws Exception {
+        String resourceFileName = jobResource.getResourceName();
+        ResourceContext resourceContext = taskRequest.getResourceContext();
+        return FileUtils.readFileToString(
+                new File(resourceContext.getResourceItem(resourceFileName).getResourceAbsolutePathInLocal()),
+                StandardCharsets.UTF_8);
+    }
+
+    /**
      * build datax configuration file
      *
      * @return datax json file name
@@ -197,9 +190,7 @@ public class DataxTask extends AbstractTask {
      */
     private String buildDataxJsonFile(Map<String, Property> paramsMap) throws Exception {
         // generate json
-        String fileName = String.format("%s/%s_job.json",
-                taskExecutionContext.getExecutePath(),
-                taskExecutionContext.getTaskAppId());
+        String fileName = String.format("%s/%s_job.json", taskRequest.getExecutePath(), taskRequest.getTaskAppId());
         String json;
 
         Path path = new File(fileName).toPath();
@@ -208,7 +199,23 @@ public class DataxTask extends AbstractTask {
         }
 
         if (dataXParameters.getCustomConfig() == Flag.YES.ordinal()) {
-            json = dataXParameters.getJson().replaceAll("\\r\\n", System.lineSeparator());
+            // An attached resource file is a valid way to supply the job definition. Without
+            // this branch the worker downloads the resource but the plugin runs with the empty
+            // inline json and the job fails (issue #18389). Existing tasks created through the
+            // UI carry an empty object placeholder, treat it the same as no inline json.
+            if (dataXParameters.isInlineJsonAbsent()) {
+                // the job definition is the single attached .json resource, never the first
+                // entry in resourceList, which may be an auxiliary keytab or xml (issue #18389)
+                ResourceInfo jobResource = dataXParameters.getJobDefinitionResource();
+                if (jobResource == null) {
+                    throw new TaskException(
+                            "DataX job definition is missing, provide inline json or attach exactly one .json resource file");
+                }
+                json = readJsonFromResourceFile(jobResource);
+            } else {
+                json = dataXParameters.getJson();
+            }
+            json = json.replaceAll("\\r\\n", System.lineSeparator());
         } else {
             ObjectNode job = JSONUtils.createObjectNode();
             job.putArray("content").addAll(buildDataxJobContentJson());
@@ -305,6 +312,10 @@ public class DataxTask extends AbstractTask {
             }
         }
 
+        if (dataXParameters.getBatchSize() > 0) {
+            writerParam.put("batchSize", dataXParameters.getBatchSize());
+        }
+
         ObjectNode writer = JSONUtils.createObjectNode();
         writer.put("name", DataxUtils.getWriterPluginName(dataxTaskExecutionContext.getTargetType()));
         writer.set("parameter", writerParam);
@@ -327,7 +338,7 @@ public class DataxTask extends AbstractTask {
 
         ObjectNode speed = JSONUtils.createObjectNode();
 
-        speed.put("channel", DATAX_CHANNEL_COUNT);
+        speed.put("channel", Optional.of(dataXParameters.getJobChannel()).orElse(DATAX_CHANNEL_COUNT));
 
         if (dataXParameters.getJobSpeedByte() > 0) {
             speed.put("byte", dataXParameters.getJobSpeedByte());
@@ -351,7 +362,7 @@ public class DataxTask extends AbstractTask {
     private ObjectNode buildDataxCoreJson() {
 
         ObjectNode speed = JSONUtils.createObjectNode();
-        speed.put("channel", DATAX_CHANNEL_COUNT);
+        speed.put("channel", Optional.of(dataXParameters.getJobChannel()).orElse(DATAX_CHANNEL_COUNT));
 
         if (dataXParameters.getJobSpeedByte() > 0) {
             speed.put("byte", dataXParameters.getJobSpeedByte());
@@ -420,7 +431,7 @@ public class DataxTask extends AbstractTask {
      */
     private String[] parsingSqlColumnNames(DbType sourceType, DbType targetType, BaseConnectionParam dataSourceCfg,
                                            String sql) {
-        String[] columnNames = tryGrammaticalAnalysisSqlColumnNames(sourceType, sql);
+        String[] columnNames = tryGrammaticalAnalysisSqlColumnNames(sourceType, sql, dataSourceCfg.getCompatibleMode());
 
         if (columnNames == null || columnNames.length == 0) {
             log.info("try to execute sql analysis query column name");
@@ -440,11 +451,14 @@ public class DataxTask extends AbstractTask {
      * @return column name array
      * @throws RuntimeException if error throws RuntimeException
      */
-    private String[] tryGrammaticalAnalysisSqlColumnNames(DbType dbType, String sql) {
+    private String[] tryGrammaticalAnalysisSqlColumnNames(DbType dbType, String sql, String compatibleMode) {
         String[] columnNames;
 
         try {
             SQLStatementParser parser = DataxUtils.getSqlStatementParser(dbType, sql);
+            if (StringUtils.isNotBlank(compatibleMode)) {
+                parser = DataxUtils.getSqlStatementParser(compatibleMode, sql);
+            }
             if (parser == null) {
                 log.warn("database driver [{}] is not support grammatical analysis sql", dbType);
                 return new String[0];
@@ -530,7 +544,7 @@ public class DataxTask extends AbstractTask {
             int num = md.getColumnCount();
             columnNames = new String[num];
             for (int i = 1; i <= num; i++) {
-                columnNames[i - 1] = md.getColumnName(i).replace("t.", "");
+                columnNames[i - 1] = md.getColumnLabel(i).replace("t.", "");
             }
         } catch (SQLException | ExecutionException e) {
             log.error(e.getMessage(), e);

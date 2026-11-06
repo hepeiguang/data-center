@@ -14,13 +14,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {
-  defineComponent,
-  ref,
-} from 'vue'
-import {
-  NImage
-} from 'naive-ui'
+
+import { defineComponent } from 'vue'
 import { useThemeStore } from '@/store/theme/theme'
 import styles from './index.module.scss'
 
@@ -28,20 +23,17 @@ const Logo = defineComponent({
   name: 'Logo',
   setup() {
     const themeStore = useThemeStore()
-    const logo = ref(`${import.meta.env.BASE_URL}images/imgs/logo1.png`)
 
-    return { themeStore, logo }
+    return { themeStore }
   },
   render() {
     return (
       <div
         class={[
           styles.logo,
+          styles[`logo-${this.themeStore.darkTheme ? 'dark' : 'light'}`]
         ]}
-        >
-        <NImage style={{marginRight: '10px'}} width='56' height='56' preview-disabled={true} src={this.logo} />
-        <span>数据资产管控平台</span>
-      </div>
+      />
     )
   }
 })

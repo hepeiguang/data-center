@@ -83,11 +83,14 @@ public class JsPacketCodec implements PacketCodec {
         ScriptEngineManager manager = new ScriptEngineManager();
         ScriptEngine engine = manager.getEngineByName("nashorn");
         if (engine == null) {
+            engine = manager.getEngineByName("graal.js");
+        }
+        if (engine == null) {
             engine = manager.getEngineByName("javascript");
         }
         if (engine == null) {
             throw new IllegalStateException(
-                    "No JS ScriptEngine available (need Nashorn on JDK 11)");
+                    "No JS ScriptEngine available: use JDK 11 (Nashorn) or add GraalJS on classpath");
         }
         engine.eval(code);
         if (!(engine instanceof Invocable)) {

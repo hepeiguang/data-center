@@ -1,0 +1,20 @@
+# Cluster profile: magic scripts live in the shared metadata DB (magic_api_file),
+# so several data-api instances serve the same API definitions behind nginx.
+spring:
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:db/cluster-schema.sql
+
+magic-api:
+  resource:
+    type: database
+    table-name: magic_api_file
+    prefix: magic-api
+    readonly: false
+
+data-api:
+  # first instance imports ./data/magic-api when magic_api_file is empty
+  magic-resource-migrate: true
+  # pull changes made by other instances every 30s
+  magic-resource-refresh-ms: 30000

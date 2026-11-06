@@ -8,3 +8,19 @@
 **/META-INF/
 **/downloads/
 .DS_Store
+
+dolphinscheduler-pre343-mixed/
+*.nested.yaml.bak
+.tmp-mysqlcli/
+
+# deployment staging / runtime
+deploy/all-in-one/build/
+deploy/local/run/
+
+
+# runtime logs and ad-hoc backups (never review material)
+dolphinscheduler/dolphinscheduler-data-api/logs/
+dolphinscheduler/dolphinscheduler-data-api/backup/
+dolphinscheduler/dolphinscheduler-ui/*.log
+dolphinscheduler/dolphinscheduler-ui/ui-dev.out
+logs/

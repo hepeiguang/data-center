@@ -17,15 +17,17 @@
 
 package org.apache.seatunnel.connectors.seatunnel.paimon.source.enumerator;
 
+import org.apache.seatunnel.common.constants.JobMode;
 import org.apache.seatunnel.connectors.seatunnel.paimon.source.PaimonSourceSplit;
 
-import org.apache.paimon.table.source.TableScan;
+import org.apache.paimon.table.source.ReadBuilder;
 
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
 import java.util.Deque;
+import java.util.Map;
 
 /** Paimon source split enumerator, used to calculate the splits for every reader. */
 @Slf4j
@@ -35,16 +37,43 @@ public class PaimonStreamSourceSplitEnumerator extends AbstractSplitEnumerator {
             Context<PaimonSourceSplit> context,
             Deque<PaimonSourceSplit> pendingSplits,
             @Nullable Long nextSnapshotId,
-            TableScan tableScan,
+            Map<String, ReadBuilder> readBuilders,
             int splitMaxPerTask) {
-        super(context, pendingSplits, nextSnapshotId, tableScan, splitMaxPerTask);
+        this(
+                context,
+                pendingSplits,
+                nextSnapshotId,
+                java.util.Collections.emptyMap(),
+                readBuilders,
+                splitMaxPerTask);
+    }
+
+    public PaimonStreamSourceSplitEnumerator(
+            Context<PaimonSourceSplit> context,
+            Deque<PaimonSourceSplit> pendingSplits,
+            @Nullable Long nextSnapshotId,
+            Map<String, Long> nextSnapshotIds,
+            Map<String, ReadBuilder> readBuilders,
+            int splitMaxPerTask) {
+        super(
+                context,
+                pendingSplits,
+                nextSnapshotId,
+                nextSnapshotIds,
+                readBuilders,
+                splitMaxPerTask,
+                JobMode.STREAMING);
     }
 
     @Override
     public void handleSplitRequest(int subtaskId) {
-        readersAwaitingSplit.add(subtaskId);
-        assignSplits();
-        if (readersAwaitingSplit.contains(subtaskId)) {
+        boolean shouldLoadNewSplits;
+        synchronized (stateLock) {
+            readersAwaitingSplit.add(subtaskId);
+            assignSplits();
+            shouldLoadNewSplits = readersAwaitingSplit.contains(subtaskId);
+        }
+        if (shouldLoadNewSplits) {
             loadNewSplits();
         }
     }

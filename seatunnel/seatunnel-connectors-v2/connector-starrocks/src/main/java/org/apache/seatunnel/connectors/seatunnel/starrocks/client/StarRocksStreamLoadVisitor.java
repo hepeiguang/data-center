@@ -46,11 +46,13 @@ public class StarRocksStreamLoadVisitor {
 
     private final HttpHelper httpHelper;
     private static final int MAX_SLEEP_TIME = 5;
+    private static final long DEFAULT_LABEL_STATE_TIMEOUT_MS = TimeUnit.MINUTES.toMillis(3);
 
     private final SinkConfig sinkConfig;
     private long pos;
     private static final String RESULT_FAILED = "Fail";
     private static final String RESULT_SUCCESS = "Success";
+    private static final String RESULT_PUBLISH_TIMEOUT = "Publish Timeout";
     private static final String RESULT_LABEL_EXISTED = "Label Already Exists";
     private static final String LABEL_STATE_VISIBLE = "VISIBLE";
     private static final String LABEL_STATE_COMMITTED = "COMMITTED";
@@ -60,10 +62,39 @@ public class StarRocksStreamLoadVisitor {
 
     private final TableSchema tableSchema;
 
+    /**
+     * Maximum total time spent waiting for one reused label to leave the PREPARE state. The bound
+     * prevents a checkpoint flush from waiting forever on an unresolved transaction.
+     */
+    private final long labelStateTimeoutMs;
+
     public StarRocksStreamLoadVisitor(SinkConfig sinkConfig, TableSchema tableSchema) {
+        this(sinkConfig, tableSchema, new HttpHelper(sinkConfig), DEFAULT_LABEL_STATE_TIMEOUT_MS);
+    }
+
+    /**
+     * Creates a visitor with an explicit HTTP helper so response handling can be verified without a
+     * live StarRocks cluster.
+     */
+    StarRocksStreamLoadVisitor(
+            SinkConfig sinkConfig, TableSchema tableSchema, HttpHelper httpHelper) {
+        this(sinkConfig, tableSchema, httpHelper, DEFAULT_LABEL_STATE_TIMEOUT_MS);
+    }
+
+    /**
+     * Creates a visitor with explicit HTTP transport and label-state timeout for deterministic
+     * boundary tests.
+     */
+    StarRocksStreamLoadVisitor(
+            SinkConfig sinkConfig,
+            TableSchema tableSchema,
+            HttpHelper httpHelper,
+            long labelStateTimeoutMs) {
         this.sinkConfig = sinkConfig;
         this.tableSchema = tableSchema;
-        this.httpHelper = new HttpHelper(sinkConfig);
+        this.httpHelper = httpHelper;
+        this.labelStateTimeoutMs = Math.max(1, labelStateTimeoutMs);
+        checkBatchMaxBytes(sinkConfig.getBatchMaxBytes(), sinkConfig.getBatchMaxSize());
     }
 
     public Boolean doStreamLoad(StarRocksFlushTuple flushData) throws IOException {
@@ -92,7 +123,7 @@ public class StarRocksStreamLoadVisitor {
         Map<String, Object> loadResult =
                 httpHelper.doHttpPut(
                         loadUrl,
-                        joinRows(flushData.getRows(), flushData.getBytes().intValue()),
+                        joinRows(flushData.getRows(), flushData.getBytes()),
                         getStreamLoadHttpHeader(flushData.getLabel()));
         final String keyStatus = "Status";
         if (null == loadResult || !loadResult.containsKey(keyStatus)) {
@@ -104,7 +135,22 @@ public class StarRocksStreamLoadVisitor {
         if (LOG.isDebugEnabled()) {
             LOG.debug("StreamLoad response:\n" + JsonUtils.toJsonString(loadResult));
         }
-        if (RESULT_FAILED.equals(loadResult.get(keyStatus))) {
+        Object resultStatus = loadResult.get(keyStatus);
+        if (RESULT_SUCCESS.equals(resultStatus) || RESULT_PUBLISH_TIMEOUT.equals(resultStatus)) {
+            return true;
+        }
+        if (RESULT_LABEL_EXISTED.equals(resultStatus)) {
+            LOG.debug("StreamLoad response:\n" + JsonUtils.toJsonString(loadResult));
+            // The original request may already be committed, so never resend it under a new label
+            // until StarRocks reports the final state of the existing label.
+            checkLabelState(host, flushData.getLabel());
+            return true;
+        }
+        if (RESULT_FAILED.equals(resultStatus)) {
+            if (isLabelAlreadyUsed(loadResult, flushData.getLabel())) {
+                checkLabelState(host, flushData.getLabel());
+                return true;
+            }
             StringBuilder errorBuilder = new StringBuilder("Failed to flush data to StarRocks \n");
             errorBuilder
                     .append(sinkConfig.getDatabase())
@@ -130,12 +176,11 @@ public class StarRocksStreamLoadVisitor {
             }
             throw new StarRocksConnectorException(
                     StarRocksConnectorErrorCode.FLUSH_DATA_FAILED, errorBuilder.toString());
-        } else if (RESULT_LABEL_EXISTED.equals(loadResult.get(keyStatus))) {
-            LOG.debug("StreamLoad response:\n" + JsonUtils.toJsonString(loadResult));
-            // has to block-checking the state to get the final result
-            checkLabelState(host, flushData.getLabel());
         }
-        return RESULT_SUCCESS.equals(loadResult.get(keyStatus));
+        throw new StarRocksConnectorException(
+                StarRocksConnectorErrorCode.FLUSH_DATA_FAILED,
+                "Unable to flush data to StarRocks: unexpected result status. "
+                        + JsonUtils.toJsonString(loadResult));
     }
 
     private String getAvailableHost() {
@@ -150,13 +195,15 @@ public class StarRocksStreamLoadVisitor {
         return null;
     }
 
-    private byte[] joinRows(List<byte[]> rows, int totalBytes) {
+    private byte[] joinRows(List<byte[]> rows, Long totalBytes) {
+        checkBatchMaxBytes(totalBytes, rows.size());
         if (SinkConfig.StreamLoadFormat.CSV.equals(sinkConfig.getLoadFormat())) {
             Map<String, Object> props = sinkConfig.getStreamLoadProps();
             byte[] lineDelimiter =
                     StarRocksDelimiterParser.parse((String) props.get("row_delimiter"), "\n")
                             .getBytes(StandardCharsets.UTF_8);
-            ByteBuffer bos = ByteBuffer.allocate(totalBytes + rows.size() * lineDelimiter.length);
+            ByteBuffer bos =
+                    ByteBuffer.allocate(totalBytes.intValue() + rows.size() * lineDelimiter.length);
             for (byte[] row : rows) {
                 bos.put(row);
                 bos.put(lineDelimiter);
@@ -166,7 +213,8 @@ public class StarRocksStreamLoadVisitor {
 
         if (SinkConfig.StreamLoadFormat.JSON.equals(sinkConfig.getLoadFormat())) {
             ByteBuffer bos =
-                    ByteBuffer.allocate(totalBytes + (rows.isEmpty() ? 2 : rows.size() + 1));
+                    ByteBuffer.allocate(
+                            totalBytes.intValue() + (rows.isEmpty() ? 2 : rows.size() + 1));
             bos.put("[".getBytes(StandardCharsets.UTF_8));
             byte[] jsonDelimiter = ",".getBytes(StandardCharsets.UTF_8);
             boolean isFirstElement = true;
@@ -188,12 +236,8 @@ public class StarRocksStreamLoadVisitor {
     @SuppressWarnings("unchecked")
     private void checkLabelState(String host, String label) throws IOException {
         int idx = 0;
-        while (true) {
-            try {
-                TimeUnit.SECONDS.sleep(Math.min(++idx, MAX_SLEEP_TIME));
-            } catch (InterruptedException ex) {
-                break;
-            }
+        long deadlineNanos = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(labelStateTimeoutMs);
+        while (System.nanoTime() < deadlineNanos) {
             try {
                 String queryLoadStateUrl =
                         new StringBuilder(host)
@@ -203,7 +247,10 @@ public class StarRocksStreamLoadVisitor {
                                 .append(label)
                                 .toString();
                 Map<String, Object> result =
-                        httpHelper.doHttpGet(queryLoadStateUrl, getLoadStateHttpHeader(label));
+                        httpHelper.doHttpGet(
+                                queryLoadStateUrl,
+                                getLoadStateHttpHeader(label),
+                                remainingTimeoutMs(deadlineNanos));
                 if (result == null) {
                     throw new StarRocksConnectorException(
                             StarRocksConnectorErrorCode.FLUSH_DATA_FAILED,
@@ -229,6 +276,7 @@ public class StarRocksStreamLoadVisitor {
                     case LABEL_STATE_COMMITTED:
                         return;
                     case RESULT_LABEL_PREPARE:
+                        sleepBeforeNextLabelCheck(++idx, deadlineNanos, label);
                         continue;
                     case RESULT_LABEL_ABORTED:
                         throw new StarRocksConnectorException(
@@ -252,6 +300,62 @@ public class StarRocksStreamLoadVisitor {
                         StarRocksConnectorErrorCode.FLUSH_DATA_FAILED, e);
             }
         }
+        throw new StarRocksConnectorException(
+                StarRocksConnectorErrorCode.FLUSH_DATA_FAILED,
+                String.format(
+                        "Timed out after %d ms while checking the final state of label[%s].",
+                        labelStateTimeoutMs, label));
+    }
+
+    /**
+     * Converts the remaining label-state deadline into a positive HTTP timeout.
+     *
+     * @param deadlineNanos absolute deadline based on {@link System#nanoTime()}
+     * @return bounded timeout accepted by the Apache HTTP client
+     */
+    private int remainingTimeoutMs(long deadlineNanos) {
+        long remainingNanos = Math.max(1, deadlineNanos - System.nanoTime());
+        long remainingMillis = Math.max(1, TimeUnit.NANOSECONDS.toMillis(remainingNanos));
+        return (int) Math.min(Integer.MAX_VALUE, remainingMillis);
+    }
+
+    /**
+     * Waits before polling a PREPARE label again without exceeding the total state deadline. An
+     * interrupted wait fails the flush while preserving the thread interruption signal.
+     */
+    private void sleepBeforeNextLabelCheck(int attempt, long deadlineNanos, String label) {
+        long remainingNanos = deadlineNanos - System.nanoTime();
+        if (remainingNanos <= 0) {
+            return;
+        }
+        long sleepNanos =
+                Math.min(
+                        TimeUnit.SECONDS.toNanos(Math.min(attempt, MAX_SLEEP_TIME)),
+                        remainingNanos);
+        try {
+            TimeUnit.NANOSECONDS.sleep(sleepNanos);
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            throw new StarRocksConnectorException(
+                    StarRocksConnectorErrorCode.FLUSH_DATA_FAILED,
+                    String.format(
+                            "Interrupted while checking the final state of label[%s].", label),
+                    ex);
+        }
+    }
+
+    /**
+     * Detects the legacy failure response used by some StarRocks versions for a reused label.
+     *
+     * @param loadResult Stream Load response body
+     * @param label label used by the current batch
+     * @return true when the message identifies the current label as already used
+     */
+    private boolean isLabelAlreadyUsed(Map<String, Object> loadResult, String label) {
+        Object message = loadResult.get("Message");
+        return message != null
+                && message.toString()
+                        .contains(String.format("Label [%s] has already been used", label));
     }
 
     private String getBasicAuthHeader(String username, String password) {
@@ -299,5 +403,31 @@ public class StarRocksStreamLoadVisitor {
                 getBasicAuthHeader(sinkConfig.getUsername(), sinkConfig.getPassword()));
         headerMap.put("Connection", "close");
         return headerMap;
+    }
+
+    void checkBatchMaxBytes(long batchMaxBytes, long batchMaxRows) {
+        long batchMaxBytesLimit;
+        if (SinkConfig.StreamLoadFormat.CSV.equals(sinkConfig.getLoadFormat())) {
+            Map<String, Object> props = sinkConfig.getStreamLoadProps();
+            byte[] lineDelimiter =
+                    StarRocksDelimiterParser.parse((String) props.get("row_delimiter"), "\n")
+                            .getBytes(StandardCharsets.UTF_8);
+            batchMaxBytesLimit = Integer.MAX_VALUE - batchMaxRows * lineDelimiter.length;
+        } else if (SinkConfig.StreamLoadFormat.JSON.equals(sinkConfig.getLoadFormat())) {
+            batchMaxBytesLimit = Integer.MAX_VALUE - (batchMaxRows == 0 ? 2 : batchMaxRows + 1);
+        } else {
+            throw new StarRocksConnectorException(
+                    StarRocksConnectorErrorCode.FLUSH_DATA_FAILED,
+                    "Failed to join rows data, unsupported `format` from stream load properties:");
+        }
+
+        if (batchMaxBytes > batchMaxBytesLimit) {
+            throw new StarRocksConnectorException(
+                    StarRocksConnectorErrorCode.FLUSH_DATA_FAILED,
+                    String.format(
+                            "The batch_max_bytes[%d] of the data exceeds the maximum limit[%d], "
+                                    + "please reset the batch_max_bytes.",
+                            batchMaxBytes, batchMaxBytesLimit));
+        }
     }
 }

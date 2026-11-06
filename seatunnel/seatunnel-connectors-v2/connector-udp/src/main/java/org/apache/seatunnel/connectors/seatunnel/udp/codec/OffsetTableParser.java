@@ -7,6 +7,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -16,11 +17,13 @@ import java.util.Map;
 /**
  * Cursor-based binary parser supporting read / loop / switch / skip / assert.
  *
- * <p>See docs/UDP_CODEC.md for DSL.
+ * <p>See docs/UDP_CODEC.md for DSL. Type {@code bytes} is emitted as Base64 string for JSON
+ * safety; use {@code hex} for hex text.
  */
 public class OffsetTableParser implements PacketCodec {
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
+    private static final int MAX_LOOP_COUNT = 1_000_000;
 
     private final JsonNode root;
     private final ByteOrder byteOrder;
@@ -84,7 +87,12 @@ public class OffsetTableParser implements PacketCodec {
         String name = requiredText(step, "name");
         String type = requiredText(step, "type").toLowerCase(Locale.ROOT);
         if (step.has("offset")) {
-            buf.position(step.get("offset").asInt());
+            int absolute = step.get("offset").asInt();
+            if (absolute < 0 || absolute > buf.limit()) {
+                throw new IllegalArgumentException(
+                        "invalid absolute offset=" + absolute + " limit=" + buf.limit());
+            }
+            buf.position(absolute);
         }
         vars.put(name, readValue(type, step, buf, vars));
     }
@@ -92,37 +100,49 @@ public class OffsetTableParser implements PacketCodec {
     private Object readValue(String type, JsonNode step, ByteBuffer buf, Map<String, Object> vars) {
         switch (type) {
             case "uint8":
+                ensureRemaining(buf, 1);
                 return buf.get() & 0xFF;
             case "int8":
+                ensureRemaining(buf, 1);
                 return (int) buf.get();
             case "uint16":
+                ensureRemaining(buf, 2);
                 return buf.getShort() & 0xFFFF;
             case "int16":
+                ensureRemaining(buf, 2);
                 return (int) buf.getShort();
             case "uint32":
+                ensureRemaining(buf, 4);
                 return buf.getInt() & 0xFFFFFFFFL;
             case "int32":
+                ensureRemaining(buf, 4);
                 return buf.getInt();
             case "int64":
+                ensureRemaining(buf, 8);
                 return buf.getLong();
             case "float32":
+                ensureRemaining(buf, 4);
                 return buf.getFloat();
             case "float64":
+                ensureRemaining(buf, 8);
                 return buf.getDouble();
             case "bytes": {
                 int len = resolveLength(step, vars);
+                ensureRemaining(buf, len);
                 byte[] b = new byte[len];
                 buf.get(b);
-                return b;
+                return Base64.getEncoder().encodeToString(b);
             }
             case "hex": {
                 int len = resolveLength(step, vars);
+                ensureRemaining(buf, len);
                 byte[] b = new byte[len];
                 buf.get(b);
                 return toHex(b);
             }
             case "string": {
                 int len = resolveLength(step, vars);
+                ensureRemaining(buf, len);
                 byte[] b = new byte[len];
                 buf.get(b);
                 return new String(b, charset);
@@ -133,18 +153,26 @@ public class OffsetTableParser implements PacketCodec {
     }
 
     private int resolveLength(JsonNode step, Map<String, Object> vars) {
+        int len;
         if (step.has("length")) {
-            return step.get("length").asInt();
-        }
-        if (step.has("lengthFrom")) {
+            len = step.get("length").asInt();
+        } else if (step.has("lengthFrom")) {
             String ref = step.get("lengthFrom").asText();
             Object v = vars.get(ref);
             if (v == null) {
                 throw new IllegalArgumentException("lengthFrom field not found: " + ref);
             }
-            return ((Number) v).intValue();
+            if (!(v instanceof Number)) {
+                throw new IllegalArgumentException("lengthFrom field is not a number: " + ref);
+            }
+            len = ((Number) v).intValue();
+        } else {
+            throw new IllegalArgumentException("bytes/string/hex require length or lengthFrom");
         }
-        throw new IllegalArgumentException("bytes/string/hex require length or lengthFrom");
+        if (len < 0) {
+            throw new IllegalArgumentException("length must be >= 0, got " + len);
+        }
+        return len;
     }
 
     private void doLoop(JsonNode step, ByteBuffer buf, Map<String, Object> vars) throws Exception {
@@ -157,9 +185,19 @@ public class OffsetTableParser implements PacketCodec {
             if (v == null) {
                 throw new IllegalArgumentException("countFrom field not found: " + ref);
             }
+            if (!(v instanceof Number)) {
+                throw new IllegalArgumentException("countFrom field is not a number: " + ref);
+            }
             count = ((Number) v).intValue();
         } else {
             throw new IllegalArgumentException("loop requires count or countFrom");
+        }
+        if (count < 0) {
+            throw new IllegalArgumentException("loop count must be >= 0, got " + count);
+        }
+        if (count > MAX_LOOP_COUNT) {
+            throw new IllegalArgumentException(
+                    "loop count exceeds max " + MAX_LOOP_COUNT + ": " + count);
         }
         String as = step.path("as").asText("items");
         JsonNode body = step.get("steps");
@@ -215,10 +253,22 @@ public class OffsetTableParser implements PacketCodec {
             len = step.get("length").asInt();
         } else if (step.has("lengthFrom")) {
             Object v = vars.get(step.get("lengthFrom").asText());
+            if (v == null) {
+                throw new IllegalArgumentException(
+                        "lengthFrom field not found: " + step.get("lengthFrom").asText());
+            }
+            if (!(v instanceof Number)) {
+                throw new IllegalArgumentException(
+                        "lengthFrom field is not a number: " + step.get("lengthFrom").asText());
+            }
             len = ((Number) v).intValue();
         } else {
             throw new IllegalArgumentException("skip requires length or lengthFrom");
         }
+        if (len < 0) {
+            throw new IllegalArgumentException("skip length must be >= 0, got " + len);
+        }
+        ensureRemaining(buf, len);
         buf.position(buf.position() + len);
     }
 
@@ -236,6 +286,16 @@ public class OffsetTableParser implements PacketCodec {
                             + step.get("eq")
                             + " actual="
                             + actual);
+        }
+    }
+
+    private static void ensureRemaining(ByteBuffer buf, int needed) {
+        if (needed < 0) {
+            throw new IllegalArgumentException("negative length: " + needed);
+        }
+        if (buf.remaining() < needed) {
+            throw new IllegalArgumentException(
+                    "packet truncated: need " + needed + " bytes, remaining " + buf.remaining());
         }
     }
 

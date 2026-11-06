@@ -52,7 +52,6 @@ public class ConnectorOptionCheckTest {
     @Test
     public void checkConnectorOptionExist() {
         Set<String> connectorOptionFileNames = new HashSet<>();
-        Set<String> whiteListConnectorOptionFileNames = buildWhiteList();
         try (Stream<Path> paths = Files.walk(Paths.get(".."), FileVisitOption.FOLLOW_LINKS)) {
             List<Path> connectorClassPaths =
                     paths.filter(
@@ -124,6 +123,18 @@ public class ConnectorOptionCheckTest {
                                                                         || extendedType
                                                                                 .getNameAsString()
                                                                                 .equals(
+                                                                                        "BaseMultipleTableFileSink")
+                                                                        || extendedType
+                                                                                .getNameAsString()
+                                                                                .equals(
+                                                                                        "BaseFileSource")
+                                                                        || extendedType
+                                                                                .getNameAsString()
+                                                                                .equals(
+                                                                                        "BaseFileSink")
+                                                                        || extendedType
+                                                                                .getNameAsString()
+                                                                                .equals(
                                                                                         "HttpSource")
                                                                         || extendedType
                                                                                 .getNameAsString()
@@ -152,15 +163,6 @@ public class ConnectorOptionCheckTest {
                         connectorOptionFileNames.remove(className);
                     });
 
-            whiteListConnectorOptionFileNames.forEach(
-                    whiteListConnectorOptionFileName -> {
-                        Assertions.assertTrue(
-                                connectorOptionFileNames.remove(whiteListConnectorOptionFileName),
-                                "This [Options] class is in white list, but not found related connector classes, please check: ["
-                                        + whiteListConnectorOptionFileName
-                                        + "]\n");
-                    });
-
             Assertions.assertEquals(
                     0,
                     connectorOptionFileNames.size(),
@@ -173,46 +175,5 @@ public class ConnectorOptionCheckTest {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    private Set<String> buildWhiteList() {
-        Set<String> whiteList = new HashSet<>();
-        whiteList.add("JdbcSinkOptions");
-        whiteList.add("TypesenseSourceOptions");
-        whiteList.add("TypesenseSinkOptions");
-        whiteList.add("PulsarSinkOptions");
-        whiteList.add("SlsSinkOptions");
-        whiteList.add("Neo4jSinkOptions");
-        whiteList.add("MaxcomputeSinkOptions");
-        whiteList.add("PaimonSinkOptions");
-        whiteList.add("TDengineSourceOptions");
-        whiteList.add("PulsarSourceOptions");
-        whiteList.add("MongodbSinkOptions");
-        whiteList.add("PaimonSourceOptions");
-        whiteList.add("SlsSourceOptions");
-        whiteList.add("SentrySinkOptions");
-        whiteList.add("QdrantSinkOptions");
-        whiteList.add("MilvusSourceOptions");
-        whiteList.add("RocketMqSinkOptions");
-        whiteList.add("MaxcomputeSourceOptions");
-        whiteList.add("KuduSourceOptions");
-        whiteList.add("SocketSinkOptions");
-        whiteList.add("SelectDBSinkOptions");
-        whiteList.add("MilvusSinkOptions");
-        whiteList.add("RocketMqSourceOptions");
-        whiteList.add("TablestoreSinkOptions");
-        whiteList.add("TableStoreDBSourceOptions");
-        whiteList.add("KuduSinkOptions");
-        whiteList.add("TDengineSinkOptions");
-        whiteList.add("Neo4jSourceOptions");
-        whiteList.add("QdrantSourceOptions");
-        whiteList.add("SocketSourceOptions");
-        whiteList.add("OpenMldbSourceOptions");
-        whiteList.add("PostgresIncrementalSourceOptions");
-        whiteList.add("SqlServerIncrementalSourceOptions");
-        whiteList.add("OracleIncrementalSourceOptions");
-        whiteList.add("MySqlIncrementalSourceOptions");
-        whiteList.add("MongodbIncrementalSourceOptions");
-        return whiteList;
     }
 }

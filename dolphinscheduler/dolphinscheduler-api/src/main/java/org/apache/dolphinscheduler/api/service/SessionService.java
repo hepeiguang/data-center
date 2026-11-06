@@ -24,9 +24,9 @@ public interface SessionService {
 
     Session getSession(String sessionId);
 
-    Session createSessionIfAbsent(User user, String sessionId);
+    Session createSessionIfAbsent(User user);
 
-    void expireSession(String userId);
+    void expireSession(Integer userId);
 
     boolean isSessionExpire(Session session);
 }

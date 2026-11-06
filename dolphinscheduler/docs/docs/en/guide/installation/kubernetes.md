@@ -16,22 +16,8 @@ If you are a new hand and want to experience DolphinScheduler functions, we reco
 
 ```bash
 # Choose the corresponding version yourself
-export VERSION=3.2.1
-helm pull oci://registry-1.docker.io/apache/dolphinscheduler-helm --version ${VERSION}
-tar -xvf dolphinscheduler-helm-${VERSION}.tgz
-cd dolphinscheduler-helm
-helm repo add bitnami https://charts.bitnami.com/bitnami
-helm dependency update .
-helm install dolphinscheduler .
+helm upgrade --install dolphinscheduler --create-namespace --namespace dolphinscheduler oci://registry-1.docker.io/apache/dolphinscheduler-helm --version <version>
 ```
-
-To publish the release name `dolphinscheduler` version to `test` namespace:
-
-```bash
-$ helm install dolphinscheduler . -n test
-```
-
-> **Tip**: If a namespace named `test` is used, the optional parameter `-n test` needs to be added to the `helm` and `kubectl` commands.
 
 These commands are used to deploy DolphinScheduler on the Kubernetes cluster by default. The [Appendix-Configuration](#appendix-configuration) section lists the parameters that can be configured during installation.
 
@@ -112,7 +98,7 @@ helm install keda kedacore/keda \
 Secondly, you need to set `worker.keda.enabled` to `true` in `values.yaml` or install the chart by:
 
 ```bash
-helm install dolphinscheduler . --set worker.keda.enabled=true -n <your-namespace-to-deploy-dolphinscheduler>
+helm upgrade --install dolphinscheduler --create-namespace --namespace dolphinscheduler oci://registry-1.docker.io/apache/dolphinscheduler-helm --version <version> --set worker.keda.enabled=true
 ```
 
 Once autoscaling enabled, the number of workers will scale between `minReplicaCount` and `maxReplicaCount` based on the states
@@ -233,9 +219,9 @@ kubectl scale --replicas=6 sts dolphinscheduler-worker -n test # with test names
 2. Create a new `Dockerfile` to add MySQL driver:
 
 ```
-FROM dolphinscheduler.docker.scarf.sh/apache/dolphinscheduler-<service>:3.2.2
+FROM dolphinscheduler.docker.scarf.sh/apache/dolphinscheduler-<service>:<version>
 # For example
-# FROM dolphinscheduler.docker.scarf.sh/apache/dolphinscheduler-tools:3.2.2
+# FROM dolphinscheduler.docker.scarf.sh/apache/dolphinscheduler-tools:<version>
 
 # Attention Please, If the build is dolphinscheduler-tools image
 # You need to change the following line to: COPY mysql-connector-java-8.0.16.jar /opt/dolphinscheduler/tools/libs
@@ -284,9 +270,9 @@ externalDatabase:
 2. Create a new `Dockerfile` to add MySQL or Oracle driver:
 
 ```
-FROM dolphinscheduler.docker.scarf.sh/apache/dolphinscheduler-<service>:3.2.2
+FROM dolphinscheduler.docker.scarf.sh/apache/dolphinscheduler-<service>:<version>
 # For example
-# FROM dolphinscheduler.docker.scarf.sh/apache/dolphinscheduler-worker:3.2.2
+# FROM dolphinscheduler.docker.scarf.sh/apache/dolphinscheduler-worker:<version>
 
 # If you want to support MySQL Datasource
 COPY mysql-connector-java-8.0.16.jar /opt/dolphinscheduler/libs
@@ -316,7 +302,7 @@ docker build -t apache/dolphinscheduler-<service>:new-driver .
 1. Create a new `Dockerfile` to install pip:
 
 ```
-FROM dolphinscheduler.docker.scarf.sh/apache/dolphinscheduler-worker:3.2.2
+FROM dolphinscheduler.docker.scarf.sh/apache/dolphinscheduler-worker:<version>
 COPY requirements.txt /tmp
 RUN apt-get update && \
     apt-get install -y --no-install-recommends python-pip && \
@@ -351,7 +337,7 @@ docker build -t apache/dolphinscheduler-worker:pip .
 1. Create a new `Dockerfile` to install Python 3:
 
 ```
-FROM dolphinscheduler.docker.scarf.sh/apache/dolphinscheduler-worker:3.2.2
+FROM dolphinscheduler.docker.scarf.sh/apache/dolphinscheduler-worker:<version>
 RUN apt-get update && \
     apt-get install -y --no-install-recommends python3 && \
     rm -rf /var/lib/apt/lists/*
@@ -491,16 +477,10 @@ Take MinIO as an example: Modify the following configurations in `values.yaml`:
 common:
   configmap:
     RESOURCE_STORAGE_TYPE: "S3"
-    RESOURCE_UPLOAD_PATH: "/dolphinscheduler"
-    FS_DEFAULT_FS: "s3a://BUCKET_NAME"
-    FS_S3A_ENDPOINT: "http://MINIO_IP:9000"
-    FS_S3A_ACCESS_KEY: "MINIO_ACCESS_KEY"
-    FS_S3A_SECRET_KEY: "MINIO_SECRET_KEY"
+    ...
 ```
 
-Modify `BUCKET_NAME`, `MINIO_IP`, `MINIO_ACCESS_KEY` and `MINIO_SECRET_KEY` to actual environment values.
-
-> **Note**: `MINIO_IP` can only use IP instead of the domain name, because DolphinScheduler currently doesn't support S3 path style access.
+For detailed explanation of specific fields, please see: [Resource Center Configuration](../resource/configuration.md)
 
 ### How to deploy specific components separately?
 
@@ -510,22 +490,23 @@ For example, if you need to deploy worker to both CPU and GPU servers in a clust
 
 ```bash
 # Install master, api-server, alert-server, and other default components, but do not install worker
-helm install dolphinscheduler . --set worker.enabled=false
+helm upgrade --install dolphinscheduler --create-namespace --namespace dolphinscheduler oci://registry-1.docker.io/apache/dolphinscheduler-helm --version <version> --set worker.enabled=false
 # Disable the installation of other components, only install worker, use the self-built CPU image, deploy to CPU servers with the `x86` label through nodeselector, and use zookeeper as the external registry center
-helm install dolphinscheduler-cpu-worker . \
+helm upgrade --install dolphinscheduler-cpu-worker --create-namespace --namespace dolphinscheduler oci://registry-1.docker.io/apache/dolphinscheduler-helm --version <version> \
      --set minio.enabled=false --set postgresql.enabled=false --set zookeeper.enabled=false \
      --set master.enabled=false  --set api.enabled=false --set alert.enabled=false \
      --set worker.enabled=true --set image.tag=latest-cpu --set worker.nodeSelector.cpu="x86" \
-     --set externalRegistry.registryPluginName=zookeeper --set externalRegistry.registryServers=ds-zookeeper:2181
+     --set externalRegistry.registryPluginName=zookeeper --set externalRegistry.registryServers=dolphinscheduler-zookeeper:2181
 # Disable the installation of other components, only install worker, use the self-built GPU image, deploy to GPU servers with the `a100` label through nodeselector, and use zookeeper as the external registry center
-helm install dolphinscheduler-gpu-worker . \
+helm upgrade --install dolphinscheduler-gpu-worker --create-namespace --namespace dolphinscheduler oci://registry-1.docker.io/apache/dolphinscheduler-helm --version <version> \
      --set minio.enabled=false --set postgresql.enabled=false --set zookeeper.enabled=false \
      --set master.enabled=false  --set api.enabled=false --set alert.enabled=false \
      --set worker.enabled=true --set image.tag=latest-gpu --set worker.nodeSelector.gpu="a100" \
-     --set externalRegistry.registryPluginName=zookeeper --set externalRegistry.registryServers=ds-zookeeper:2181
+     --set externalRegistry.registryPluginName=zookeeper --set externalRegistry.registryServers=dolphinscheduler-zookeeper:2181
 ```
 
 > **Note**: the above steps are for reference only, and specific operations need to be adjusted according to the actual situation.
+> **Note**: DS uses the /tmp/dolphinscheduler directory as the resource center by default. If you need to change the directory of the resource center, change the resource items in the conf/common.properties file
 
 ## Appendix-Configuration
 

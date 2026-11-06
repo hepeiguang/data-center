@@ -17,6 +17,8 @@
 
 package org.apache.seatunnel.connectors.seatunnel.jdbc.internal.dialect.oceanbase;
 
+import org.apache.seatunnel.shade.org.apache.commons.lang3.StringUtils;
+
 import org.apache.seatunnel.api.table.catalog.TablePath;
 import org.apache.seatunnel.api.table.converter.BasicTypeDefine;
 import org.apache.seatunnel.api.table.converter.TypeConverter;
@@ -26,9 +28,8 @@ import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.dialect.JdbcDiale
 import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.dialect.JdbcDialectTypeMapper;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.dialect.SQLUtils;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.dialect.dialectenum.FieldIdeEnum;
+import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.dialect.mysql.MysqlFamilyTableOptions;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.source.JdbcSourceTable;
-
-import org.apache.commons.lang3.StringUtils;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -65,7 +66,7 @@ public class OceanBaseMysqlDialect implements JdbcDialect {
 
     @Override
     public String dialectName() {
-        return DatabaseIdentifier.OCENABASE;
+        return DatabaseIdentifier.OCEANBASE;
     }
 
     @Override
@@ -101,7 +102,7 @@ public class OceanBaseMysqlDialect implements JdbcDialect {
 
     @Override
     public Optional<String> getUpsertStatement(
-            String database, String tableName, String[] fieldNames, String[] uniqueKeyFields) {
+            String database, String tableName, String[] fieldNames, String[] pkNames) {
         String updateClause =
                 Arrays.stream(fieldNames)
                         .map(
@@ -137,6 +138,7 @@ public class OceanBaseMysqlDialect implements JdbcDialect {
     public Map<String, String> defaultParameter() {
         HashMap<String, String> map = new HashMap<>();
         map.put("rewriteBatchedStatements", "true");
+        map.put("allowMultiQueries", "true");
         return map;
     }
 
@@ -267,5 +269,10 @@ public class OceanBaseMysqlDialect implements JdbcDialect {
             default:
                 return false;
         }
+    }
+
+    @Override
+    public void validateTableOptions(Map<String, String> tableOptions) {
+        MysqlFamilyTableOptions.validate(dialectName(), tableOptions);
     }
 }

@@ -46,7 +46,6 @@
         width: 280px;
         height: 60px;
         background: url('../../assets/images/logo-light.svg') 50% no-repeat;
-
         margin: 0 auto;
       }
     }
@@ -60,4 +59,41 @@
       margin-bottom: 30px;
     }
   }
+}
+
+.oidc-provider-link {
+  text-decoration: none;
+  width: 100%;
+  display: block;
+  margin-bottom: 12px;
+}
+
+.oidc-provider-btn {
+  font-weight: 350 !important;
+  color: #24292e !important;
+
+  background-color: #f6f8fa;
+  border-radius: 6px;
+  height: 40px;
+
+  transition: all 0.2s ease-in-out;
+
+  &:hover {
+    transform: translate(1px, -1px);
+    box-shadow: 3px 3px 8px rgba(0, 0, 0, 0.08);
+  }
+}
+
+.oidc-btn-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.oidc-btn-icon {
+  width: 20px;
+  height: 20px;
+  margin-right: 8px;
+  object-fit: contain;
 }

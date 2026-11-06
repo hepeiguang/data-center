@@ -18,6 +18,7 @@ import { ref, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useCustomParams, useDatasource, useResources } from '.'
 import type { IJsonItem } from '../types'
+import utils from '@/utils'
 
 export function useDataX(model: { [field: string]: any }): IJsonItem[] {
   const { t } = useI18n()
@@ -77,6 +78,28 @@ export function useDataX(model: { [field: string]: any }): IJsonItem[] {
       value: 3000
     }
   ]
+  const jobChannelOptions: any[] = [
+    {
+      label: '1',
+      value: 1
+    },
+    {
+      label: '3',
+      value: 3
+    },
+    {
+      label: '5',
+      value: 5
+    },
+    {
+      label: '10',
+      value: 10
+    },
+    {
+      label: '15',
+      value: 15
+    }
+  ]
   const memoryLimitOptions = [
     {
       label: '1G',
@@ -131,7 +154,8 @@ export function useDataX(model: { [field: string]: any }): IJsonItem[] {
     'CLICKHOUSE',
     'DATABEND',
     'HIVE',
-    'PRESTO'
+    'PRESTO',
+    'OCEANBASE'
   ]
   onMounted(() => {
     initConstants()
@@ -156,7 +180,7 @@ export function useDataX(model: { [field: string]: any }): IJsonItem[] {
       supportedDatasourceType
     }),
     {
-      type: 'mirror',
+      type: 'editor',
       field: 'sql',
       name: t('project.node.sql_statement'),
       span: sqlEditorSpan,
@@ -164,23 +188,57 @@ export function useDataX(model: { [field: string]: any }): IJsonItem[] {
         trigger: ['input', 'trigger'],
         required: true,
         message: t('project.node.sql_empty_tips')
-      },
-      props: {
-        language: 'sql',
       }
     },
     {
-      type: 'mirror',
+      type: 'editor',
       field: 'json',
       name: t('project.node.datax_json_template'),
       span: jsonEditorSpan,
       validate: {
         trigger: ['input', 'trigger'],
-        required: true,
-        message: t('project.node.sql_empty_tips')
-      },
-      props: {
-        language: 'sql',
+        required: false,
+        validator() {
+          // When the inline json is absent the job definition must come from exactly one
+          // attached .json resource. resourceList is multi-select and also carries auxiliary
+          // files such as keytabs and xml, so the same rule as the backend
+          // DataxParameters.getJobDefinitionResource applies here (issue #18389).
+          const resourceList = (model.resourceList as string[]) || []
+          const hasSingleJsonResource =
+            resourceList.filter(
+              (fullName) =>
+                typeof fullName === 'string' &&
+                fullName.toLowerCase().endsWith('.json')
+            ).length === 1
+          // Treat a whitespace-only value as absent too, matching the backend
+          // DataxParameters.isInlineJsonAbsent which uses StringUtils.isBlank. Otherwise a
+          // blank inline json would reach utils.isJson below and be rejected even when exactly
+          // one valid .json resource is attached, a configuration the worker would have accepted.
+          const inlineJsonAbsent =
+            model.json === undefined ||
+            model.json === null ||
+            (model.json as string).trim() === ''
+          if (inlineJsonAbsent) {
+            return hasSingleJsonResource
+              ? undefined
+              : new Error(t('project.node.datax_custom_json_resource_tips'))
+          }
+          if (!utils.isJson(model.json)) {
+            return new Error(t('project.node.json_format_tips'))
+          }
+          // A semantically empty object ({}, { }, formatted) is the historical UI
+          // placeholder and does not count as an inline definition. Same rule as
+          // DataxParameters.isInlineJsonAbsent on the backend.
+          const parsed = JSON.parse(model.json)
+          const isEmptyObject =
+            parsed !== null &&
+            typeof parsed === 'object' &&
+            !Array.isArray(parsed) &&
+            Object.keys(parsed).length === 0
+          if (isEmptyObject && !hasSingleJsonResource) {
+            return new Error(t('project.node.datax_custom_json_resource_tips'))
+          }
+        }
       }
     },
     useResources(useResourcesSpan),
@@ -226,6 +284,18 @@ export function useDataX(model: { [field: string]: any }): IJsonItem[] {
       }
     },
     {
+      type: 'input-number',
+      field: 'batchSize',
+      name: t('project.node.datax_writer_batch_size'),
+      span: otherStatementSpan,
+      props: {
+        min: 0,
+        step: 1024,
+        placeholder: t('project.node.datax_writer_batch_size_tips')
+      },
+      value: null
+    },
+    {
       type: 'select',
       field: 'jobSpeedByte',
       name: t('project.node.datax_job_speed_byte'),
@@ -255,6 +325,14 @@ export function useDataX(model: { [field: string]: any }): IJsonItem[] {
       name: t('project.node.datax_job_runtime_memory_xmx'),
       span: 12,
       options: memoryLimitOptions,
+      value: 1
+    },
+    {
+      type: 'input',
+      field: 'jobChannel',
+      name: t('project.node.datax_job_channel'),
+      span: jobSpeedSpan,
+      options: jobChannelOptions,
       value: 1
     },
     ...useCustomParams({ model, field: 'localParams', isSimple: true })

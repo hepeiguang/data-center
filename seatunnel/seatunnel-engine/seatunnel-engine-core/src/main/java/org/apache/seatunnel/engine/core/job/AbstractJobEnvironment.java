@@ -18,9 +18,7 @@
 package org.apache.seatunnel.engine.core.job;
 
 import org.apache.seatunnel.common.config.Common;
-import org.apache.seatunnel.common.utils.FileUtils;
 import org.apache.seatunnel.engine.common.config.JobConfig;
-import org.apache.seatunnel.engine.common.exception.SeaTunnelEngineException;
 import org.apache.seatunnel.engine.common.utils.IdGenerator;
 import org.apache.seatunnel.engine.core.dag.actions.Action;
 import org.apache.seatunnel.engine.core.dag.logical.LogicalDag;
@@ -31,10 +29,8 @@ import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 
 import java.io.File;
-import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -47,6 +43,8 @@ public abstract class AbstractJobEnvironment {
     protected static ILogger LOGGER = null;
 
     protected final boolean isStartWithSavePoint;
+
+    protected final RestoreMode restoreMode;
 
     protected final List<Action> actions = new ArrayList<>();
 
@@ -61,19 +59,32 @@ public abstract class AbstractJobEnvironment {
     protected final List<URL> commonPluginJars = new ArrayList<>();
 
     public AbstractJobEnvironment(JobConfig jobConfig, boolean isStartWithSavePoint) {
+        this(jobConfig, isStartWithSavePoint ? RestoreMode.SAVEPOINT : RestoreMode.NONE);
+    }
+
+    public AbstractJobEnvironment(JobConfig jobConfig, RestoreMode restoreMode) {
         LOGGER = Logger.getLogger(getClass().getName());
         this.jobConfig = jobConfig;
-        this.isStartWithSavePoint = isStartWithSavePoint;
+        this.restoreMode = restoreMode == null ? RestoreMode.NONE : restoreMode;
+        this.isStartWithSavePoint = this.restoreMode == RestoreMode.SAVEPOINT;
         this.idGenerator = new IdGenerator();
         this.commonPluginJars.addAll(searchPluginJars());
     }
 
     protected Set<URL> searchPluginJars() {
         try {
-            if (Files.exists(Common.pluginRootDir())) {
-                return new HashSet<>(FileUtils.searchJarFiles(Common.pluginRootDir()));
-            }
-        } catch (IOException | SeaTunnelEngineException e) {
+            return new HashSet<>(
+                    Common.getPluginsJarDependenciesWithoutConnectorDependency().stream()
+                            .map(
+                                    p -> {
+                                        try {
+                                            return p.toUri().toURL();
+                                        } catch (MalformedURLException e) {
+                                            throw new RuntimeException(e);
+                                        }
+                                    })
+                            .collect(Collectors.toList()));
+        } catch (Exception e) {
             LOGGER.warning(
                     String.format("Can't search plugin jars in %s.", Common.pluginRootDir()), e);
         }
@@ -124,7 +135,7 @@ public abstract class AbstractJobEnvironment {
     protected abstract MultipleTableJobConfigParser getJobConfigParser();
 
     protected LogicalDagGenerator getLogicalDagGenerator() {
-        return new LogicalDagGenerator(actions, jobConfig, idGenerator, isStartWithSavePoint);
+        return new LogicalDagGenerator(actions, jobConfig, idGenerator, restoreMode.isRestore());
     }
 
     public abstract LogicalDag getLogicalDag();

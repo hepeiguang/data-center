@@ -107,14 +107,14 @@ const yarnQueueManage = defineComponent({
       <NSpace vertical>
         <Card>
           <NSpace justify='space-between'>
-            {/* <NButton
+            <NButton
               size='small'
               type='primary'
               onClick={handleModalChange}
               class='btn-create-queue'
             >
               {t('security.yarn_queue.create_queue')}
-            </NButton> */}
+            </NButton>
             <NSpace>
               <Search
                 v-model:value={this.searchVal}
@@ -130,40 +130,26 @@ const yarnQueueManage = defineComponent({
           </NSpace>
         </Card>
         <Card title={t('menu.yarn_queue_manage')}>
-          {{
-            default: () => (
-              <NSpace vertical>
-                <NDataTable
-                  loading={loadingRef}
-                  row-class-name='items'
-                  columns={this.columns}
-                  data={this.tableData}
-                />
-                <NSpace justify='center'>
-                  <NPagination
-                    v-model:page={this.page}
-                    v-model:page-size={this.pageSize}
-                    page-count={this.totalPage}
-                    show-size-picker
-                    page-sizes={[10, 30, 50]}
-                    show-quick-jumper
-                    onUpdatePage={requestData}
-                    onUpdatePageSize={onUpdatePageSize}
-                  />
-                </NSpace>
-              </NSpace>
-            ),
-            'header-extra': () => (
-              <NButton
-                size='small'
-                type='primary'
-                onClick={handleModalChange}
-                class='btn-create-queue'
-              >
-                {t('security.yarn_queue.create_queue')}
-              </NButton>
-            )
-          }}
+          <NSpace vertical>
+            <NDataTable
+              loading={loadingRef}
+              row-class-name='items'
+              columns={this.columns}
+              data={this.tableData}
+            />
+            <NSpace justify='center'>
+              <NPagination
+                v-model:page={this.page}
+                v-model:page-size={this.pageSize}
+                page-count={this.totalPage}
+                show-size-picker
+                page-sizes={[10, 30, 50]}
+                show-quick-jumper
+                onUpdatePage={requestData}
+                onUpdatePageSize={onUpdatePageSize}
+              />
+            </NSpace>
+          </NSpace>
         </Card>
         <YarnQueueModal
           showModalRef={this.showModalRef}

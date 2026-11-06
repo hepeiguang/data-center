@@ -1,5 +1,6 @@
 # Package Files #
 *.jar
+*.class
 *.zip
 *.tar.gz
 
@@ -17,10 +18,19 @@ target/
 /logs
 logs.zip
 
+# Local BOS integration test configs (may reference credentials)
+config/bos-local-test/
+
 # Intellij Idea files
 .idea/
 *.iml
 .idea/*
+
+# Eclipse / M2E files
+.classpath
+.factorypath
+.project
+.settings/
 
 .DS_Store
 
@@ -48,7 +58,6 @@ test.conf
 spark-warehouse
 *.flattened-pom.xml
 
-seatunnel-examples
 
 # vscode
 .vscode
@@ -60,3 +69,10 @@ node/
 dist/
 
 seatunnel-engine/seatunnel-engine-server/**/ui/*
+
+seatunnel-edge-agent/**/edge-agent.id
+seatunnel-edge-agent/**/tmp/
+
+# seatunnel-cli benchmark runtime artifacts
+seatunnel-cli/benchmark/results/
+seatunnel-cli/benchmark/models.json

@@ -17,55 +17,26 @@
 
 package org.apache.seatunnel.connectors.seatunnel.file.oss.jindo.sink;
 
-import org.apache.seatunnel.shade.com.typesafe.config.Config;
-
-import org.apache.seatunnel.api.common.PrepareFailException;
-import org.apache.seatunnel.api.common.SeaTunnelAPIErrorCode;
-import org.apache.seatunnel.api.sink.SeaTunnelSink;
+import org.apache.seatunnel.api.configuration.ReadonlyConfig;
 import org.apache.seatunnel.api.table.catalog.CatalogTable;
-import org.apache.seatunnel.common.config.CheckConfigUtil;
-import org.apache.seatunnel.common.config.CheckResult;
-import org.apache.seatunnel.common.constants.PluginType;
 import org.apache.seatunnel.connectors.seatunnel.file.config.FileSystemType;
+import org.apache.seatunnel.connectors.seatunnel.file.config.HadoopConf;
 import org.apache.seatunnel.connectors.seatunnel.file.oss.jindo.config.OssConf;
-import org.apache.seatunnel.connectors.seatunnel.file.oss.jindo.config.OssConfigOptions;
-import org.apache.seatunnel.connectors.seatunnel.file.oss.jindo.exception.OssJindoConnectorException;
 import org.apache.seatunnel.connectors.seatunnel.file.sink.BaseFileSink;
 
-import com.google.auto.service.AutoService;
-
-import java.util.Optional;
-
-@AutoService(SeaTunnelSink.class)
 public class OssFileSink extends BaseFileSink {
+
+    public OssFileSink(ReadonlyConfig pluginConfig, CatalogTable catalogTable) {
+        super(pluginConfig, catalogTable);
+    }
+
+    @Override
+    protected HadoopConf initHadoopConf() {
+        return OssConf.buildWithReadonlyConfig(pluginConfig);
+    }
+
     @Override
     public String getPluginName() {
         return FileSystemType.OSS_JINDO.getFileSystemPluginName();
-    }
-
-    @Override
-    public void prepare(Config pluginConfig) throws PrepareFailException {
-        super.prepare(pluginConfig);
-        CheckResult result =
-                CheckConfigUtil.checkAllExists(
-                        pluginConfig,
-                        OssConfigOptions.FILE_PATH.key(),
-                        OssConfigOptions.ENDPOINT.key(),
-                        OssConfigOptions.ACCESS_KEY.key(),
-                        OssConfigOptions.ACCESS_SECRET.key(),
-                        OssConfigOptions.BUCKET.key());
-        if (!result.isSuccess()) {
-            throw new OssJindoConnectorException(
-                    SeaTunnelAPIErrorCode.CONFIG_VALIDATION_FAILED,
-                    String.format(
-                            "PluginName: %s, PluginType: %s, Message: %s",
-                            getPluginName(), PluginType.SINK, result.getMsg()));
-        }
-        hadoopConf = OssConf.buildWithConfig(pluginConfig);
-    }
-
-    @Override
-    public Optional<CatalogTable> getWriteCatalogTable() {
-        return super.getWriteCatalogTable();
     }
 }

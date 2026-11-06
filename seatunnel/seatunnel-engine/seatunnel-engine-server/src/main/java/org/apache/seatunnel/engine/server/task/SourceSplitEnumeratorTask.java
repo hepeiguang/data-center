@@ -200,6 +200,8 @@ public class SourceSplitEnumeratorTask<SplitT extends SourceSplit> extends Coord
         } else {
             this.enumerator = this.source.getSource().createEnumerator(enumeratorContext);
         }
+        enumerator.open();
+        enumeratorContext.getEventListener().onEvent(new EnumeratorOpenEvent());
         restoreComplete.complete(null);
         log.debug("restoreState split enumerator [{}] finished", actionStateList);
     }
@@ -221,8 +223,19 @@ public class SourceSplitEnumeratorTask<SplitT extends SourceSplit> extends Coord
         log.info("received reader register, readerID: " + readerId);
 
         SourceSplitEnumerator<SplitT, Serializable> enumerator = getEnumerator();
+        int readerIndex = readerId.getTaskIndex();
+        boolean needResignalNoMoreSplits;
         this.addTaskMemberMapping(readerId, memberAddr);
-        enumerator.registerReader(readerId.getTaskIndex());
+        synchronized (enumeratorContext) {
+            enumerator.registerReader(readerIndex);
+            needResignalNoMoreSplits = enumeratorContext.hasNoMoreSplitsSignaled(readerIndex);
+        }
+        if (needResignalNoMoreSplits) {
+            log.info(
+                    "Reader [{}] re-registered after failover. Re-signaling NoMoreSplitsEvent.",
+                    readerIndex);
+            enumeratorContext.signalNoMoreSplits(readerIndex);
+        }
         int taskSize = taskMemberMapping.size();
         if (maxReaderSize == taskSize) {
             readerRegisterComplete = true;
@@ -301,7 +314,7 @@ public class SourceSplitEnumeratorTask<SplitT extends SourceSplit> extends Coord
                 reportTaskStatus(WAITING_RESTORE);
                 break;
             case WAITING_RESTORE:
-                if (restoreComplete.isDone()) {
+                if (restoreComplete.isDone() && readerRegisterComplete) {
                     currState = READY_START;
                     reportTaskStatus(READY_START);
                 } else {
@@ -309,10 +322,8 @@ public class SourceSplitEnumeratorTask<SplitT extends SourceSplit> extends Coord
                 }
                 break;
             case READY_START:
-                if (startCalled && readerRegisterComplete) {
+                if (startCalled) {
                     currState = STARTING;
-                    enumerator.open();
-                    enumeratorContext.getEventListener().onEvent(new EnumeratorOpenEvent());
                 } else {
                     Thread.sleep(100);
                 }

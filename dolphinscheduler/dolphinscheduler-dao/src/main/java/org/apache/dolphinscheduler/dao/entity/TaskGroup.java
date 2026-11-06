@@ -46,7 +46,7 @@ public class TaskGroup implements Serializable {
     private String description;
     private int groupSize;
     private int useSize;
-    private String userId;
+    private int userId;
     private Flag status;
     private Date createTime;
     private Date updateTime;

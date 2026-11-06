@@ -15,17 +15,15 @@
  * limitations under the License.
  */
 
-import { defineComponent, onMounted, watch, toRefs, ref, computed } from 'vue'
-import { NLayout, NLayoutContent, NLayoutHeader, useMessage } from 'naive-ui'
-import NavBar from './components/navbar'
+import { defineComponent, onMounted, watch, toRefs, computed } from 'vue'
+import { NLayout, NLayoutContent, useMessage } from 'naive-ui'
 import SideBar from './components/sidebar'
 import { useDataList } from './use-dataList'
 import { useLocalesStore } from '@/store/locales/locales'
 import { useRouteStore } from '@/store/route/route'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
-import { singleSignOnValue } from '@/router/singleSignOnMode'
-import { useParentAppProps } from '@/store/parentAppProps/parentAppProps'
+
 const Content = defineComponent({
   name: 'DSContent',
   setup() {
@@ -35,131 +33,62 @@ const Content = defineComponent({
     const { locale } = useI18n()
     const localesStore = useLocalesStore()
     const routeStore = useRouteStore()
-    const parentAppProps = useParentAppProps()
-    const {
-      state,
-      changeMenuOption,
-      changeHeaderMenuOptions,
-      changeUserDropdown
-    } = useDataList()
-    const sideKeyRef = ref()
+    const { state, changeMenuOption, changeUserDropdown } = useDataList()
+
+    const activeKey = computed(() => {
+      const activeSide = route.meta.activeSide as string | undefined
+      const key = activeSide || route.path
+      return key.replace(
+        ':projectCode',
+        (route.params.projectCode as string) || ''
+      )
+    })
+
+    const refresh = () => {
+      changeMenuOption(state)
+      changeUserDropdown(state)
+    }
 
     onMounted(() => {
       locale.value = localesStore.getLocales
-      changeMenuOption(state)
-      changeHeaderMenuOptions(state)
-      getSideMenu(state)
-      changeUserDropdown(state)
+      refresh()
     })
 
-    const getSideMenu = (state: any) => {
-      const key = route.meta.activeMenu
-      state.sideMenuOptions =
-        state.menuOptions.filter((menu: { key: string }) => menu.key === key)[0]
-          ?.children || state.menuOptions
-      state.isShowSide = route.meta.showSide
-    }
-
-    // const isSingleSign = ref(window.APP_CONFIG.singleSignOnValue)
-    const isSingleSign = ref(!window.APP_CONFIG.showMenu)
-    const headerStyle = computed(() => {
-      return isSingleSign.value? { display: 'none'}: { height: '65px' }
-    })
-    // 集成有的需要左侧导航栏
-    const sideStyle = computed(() => {
-      return (isSingleSign.value && !parentAppProps.isAside) ? { display: 'none'}: {}
-    })
-
-
-    const mainStyle = computed(() => {
-      return isSingleSign.value ? { top: '0' } : { top: '65px' }
-    })
-    /**
-     *   const isSingleSign = ref(!window.APP_CONFIG.showMenu)
-          const headerStyle = computed(() => {
-            return isSingleSign.value? { display: 'none'}: { height: '65px' }
-          })
-
-          const sideStyle = computed(() => {
-            return isSingleSign.value? { display: 'none'}: {}
-          })
-
-     */
-
-
-    watch(useI18n().locale, () => {
-      changeMenuOption(state)
-      changeHeaderMenuOptions(state)
-      getSideMenu(state)
-      changeUserDropdown(state)
-    })
+    watch(locale, refresh)
 
     watch(
       () => route.path,
-      () => {
-        if (route.path !== '/login') {
-          routeStore.setLastRoute(route.path)
-
-          state.isShowSide = route.meta.showSide as boolean
-          if (route.matched[1].path === '/projects/:projectCode') {
-            changeMenuOption(state)
-          }
-
-          getSideMenu(state)
-          const currentSide = (
-            route.meta.activeSide
-              ? route.meta.activeSide
-              : route.matched[1].path
-          ) as string
-          sideKeyRef.value = currentSide.includes(':projectCode')
-            ? currentSide.replace(
-                ':projectCode',
-                route.params.projectCode as string
-              )
-            : currentSide
+      (path) => {
+        if (path !== '/login') {
+          routeStore.setLastRoute(path)
+          refresh()
         }
-      },
-      { immediate: true }
+      }
     )
 
     return {
       ...toRefs(state),
-      changeMenuOption,
-      sideKeyRef,
-      currentRoute: route,
-      headerStyle,
-      sideStyle,
-      mainStyle
+      activeKey,
+      currentRoute: route
     }
   },
   render() {
     return (
-      <NLayout style='height: 100%'>
-        <NLayoutHeader style={ this.headerStyle }>
-          <NavBar
-            class='tab-horizontal'
-            headerMenuOptions={this.headerMenuOptions}
-            localesOptions={this.localesOptions}
-            timezoneOptions={this.timezoneOptions}
-            userDropdownOptions={this.userDropdownOptions}
-          />
-        </NLayoutHeader>
-        <NLayout has-sider position='absolute' style={this.mainStyle}>
-          {this.isShowSide && (
-            <SideBar
-              style={this.sideStyle}
-              sideMenuOptions={this.sideMenuOptions}
-              sideKey={this.sideKeyRef}
-            />
-          )}
-          <NLayoutContent
-            native-scrollbar={false}
-            style='padding: 16px 22px'
-            contentStyle={'height: 100%'}
-          >
-            <router-view key={this.currentRoute.fullPath} />
-          </NLayoutContent>
-        </NLayout>
+      <NLayout style='height: 100%' has-sider>
+        <SideBar
+          menuOptions={this.menuOptions}
+          activeKey={this.activeKey}
+          localesOptions={this.localesOptions}
+          timezoneOptions={this.timezoneOptions}
+          userDropdownOptions={this.userDropdownOptions}
+        />
+        <NLayoutContent
+          native-scrollbar={false}
+          style='padding: 16px 22px'
+          contentStyle={'height: 100%'}
+        >
+          <router-view key={this.currentRoute.fullPath} />
+        </NLayoutContent>
       </NLayout>
     )
   }

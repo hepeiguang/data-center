@@ -20,7 +20,7 @@
     <parent>
         <groupId>org.apache.dolphinscheduler</groupId>
         <artifactId>dolphinscheduler</artifactId>
-        <version>3.2.2</version>
+        <version>3.4.3</version>
     </parent>
 
     <artifactId>dolphinscheduler-storage-plugin</artifactId>
@@ -35,6 +35,7 @@
         <module>dolphinscheduler-storage-gcs</module>
         <module>dolphinscheduler-storage-abs</module>
         <module>dolphinscheduler-storage-obs</module>
+        <module>dolphinscheduler-storage-cos</module>
     </modules>
 
     <dependencyManagement>

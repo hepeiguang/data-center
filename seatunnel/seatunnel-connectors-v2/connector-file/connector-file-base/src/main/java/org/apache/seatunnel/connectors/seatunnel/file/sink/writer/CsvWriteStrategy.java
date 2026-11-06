@@ -47,7 +47,6 @@ import java.util.Map;
 public class CsvWriteStrategy extends AbstractWriteStrategy<FSDataOutputStream> {
     private final LinkedHashMap<String, FSDataOutputStream> beingWrittenOutputStream;
     private final Map<String, Boolean> isFirstWrite;
-    private final String fieldDelimiter;
     private final String rowDelimiter;
     private final DateUtils.Formatter dateFormat;
     private final DateTimeUtils.Formatter dateTimeFormat;
@@ -58,12 +57,13 @@ public class CsvWriteStrategy extends AbstractWriteStrategy<FSDataOutputStream> 
     private final CsvStringQuoteMode csvStringQuoteMode;
     private SerializationSchema serializationSchema;
 
+    private final String fieldDelimiter;
+
     public CsvWriteStrategy(FileSinkConfig fileSinkConfig) {
         super(fileSinkConfig);
         this.csvStringQuoteMode = fileSinkConfig.getCsvStringQuoteMode();
         this.beingWrittenOutputStream = new LinkedHashMap<>();
         this.isFirstWrite = new HashMap<>();
-        this.fieldDelimiter = fileSinkConfig.getFieldDelimiter();
         this.rowDelimiter = fileSinkConfig.getRowDelimiter();
         this.dateFormat = fileSinkConfig.getDateFormat();
         this.dateTimeFormat = fileSinkConfig.getDatetimeFormat();
@@ -71,6 +71,7 @@ public class CsvWriteStrategy extends AbstractWriteStrategy<FSDataOutputStream> 
         this.fileFormat = fileSinkConfig.getFileFormat();
         this.enableHeaderWriter = fileSinkConfig.getEnableHeaderWriter();
         this.charset = EncodingUtils.tryParseCharset(fileSinkConfig.getEncoding());
+        this.fieldDelimiter = fileSinkConfig.getFieldDelimiter();
     }
 
     @Override
@@ -91,6 +92,21 @@ public class CsvWriteStrategy extends AbstractWriteStrategy<FSDataOutputStream> 
     }
 
     @Override
+    protected void onSchemaChanged() {
+        this.serializationSchema =
+                CsvSerializationSchema.builder()
+                        .seaTunnelRowType(
+                                buildSchemaWithRowType(seaTunnelRowType, sinkColumnsIndexInRow))
+                        .delimiter(fieldDelimiter)
+                        .dateFormatter(dateFormat)
+                        .dateTimeFormatter(dateTimeFormat)
+                        .timeFormatter(timeFormat)
+                        .charset(charset)
+                        .quoteMode(csvStringQuoteMode)
+                        .build();
+    }
+
+    @Override
     public void write(@NonNull SeaTunnelRow seaTunnelRow) {
         super.write(seaTunnelRow);
         String filePath = getOrCreateFilePathBeingWritten(seaTunnelRow);
@@ -101,12 +117,7 @@ public class CsvWriteStrategy extends AbstractWriteStrategy<FSDataOutputStream> 
             } else {
                 fsDataOutputStream.write(rowDelimiter.getBytes(charset));
             }
-            fsDataOutputStream.write(
-                    serializationSchema.serialize(
-                            seaTunnelRow.copy(
-                                    sinkColumnsIndexInRow.stream()
-                                            .mapToInt(Integer::intValue)
-                                            .toArray())));
+            fsDataOutputStream.write(serializationSchema.serialize(safeProjectedRow(seaTunnelRow)));
         } catch (IOException e) {
             throw CommonError.fileOperationFailed("CsvFile", "write", filePath, e);
         }

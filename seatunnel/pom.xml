@@ -13,8 +13,7 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
@@ -26,7 +25,7 @@
 
     <groupId>org.apache.seatunnel</groupId>
     <artifactId>seatunnel</artifactId>
-    <version>${revision}</version>
+    <version>3.0.0</version>
     <packaging>pom</packaging>
 
     <name>SeaTunnel :</name>
@@ -49,20 +48,35 @@
         <module>seatunnel-plugin-discovery</module>
         <module>seatunnel-formats</module>
         <module>seatunnel-engine</module>
-<!--        <module>seatunnel-examples</module>-->
+        <module>seatunnel-trace</module>
+        <module>seatunnel-examples</module>
         <module>seatunnel-e2e</module>
-        <module>seatunnel-shade</module>
+        <module>seatunnel-edge-agent</module>
         <module>seatunnel-ci-tools</module>
-        <module>seatunnel-udfs</module>
-        <module>seatunnel-dist</module>
+        <!-- LHYF custom UDF module -->
         <module>seatunnel-udpparsing</module>
     </modules>
 
     <properties>
         <!--todo The classification is too confusing, reclassify by type-->
-<!--        <revision>2.3.11-SNAPSHOT</revision>-->
-        <revision>2.3.10</revision>
+        <revision>3.0.0-SNAPSHOT</revision>
         <seatunnel.config.shade.version>2.1.1</seatunnel.config.shade.version>
+        <!-- The seatunnel shade version  e.g. ${seatunnel.shade.hazelcast.version}-${seatunnel.shade.version} -->
+        <seatunnel.shade.version>3.0.0</seatunnel.shade.version>
+        <seatunnel.shade.arraw.version>15.0.1</seatunnel.shade.arraw.version>
+        <seatunnel.shade.guava.version>27.0-jre</seatunnel.shade.guava.version>
+        <seatunnel.shade.hadoop.version>3.1.4</seatunnel.shade.hadoop.version>
+        <seatunnel.shade.hadoop-aws.version>3.1.4</seatunnel.shade.hadoop-aws.version>
+        <seatunnel.shade.hazelcast.version>5.1</seatunnel.shade.hazelcast.version>
+        <seatunnel.shade.hikari.version>4.0.3</seatunnel.shade.hikari.version>
+        <seatunnel.shade.jackson.version>2.15.4</seatunnel.shade.jackson.version>
+        <seatunnel.shade.janino.version>3.1.12</seatunnel.shade.janino.version>
+        <seatunnel.shade.jetty.version>9.4.56.v20240826</seatunnel.shade.jetty.version>
+        <seatunnel.shade.scala-compiler.version>2.12</seatunnel.shade.scala-compiler.version>
+        <seatunnel.shade.thrift-service.version>1.0.0</seatunnel.shade.thrift-service.version>
+        <seatunnel.shade.commons-lang3.version>3.18.0</seatunnel.shade.commons-lang3.version>
+        <seatunnel.shade.calcite.version>1.38.0</seatunnel.shade.calcite.version>
+
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java.version>1.8</java.version>
         <scala.version>2.12.15</scala.version>
@@ -70,6 +84,8 @@
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
 
+        <system-rules.version>1.2.1</system-rules.version>
+        <powermock.version>2.0.9</powermock.version>
         <slf4j.version>1.7.36</slf4j.version>
         <log4j2.version>2.17.1</log4j2.version>
         <log4j2-disruptor.version>3.4.4</log4j2-disruptor.version>
@@ -78,6 +94,7 @@
         <commons-logging.version>1.2</commons-logging.version>
         <flink.1.13.6.version>1.13.6</flink.1.13.6.version>
         <flink.1.15.3.version>1.15.3</flink.1.15.3.version>
+        <flink.1.20.1.version>1.20.1</flink.1.20.1.version>
         <spark.2.4.0.version>2.4.0</spark.2.4.0.version>
         <spark.3.3.0.version>3.3.0</spark.3.3.0.version>
         <spark.binary.2.4.version>2.4</spark.binary.2.4.version>
@@ -89,8 +106,8 @@
         <jersey.version>1.19</jersey.version>
         <javax.servlet.jap.version>2.1</javax.servlet.jap.version>
         <hadoop.binary.version>2.7</hadoop.binary.version>
-        <jackson.version>2.13.3</jackson.version>
-        <lombok.version>1.18.24</lombok.version>
+        <jackson.version>2.15.4</jackson.version>
+        <lombok.version>1.18.36</lombok.version>
         <commons-compress.version>1.20</commons-compress.version>
         <avro.version>1.11.1</avro.version>
         <skip.pmd.check>false</skip.pmd.check>
@@ -107,7 +124,7 @@
         <elasticsearch6.client.version>6.3.1</elasticsearch6.client.version>
         <elasticsearch7.client.version>7.5.1</elasticsearch7.client.version>
         <flink-shaded-hadoop-2.version>2.7.5-7.0</flink-shaded-hadoop-2.version>
-        <commons-lang3.version>3.8</commons-lang3.version>
+        <commons-lang3.version>3.18.0</commons-lang3.version>
         <commons-io.version>2.11.0</commons-io.version>
         <commons-collections4.version>4.4</commons-collections4.version>
         <commons-csv.version>1.10.0</commons-csv.version>
@@ -129,7 +146,7 @@
         <rest-assured.version>5.4.0</rest-assured.version>
         <mockito.version>4.11.0</mockito.version>
         <config.version>1.3.3</config.version>
-        <maven-shade-plugin.version>3.4.1</maven-shade-plugin.version>
+        <maven-shade-plugin.version>3.5.1</maven-shade-plugin.version>
         <maven-helper-plugin.version>3.2.0</maven-helper-plugin.version>
         <maven-git-commit-id-plugin.version>4.0.4</maven-git-commit-id-plugin.version>
         <flatten-maven-plugin.version>1.3.0</flatten-maven-plugin.version>
@@ -144,9 +161,12 @@
         <jsqlparser.version>4.9</jsqlparser.version>
         <json-path.version>2.7.0</json-path.version>
         <groovy.version>4.0.16</groovy.version>
+        <scala.version>2.12.15</scala.version>
         <jetty.version>9.4.56.v20240826</jetty.version>
         <jakarta.servlet-api>4.0.4</jakarta.servlet-api>
+        <hugegraph.client.version>1.7.0</hugegraph.client.version>
         <!-- Option args -->
+        <surefire.jvm.args>-Dfile.encoding=UTF-8</surefire.jvm.args>
         <skipUT>false</skipUT>
         <skipIT>true</skipIT>
         <elasticsearch>7</elasticsearch>
@@ -158,14 +178,16 @@
         <checker.qual.version>3.10.0</checker.qual.version>
         <awaitility.version>4.2.0</awaitility.version>
         <e2e.dependency.skip>true</e2e.dependency.skip>
-        <skip.spotless>true</skip.spotless>
+        <skip.spotless>false</skip.spotless>
 
         <!-- prometheus simpleclient -->
         <prometheus.simpleclient.version>0.16.0</prometheus.simpleclient.version>
         <enableSourceJarCreation>true</enableSourceJarCreation>
 
         <hadoop-aws.version>3.1.4</hadoop-aws.version>
+        <software.amazon.awssdk.version>2.31.30</software.amazon.awssdk.version>
         <arrow.version>15.0.1</arrow.version>
+        <okhttp.version>4.12.0</okhttp.version>
 
     </properties>
 
@@ -325,6 +347,19 @@
                 <version>${codec.version}</version>
             </dependency>
 
+            <!-- OkHttp dependencies -->
+            <dependency>
+                <groupId>com.squareup.okhttp3</groupId>
+                <artifactId>okhttp</artifactId>
+                <version>${okhttp.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.squareup.okhttp3</groupId>
+                <artifactId>mockwebserver</artifactId>
+                <version>${okhttp.version}</version>
+                <scope>test</scope>
+            </dependency>
+
             <dependency>
                 <groupId>org.apache.flink</groupId>
                 <artifactId>flink-shaded-hadoop-2</artifactId>
@@ -401,6 +436,11 @@
                 <artifactId>jackson-datatype-jsr310</artifactId>
                 <version>${jackson.version}</version>
             </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.module</groupId>
+                <artifactId>jackson-module-scala_${scala.binary.version}</artifactId>
+                <version>${jackson.version}</version>
+            </dependency>
 
             <dependency>
                 <groupId>com.fasterxml.jackson.core</groupId>
@@ -411,6 +451,21 @@
             <dependency>
                 <groupId>com.fasterxml.jackson.core</groupId>
                 <artifactId>jackson-databind</artifactId>
+                <version>${jackson.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.dataformat</groupId>
+                <artifactId>jackson-dataformat-yaml</artifactId>
+                <version>${jackson.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.dataformat</groupId>
+                <artifactId>jackson-dataformat-properties</artifactId>
+                <version>${jackson.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.datatype</groupId>
+                <artifactId>jackson-datatype-jdk8</artifactId>
                 <version>${jackson.version}</version>
             </dependency>
 
@@ -495,10 +550,87 @@
 
             <dependency>
                 <groupId>org.apache.seatunnel</groupId>
-                <artifactId>seatunnel-hadoop3-3.1.4-uber</artifactId>
-                <version>${project.version}</version>
-                <classifier>optional</classifier>
+                <artifactId>seatunnel-shade-hadoop3-uber</artifactId>
+                <version>${seatunnel.shade.hadoop.version}-${seatunnel.shade.version}</version>
                 <scope>provided</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.seatunnel</groupId>
+                <artifactId>seatunnel-shade-hadoop-aws</artifactId>
+                <version>${seatunnel.shade.hadoop-aws.version}-${seatunnel.shade.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.seatunnel</groupId>
+                <artifactId>seatunnel-shade-guava</artifactId>
+                <version>${seatunnel.shade.guava.version}-${seatunnel.shade.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.seatunnel</groupId>
+                <artifactId>seatunnel-shade-jackson</artifactId>
+                <version>${seatunnel.shade.jackson.version}-${seatunnel.shade.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.seatunnel</groupId>
+                <artifactId>seatunnel-shade-jackson-yaml</artifactId>
+                <version>${seatunnel.shade.jackson.version}-${seatunnel.shade.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.seatunnel</groupId>
+                <artifactId>seatunnel-shade-commons-lang3</artifactId>
+                <version>${seatunnel.shade.commons-lang3.version}-${seatunnel.shade.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.seatunnel</groupId>
+                <artifactId>seatunnel-shade-arrow</artifactId>
+                <version>${seatunnel.shade.arraw.version}-${seatunnel.shade.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.seatunnel</groupId>
+                <artifactId>seatunnel-shade-hikari</artifactId>
+                <version>${seatunnel.shade.hikari.version}-${seatunnel.shade.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.seatunnel</groupId>
+                <artifactId>seatunnel-shade-hazelcast</artifactId>
+                <version>${seatunnel.shade.hazelcast.version}-${seatunnel.shade.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.seatunnel</groupId>
+                <artifactId>seatunnel-shade-scala-compiler</artifactId>
+                <version>${seatunnel.shade.scala-compiler.version}-${seatunnel.shade.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.seatunnel</groupId>
+                <artifactId>seatunnel-shade-janino</artifactId>
+                <version>${seatunnel.shade.janino.version}-${seatunnel.shade.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.seatunnel</groupId>
+                <artifactId>seatunnel-shade-calcite</artifactId>
+                <version>${seatunnel.shade.calcite.version}-${seatunnel.shade.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.seatunnel</groupId>
+                <artifactId>seatunnel-shade-jetty</artifactId>
+                <version>${seatunnel.shade.jetty.version}-${seatunnel.shade.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.seatunnel</groupId>
+                <artifactId>seatunnel-shade-thrift-service</artifactId>
+                <version>${seatunnel.shade.thrift-service.version}-${seatunnel.shade.version}</version>
             </dependency>
 
             <dependency>
@@ -510,6 +642,12 @@
                 <groupId>org.apache.arrow</groupId>
                 <artifactId>arrow-memory-netty</artifactId>
                 <version>${arrow.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.hugegraph</groupId>
+                <artifactId>hugegraph-client</artifactId>
+                <version>${hugegraph.client.version}</version>
             </dependency>
 
         </dependencies>
@@ -572,6 +710,31 @@
             <scope>test</scope>
         </dependency>
 
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-inline</artifactId>
+            <version>${mockito.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.github.stefanbirkner</groupId>
+            <artifactId>system-lambda</artifactId>
+            <version>${system-rules.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.powermock</groupId>
+            <artifactId>powermock-module-junit4</artifactId>
+            <version>${powermock.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.powermock</groupId>
+            <artifactId>powermock-api-mockito2</artifactId>
+            <version>${powermock.version}</version>
+            <scope>test</scope>
+        </dependency>
+
         <!-- The prometheus simpleclient -->
         <dependency>
             <groupId>io.prometheus</groupId>
@@ -595,8 +758,7 @@
 
     <build>
 
-<!--        <finalName>${project.artifactId}-${project.version}-${scala.version}</finalName>-->
-        <finalName>${project.artifactId}-${project.version}</finalName>
+        <finalName>${project.artifactId}-${project.version}-${scala.version}</finalName>
 
         <pluginManagement>
             <plugins>
@@ -617,6 +779,7 @@
                     <artifactId>maven-surefire-plugin</artifactId>
                     <version>${maven-surefire-plugin.version}</version>
                     <configuration>
+                        <argLine>${surefire.jvm.args}</argLine>
                         <skip>${skipUT}</skip>
                         <systemPropertyVariables>
                             <jacoco-agent.destfile>${project.build.directory}/jacoco.exec</jacoco-agent.destfile>
@@ -648,6 +811,7 @@
                     <artifactId>maven-failsafe-plugin</artifactId>
                     <version>${maven-failsafe-plugin.version}</version>
                     <configuration>
+                        <argLine>${surefire.jvm.args}</argLine>
                         <skip>${skipIT}</skip>
                     </configuration>
                     <executions>
@@ -827,6 +991,18 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
                     <encoding>UTF-8</encoding>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>${lombok.version}</version>
+                        </path>
+                        <path>
+                            <groupId>com.google.auto.service</groupId>
+                            <artifactId>auto-service</artifactId>
+                            <version>${auto-service.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
                 </configuration>
             </plugin>
             <plugin>
@@ -895,6 +1071,31 @@
                             <name>Block jUnit4 imports</name>
                             <searchRegex>import\s+org\.junit\.[^jupiter][^\*\s]*(|\*);(\r\n|\r|\n)</searchRegex>
                             <replacement>$1</replacement>
+                        </replaceRegex>
+                        <replaceRegex>
+                            <name>Convert Google Guava imports to shade</name>
+                            <searchRegex>import\s+(static\s+)?com\.google\.common\.([^;]+);(\r\n|\r|\n)</searchRegex>
+                            <replacement>import $1org.apache.seatunnel.shade.com.google.common.$2;$3</replacement>
+                        </replaceRegex>
+                        <replaceRegex>
+                            <name>Convert Jetty imports to shade</name>
+                            <searchRegex>import\s+(static\s+)?org\.eclipse\.jetty\.([^;]+);(\r\n|\r|\n)</searchRegex>
+                            <replacement>import $1org.apache.seatunnel.shade.org.eclipse.jetty.$2;$3</replacement>
+                        </replaceRegex>
+                        <replaceRegex>
+                            <name>Convert Hikari imports to shade</name>
+                            <searchRegex>import\s+(static\s+)?com\.zaxxer\.hikari\.([^;]+);(\r\n|\r|\n)</searchRegex>
+                            <replacement>import $1org.apache.seatunnel.shade.com.zaxxer.hikari.$2;$3</replacement>
+                        </replaceRegex>
+                        <replaceRegex>
+                            <name>Convert Janino imports to shade</name>
+                            <searchRegex>import\s+(static\s+)?org\.codehaus\.(janino|commons)\.([^;]+);(\r\n|\r|\n)</searchRegex>
+                            <replacement>import $1org.apache.seatunnel.shade.org.codehaus.$2.$3;$4</replacement>
+                        </replaceRegex>
+                        <replaceRegex>
+                            <name>Convert Apache Commons Lang3 imports to shade</name>
+                            <searchRegex>import\s+(static\s+)?org\.apache\.commons\.lang3\.([^;]+);(\r\n|\r|\n)</searchRegex>
+                            <replacement>import $1org.apache.seatunnel.shade.org.apache.commons.lang3.$2;$3</replacement>
                         </replaceRegex>
                     </java>
                     <pom>
@@ -972,7 +1173,7 @@
         <connection>scm:git:https://github.com/apache/seatunnel.git</connection>
         <developerConnection>scm:git:https://github.com/apache/seatunnel.git</developerConnection>
         <url>https://github.com/apache/seatunnel</url>
-        <tag>HEAD</tag>
+        <tag>v3.0.0</tag>
     </scm>
 
     <issueManagement>
@@ -996,6 +1197,15 @@
             <activation>
                 <activeByDefault>false</activeByDefault>
             </activation>
+        </profile>
+        <profile>
+            <id>benchmark</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <modules>
+                <module>seatunnel-benchmarks</module>
+            </modules>
         </profile>
     </profiles>
 

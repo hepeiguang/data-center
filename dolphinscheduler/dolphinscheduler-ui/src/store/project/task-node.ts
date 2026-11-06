@@ -33,6 +33,7 @@ export const useTaskNodeStore = defineStore({
     preTaskOptions: [],
     postTaskOptions: [],
     preTasks: [],
+    taskDefinitionList: [],
     resources: [],
     mainJars: {},
     name: '',
@@ -48,6 +49,9 @@ export const useTaskNodeStore = defineStore({
     },
     getPreTasks(): number[] {
       return this.preTasks
+    },
+    getTaskDefinitionList(): any[] {
+      return this.taskDefinitionList
     },
     getResources(): IResource[] {
       return this.resources
@@ -65,8 +69,10 @@ export const useTaskNodeStore = defineStore({
   actions: {
     updateDefinition(definition?: EditWorkflowDefinition, code?: number) {
       if (!definition) return
-      const { processTaskRelationList = [], taskDefinitionList = [] } =
+      const { workflowTaskRelationList = [], taskDefinitionList = [] } =
         definition
+
+      this.taskDefinitionList = taskDefinitionList || []
 
       const preTaskOptions: { value: number; label: string }[] = []
       const tasks: { [field: number]: string } = {}
@@ -76,7 +82,7 @@ export const useTaskNodeStore = defineStore({
           if (task.code === code) return
           if (
             task.taskType === 'CONDITIONS' &&
-            processTaskRelationList.filter(
+            workflowTaskRelationList.filter(
               (relation: { preTaskCode: number }) =>
                 relation.preTaskCode === task.code
             ).length >= 2
@@ -94,7 +100,7 @@ export const useTaskNodeStore = defineStore({
       if (!code) return
       const preTasks: number[] = []
       const postTaskOptions: { value: number; label: string }[] = []
-      processTaskRelationList.forEach(
+      workflowTaskRelationList.forEach(
         (relation: { preTaskCode: number; postTaskCode: number }) => {
           if (relation.preTaskCode === code) {
             postTaskOptions.push({
@@ -140,6 +146,7 @@ export const useTaskNodeStore = defineStore({
       this.preTaskOptions = []
       this.postTaskOptions = []
       this.preTasks = []
+      this.taskDefinitionList = []
       this.resources = []
       this.mainJars = {}
       this.name = ''

@@ -15,67 +15,196 @@
  * limitations under the License.
  */
 
-import { defineComponent, ref, PropType, computed } from 'vue'
-import { NLayoutSider, NMenu } from 'naive-ui'
+import { defineComponent, ref, PropType, watch } from 'vue'
+import { NLayoutSider, NMenu, NButton, NIcon, NPopover } from 'naive-ui'
+import { SettingOutlined } from '@vicons/antd'
+import { useI18n } from 'vue-i18n'
+import { useRouter } from 'vue-router'
+import Logo from '../logo'
+import Theme from '../theme'
+import Locales from '../locales'
+import Timezone from '../timezone'
+import User from '../user'
 import { useMenuClick } from './use-menuClick'
-import { useParentAppProps } from '@/store/parentAppProps/parentAppProps'
+import styles from './index.module.scss'
+
+const findAncestors = (
+  options: any[],
+  targetKey: string,
+  trail: string[] = []
+): string[] | null => {
+  for (const option of options) {
+    const key = String(option.key)
+    if (key === targetKey) return trail
+    if (option.children?.length) {
+      const ancestors = findAncestors(option.children, targetKey, [
+        ...trail,
+        key
+      ])
+      if (ancestors) return ancestors
+    }
+  }
+  return null
+}
 
 const Sidebar = defineComponent({
   name: 'Sidebar',
   props: {
-    sideMenuOptions: {
-      type: Array as PropType<any>,
-      default: []
+    menuOptions: {
+      type: Array as PropType<any[]>,
+      default: () => []
     },
-    sideKey: {
+    activeKey: {
       type: String as PropType<string>,
       default: ''
+    },
+    localesOptions: {
+      type: Array as PropType<any[]>,
+      default: () => []
+    },
+    timezoneOptions: {
+      type: Array as PropType<any[]>,
+      default: () => []
+    },
+    userDropdownOptions: {
+      type: Array as PropType<any[]>,
+      default: () => []
     }
   },
   setup(props) {
-    const parentAppProps = useParentAppProps()
-    const collapsedRef = ref(false)
-    const defaultExpandedKeys = [
-      'workflow',
-      'task',
-      'udf-manage',
-      'service-manage',
-      'statistical-manage',
-      'task-group-manage'
-    ]
+    const router = useRouter()
+    const { t } = useI18n()
     const { handleMenuClick } = useMenuClick()
-    const filteredTaskMenuOptions = computed(() => {
-      return props.sideMenuOptions.filter((item: any) => item.label !== '任务')
+    const collapsed = ref(false)
+    const showSettings = ref(false)
+    const expandedKeys = ref<string[]>([])
+
+    const syncExpandedKeys = () => {
+      const ancestors = findAncestors(props.menuOptions, props.activeKey) || []
+      expandedKeys.value = Array.from(
+        new Set([...expandedKeys.value, ...ancestors])
+      )
+    }
+
+    watch(() => [props.activeKey, props.menuOptions], syncExpandedKeys, {
+      immediate: true
     })
-    const finalFilteredMenuOptions = computed(() => {
-      if (parentAppProps.filterMenu) {
-        return filteredTaskMenuOptions.value.map((item: any) => ({
-          ...item,
-          children: item.children.filter((ele: any) => ele.label === '项目概览'||ele.label === '工作流定义'||ele.label === '工作流实例')
-        }))
-      }
-      return props.sideMenuOptions
-    })
-    return { collapsedRef, defaultExpandedKeys, handleMenuClick,parentAppProps,finalFilteredMenuOptions }
+
+    const handleUpdateExpandedKeys = (keys: string[]) => {
+      expandedKeys.value = keys
+    }
+
+    const handleUpdateSettings = (show: boolean) => {
+      showSettings.value = show
+    }
+
+    const handleUISettingClick = () => {
+      showSettings.value = false
+      router.push({ path: '/ui-setting' })
+    }
+
+    return {
+      t,
+      collapsed,
+      showSettings,
+      expandedKeys,
+      handleMenuClick,
+      handleUpdateExpandedKeys,
+      handleUpdateSettings,
+      handleUISettingClick
+    }
   },
   render() {
     return (
       <NLayoutSider
         bordered
-        nativeScrollbar={false}
-        show-trigger='bar'
-        collapse-mode='width'
-        collapsed={this.collapsedRef}
-        onCollapse={() => (this.collapsedRef = true)}
-        onExpand={() => (this.collapsedRef = false)}
+        collapseMode='width'
+        width={240}
+        collapsedWidth={64}
+        collapsed={this.collapsed}
+        showTrigger='bar'
+        onCollapse={() => (this.collapsed = true)}
+        onExpand={() => (this.collapsed = false)}
+        contentStyle='display: flex; flex-direction: column; overflow: hidden; height: 100%'
       >
-        <NMenu
-          class='tab-vertical'
-          value={this.sideKey}
-          options={this.finalFilteredMenuOptions}
-          defaultExpandedKeys={this.defaultExpandedKeys}
-          onUpdateValue={this.handleMenuClick}
-        />
+        <div class={[styles.logo, this.collapsed && styles.logoCollapsed]}>
+          {this.collapsed ? (
+            <div class={styles.logoMark}>
+              <Logo />
+            </div>
+          ) : (
+            <Logo />
+          )}
+        </div>
+        <div class={styles.menu}>
+          <NMenu
+            value={this.activeKey}
+            options={this.menuOptions}
+            indent={20}
+            collapsed={this.collapsed}
+            collapsedWidth={64}
+            collapsedIconSize={22}
+            expandedKeys={this.expandedKeys}
+            onUpdateExpandedKeys={this.handleUpdateExpandedKeys}
+            onUpdateValue={this.handleMenuClick}
+          />
+        </div>
+        <div class={[styles.footer, this.collapsed && styles.footerCollapsed]}>
+          <div
+            class={[styles.account, this.collapsed && styles.accountCollapsed]}
+          >
+            <NPopover
+              trigger='click'
+              placement='right-end'
+              showArrow
+              show={this.showSettings}
+              onUpdateShow={this.handleUpdateSettings}
+            >
+              {{
+                trigger: () => (
+                  <NButton
+                    quaternary
+                    size='small'
+                    title={this.t('menu.settings')}
+                  >
+                    {{
+                      icon: () => (
+                        <NIcon size='16'>
+                          <SettingOutlined />
+                        </NIcon>
+                      ),
+                      default: this.collapsed
+                        ? undefined
+                        : () => this.t('menu.settings')
+                    }}
+                  </NButton>
+                ),
+                default: () => (
+                  <div class={styles.panel}>
+                    <NButton text onClick={this.handleUISettingClick}>
+                      {{
+                        icon: () => (
+                          <NIcon size='16'>
+                            <SettingOutlined />
+                          </NIcon>
+                        ),
+                        default: () => this.t('menu.ui_setting')
+                      }}
+                    </NButton>
+                    <div class={styles.panelDivider} />
+                    <Theme />
+                    <Locales localesOptions={this.localesOptions} />
+                    <Timezone timezoneOptions={this.timezoneOptions} />
+                  </div>
+                )
+              }}
+            </NPopover>
+            <User
+              collapsed={this.collapsed}
+              userDropdownOptions={this.userDropdownOptions}
+            />
+          </div>
+        </div>
       </NLayoutSider>
     )
   }

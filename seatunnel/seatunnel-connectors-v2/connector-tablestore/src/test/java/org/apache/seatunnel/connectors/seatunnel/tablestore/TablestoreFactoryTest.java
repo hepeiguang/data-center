@@ -17,15 +17,15 @@
 
 package org.apache.seatunnel.connectors.seatunnel.tablestore;
 
-import org.apache.seatunnel.connectors.seatunnel.tablestore.sink.TablestoreSinkFactory;
+import org.apache.seatunnel.connectors.seatunnel.tablestore.sink.TableStoreSinkFactory;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-class TablestoreFactoryTest {
+class TableStoreFactoryTest {
 
     @Test
     void optionRule() {
-        Assertions.assertNotNull((new TablestoreSinkFactory()).optionRule());
+        Assertions.assertNotNull((new TableStoreSinkFactory()).optionRule());
     }
 }

@@ -30,7 +30,6 @@ import { PlusOutlined, DeleteOutlined } from '@vicons/antd'
 import getField from './get-field'
 import { formatValidate } from '../utils'
 import type { IJsonItem, IFormItemRule } from '../types'
-import deepClone from '@/utils/deepClone'
 
 const CustomParameters = defineComponent({
   name: 'CustomParameters',
@@ -133,10 +132,10 @@ export function renderCustomParameters(
       )
     })
   const getChildren = ({ disabled }: { disabled: boolean }) =>
-    fields[field].map((item: any, i: number) => {
+    fields[field].map((item: object, i: number) => {
       return h(NGrid, { xGap: 10 }, () => [
         ...getChild(item, i, disabled),
-        !item.hiddenDel && h(
+        h(
           NGridItem,
           {
             span: 2
@@ -166,8 +165,8 @@ export function renderCustomParameters(
     CustomParameters,
     {
       onAdd: () => {
-        rules.push(deepClone(ruleItem))
-        fields[field].push(deepClone(defaultValue))
+        rules.push(ruleItem)
+        fields[field].push({ ...defaultValue })
       }
     },
     {

@@ -92,12 +92,12 @@ public class SourceExecuteProcessor extends SparkAbstractPluginExecuteProcessor<
                                         EnvCommonOptions.PARALLELISM.key(),
                                         EnvCommonOptions.PARALLELISM.defaultValue());
             }
+            envOption.put(EnvCommonOptions.PARALLELISM.key(), String.valueOf(parallelism));
             Dataset<Row> dataset =
                     sparkRuntimeEnvironment
                             .getSparkSession()
                             .read()
                             .format(SeaTunnelSource.class.getSimpleName())
-                            .option(EnvCommonOptions.PARALLELISM.key(), parallelism)
                             .option(
                                     Constants.SOURCE_SERIALIZATION,
                                     SerializationUtils.objectToString(source))
@@ -129,13 +129,15 @@ public class SourceExecuteProcessor extends SparkAbstractPluginExecuteProcessor<
                             PluginType.SOURCE.getType(),
                             sourceConfig.getString(PLUGIN_NAME.key()));
             jars.addAll(
-                    sourcePluginDiscovery.getPluginJarPaths(Lists.newArrayList(pluginIdentifier)));
+                    sourcePluginDiscovery.getPluginJarAndDependencyPaths(
+                            Lists.newArrayList(pluginIdentifier)));
             Tuple2<SeaTunnelSource<Object, SourceSplit, Serializable>, List<CatalogTable>> source =
                     FactoryUtil.createAndPrepareSource(
                             ReadonlyConfig.fromConfig(sourceConfig),
                             classLoader,
                             pluginIdentifier.getPluginName(),
                             fallbackCreateSource,
+                            null,
                             null);
 
             source._1().setJobContext(jobContext);

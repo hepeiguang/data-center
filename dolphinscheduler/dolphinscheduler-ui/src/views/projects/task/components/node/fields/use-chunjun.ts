@@ -36,7 +36,7 @@ export function useChunjun(model: { [field: string]: any }): IJsonItem[] {
 
   return [
     {
-      type: 'mirror',
+      type: 'editor',
       field: 'json',
       name: t('project.node.chunjun_json_template'),
       span: jsonEditorSpan,
@@ -44,9 +44,6 @@ export function useChunjun(model: { [field: string]: any }): IJsonItem[] {
         trigger: ['input', 'trigger'],
         required: true,
         message: t('project.node.sql_empty_tips')
-      },
-      props: {
-        language: 'sql'
       }
     },
     {

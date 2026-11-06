@@ -145,7 +145,6 @@ export function useTable() {
         ? format(parseTime(params.datePickerRange[1]), 'yyyy-MM-dd HH:mm:ss')
         : ''
     }
-    console.log(data,111111)
 
     const { state } = useAsyncState(
       queryAuditLogListPaging(data).then((res: AuditListRes) => {

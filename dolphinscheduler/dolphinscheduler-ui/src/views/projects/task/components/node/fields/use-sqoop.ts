@@ -93,7 +93,7 @@ export function useSqoop(model: { [field: string]: any }): IJsonItem[] {
       }
     },
     {
-      type: 'mirror',
+      type: 'editor',
       field: 'customShell',
       name: t('project.node.custom_script'),
       span: customSpan,
@@ -105,9 +105,6 @@ export function useSqoop(model: { [field: string]: any }): IJsonItem[] {
             return new Error(t('project.node.custom_script'))
           }
         }
-      },
-      props: {
-        language: 'sql'
       }
     },
     ...useCustomParams({

@@ -20,7 +20,6 @@ import type { IJsonItem, IFormRules, IFormItemRule } from '../types'
 
 const TYPES = [
   'input',
-  'button',
   'radio',
   'editor',
   'custom-parameters',
@@ -32,11 +31,7 @@ const TYPES = [
   'tree-select',
   'multi-input',
   'custom',
-  'multi-condition',
-  'sql-transformers',
-  'output-field',
-  'mirror',
-  'dict-transformers'
+  'multi-condition'
 ]
 
 const getField = (

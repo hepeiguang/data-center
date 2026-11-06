@@ -18,12 +18,16 @@
 package org.apache.seatunnel.engine.server;
 
 import org.apache.seatunnel.common.utils.ExceptionUtils;
+import org.apache.seatunnel.common.utils.FileUtils;
 import org.apache.seatunnel.engine.common.config.ConfigProvider;
 import org.apache.seatunnel.engine.common.config.SeaTunnelConfig;
 import org.apache.seatunnel.engine.common.runtime.ExecutionMode;
 import org.apache.seatunnel.engine.common.utils.PassiveCompletableFuture;
 import org.apache.seatunnel.engine.core.dag.logical.LogicalDag;
 import org.apache.seatunnel.engine.core.job.JobImmutableInformation;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.LoggerContext;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -36,6 +40,8 @@ import com.hazelcast.logging.ILogger;
 import com.hazelcast.spi.impl.NodeEngine;
 import lombok.extern.slf4j.Slf4j;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collections;
 
 @Slf4j
@@ -49,6 +55,8 @@ public abstract class AbstractSeaTunnelServerTest<T extends AbstractSeaTunnelSer
     protected HazelcastInstanceImpl instance;
 
     protected static ILogger LOGGER;
+
+    private final int hazelcastPort = TestUtils.getAvailablePort(100);
 
     @BeforeAll
     public void before() {
@@ -66,6 +74,7 @@ public abstract class AbstractSeaTunnelServerTest<T extends AbstractSeaTunnelSer
     }
 
     protected String getHazelcastConfig() {
+        // Use the IPv4 loopback address to avoid dual-stack localhost resolution on Windows CI.
         return "hazelcast:\n"
                 + "  cluster-name: seatunnel\n"
                 + "  network:\n"
@@ -78,11 +87,13 @@ public abstract class AbstractSeaTunnelServerTest<T extends AbstractSeaTunnelSer
                 + "      tcp-ip:\n"
                 + "        enabled: true\n"
                 + "        member-list:\n"
-                + "          - localhost\n"
+                + "          - 127.0.0.1\n"
                 + "    port:\n"
                 + "      auto-increment: true\n"
                 + "      port-count: 100\n"
-                + "      port: 5801\n"
+                + "      port: "
+                + getHazelcastPort()
+                + "\n"
                 + "\n"
                 + "  properties:\n"
                 + "    hazelcast.invocation.max.retry.count: 200\n"
@@ -93,8 +104,14 @@ public abstract class AbstractSeaTunnelServerTest<T extends AbstractSeaTunnelSer
                 + "    hazelcast.operation.generic.thread.count: 200\n";
     }
 
+    protected int getHazelcastPort() {
+        return hazelcastPort;
+    }
+
     public SeaTunnelConfig loadSeaTunnelConfig() {
-        return ConfigProvider.locateAndGetSeaTunnelConfig();
+        SeaTunnelConfig seaTunnelConfig = ConfigProvider.locateAndGetSeaTunnelConfig();
+        seaTunnelConfig.getEngineConfig().setStateCleanupDelayMillis(0L);
+        return seaTunnelConfig;
     }
 
     protected void startJob(Long jobId, String path, boolean isStartWithSavePoint) {
@@ -128,6 +145,12 @@ public abstract class AbstractSeaTunnelServerTest<T extends AbstractSeaTunnelSer
             if (instance != null) {
                 instance.shutdown();
             }
+
+            // Manually release log4j2 context references, otherwise deleting log files will fail
+            LoggerContext context = (LoggerContext) LogManager.getContext(false);
+            context.close();
+            Path logPath = Paths.get("logs");
+            FileUtils.deleteFile(logPath.toString());
         } catch (Exception e) {
             log.error(ExceptionUtils.getMessage(e));
         }

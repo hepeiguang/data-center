@@ -25,20 +25,13 @@ export function formatLabel(label?: string): string {
 export function formatValidate(
   validate?: IFormItemRule | FormRules
 ): IFormItemRule {
-
-  if (!validate){
-    return {}
-  }
+  if (!validate) return {}
   if (Array.isArray(validate)) {
     validate.forEach((item: IFormItemRule) => {
-      if (!item?.message) {
-        delete item.message
-      }
+      if (!item?.message) delete item.message
       return item
     })
   }
-  if (!validate.message) {
-    delete validate.message
-  }
+  if (!validate.message) delete validate.message
   return validate
 }

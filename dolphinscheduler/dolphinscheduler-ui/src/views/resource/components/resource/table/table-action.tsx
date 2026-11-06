@@ -31,7 +31,7 @@ import {
   ResourceFileTableData,
   IRenameResource,
   IRtDisb,
-  IReuploadResource, CustomResourceType
+  IReuploadResource
 } from '../types'
 import { fileTypeArr } from '@/common/common'
 import { downloadResource, deleteResource } from '@/service/modules/resources'
@@ -47,9 +47,7 @@ const props = {
     default: {
       name: '',
       description: '',
-      user_name: '',
-      //增加
-      customType: 'Hive',
+      user_name: ''
     }
   }
 }
@@ -62,10 +60,6 @@ export default defineComponent({
     const { t } = useI18n()
     const router: Router = useRouter()
 
-    ///*
-    //     * 这段代码定义了一个名为 rtDisb 的函数，用于判断某个资源文件是否可以编辑（edit）或下载（download），
-    //     * 主要逻辑是根据文件扩展名和大小来决定按钮是否禁用。
-    //     * */
     const rtDisb: IRtDisb = (name, size) => {
       const i = name.lastIndexOf('.')
       const a = name.substring(i, name.length)
@@ -95,15 +89,13 @@ export default defineComponent({
       deleteResource(fullNameObj).then(() => emit('updateList'))
     }
 
-    //重新上传文件
     const handleReuploadFile: IReuploadResource = (
       name: string,
       description: string,
       fullName: string,
-      user_name: string,
-      customType: CustomResourceType
+      user_name: string
     ) => {
-      emit('reuploadResource', name, description, fullName, user_name,customType)
+      emit('reuploadResource', name, description, fullName, user_name)
     }
 
     const handleRenameFile: IRenameResource = (
@@ -129,7 +121,7 @@ export default defineComponent({
     const { t } = useI18n()
     return (
       <NSpace>
-        {this.row.type !== 'UDF' && (
+        {
           <NTooltip trigger={'hover'}>
             {{
               default: () => t('resource.file.edit'),
@@ -157,7 +149,7 @@ export default defineComponent({
               )
             }}
           </NTooltip>
-        )}
+        }
         <NTooltip trigger={'hover'}>
           {{
             default: () => t('resource.file.reupload'),
@@ -170,9 +162,7 @@ export default defineComponent({
                     this.row.name,
                     this.row.description,
                     this.row.fullName,
-                    this.row.user_name,
-                    //增加
-                    this.row.customType,
+                    this.row.user_name
                   )
                 }
                 disabled={!!this.row?.directory}

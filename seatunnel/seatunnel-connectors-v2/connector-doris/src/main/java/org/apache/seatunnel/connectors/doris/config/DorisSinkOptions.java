@@ -71,6 +71,20 @@ public class DorisSinkOptions extends DorisBaseOptions {
                     .defaultValue(false)
                     .withDescription("whether to enable the delete function");
 
+    public static final Option<String> BENODES =
+            Options.key("benodes")
+                    .stringType()
+                    .noDefaultValue()
+                    .withDescription(
+                            "doris be http address list used when direct_to_be is enabled.");
+
+    public static final Option<Boolean> DIRECT_TO_BE =
+            Options.key("direct_to_be")
+                    .booleanType()
+                    .defaultValue(false)
+                    .withDescription(
+                            "whether to send stream load write requests directly to Doris BE.");
+
     public static final Option<Map<String, String>> DORIS_SINK_CONFIG_PREFIX =
             Options.key("doris.config")
                     .mapType()
@@ -106,6 +120,13 @@ public class DorisSinkOptions extends DorisBaseOptions {
                     .defaultValue(false)
                     .withDescription(
                             "Whether to enable the unsupported type casting, such as Decimal64 to Double");
+
+    public static final Option<Boolean> CASE_SENSITIVE =
+            Options.key("case_sensitive")
+                    .booleanType()
+                    .defaultValue(true)
+                    .withDescription(
+                            "Whether to preserve the original case of table and column names. Default is true (case sensitive)");
 
     // create table
     public static final Option<String> SAVE_MODE_CREATE_TEMPLATE =

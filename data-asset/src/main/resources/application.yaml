@@ -1,0 +1,41 @@
+server:
+  port: 12347
+
+spring:
+  application:
+    name: data-asset-service
+  datasource:
+    url: jdbc:h2:file:./data/data-asset;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+  sql:
+    init:
+      mode: never
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+  jackson:
+    default-property-inclusion: non_null
+
+data-asset:
+  om:
+    base-url: ${OM_BASE_URL:http://127.0.0.1:8585}
+    token: ${OM_TOKEN:}
+    admin-email: ${OM_ADMIN_EMAIL:admin@open-metadata.org}
+    admin-password: ${OM_ADMIN_PASSWORD:admin}
+    timeout-seconds: ${OM_TIMEOUT_SECONDS:15}
+  auth:
+    mode: ${ASSET_AUTH_MODE:local}
+    debug-user: ${ASSET_DEBUG_USER:admin}
+    ds-base-url: ${DS_BASE_URL:http://127.0.0.1:12345/dolphinscheduler}
+  query:
+    timeout-seconds: 60
+    default-page-size: 200
+  datasources:
+    agri_satellite_pg:
+      url: ${AGRI_JDBC_URL:jdbc:postgresql://123.57.2.64:5432/agri_sat?sslmode=prefer}
+      username: ${AGRI_RO_USER:data_asset_ro}
+      password: ${AGRI_RO_PASSWORD:data_asset_ro}
+      pool-size: 3

@@ -17,19 +17,20 @@
 
 package org.apache.seatunnel.connectors.seatunnel.file.sink.config;
 
-import org.apache.seatunnel.shade.com.typesafe.config.Config;
+import org.apache.seatunnel.shade.org.apache.commons.lang3.StringUtils;
 
+import org.apache.seatunnel.api.configuration.ReadonlyConfig;
 import org.apache.seatunnel.api.table.type.SeaTunnelRowType;
 import org.apache.seatunnel.common.exception.CommonErrorCodeDeprecated;
 import org.apache.seatunnel.connectors.seatunnel.file.config.BaseFileSinkConfig;
-import org.apache.seatunnel.connectors.seatunnel.file.config.BaseSinkConfig;
+import org.apache.seatunnel.connectors.seatunnel.file.config.FileBaseSinkOptions;
 import org.apache.seatunnel.connectors.seatunnel.file.config.FileFormat;
 import org.apache.seatunnel.connectors.seatunnel.file.config.PartitionConfig;
+import org.apache.seatunnel.connectors.seatunnel.file.exception.FileConnectorErrorCode;
 import org.apache.seatunnel.connectors.seatunnel.file.exception.FileConnectorException;
 import org.apache.seatunnel.format.csv.constant.CsvStringQuoteMode;
 
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
 
 import lombok.Data;
 import lombok.NonNull;
@@ -54,16 +55,15 @@ public class FileSinkConfig extends BaseFileSinkConfig implements PartitionConfi
 
     private String partitionDirExpression;
 
-    private boolean isPartitionFieldWriteInFile =
-            BaseSinkConfig.IS_PARTITION_FIELD_WRITE_IN_FILE.defaultValue();
+    private boolean isPartitionFieldWriteInFile;
 
-    private String tmpPath = BaseSinkConfig.TMP_PATH.defaultValue();
+    private String tmpPath;
 
-    private String fileNameTimeFormat = BaseSinkConfig.FILENAME_TIME_FORMAT.defaultValue();
+    private String fileNameTimeFormat;
 
-    private boolean isEnableTransaction = BaseSinkConfig.IS_ENABLE_TRANSACTION.defaultValue();
+    private boolean isEnableTransaction;
 
-    private String encoding = BaseSinkConfig.ENCODING.defaultValue();
+    private String encoding;
 
     // ---------------------generator by config params-------------------
 
@@ -75,30 +75,31 @@ public class FileSinkConfig extends BaseFileSinkConfig implements PartitionConfi
 
     private String sheetName;
 
-    private String xmlRootTag = BaseSinkConfig.XML_ROOT_TAG.defaultValue();
+    private String xmlRootTag;
 
-    private String xmlRowTag = BaseSinkConfig.XML_ROW_TAG.defaultValue();
+    private String xmlRowTag;
 
     private Boolean xmlUseAttrFormat;
 
-    private Boolean parquetWriteTimestampAsInt96 =
-            BaseSinkConfig.PARQUET_AVRO_WRITE_TIMESTAMP_AS_INT96.defaultValue();
+    private Boolean parquetWriteTimestampAsInt96;
 
-    private List<String> parquetAvroWriteFixedAsInt96 =
-            BaseSinkConfig.PARQUET_AVRO_WRITE_FIXED_AS_INT96.defaultValue();
+    private List<String> parquetAvroWriteFixedAsInt96;
 
-    private CsvStringQuoteMode csvStringQuoteMode =
-            BaseSinkConfig.CSV_STRING_QUOTE_MODE.defaultValue();
+    private CsvStringQuoteMode csvStringQuoteMode;
 
-    public FileSinkConfig(@NonNull Config config, @NonNull SeaTunnelRowType seaTunnelRowTypeInfo) {
-        super(config);
+    private Boolean mergeUpdateEvent;
+
+    private boolean schemaEvolutionEnabled =
+            FileBaseSinkOptions.SCHEMA_EVOLUTION_ENABLED.defaultValue();
+
+    public FileSinkConfig(
+            @NonNull ReadonlyConfig pluginConfig, @NonNull SeaTunnelRowType seaTunnelRowTypeInfo) {
+        super(pluginConfig);
         checkArgument(
                 !CollectionUtils.isEmpty(Arrays.asList(seaTunnelRowTypeInfo.getFieldNames())));
 
-        if (config.hasPath(BaseSinkConfig.SINK_COLUMNS.key())
-                && !CollectionUtils.isEmpty(
-                        config.getStringList(BaseSinkConfig.SINK_COLUMNS.key()))) {
-            this.sinkColumnList = config.getStringList(BaseSinkConfig.SINK_COLUMNS.key());
+        if (pluginConfig.getOptional(FileBaseSinkOptions.SINK_COLUMNS).isPresent()) {
+            this.sinkColumnList = pluginConfig.get(FileBaseSinkOptions.SINK_COLUMNS);
         }
 
         // if the config sink_columns is empty, all fields in SeaTunnelRowTypeInfo will being write
@@ -109,50 +110,34 @@ public class FileSinkConfig extends BaseFileSinkConfig implements PartitionConfi
                     new ArrayList<>(Arrays.asList(seaTunnelRowTypeInfo.getFieldNames()));
         }
 
-        if (config.hasPath(BaseSinkConfig.PARTITION_BY.key())) {
-            this.partitionFieldList = config.getStringList(BaseSinkConfig.PARTITION_BY.key());
+        if (pluginConfig.getOptional(FileBaseSinkOptions.PARTITION_BY).isPresent()) {
+            this.partitionFieldList = pluginConfig.get(FileBaseSinkOptions.PARTITION_BY);
         } else {
             this.partitionFieldList = Collections.emptyList();
         }
 
-        if (config.hasPath(BaseSinkConfig.PARTITION_DIR_EXPRESSION.key())
+        if (pluginConfig.getOptional(FileBaseSinkOptions.PARTITION_DIR_EXPRESSION).isPresent()
                 && !StringUtils.isBlank(
-                        config.getString(BaseSinkConfig.PARTITION_DIR_EXPRESSION.key()))) {
+                        pluginConfig.get(FileBaseSinkOptions.PARTITION_DIR_EXPRESSION))) {
             this.partitionDirExpression =
-                    config.getString(BaseSinkConfig.PARTITION_DIR_EXPRESSION.key());
+                    pluginConfig.get(FileBaseSinkOptions.PARTITION_DIR_EXPRESSION);
         }
 
-        if (config.hasPath(BaseSinkConfig.IS_PARTITION_FIELD_WRITE_IN_FILE.key())) {
-            this.isPartitionFieldWriteInFile =
-                    config.getBoolean(BaseSinkConfig.IS_PARTITION_FIELD_WRITE_IN_FILE.key());
-        }
+        this.isPartitionFieldWriteInFile =
+                pluginConfig.get(FileBaseSinkOptions.IS_PARTITION_FIELD_WRITE_IN_FILE);
 
-        if (config.hasPath(BaseSinkConfig.TMP_PATH.key())
-                && !StringUtils.isBlank(config.getString(BaseSinkConfig.TMP_PATH.key()))) {
-            this.tmpPath = config.getString(BaseSinkConfig.TMP_PATH.key());
-        }
+        this.tmpPath = pluginConfig.get(FileBaseSinkOptions.TMP_PATH);
 
-        if (config.hasPath(BaseSinkConfig.FILENAME_TIME_FORMAT.key())
-                && !StringUtils.isBlank(
-                        config.getString(BaseSinkConfig.FILENAME_TIME_FORMAT.key()))) {
-            this.fileNameTimeFormat = config.getString(BaseSinkConfig.FILENAME_TIME_FORMAT.key());
-        }
-
-        if (config.hasPath(BaseSinkConfig.IS_ENABLE_TRANSACTION.key())) {
-            this.isEnableTransaction =
-                    config.getBoolean(BaseSinkConfig.IS_ENABLE_TRANSACTION.key());
-        }
-
-        if (config.hasPath(BaseSinkConfig.ENCODING.key())) {
-            this.encoding = config.getString(BaseSinkConfig.ENCODING.key());
-        }
+        this.fileNameTimeFormat = pluginConfig.get(FileBaseSinkOptions.FILENAME_TIME_FORMAT);
+        this.isEnableTransaction = pluginConfig.get(FileBaseSinkOptions.IS_ENABLE_TRANSACTION);
+        this.encoding = pluginConfig.get(FileBaseSinkOptions.ENCODING);
 
         if (this.isEnableTransaction
-                && !this.fileNameExpression.contains(BaseSinkConfig.TRANSACTION_EXPRESSION)) {
+                && !this.fileNameExpression.contains(FileBaseSinkOptions.TRANSACTION_EXPRESSION)) {
             throw new FileConnectorException(
                     CommonErrorCodeDeprecated.ILLEGAL_ARGUMENT,
                     "file_name_expression must contains "
-                            + BaseSinkConfig.TRANSACTION_EXPRESSION
+                            + FileBaseSinkOptions.TRANSACTION_EXPRESSION
                             + " when is_enable_transaction is true");
         }
 
@@ -201,51 +186,53 @@ public class FileSinkConfig extends BaseFileSinkConfig implements PartitionConfi
                             .collect(Collectors.toList());
         }
 
-        if (config.hasPath(BaseSinkConfig.MAX_ROWS_IN_MEMORY.key())) {
-            this.maxRowsInMemory = config.getInt(BaseSinkConfig.MAX_ROWS_IN_MEMORY.key());
+        if (pluginConfig.getOptional(FileBaseSinkOptions.MAX_ROWS_IN_MEMORY).isPresent()) {
+            this.maxRowsInMemory = pluginConfig.get(FileBaseSinkOptions.MAX_ROWS_IN_MEMORY);
         }
 
-        if (config.hasPath(BaseSinkConfig.SHEET_NAME.key())) {
-            this.sheetName = config.getString(BaseSinkConfig.SHEET_NAME.key());
+        if (pluginConfig.getOptional(FileBaseSinkOptions.SHEET_NAME).isPresent()) {
+            this.sheetName = pluginConfig.get(FileBaseSinkOptions.SHEET_NAME);
         }
 
         if (FileFormat.XML.equals(this.fileFormat)) {
-            if (!config.hasPath(BaseSinkConfig.XML_USE_ATTR_FORMAT.key())) {
+            if (!pluginConfig.getOptional(FileBaseSinkOptions.XML_USE_ATTR_FORMAT).isPresent()) {
                 throw new FileConnectorException(
                         CommonErrorCodeDeprecated.ILLEGAL_ARGUMENT,
                         "User must define xml_use_attr_format when file_format_type is xml");
             }
 
-            this.xmlUseAttrFormat = config.getBoolean(BaseSinkConfig.XML_USE_ATTR_FORMAT.key());
-
-            if (config.hasPath(BaseSinkConfig.XML_ROOT_TAG.key())) {
-                this.xmlRootTag = config.getString(BaseSinkConfig.XML_ROOT_TAG.key());
-            }
-
-            if (config.hasPath(BaseSinkConfig.XML_ROW_TAG.key())) {
-                this.xmlRowTag = config.getString(BaseSinkConfig.XML_ROW_TAG.key());
-            }
+            this.xmlUseAttrFormat = pluginConfig.get(FileBaseSinkOptions.XML_USE_ATTR_FORMAT);
+            this.xmlRootTag = pluginConfig.get(FileBaseSinkOptions.XML_ROOT_TAG);
+            this.xmlRowTag = pluginConfig.get(FileBaseSinkOptions.XML_ROW_TAG);
         }
 
         if (FileFormat.PARQUET.equals(this.fileFormat)) {
-            if (config.hasPath(BaseSinkConfig.PARQUET_AVRO_WRITE_TIMESTAMP_AS_INT96.key())) {
-                this.parquetWriteTimestampAsInt96 =
-                        config.getBoolean(
-                                BaseSinkConfig.PARQUET_AVRO_WRITE_TIMESTAMP_AS_INT96.key());
-            }
-            if (config.hasPath(BaseSinkConfig.PARQUET_AVRO_WRITE_FIXED_AS_INT96.key())) {
-                this.parquetAvroWriteFixedAsInt96 =
-                        config.getStringList(
-                                BaseSinkConfig.PARQUET_AVRO_WRITE_FIXED_AS_INT96.key());
-            }
+            this.parquetWriteTimestampAsInt96 =
+                    pluginConfig.get(FileBaseSinkOptions.PARQUET_AVRO_WRITE_TIMESTAMP_AS_INT96);
+            this.parquetAvroWriteFixedAsInt96 =
+                    pluginConfig.get(FileBaseSinkOptions.PARQUET_AVRO_WRITE_FIXED_AS_INT96);
         }
 
         if (FileFormat.CSV.equals(this.fileFormat)) {
-            if (config.hasPath(BaseSinkConfig.CSV_STRING_QUOTE_MODE.key())) {
-                this.csvStringQuoteMode =
-                        CsvStringQuoteMode.valueOf(
-                                config.getString(BaseSinkConfig.CSV_STRING_QUOTE_MODE.key()));
-            }
+            this.csvStringQuoteMode = pluginConfig.get(FileBaseSinkOptions.CSV_STRING_QUOTE_MODE);
         }
+        if (FileFormat.DEBEZIUM_JSON.equals(this.fileFormat)
+                || FileFormat.CANAL_JSON.equals(this.fileFormat)
+                || FileFormat.MAXWELL_JSON.equals(this.fileFormat)) {
+            this.mergeUpdateEvent = pluginConfig.get(FileBaseSinkOptions.MERGE_UPDATE_EVENT);
+        }
+
+        this.schemaEvolutionEnabled =
+                pluginConfig.get(FileBaseSinkOptions.SCHEMA_EVOLUTION_ENABLED);
+        if (this.schemaEvolutionEnabled && FileFormat.BINARY.equals(this.fileFormat)) {
+            throw new FileConnectorException(
+                    FileConnectorErrorCode.FORMAT_NOT_SUPPORT,
+                    "schema_evolution_enabled=true is not supported for file_format_type=binary."
+                            + " Binary format has a fixed schema and cannot apply schema changes.");
+        }
+        // schema_evolution + partition_by is supported: AbstractWriteStrategy.applySchemaChange
+        // rebuilds both sinkColumnsIndexInRow and partitionFieldsIndexInRow from column NAMES
+        // against the post-ALTER row type. Dropping a partition column itself is rejected at
+        // rebuild time (throws IllegalStateException) so the partition tree never corrupts.
     }
 }

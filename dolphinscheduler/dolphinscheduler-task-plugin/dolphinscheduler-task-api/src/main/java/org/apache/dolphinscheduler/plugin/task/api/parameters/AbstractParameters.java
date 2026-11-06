@@ -26,13 +26,10 @@ import org.apache.dolphinscheduler.plugin.task.api.utils.VarPoolUtils;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
-import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 import lombok.Getter;
@@ -50,6 +47,7 @@ public abstract class AbstractParameters implements IParameters {
     @Setter
     public List<Property> localParams;
 
+    @Setter
     public List<Property> varPool = new ArrayList<>();
 
     @Override
@@ -60,68 +58,16 @@ public abstract class AbstractParameters implements IParameters {
         return new ArrayList<>();
     }
 
-    public Map<String, Property> getLocalParametersMap() {
-        Map<String, Property> localParametersMaps = new LinkedHashMap<>();
-        if (localParams != null) {
-            for (Property property : localParams) {
-                localParametersMaps.put(property.getProp(), property);
-            }
-        }
-        return localParametersMaps;
-    }
-
-    /**
-     * get input local parameters map if the param direct is IN
-     *
-     * @return parameters map
-     */
-    public Map<String, Property> getInputLocalParametersMap() {
-        Map<String, Property> localParametersMaps = new LinkedHashMap<>();
-        if (localParams != null) {
-            for (Property property : localParams) {
-                // The direct of some tasks is empty, default IN
-                if (property.getDirect() == null || Objects.equals(Direct.IN, property.getDirect())) {
-                    localParametersMaps.put(property.getProp(), property);
-                }
-            }
-        }
-        return localParametersMaps;
-    }
-
-    /**
-     * get varPool map
-     *
-     * @return parameters map
-     */
-    public Map<String, Property> getVarPoolMap() {
-        Map<String, Property> varPoolMap = new LinkedHashMap<>();
-        if (varPool != null) {
-            for (Property property : varPool) {
-                varPoolMap.put(property.getProp(), property);
-            }
-        }
-        return varPoolMap;
-    }
-
-    public void setVarPool(String varPool) {
-        if (StringUtils.isEmpty(varPool)) {
-            this.varPool = new ArrayList<>();
-        } else {
-            this.varPool = JSONUtils.toList(varPool, Property.class);
-        }
-    }
-
     public void dealOutParam(Map<String, String> taskOutputParams) {
         List<Property> outProperty = getOutProperty(localParams);
         if (CollectionUtils.isEmpty(outProperty)) {
             return;
         }
-        if (CollectionUtils.isNotEmpty(outProperty) && MapUtils.isNotEmpty(taskOutputParams)) {
+        if (MapUtils.isNotEmpty(taskOutputParams)) {
             // Inject the value
             for (Property info : outProperty) {
-                String value = taskOutputParams.get(info.getProp());
-                if (value != null) {
-                    info.setValue(value);
+                if (taskOutputParams.containsKey(info.getProp())) {
+                    info.setValue(taskOutputParams.get(info.getProp()));
                 }
             }
         }

@@ -18,17 +18,12 @@
 package org.apache.seatunnel.connectors.seatunnel.jdbc.config;
 
 import org.apache.seatunnel.api.configuration.ReadonlyConfig;
-import org.apache.seatunnel.connectors.seatunnel.jdbc.catalog.JdbcCatalogOptions;
 
 import lombok.Builder;
 import lombok.Data;
 
 import java.io.Serializable;
 import java.util.List;
-
-import static org.apache.seatunnel.connectors.seatunnel.jdbc.config.JdbcOptions.ENABLE_UPSERT;
-import static org.apache.seatunnel.connectors.seatunnel.jdbc.config.JdbcOptions.IS_PRIMARY_KEY_UPDATED;
-import static org.apache.seatunnel.connectors.seatunnel.jdbc.config.JdbcOptions.SUPPORT_UPSERT_BY_INSERT_ONLY;
 
 @Data
 @Builder
@@ -46,20 +41,28 @@ public class JdbcSinkConfig implements Serializable {
     private boolean supportUpsertByInsertOnly;
     private boolean useCopyStatement;
     @Builder.Default private boolean createIndex = true;
+    @Builder.Default private OracleInsertMode oracleInsertMode = OracleInsertMode.CONVENTIONAL;
 
     public static JdbcSinkConfig of(ReadonlyConfig config) {
         JdbcSinkConfigBuilder builder = JdbcSinkConfig.builder();
         builder.jdbcConnectionConfig(JdbcConnectionConfig.of(config));
-        builder.isExactlyOnce(config.get(JdbcOptions.IS_EXACTLY_ONCE));
-        config.getOptional(JdbcOptions.PRIMARY_KEYS).ifPresent(builder::primaryKeys);
-        config.getOptional(JdbcOptions.DATABASE).ifPresent(builder::database);
-        config.getOptional(JdbcOptions.TABLE).ifPresent(builder::table);
-        builder.enableUpsert(config.get(ENABLE_UPSERT));
-        builder.isPrimaryKeyUpdated(config.get(IS_PRIMARY_KEY_UPDATED));
-        builder.supportUpsertByInsertOnly(config.get(SUPPORT_UPSERT_BY_INSERT_ONLY));
-        builder.simpleSql(config.get(JdbcOptions.QUERY));
-        builder.useCopyStatement(config.get(JdbcOptions.USE_COPY_STATEMENT));
-        builder.createIndex(config.get(JdbcCatalogOptions.CREATE_INDEX));
+        builder.isExactlyOnce(config.get(JdbcSinkOptions.IS_EXACTLY_ONCE));
+        config.getOptional(JdbcSinkOptions.PRIMARY_KEYS).ifPresent(builder::primaryKeys);
+        config.getOptional(JdbcSinkOptions.DATABASE).ifPresent(builder::database);
+        config.getOptional(JdbcSinkOptions.TABLE).ifPresent(builder::table);
+        builder.enableUpsert(config.get(JdbcSinkOptions.ENABLE_UPSERT));
+        builder.isPrimaryKeyUpdated(config.get(JdbcSinkOptions.IS_PRIMARY_KEY_UPDATED));
+        builder.supportUpsertByInsertOnly(
+                config.get(JdbcSinkOptions.SUPPORT_UPSERT_BY_INSERT_ONLY));
+        builder.simpleSql(config.get(JdbcSinkOptions.QUERY));
+        builder.useCopyStatement(config.get(JdbcSinkOptions.USE_COPY_STATEMENT));
+        builder.createIndex(config.get(JdbcSinkOptions.CREATE_INDEX));
+        builder.oracleInsertMode(config.get(JdbcSinkOptions.ORACLE_INSERT_MODE));
         return builder.build();
+    }
+
+    public enum OracleInsertMode {
+        CONVENTIONAL,
+        APPEND_VALUES
     }
 }

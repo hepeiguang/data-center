@@ -56,9 +56,6 @@ import io.swagger.v3.oas.annotations.Parameters;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
-/**
- * access token controller
- */
 @Tag(name = "ACCESS_TOKEN_TAG")
 @RestController
 @RequestMapping("/access-tokens")
@@ -87,7 +84,7 @@ public class AccessTokenController extends BaseController {
     @ApiException(CREATE_ACCESS_TOKEN_ERROR)
     @OperatorLog(auditType = AuditType.TOKEN_CREATE)
     public Result<AccessToken> createToken(@Parameter(hidden = true) @RequestAttribute(value = Constants.SESSION_USER) User loginUser,
-                                           @RequestParam(value = "userId") String userId,
+                                           @RequestParam(value = "userId") int userId,
                                            @RequestParam(value = "expireTime") String expireTime,
                                            @RequestParam(value = "token", required = false) String token) {
 
@@ -108,7 +105,7 @@ public class AccessTokenController extends BaseController {
     @ResponseStatus(HttpStatus.CREATED)
     @ApiException(GENERATE_TOKEN_ERROR)
     public Result<String> generateToken(@RequestAttribute(value = Constants.SESSION_USER) User loginUser,
-                                        @RequestParam(value = "userId") String userId,
+                                        @RequestParam(value = "userId") int userId,
                                         @RequestParam(value = "expireTime") String expireTime) {
         String token = accessTokenService.generateToken(loginUser, userId, expireTime);
         return Result.success(token);
@@ -159,7 +156,7 @@ public class AccessTokenController extends BaseController {
     @ResponseStatus(HttpStatus.OK)
     @ApiException(QUERY_ACCESSTOKEN_BY_USER_ERROR)
     public Result<List<AccessToken>> queryAccessTokenByUser(@Parameter(hidden = true) @RequestAttribute(value = Constants.SESSION_USER) User loginUser,
-                                                            @PathVariable("userId") String userId) {
+                                                            @PathVariable("userId") Integer userId) {
         List<AccessToken> accessTokens = accessTokenService.queryAccessTokenByUser(loginUser, userId);
         return Result.success(accessTokens);
     }
@@ -206,7 +203,7 @@ public class AccessTokenController extends BaseController {
     @OperatorLog(auditType = AuditType.TOKEN_UPDATE)
     public Result<AccessToken> updateToken(@Parameter(hidden = true) @RequestAttribute(value = Constants.SESSION_USER) User loginUser,
                                            @PathVariable(value = "id") int id,
-                                           @RequestParam(value = "userId") String userId,
+                                           @RequestParam(value = "userId") int userId,
                                            @RequestParam(value = "expireTime") String expireTime,
                                            @RequestParam(value = "token", required = false) String token) {
 

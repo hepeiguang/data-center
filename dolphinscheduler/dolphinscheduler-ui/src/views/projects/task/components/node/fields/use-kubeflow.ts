@@ -21,11 +21,11 @@ export function useKubeflow(model: { [field: string]: any }): IJsonItem[] {
   return [
     useNamespace(),
     {
-      type: 'mirror',
+      type: 'editor',
       field: 'yamlContent',
       name: 'yamlContent',
       props: {
-        language: 'sql'
+        language: 'yaml'
       },
       validate: {
         trigger: ['input', 'trigger'],
@@ -33,6 +33,10 @@ export function useKubeflow(model: { [field: string]: any }): IJsonItem[] {
         message: 'requestJson'
       }
     },
-    ...useCustomParams({ model, field: 'localParams', isSimple: false })
+    ...useCustomParams({
+      model,
+      field: 'localParams',
+      isSimple: model.readonly
+    })
   ]
 }

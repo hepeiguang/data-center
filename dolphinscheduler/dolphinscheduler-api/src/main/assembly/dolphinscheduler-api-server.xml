@@ -27,7 +27,6 @@
     <fileSets>
         <fileSet>
             <directory>${basedir}/src/main/resources</directory>
-            <lineEnding>lf</lineEnding>
             <includes>
                 <include>*.yaml</include>
                 <include>*.xml</include>
@@ -37,14 +36,12 @@
         </fileSet>
         <fileSet>
             <directory>${basedir}/src/main/bin</directory>
-            <lineEnding>lf</lineEnding>
             <outputDirectory>bin</outputDirectory>
             <fileMode>0755</fileMode>
             <directoryMode>0755</directoryMode>
         </fileSet>
         <fileSet>
             <directory>${basedir}/../script/env</directory>
-            <lineEnding>lf</lineEnding>
             <outputDirectory>conf</outputDirectory>
             <includes>
                 <include>dolphinscheduler_env.sh</include>
@@ -54,9 +51,15 @@
         </fileSet>
         <fileSet>
             <directory>${basedir}/../dolphinscheduler-common/src/main/resources</directory>
-            <lineEnding>lf</lineEnding>
             <includes>
                 <include>**/*.properties</include>
+                <include>**/*.yaml</include>
+            </includes>
+            <outputDirectory>conf</outputDirectory>
+        </fileSet>
+        <fileSet>
+            <directory>${basedir}/../dolphinscheduler-authentication/dolphinscheduler-aws-authentication/src/main/resources</directory>
+            <includes>
                 <include>**/*.yaml</include>
             </includes>
             <outputDirectory>conf</outputDirectory>

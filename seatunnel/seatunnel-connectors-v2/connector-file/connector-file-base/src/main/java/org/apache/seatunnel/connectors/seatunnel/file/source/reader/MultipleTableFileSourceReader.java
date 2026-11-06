@@ -17,12 +17,18 @@
 
 package org.apache.seatunnel.connectors.seatunnel.file.source.reader;
 
+import org.apache.seatunnel.api.source.Boundedness;
 import org.apache.seatunnel.api.source.Collector;
+import org.apache.seatunnel.api.source.SourceEvent;
 import org.apache.seatunnel.api.source.SourceReader;
 import org.apache.seatunnel.api.table.type.SeaTunnelRow;
 import org.apache.seatunnel.connectors.seatunnel.file.config.BaseFileSourceConfig;
 import org.apache.seatunnel.connectors.seatunnel.file.config.BaseMultipleTableFileSourceConfig;
+import org.apache.seatunnel.connectors.seatunnel.file.config.FileBaseSourceOptions;
+import org.apache.seatunnel.connectors.seatunnel.file.config.FileFormat;
 import org.apache.seatunnel.connectors.seatunnel.file.exception.FileConnectorException;
+import org.apache.seatunnel.connectors.seatunnel.file.source.MarkdownKnowledgeSyncMetadata;
+import org.apache.seatunnel.connectors.seatunnel.file.source.event.FileSplitFinishedEvent;
 import org.apache.seatunnel.connectors.seatunnel.file.source.split.FileSourceSplit;
 
 import lombok.extern.slf4j.Slf4j;
@@ -32,6 +38,7 @@ import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.stream.Collectors;
 
@@ -41,34 +48,42 @@ import static org.apache.seatunnel.connectors.seatunnel.file.exception.FileConne
 @Slf4j
 public class MultipleTableFileSourceReader implements SourceReader<SeaTunnelRow, FileSourceSplit> {
 
+    private static final long POLL_WAIT_MS = 1000L;
+
     private final Context context;
     private volatile boolean noMoreSplit;
 
     private final Deque<FileSourceSplit> sourceSplits = new ConcurrentLinkedDeque<>();
 
     private final Map<String, ReadStrategy> readStrategyMap;
+    private final Set<String> markdownKnowledgeSyncMetadataTableIds;
 
     public MultipleTableFileSourceReader(
             Context context, BaseMultipleTableFileSourceConfig multipleTableFileSourceConfig) {
         this.context = context;
+        List<BaseFileSourceConfig> fileSourceConfigs =
+                multipleTableFileSourceConfig.getFileSourceConfigs();
         this.readStrategyMap =
-                multipleTableFileSourceConfig.getFileSourceConfigs().stream()
+                fileSourceConfigs.stream()
                         .collect(
                                 Collectors.toMap(
-                                        fileSourceConfig ->
-                                                fileSourceConfig
-                                                        .getCatalogTable()
-                                                        .getTableId()
-                                                        .toTablePath()
-                                                        .toString(),
+                                        MultipleTableFileSourceReader::tableId,
                                         BaseFileSourceConfig::getReadStrategy));
+        this.markdownKnowledgeSyncMetadataTableIds =
+                fileSourceConfigs.stream()
+                        .filter(
+                                MultipleTableFileSourceReader
+                                        ::isMarkdownKnowledgeSyncMetadataEnabled)
+                        .map(MultipleTableFileSourceReader::tableId)
+                        .collect(Collectors.toSet());
     }
 
     @Override
     public void pollNext(Collector<SeaTunnelRow> output) {
+        FileSourceSplit split;
         synchronized (output.getCheckpointLock()) {
-            FileSourceSplit split = sourceSplits.poll();
-            if (null != split) {
+            split = sourceSplits.poll();
+            if (split != null) {
                 ReadStrategy readStrategy = readStrategyMap.get(split.getTableId());
                 if (readStrategy == null) {
                     throw new FileConnectorException(
@@ -78,17 +93,53 @@ public class MultipleTableFileSourceReader implements SourceReader<SeaTunnelRow,
                                     + "]");
                 }
                 try {
-                    readStrategy.read(split.getFilePath(), split.getTableId(), output);
+                    readStrategy.read(split, output);
                 } catch (Exception e) {
+                    boolean markdownKnowledgeSyncMetadataEnabled =
+                            markdownKnowledgeSyncMetadataTableIds.contains(split.getTableId());
+                    String sourceContext = split.splitId();
+                    Throwable cause = e;
+                    if (markdownKnowledgeSyncMetadataEnabled) {
+                        sourceContext =
+                                MarkdownKnowledgeSyncMetadata.safeSourceContext(
+                                        split.getFilePath());
+                        cause = MarkdownKnowledgeSyncMetadata.copyStackTraceOnly(e);
+                    }
                     String errorMsg =
-                            String.format("Read data from this file [%s] failed", split.splitId());
-                    throw new FileConnectorException(FILE_READ_FAILED, errorMsg, e);
+                            String.format("Read data from this file [%s] failed", sourceContext);
+                    throw new FileConnectorException(FILE_READ_FAILED, errorMsg, cause);
                 }
-            } else if (noMoreSplit && sourceSplits.isEmpty()) {
-                // signal to the source that we have reached the end of the data.
-                log.info(
-                        "There is no more element for the bounded MultipleTableLocalFileSourceReader");
-                context.signalNoMoreElement();
+            }
+        }
+
+        if (split != null) {
+            if (Boundedness.UNBOUNDED.equals(context.getBoundedness())) {
+                ReadStrategy readStrategy = readStrategyMap.get(split.getTableId());
+                SourceEvent event =
+                        new FileSplitFinishedEvent(
+                                split.splitId(),
+                                readStrategy == null
+                                        ? null
+                                        : readStrategy.getLastReadFingerprint());
+                context.sendSourceEventToEnumerator(event);
+            }
+            return;
+        }
+
+        if (noMoreSplit
+                && sourceSplits.isEmpty()
+                && Boundedness.BOUNDED.equals(context.getBoundedness())) {
+            log.info("There is no more element for bounded MultipleTableFileSourceReader");
+            context.signalNoMoreElement();
+            return;
+        }
+
+        context.sendSplitRequest();
+        if (sourceSplits.isEmpty()) {
+            try {
+                Thread.sleep(POLL_WAIT_MS);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
             }
         }
     }
@@ -126,5 +177,17 @@ public class MultipleTableFileSourceReader implements SourceReader<SeaTunnelRow,
         for (ReadStrategy strategy : readStrategyMap.values()) {
             strategy.close();
         }
+    }
+
+    private static String tableId(BaseFileSourceConfig fileSourceConfig) {
+        return fileSourceConfig.getCatalogTable().getTableId().toTablePath().toString();
+    }
+
+    private static boolean isMarkdownKnowledgeSyncMetadataEnabled(
+            BaseFileSourceConfig fileSourceConfig) {
+        return fileSourceConfig.getFileFormat() == FileFormat.MARKDOWN
+                && fileSourceConfig
+                        .getBaseFileSourceConfig()
+                        .get(FileBaseSourceOptions.MARKDOWN_RAG_METADATA_ENABLED);
     }
 }

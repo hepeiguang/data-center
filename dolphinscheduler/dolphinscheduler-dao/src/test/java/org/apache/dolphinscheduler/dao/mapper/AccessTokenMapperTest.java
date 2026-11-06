@@ -37,9 +37,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 
-/**
- * AccessToken mapper test
- */
 public class AccessTokenMapperTest extends BaseDaoTest {
 
     @Autowired
@@ -53,7 +50,7 @@ public class AccessTokenMapperTest extends BaseDaoTest {
      */
     @Test
     public void testInsert() throws Exception {
-        String userId = "1";
+        Integer userId = 1;
         AccessToken accessToken = createAccessToken(userId);
         Assertions.assertTrue(accessToken.getId() > 0);
     }
@@ -63,7 +60,7 @@ public class AccessTokenMapperTest extends BaseDaoTest {
      */
     @Test
     public void testDeleteAccessTokenByUserId() {
-        String userId = "1";
+        Integer userId = 1;
         int insertCount = 0;
 
         for (int i = 0; i < 10; i++) {
@@ -86,7 +83,7 @@ public class AccessTokenMapperTest extends BaseDaoTest {
      */
     @Test
     public void testSelectById() throws Exception {
-        String userId = "1";
+        Integer userId = 1;
         AccessToken accessToken = createAccessToken(userId);
         AccessToken resultAccessToken = accessTokenMapper.selectById(accessToken.getId());
         Assertions.assertEquals(accessToken, resultAccessToken);
@@ -99,7 +96,7 @@ public class AccessTokenMapperTest extends BaseDaoTest {
      */
     @Test
     public void testHashCodeMethod() throws Exception {
-        String userId = "1";
+        Integer userId = 1;
         AccessToken accessToken = createAccessToken(userId);
         AccessToken resultAccessToken = accessTokenMapper.selectById(accessToken.getId());
         boolean flag = accessToken.equals(resultAccessToken);
@@ -113,7 +110,7 @@ public class AccessTokenMapperTest extends BaseDaoTest {
      */
     @Test
     public void testEqualsMethod() throws Exception {
-        String userId = "1";
+        Integer userId = 1;
         AccessToken accessToken = createAccessToken(userId);
         int result = accessToken.hashCode();
         Assertions.assertNotNull(Integer.valueOf(result));
@@ -131,8 +128,8 @@ public class AccessTokenMapperTest extends BaseDaoTest {
         Integer size = 2;
 
         Map<Integer, AccessToken> accessTokenMap = createAccessTokens(count, userName);
-        Set<String> userIds = accessTokenMap.values().stream().map(AccessToken::getUserId).collect(Collectors.toSet());
-        String createTokenUserId = new ArrayList<>(userIds).get(0);
+        Set<Integer> userIds = accessTokenMap.values().stream().map(AccessToken::getUserId).collect(Collectors.toSet());
+        Integer createTokenUserId = new ArrayList<>(userIds).get(0);
 
         // general user and create token user
         Page page = new Page(offset, size);
@@ -140,7 +137,7 @@ public class AccessTokenMapperTest extends BaseDaoTest {
         Assertions.assertEquals(Integer.valueOf(accessTokenPage.getRecords().size()), size);
 
         // admin user
-        IPage<AccessToken> adminAccessTokenPage = accessTokenMapper.selectAccessTokenPage(page, userName, "0");
+        IPage<AccessToken> adminAccessTokenPage = accessTokenMapper.selectAccessTokenPage(page, userName, 0);
         Assertions.assertEquals(Integer.valueOf(adminAccessTokenPage.getRecords().size()), size);
         for (AccessToken accessToken : adminAccessTokenPage.getRecords()) {
             AccessToken resultAccessToken = accessTokenMap.get(accessToken.getId());
@@ -149,7 +146,7 @@ public class AccessTokenMapperTest extends BaseDaoTest {
 
         // general user
         Integer emptySize = 0;
-        IPage<AccessToken> generalAccessTokenPage = accessTokenMapper.selectAccessTokenPage(page, userName, "1");
+        IPage<AccessToken> generalAccessTokenPage = accessTokenMapper.selectAccessTokenPage(page, userName, 1);
         Assertions.assertEquals(Integer.valueOf(generalAccessTokenPage.getRecords().size()), emptySize);
     }
 
@@ -158,7 +155,7 @@ public class AccessTokenMapperTest extends BaseDaoTest {
      */
     @Test
     public void testUpdate() throws Exception {
-        String userId = "1";
+        Integer userId = 1;
         AccessToken accessToken = createAccessToken(userId);
         // update
         accessToken.setToken("56789");
@@ -177,7 +174,7 @@ public class AccessTokenMapperTest extends BaseDaoTest {
      */
     @Test
     public void testDelete() throws Exception {
-        String userId = "1";
+        Integer userId = 1;
 
         AccessToken accessToken = createAccessToken(userId);
         int status = accessTokenMapper.deleteById(accessToken.getId());
@@ -247,7 +244,7 @@ public class AccessTokenMapperTest extends BaseDaoTest {
      * @param userName userName
      * @return accessToken
      */
-    private AccessToken createAccessToken(String userId, String userName) {
+    private AccessToken createAccessToken(Integer userId, String userName) {
         // insertOne
         AccessToken accessToken = new AccessToken();
         accessToken.setUserName(userName);
@@ -272,7 +269,7 @@ public class AccessTokenMapperTest extends BaseDaoTest {
      * @return accessToken
      * @throws Exception
      */
-    private AccessToken createAccessToken(String userId) throws Exception {
+    private AccessToken createAccessToken(Integer userId) throws Exception {
         return createAccessToken(userId, null);
     }
 

@@ -18,7 +18,7 @@
 package org.apache.dolphinscheduler.dao.mapper;
 
 import org.apache.dolphinscheduler.dao.entity.User;
-import org.apache.dolphinscheduler.dao.entity.UserWithProcessDefinitionCode;
+import org.apache.dolphinscheduler.dao.entity.UserWithWorkflowDefinitionCode;
 
 import org.apache.ibatis.annotations.Param;
 
@@ -29,20 +29,17 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 
-/**
- * user mapper interface
- */
 public interface UserMapper extends BaseMapper<User> {
 
     /**
      * select by user id
      */
-    User selectById(String id);
+    User selectById(int id);
 
     /**
      * delete by id
      */
-    int deleteById(String id);
+    int deleteById(int id);
 
     /**
      * update
@@ -89,15 +86,7 @@ public interface UserMapper extends BaseMapper<User> {
      * @param userId userId
      * @return user
      */
-    User queryDetailsById(@Param("userId") String userId);
-
-    /**
-     * query user list by alertgroupId
-     *
-     * @param alertgroupId alertgroupId
-     * @return user list
-     */
-    List<User> queryUserListByAlertGroupId(@Param("alertgroupId") int alertgroupId);
+    User queryDetailsById(@Param("userId") int userId);
 
     /**
      * query user list by tenantId
@@ -113,7 +102,7 @@ public interface UserMapper extends BaseMapper<User> {
      * @param userId userId
      * @return user
      */
-    User queryTenantCodeByUserId(@Param("userId") String userId);
+    User queryTenantCodeByUserId(@Param("userId") int userId);
 
     /**
      * query user by token
@@ -155,7 +144,7 @@ public interface UserMapper extends BaseMapper<User> {
      * @param ids id list
      * @return user list
      */
-    List<User> selectByIds(@Param("ids") List<String> ids);
+    List<User> selectByIds(@Param("ids") List<Integer> ids);
 
     /**
      * query authed user list by projectId
@@ -174,9 +163,9 @@ public interface UserMapper extends BaseMapper<User> {
     /**
      * query User and task flow binding relationship
      *
-     * @param processDefinitionCodes processDefinitionCodes
+     * @param workflowDefinitionCodes workflowDefinitionCodes
      * @return user with process definition code
      */
-    List<UserWithProcessDefinitionCode> queryUserWithProcessDefinitionCode(@Param("processDefinitionCodes") List<Long> processDefinitionCodes);
+    List<UserWithWorkflowDefinitionCode> queryUserWithWorkflowDefinitionCode(@Param("workflowDefinitionCodes") List<Long> workflowDefinitionCodes);
 
 }

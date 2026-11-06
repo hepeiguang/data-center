@@ -15,18 +15,16 @@
  * limitations under the License.
  */
 
-import { defineComponent, onMounted, ref, defineAsyncComponent } from 'vue'
+import { defineComponent, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useThemeStore } from '@/store/theme/theme'
 import { useMessage } from 'naive-ui'
 import { useI18n } from 'vue-i18n'
-// import Dag from '../../components/dag'
+import Dag from '../../components/dag'
 import {
-  queryProcessDefinitionByCode,
-  updateProcessDefinition,
-  jgUpdateProcessDefinition,
-  getDetailByDsWdCode
-} from '@/service/modules/process-definition'
+  queryWorkflowDefinitionByCode,
+  updateWorkflowDefinition
+} from '@/service/modules/workflow-definition'
 import {
   WorkflowDefinition,
   SaveForm,
@@ -46,10 +44,7 @@ interface SaveData {
 
 export default defineComponent({
   name: 'WorkflowDefinitionDetails',
-  setup(props, context) {
-    const Dag = defineAsyncComponent(() => 
-      import('@/views/projects/workflow/components/dag')
-    )
+  setup() {
     const theme = useThemeStore()
     const route = useRoute()
     const router = useRouter()
@@ -62,45 +57,23 @@ export default defineComponent({
     const readonly = ref(false)
     const isLoading = ref(true)
     const dagRef = ref()
-     // 增加给基改使用内容
-    // 查看路由跳转是否有类型参数
-    const queryParamsType = route.query.type
-    const jgQueryId = route.query.id
+
     const refresh = () => {
       isLoading.value = true
-      if (queryParamsType) {
-        getDetailByDsWdCode(code, projectCode).then((resp: any) => {
-          const res = resp.value;
-          readonly.value = res.processDefinition.releaseState === 'ONLINE'
-          res.processDefinition.taskType = res.policy.taskType
-          res.processDefinition.templateId = res.policy.dsWdCode
-          definition.value = res
-          isLoading.value = false
-          if (!res.processDefinition.locations) {
-            setTimeout(() => {
-              const graph = dagRef.value
-              const { submit } = useGraphAutoLayout({ graph })
-              submit()
-            }, 1000)
-          }
-        })
-      } else {
-         queryProcessDefinitionByCode(code, projectCode).then((res: any) => {
-          readonly.value = res.processDefinition.releaseState === 'ONLINE'
-          definition.value = res
-          isLoading.value = false
-          if (!res.processDefinition.locations) {
-            setTimeout(() => {
-              const graph = dagRef.value
-              const { submit } = useGraphAutoLayout({ graph })
-              submit()
-            }, 1000)
-          }
-        })
-      }
+      queryWorkflowDefinitionByCode(code, projectCode).then((res: any) => {
+        readonly.value = res.workflowDefinition.releaseState === 'ONLINE'
+        definition.value = res
+        isLoading.value = false
+        if (!res.workflowDefinition.locations) {
+          setTimeout(() => {
+            const graph = dagRef.value
+            const { submit } = useGraphAutoLayout({ graph })
+            submit()
+          }, 1000)
+        }
+      })
     }
-   
-    console.log(route, 'route')
+
     const save = ({
       taskDefinitions,
       saveForm,
@@ -112,44 +85,22 @@ export default defineComponent({
           prop: p.key,
           value: p.value,
           direct: p.direct,
-          type: 'VARCHAR'
+          type: p.type
         }
       })
-      const params:any = {
-        taskDefinitionJson: JSON.stringify(taskDefinitions),
-        taskRelationJson: JSON.stringify(connects),
-        locations: JSON.stringify(locations),
-        name: saveForm.name,
-        executionType: saveForm.executionType,
-        description: saveForm.description,
-        globalParams: JSON.stringify(globalParams),
-        timeout: saveForm.timeoutFlag ? saveForm.timeout : 0,
-        releaseState: saveForm.release ? 'ONLINE' : 'OFFLINE',
-        projectCode,
-        code,
-      }
-      if (queryParamsType) {
-        // 处理下数据
-        let jgparams:any = {
-          "id": jgQueryId,
-          "policyName": saveForm.name,
-          "taskType": saveForm.taskType,
-          "description": saveForm.description,
-          "type": queryParamsType == "stategy" ? 0 : 1,
-          "workflow": params
-        }
-        jgUpdateProcessDefinition(
-          jgparams
-        ).then((ignored: any) => {
-          message.success(t('project.dag.success'))
-          
-        }).finally(() => {
-          window.parent.postMessage('clone', '*')
-        })
-        return
-      }
-      updateProcessDefinition(
-        params,
+
+      updateWorkflowDefinition(
+        {
+          taskDefinitionJson: JSON.stringify(taskDefinitions),
+          taskRelationJson: JSON.stringify(connects),
+          locations: JSON.stringify(locations),
+          name: saveForm.name,
+          executionType: saveForm.executionType,
+          description: saveForm.description,
+          globalParams: JSON.stringify(globalParams),
+          timeout: saveForm.timeoutFlag ? saveForm.timeout : 0,
+          releaseState: saveForm.release ? 'ONLINE' : 'OFFLINE'
+        },
         code,
         projectCode
       ).then((ignored: any) => {
@@ -158,9 +109,7 @@ export default defineComponent({
       })
     }
 
-    context.expose(dagRef)
     onMounted(() => {
-      console.log('llxl 详情页面挂载')
       if (!code || !projectCode) return
       refresh()
     })
@@ -174,7 +123,6 @@ export default defineComponent({
       >
         {!isLoading.value && (
           <Dag
-            externalParam={queryParamsType}
             ref={dagRef}
             definition={definition.value}
             onRefresh={refresh}

@@ -17,7 +17,6 @@
 
 package org.apache.dolphinscheduler.api.audit;
 
-import cn.hutool.core.util.URLUtil;
 import org.apache.dolphinscheduler.api.audit.enums.AuditType;
 import org.apache.dolphinscheduler.api.enums.ExecuteType;
 import org.apache.dolphinscheduler.api.utils.Result;
@@ -27,10 +26,8 @@ import org.apache.dolphinscheduler.common.enums.AuditOperationType;
 import org.apache.dolphinscheduler.common.enums.ReleaseState;
 import org.apache.dolphinscheduler.dao.entity.AuditLog;
 import org.apache.dolphinscheduler.dao.entity.User;
-import org.apache.dolphinscheduler.spi.enums.ResourceType;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -41,11 +38,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.reflect.MethodSignature;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
-
-import javax.servlet.http.HttpServletRequest;
 
 @Slf4j
 public class OperatorUtils {
@@ -54,7 +46,7 @@ public class OperatorUtils {
         return result != null && result.isFailed();
     }
 
-    public static List<AuditLog> buildAuditLogList(String apiDescription, AuditType auditType, User user,String httpMethod) {
+    public static List<AuditLog> buildAuditLogList(String apiDescription, AuditType auditType, User user) {
         List<AuditLog> auditLogList = new ArrayList<>();
         AuditLog auditLog = new AuditLog();
         auditLog.setUserId(user.getId());
@@ -62,56 +54,8 @@ public class OperatorUtils {
         auditLog.setOperationType(auditType.getAuditOperationType().getName());
         auditLog.setDescription(apiDescription);
         auditLog.setCreateTime(new Date());
-        auditLog.setHttpMethod(httpMethod);
-        auditLog.setHttpUrl(getHttpUrl());
         auditLogList.add(auditLog);
         return auditLogList;
-    }
-
-    /**
-     * 获取HTTP请求方法
-     */
-    public static String getHttpMethod(Method method) {
-        // 检查方法上的HTTP注解
-        if (method.isAnnotationPresent(PostMapping.class)) {
-            return "POST";
-        } else if (method.isAnnotationPresent(GetMapping.class)) {
-            return "GET";
-        } else if (method.isAnnotationPresent(PutMapping.class)) {
-            return "PUT";
-        } else if (method.isAnnotationPresent(DeleteMapping.class)) {
-            return "DELETE";
-        } else if (method.isAnnotationPresent(PatchMapping.class)) {
-            return "PATCH";
-        } else if (method.isAnnotationPresent(RequestMapping.class)) {
-            RequestMapping requestMapping = method.getAnnotation(RequestMapping.class);
-            if (requestMapping.method().length > 0) {
-                return requestMapping.method()[0].name();
-            }
-        }
-        return "UNKNOWN";
-    }
-
-    /**
-     * 获取完整的HTTP URL（包含协议、域名、端口、路径和参数）
-     */
-    public static String getHttpUrl() {
-        try {
-            HttpServletRequest request = getHttpServletRequest();
-            return URLUtil.getPath(request.getRequestURI());
-        } catch (Exception e) {
-            log.debug("Failed to get HTTP URL from request", e);
-            return "UNKNOWN";
-        }
-    }
-
-
-    /**
-     * 获取HttpServletRequest对象
-     */
-    private static HttpServletRequest getHttpServletRequest() {
-        return ((ServletRequestAttributes) RequestContextHolder
-                .currentRequestAttributes()).getRequest();
     }
 
     public static User getUser(Map<String, Object> paramsMap) {
@@ -181,7 +125,7 @@ public class OperatorUtils {
         return auditType.getAuditOperationType();
     }
 
-    public static long getObjectIdentityByParma(String[] paramNameArr, Map<String, Object> paramsMap) {
+    public static long getObjectIdentityByParam(String[] paramNameArr, Map<String, Object> paramsMap) {
         for (String name : paramNameArr) {
             if (paramsMap.get(name) instanceof String) {
                 String param = (String) paramsMap.get(name);
@@ -227,23 +171,13 @@ public class OperatorUtils {
         return map;
     }
 
-    public static boolean isUdfResource(Map<String, Object> paramsMap) {
-        ResourceType resourceType = (ResourceType) paramsMap.get(Constants.STRING_PLUGIN_PARAM_TYPE);
-        return resourceType != null && resourceType.equals(ResourceType.UDF);
-    }
-
     public static boolean isFolder(String name) {
         return name != null && name.endsWith("/");
     }
 
     public static String getFileAuditObject(AuditType auditType, Map<String, Object> paramsMap, String name) {
-        boolean isUdfResource = isUdfResource(paramsMap);
         boolean isFolder = auditType == AuditType.FOLDER_CREATE || isFolder(name);
-        if (isUdfResource) {
-            return isFolder ? AuditModelType.UDF_FOLDER.getName() : AuditModelType.UDF_FILE.getName();
-        } else {
-            return isFolder ? AuditModelType.FOLDER.getName() : AuditModelType.FILE.getName();
-        }
+        return isFolder ? AuditModelType.FOLDER.getName() : AuditModelType.FILE.getName();
     }
 
 }

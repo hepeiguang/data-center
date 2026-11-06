@@ -25,7 +25,7 @@ import { get } from 'lodash'
  */
 export function useBusinessMapper() {
   /**
-   * Get connects, connects and processTaskRelationList are the same
+   * Get connects, connects and workflowTaskRelationList are the same
    * @param {Node[]} nodes
    * @param {Edge[]} edges
    * @param {TaskDefinition[]} taskDefinitions
@@ -68,8 +68,8 @@ export function useBusinessMapper() {
           name: '',
           preTaskCode: 0,
           preTaskVersion: 0,
-          postTaskCode: task && task.code? task.code: '',
-          postTaskVersion: task && task.version? task.version: 0,
+          postTaskCode: task.code,
+          postTaskVersion: task.version || 0,
           // conditionType and conditionParams are reserved
           conditionType: 'NONE',
           conditionParams: {}
@@ -103,12 +103,17 @@ export function useBusinessMapper() {
     return nodes.map((node) => {
       const code = +node.id
       const { x, y } = node.getPosition()
-      const {width, height} = node.getSize()
-      return {
+      const size = node.getSize?.()
+      const loc: any = {
         taskCode: code,
         x,
-        y,width, height
+        y
       }
+      if (size?.width && size.width > 220) {
+        loc.width = size.width
+        loc.height = size.height
+      }
+      return loc
     })
   }
 

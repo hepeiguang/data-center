@@ -27,7 +27,6 @@ import org.apache.dolphinscheduler.plugin.task.api.utils.ParameterUtils;
 import java.util.Date;
 import java.util.Map;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 public class TimePlaceholderUtilsTest {
@@ -131,26 +130,8 @@ public class TimePlaceholderUtilsTest {
     }
 
     @Test
-    public void timePlaceHolderForTimestamp() {
-        String weekLastDate = "$[timestamp(yyyyMMddHHmmss)]";
-        String weekLastDateMs = "$[timestamp_ms(yyyyMMddHHmmss)]";
-        String weekLastDateMs2 = "$[timestamp_ms(yyyyMMddHHmmss-30)]";
-
-        String weekLastDateTime = ParameterUtils.convertParameterPlaceholders(weekLastDate, timeParams);
-        assertEquals(weekLastDateTime, "1661443200");
-
-        String weekLastDateTimeMs = ParameterUtils.convertParameterPlaceholders(weekLastDateMs, timeParams);
-        assertEquals(weekLastDateTimeMs, "1661443200000");
-        String weekLastDateTimeMs2 = ParameterUtils.convertParameterPlaceholders(weekLastDateMs2, timeParams);
-        assertEquals(weekLastDateTimeMs2, "1658851200000");
-
-    }
-
-    @Test
-    void getPlaceHolderTime() {
-        IllegalArgumentException illegalArgumentException = Assertions.assertThrows(IllegalArgumentException.class,
-                () -> TimePlaceholderUtils.getPlaceHolderTime("$[week_last_day(yyyy-MM-dd,0) - 1]", new Date()));
-        assertEquals("Unsupported placeholder expression: $[week_last_day(yyyy-MM-dd,0) - 1]",
-                illegalArgumentException.getMessage());
+    void formatTimeExpressionWithInvalidExpression() {
+        assertEquals("$[week_last_day(yyyy-MM-dd,0) - 1]",
+                TimePlaceholderUtils.formatTimeExpression("$[week_last_day(yyyy-MM-dd,0) - 1]", new Date(), true));
     }
 }

@@ -30,8 +30,8 @@ import org.apache.dolphinscheduler.common.utils.CodeGenerateUtils;
 import org.apache.dolphinscheduler.dao.entity.Project;
 import org.apache.dolphinscheduler.dao.entity.ProjectParameter;
 import org.apache.dolphinscheduler.dao.entity.User;
-import org.apache.dolphinscheduler.dao.mapper.ProjectMapper;
 import org.apache.dolphinscheduler.dao.mapper.ProjectParameterMapper;
+import org.apache.dolphinscheduler.dao.repository.ProjectDao;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -63,20 +63,17 @@ public class ProjectParameterServiceImpl extends BaseServiceImpl implements Proj
     private ProjectService projectService;
 
     @Autowired
-    private ProjectMapper projectMapper;
+    private ProjectDao projectDao;
 
     @Override
     @Transactional
     public Result createProjectParameter(User loginUser, long projectCode, String projectParameterName,
-                                         String projectParameterValue) {
+                                         String projectParameterValue, String projectParameterDataType) {
         Result result = new Result();
 
         // check if user have write perm for project
-        Project project = projectMapper.queryByCode(projectCode);
-        boolean hasProjectAndWritePerm = projectService.hasProjectAndWritePerm(loginUser, project, result);
-        if (!hasProjectAndWritePerm) {
-            return result;
-        }
+        Project project = projectDao.queryByCode(projectCode);
+        projectService.checkHasProjectWritePermissionThrowException(loginUser, project);
 
         // check if project parameter name exists
         ProjectParameter projectParameter = projectParameterMapper.selectOne(new QueryWrapper<ProjectParameter>()
@@ -92,22 +89,18 @@ public class ProjectParameterServiceImpl extends BaseServiceImpl implements Proj
 
         Date now = new Date();
 
-        try {
-            projectParameter = ProjectParameter
-                    .builder()
-                    .paramName(projectParameterName)
-                    .paramValue(projectParameterValue)
-                    .code(CodeGenerateUtils.genCode())
-                    .projectCode(projectCode)
-                    .userId(loginUser.getId())
-                    .createTime(now)
-                    .updateTime(now)
-                    .build();
-        } catch (CodeGenerateUtils.CodeGenerateException e) {
-            log.error("Generate project parameter code error.", e);
-            putMsg(result, Status.CREATE_PROJECT_PARAMETER_ERROR);
-            return result;
-        }
+        projectParameter = ProjectParameter
+                .builder()
+                .paramName(projectParameterName)
+                .paramValue(projectParameterValue)
+                .paramDataType(projectParameterDataType)
+                .code(CodeGenerateUtils.genCode())
+                .projectCode(projectCode)
+                .userId(loginUser.getId())
+                .operator(loginUser.getId())
+                .createTime(now)
+                .updateTime(now)
+                .build();
 
         if (projectParameterMapper.insert(projectParameter) > 0) {
             log.info("Project parameter is created and id is :{}", projectParameter.getId());
@@ -122,15 +115,12 @@ public class ProjectParameterServiceImpl extends BaseServiceImpl implements Proj
 
     @Override
     public Result updateProjectParameter(User loginUser, long projectCode, long code, String projectParameterName,
-                                         String projectParameterValue) {
+                                         String projectParameterValue, String projectParameterDataType) {
         Result result = new Result();
 
         // check if user have write perm for project
-        Project project = projectMapper.queryByCode(projectCode);
-        boolean hasProjectAndWritePerm = projectService.hasProjectAndWritePerm(loginUser, project, result);
-        if (!hasProjectAndWritePerm) {
-            return result;
-        }
+        Project project = projectDao.queryByCode(projectCode);
+        projectService.checkHasProjectWritePermissionThrowException(loginUser, project);
 
         ProjectParameter projectParameter = projectParameterMapper.queryByCode(code);
         // check project parameter exists
@@ -155,6 +145,7 @@ public class ProjectParameterServiceImpl extends BaseServiceImpl implements Proj
 
         projectParameter.setParamName(projectParameterName);
         projectParameter.setParamValue(projectParameterValue);
+        projectParameter.setParamDataType(projectParameterDataType);
         projectParameter.setUpdateTime(new Date());
         projectParameter.setOperator(loginUser.getId());
 
@@ -174,11 +165,8 @@ public class ProjectParameterServiceImpl extends BaseServiceImpl implements Proj
         Result result = new Result();
 
         // check if user have write perm for project
-        Project project = projectMapper.queryByCode(projectCode);
-        boolean hasProjectAndWritePerm = projectService.hasProjectAndWritePerm(loginUser, project, result);
-        if (!hasProjectAndWritePerm) {
-            return result;
-        }
+        Project project = projectDao.queryByCode(projectCode);
+        projectService.checkHasProjectWritePermissionThrowException(loginUser, project);
 
         ProjectParameter projectParameter = projectParameterMapper.queryByCode(code);
         // check project parameter exists
@@ -236,20 +224,18 @@ public class ProjectParameterServiceImpl extends BaseServiceImpl implements Proj
 
     @Override
     public Result queryProjectParameterListPaging(User loginUser, long projectCode, Integer pageSize, Integer pageNo,
-                                                  String searchVal) {
+                                                  String searchVal, String projectParameterDataType) {
         Result result = new Result();
 
-        Project project = projectMapper.queryByCode(projectCode);
-        boolean hasProjectAndPerm = projectService.hasProjectAndPerm(loginUser, project, result, PROJECT);
-        if (!hasProjectAndPerm) {
-            return result;
-        }
+        Project project = projectDao.queryByCode(projectCode);
+        projectService.checkProjectAndAuthThrowException(loginUser, project, PROJECT);
 
         PageInfo<ProjectParameter> pageInfo = new PageInfo<>(pageNo, pageSize);
         Page<ProjectParameter> page = new Page<>(pageNo, pageSize);
 
         IPage<ProjectParameter> iPage =
-                projectParameterMapper.queryProjectParameterListPaging(page, projectCode, null, searchVal);
+                projectParameterMapper.queryProjectParameterListPaging(page, projectCode, null, searchVal,
+                        projectParameterDataType);
 
         List<ProjectParameter> projectParameterList = iPage.getRecords();
 
@@ -264,11 +250,8 @@ public class ProjectParameterServiceImpl extends BaseServiceImpl implements Proj
     public Result queryProjectParameterByCode(User loginUser, long projectCode, long code) {
         Result result = new Result();
 
-        Project project = projectMapper.queryByCode(projectCode);
-        boolean hasProjectAndPerm = projectService.hasProjectAndPerm(loginUser, project, result, PROJECT);
-        if (!hasProjectAndPerm) {
-            return result;
-        }
+        Project project = projectDao.queryByCode(projectCode);
+        projectService.checkProjectAndAuthThrowException(loginUser, project, PROJECT);
 
         ProjectParameter projectParameter = projectParameterMapper.queryByCode(code);
         if (projectParameter == null || projectCode != projectParameter.getProjectCode()) {

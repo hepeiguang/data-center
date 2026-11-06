@@ -22,7 +22,9 @@ import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
 
 import java.net.Inet4Address;
+import java.net.Inet6Address;
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -32,9 +34,13 @@ public class NetUtilsTest {
 
     @Test
     public void testGetAddr() {
-        Assertions.assertEquals(NetUtils.getHost() + ":5678", NetUtils.getAddr(5678));
+        Assertions.assertEquals(NetUtils.getAddr(NetUtils.getHost(), 5678), NetUtils.getAddr(5678));
         Assertions.assertEquals("127.0.0.1:5678", NetUtils.getAddr("127.0.0.1", 5678));
         Assertions.assertEquals("localhost:1234", NetUtils.getAddr("localhost", 1234));
+        Assertions.assertEquals("[fd15:4ba5:5a2b:1008:71bc:dd01:e661:e831]:1234",
+                NetUtils.getAddr("fd15:4ba5:5a2b:1008:71bc:dd01:e661:e831", 1234));
+        Assertions.assertEquals("[fd15:4ba5:5a2b:1008:71bc:dd01:e661:e831]:1234",
+                NetUtils.getAddr("[fd15:4ba5:5a2b:1008:71bc:dd01:e661:e831]", 1234));
     }
 
     @Test
@@ -58,12 +64,16 @@ public class NetUtilsTest {
             address = mock(InetAddress.class);
             when(address.getCanonicalHostName()).thenReturn("dolphinscheduler.cluster-domain.example");
             when(address.getHostName()).thenReturn("dolphinscheduler");
-            Assertions.assertEquals("dolphinscheduler.cluster-domain.example", NetUtils.getHost(address));
+            when(address.getHostAddress()).thenReturn("10.0.0.1");
+            Assertions.assertEquals("10.0.0.1", NetUtils.getHost(address));
 
+            // Regression test for Kubernetes Deployment pod: short hostname without svc suffix
+            // should fall back to getHostAddress() to return the IP address
             address = mock(InetAddress.class);
             when(address.getCanonicalHostName()).thenReturn("dolphinscheduler-worker-0");
             when(address.getHostName()).thenReturn("dolphinscheduler-worker-0");
-            Assertions.assertEquals("dolphinscheduler-worker-0", NetUtils.getHost(address));
+            when(address.getHostAddress()).thenReturn("10.0.0.2");
+            Assertions.assertEquals("10.0.0.2", NetUtils.getHost(address));
         }
     }
 
@@ -75,6 +85,13 @@ public class NetUtilsTest {
         when(address.getHostName()).thenReturn("dolphinscheduler-worker-0");
         when(address.getHostAddress()).thenReturn("172.17.0.15");
         Assertions.assertEquals("172.17.0.15", NetUtils.getHost(address));
+    }
+
+    @Test
+    public void testGetHostInNonKubernetesModeShouldStripIpv6Scope() throws UnknownHostException {
+        Inet6Address address = Inet6Address.getByAddress(null,
+                InetAddress.getByName("fd15:4ba5:5a2b:1008:71bc:dd01:e661:e831").getAddress(), 2);
+        Assertions.assertEquals("fd15:4ba5:5a2b:1008:71bc:dd01:e661:e831", NetUtils.getHost(address));
     }
 
     @Test
@@ -114,6 +131,24 @@ public class NetUtilsTest {
         address = mock(Inet4Address.class);
         when(address.getHostAddress()).thenReturn("-1.2.3.4");
         Assertions.assertFalse(NetUtils.isValidV4Address(address));
+    }
+
+    @Test
+    public void testIsValidV6Address() throws UnknownHostException {
+        Assertions.assertFalse(NetUtils.isValidV6Address(null));
+
+        Inet6Address globalAddress = (Inet6Address) InetAddress
+                .getByName("fd15:4ba5:5a2b:1008:71bc:dd01:e661:e831");
+        Assertions.assertTrue(NetUtils.isValidV6Address(globalAddress));
+
+        Inet6Address scopedGlobalAddress = Inet6Address.getByAddress(null, globalAddress.getAddress(), 2);
+        Assertions.assertTrue(NetUtils.isValidV6Address(scopedGlobalAddress));
+
+        Inet6Address linkLocalAddress = (Inet6Address) InetAddress.getByName("fe80::20c:29ff:feac:72e7");
+        Assertions.assertFalse(NetUtils.isValidV6Address(linkLocalAddress));
+
+        Inet6Address loopbackAddress = (Inet6Address) InetAddress.getByName("::1");
+        Assertions.assertFalse(NetUtils.isValidV6Address(loopbackAddress));
     }
 
 }

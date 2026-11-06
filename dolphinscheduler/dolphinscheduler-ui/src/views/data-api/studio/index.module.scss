@@ -1,0 +1,275 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+.studio {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  // DS gives the content wrapper `height: 100%`, so fill it instead of guessing vh
+  height: 100%;
+  min-height: 520px;
+  overflow: hidden;
+  font-size: 14px;
+
+  .toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .body {
+    display: flex;
+    gap: 16px;
+    flex: 1;
+    min-height: 0;
+  }
+
+  // the two panels are NCard roots: stretch the card body so the page fills the height
+  .tree-panel,
+  .detail-panel {
+    display: flex;
+    flex-direction: column;
+
+    > :global(.n-card-header) {
+      flex: none;
+    }
+
+    > :global(.n-card__content) {
+      flex: 1;
+      min-height: 0;
+      overflow: auto;
+    }
+  }
+
+  .tree-panel {
+    width: 320px;
+    flex: none;
+  }
+
+  .detail-panel {
+    flex: 1;
+    min-width: 0;
+
+    > :global(.n-card__content) {
+      overflow: hidden;
+    }
+  }
+
+  .tabs {
+    flex: 1;
+    min-height: 0;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+
+    > :global(.n-tabs-nav) {
+      flex: none;
+    }
+
+    // naive renders the pane directly under .n-tabs (and wrapped in
+    // .n-tabs-pane-wrapper when animated): both cases must be the scroll container
+    > :global(.n-tabs-pane-wrapper),
+    > :global(.n-tab-pane) {
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow-x: hidden;
+      overflow-y: auto;
+    }
+
+    :global(.n-tab-pane) {
+      padding: 8px 2px 12px;
+    }
+  }
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.card-icon {
+  font-size: 16px;
+}
+
+.tab-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.node {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+
+  .node-name {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .node-method {
+    flex: none;
+  }
+
+  .node-actions {
+    flex: none;
+    visibility: hidden;
+  }
+
+  &:hover .node-actions {
+    visibility: visible;
+  }
+}
+
+.tree-panel :global(.n-tree-node) {
+  padding-top: 2px;
+  padding-bottom: 2px;
+}
+
+.node-icon {
+  margin-right: 6px;
+  font-size: 15px;
+}
+
+.path-line {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-family: Consolas, Monaco, monospace;
+  font-size: 14px;
+}
+
+.section-title {
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.section-hint {
+  color: rgb(128 128 128);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.def-table {
+  width: 100%;
+
+  td {
+    padding: 8px 10px;
+    vertical-align: middle;
+  }
+
+  th {
+    padding: 8px 10px;
+    text-align: left;
+    font-weight: 500;
+    font-size: 13px;
+  }
+}
+
+.response-box {
+  flex: 1;
+  min-height: 200px;
+  max-height: 460px;
+  overflow: auto;
+  font-family: Consolas, Monaco, monospace;
+  font-size: 13px;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.meta-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  margin-top: 12px;
+  font-size: 13px;
+  color: rgb(128 128 128);
+
+  .meta-item {
+    display: flex;
+    gap: 6px;
+  }
+}
+
+.diff-grid {
+  display: flex;
+  gap: 16px;
+
+  > div {
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+.script-layout {
+  display: flex;
+  gap: 16px;
+  height: 100%;
+  min-height: 320px;
+
+  .script-editor {
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+  }
+
+  .script-side {
+    width: 340px;
+    flex: none;
+    overflow: auto;
+  }
+
+  .script-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+  }
+}
+
+.readonly-table {
+  width: 100%;
+
+  th,
+  td {
+    padding: 8px 12px;
+    text-align: left;
+    font-weight: 500;
+    border-bottom: 1px solid rgb(238 238 238 / 60%);
+  }
+
+  th {
+    font-size: 13px;
+  }
+}

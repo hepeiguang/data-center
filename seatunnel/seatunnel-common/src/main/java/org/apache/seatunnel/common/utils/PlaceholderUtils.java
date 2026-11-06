@@ -17,6 +17,9 @@
 
 package org.apache.seatunnel.common.utils;
 
+import org.apache.seatunnel.shade.com.fasterxml.jackson.databind.JsonNode;
+import org.apache.seatunnel.shade.org.apache.commons.lang3.StringUtils;
+
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -36,7 +39,7 @@ public class PlaceholderUtils {
         while (matcher.find()) {
             String replacement =
                     value != null && !value.isEmpty()
-                            ? value
+                            ? StringUtils.unwrap(value, "\"")
                             : (matcher.group(1) != null
                                     ? matcher.group(1).substring(1).trim()
                                     : defaultValue);
@@ -47,5 +50,19 @@ public class PlaceholderUtils {
         }
         matcher.appendTail(result);
         return result.toString();
+    }
+
+    public static String replacePlaceholders(String input, JsonNode supportedValues) {
+        Pattern pattern = Pattern.compile("\\$\\{([^}]*)\\}");
+        Matcher matcher = pattern.matcher(input);
+        if (matcher.find()) {
+            String placeholder = matcher.group(1);
+
+            if (supportedValues.has(placeholder)) {
+                String replaced = supportedValues.get(placeholder).asText();
+                return replacePlaceholders(input, placeholder, replaced);
+            }
+        }
+        return input;
     }
 }

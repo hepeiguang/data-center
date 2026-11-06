@@ -51,24 +51,7 @@ export function useForm(id?: number) {
     endpoint: '',
     MSIClientId: '',
     dbUser: '',
-    datawarehouse: '',
-    // add http server params
-    httpEndpoint: '',
-    httpMethod: 'GET',
-    httpAuthType: 'NONE',
-    httpAuthConfig: '',
-    connectTimeout: 5000,
-    socketTimeout: 5000,
-    bufferSize: 4196,
-    // add udp multicast params
-    multicastAddress: '',
-    udpMulticastType: 'SOURCE',
-    maxConnections: 100,
-    // add hdfs file
-    remoteUser: 'default',
-    hdfsSitePath: '',
-    //add minio
-    secure: false
+    datawarehouse: ''
   } as IDataSourceDetail
 
   const state = reactive({
@@ -85,27 +68,13 @@ export function useForm(id?: number) {
     showMode: false,
     showDataBaseName: true,
     showJDBCConnectParameters: true,
-    showKAFKAConnectParameters: false,
-    showSocketServerParameters: false,
-    showHttpServerParameters: false,
-    showUdpMulticastParameters: false,
-    showHdfsFileParameters: false,
-    showMinioParameters: false,
-    showFtpParameters: false,
-    showSftpParameters: false,
-    showPublicKey: false,
-    showHttpEndpoint: false,
-    showHttpMethod: false,
-    showHttpAuthType: false,
-    showHttpAuthConfig: false,
-    showConnectTimeout: false,
-    showSocketTimeout: false,
-    showBufferSize: false,
-    showMulticastAddress: false,
-    showUdpMulticastType: false,
-    showMaxConnections: false,
-    showRemoteUser: false,
-    showHdfsSitePath: false,
+    showPrivateKey: false,
+    showNamespace: false,
+    showKubeConfig: false,
+    showAccessKeyId: false,
+    showAccessKeySecret: false,
+    showRegionId: false,
+    showEndpoint: false,
     rules: {
       name: {
         trigger: ['input'],
@@ -156,11 +125,8 @@ export function useForm(id?: number) {
           if (
             !state.detailForm.userName &&
             state.detailForm.type !== 'AZURESQL' &&
-            state.detailForm.type !== 'KAFKA' &&
-            state.detailForm.type !== 'SOCKET_SERVER' &&
-            state.detailForm.type !== 'HTTP_SERVER' &&
-            state.detailForm.type !== 'UDP_MULTICAST' &&
-            state.detailForm.type !== 'HDFS_FILE'
+            state.detailForm.type !== 'K8S' &&
+            state.detailForm.type !== 'ALIYUN_SERVERLESS_SPARK'
           ) {
             return new Error(t('datasource.user_name_tips'))
           }
@@ -231,14 +197,6 @@ export function useForm(id?: number) {
           }
         }
       }
-      // databaseUserName: {
-      //   trigger: ['input'],
-      //   validator() {
-      //     if (!state.detailForm.userName) {
-      //       return new Error(t('datasource.user_name_tips'))
-      //     }
-      //   }
-      // },
     } as FormRules,
     modeOptions: [
       {
@@ -283,13 +241,9 @@ export function useForm(id?: number) {
   const changeType = async (type: IDataBase, options: IDataBaseOption) => {
     state.detailForm.port = options.previousPort || options.defaultPort
     state.detailForm.type = type
-    state.showKAFKAConnectParameters = false
-    state.showSocketServerParameters = false
-    state.showHttpServerParameters = false
-    state.showUdpMulticastParameters = false
-    state.showHdfsFileParameters = false
-    state.showMinioParameters = false
-    state.requiredDataBase = type !== 'POSTGRESQL' && type !== 'ATHENA'
+
+    state.requiredDataBase =
+      type !== 'POSTGRESQL' && type !== 'ATHENA' && type !== 'DOLPHINDB'
 
     state.showHost = type !== 'ATHENA'
     state.showPort = type !== 'ATHENA'
@@ -308,99 +262,71 @@ export function useForm(id?: number) {
     } else {
       state.showPrincipal = false
     }
-    if (type === 'SSH' || type === 'ZEPPELIN' || type === 'SAGEMAKER') {
+
+    if (
+      type === 'SSH' ||
+      type === 'ZEPPELIN' ||
+      type === 'SAGEMAKER' ||
+      type === 'K8S' ||
+      type === 'ALIYUN_SERVERLESS_SPARK' ||
+      type === 'DOLPHINDB'
+    ) {
       state.showDataBaseName = false
       state.requiredDataBase = false
       state.showJDBCConnectParameters = false
-      state.showPublicKey = false
+      state.showPrivateKey = false
+      if (type === 'DOLPHINDB') {
+        state.showJDBCConnectParameters = true
+        state.showPrivateKey = false
+      }
       if (type === 'SSH') {
-        state.showPublicKey = true
+        state.showPrivateKey = true
       }
       if (type === 'ZEPPELIN') {
         state.showHost = false
         state.showPort = false
         state.showRestEndpoint = true
+      } else {
+        state.showRestEndpoint = false
       }
-      if (type === 'SAGEMAKER') {
+      if (
+        type === 'SAGEMAKER' ||
+        type === 'K8S' ||
+        type == 'ALIYUN_SERVERLESS_SPARK'
+      ) {
         state.showHost = false
         state.showPort = false
       }
-    }else if (type == 'KAFKA') {
-      state.showKAFKAConnectParameters = true
-      state.showDataBaseName = false
-      state.requiredDataBase = false
-      state.showJDBCConnectParameters = false
-      state.showPublicKey = false
-      state.showHost = false
-      state.showPort = false
-    } else if (type == 'SOCKET_SERVER') {
-      state.showSocketServerParameters = true
-      state.showDataBaseName = false
-      state.requiredDataBase = false
-      state.showJDBCConnectParameters = false
-      state.showPublicKey = false
-      state.showHost = true
-      state.showPort = true
-      state.showConnectTimeout = false
-      state.showBufferSize = true
-      state.showMaxConnections = true
-      state.showSocketTimeout = true
-    } else if (type == 'HTTP_SERVER') {
-      state.showHttpServerParameters = true
-      state.showDataBaseName = false
-      state.requiredDataBase = false
-      state.showJDBCConnectParameters = false
-      state.showPublicKey = false
-      state.showHost = true
-      state.showPort = true
-      state.showHttpEndpoint = true
-      state.showHttpMethod = true
-      state.showHttpAuthType = true
-      state.showHttpAuthConfig = true
-      state.showConnectTimeout = true
-      state.showSocketTimeout = false
-    } else if (type == 'UDP_MULTICAST') {
-      state.showUdpMulticastParameters = true
-      state.showDataBaseName = false
-      state.requiredDataBase = false
-      state.showJDBCConnectParameters = false
-      state.showPublicKey = false
-      state.showHost = false
-      state.showUdpMulticastType = true
-      state.showMulticastAddress = true
-      state.showPort = true
-      state.showConnectTimeout = true
-      state.showBufferSize = true
-    } else if (type == 'HDFS_FILE') {
-      state.showHdfsFileParameters = true
-      state.showDataBaseName = false
-      state.requiredDataBase = false
-      state.showJDBCConnectParameters = false
-      state.showPublicKey = false
-      state.showHost = false
-      state.showPort = false
-      state.showHdfsSitePath = true
-      state.showRemoteUser = true
-    } else if (type == 'MINIO') {
-      state.showMinioParameters = true
-      state.showDataBaseName = false
-      state.requiredDataBase = false
-      state.showJDBCConnectParameters = false
-    } else if (type == 'FTP') {
-      state.showFtpParameters = true
-      state.showDataBaseName = false
-      state.requiredDataBase = false
-      state.showJDBCConnectParameters = false
-    } else if (type == 'SFTP') {
-      state.showSftpParameters = true
-      state.showDataBaseName = false
-      state.requiredDataBase = false
-      state.showJDBCConnectParameters = false
+      if (type === 'K8S') {
+        state.showNamespace = true
+        state.showKubeConfig = true
+      } else {
+        state.showNamespace = false
+        state.showKubeConfig = false
+      }
+      if (type === 'ALIYUN_SERVERLESS_SPARK') {
+        state.showAccessKeyId = true
+        state.showAccessKeySecret = true
+        state.showRegionId = true
+        state.showEndpoint = true
+      } else {
+        state.showAccessKeyId = false
+        state.showAccessKeySecret = false
+        state.showRegionId = false
+        state.showEndpoint = false
+      }
     } else {
       state.showDataBaseName = true
       state.requiredDataBase = true
       state.showJDBCConnectParameters = true
-      state.showPublicKey = false
+      state.showPrivateKey = false
+      state.showRestEndpoint = false
+      state.showNamespace = false
+      state.showKubeConfig = false
+      state.showAccessKeyId = false
+      state.showAccessKeySecret = false
+      state.showRegionId = false
+      state.showEndpoint = false
     }
   }
 
@@ -560,50 +486,20 @@ export const datasourceType: IDataBaseOptionKeys = {
     label: 'SAGEMAKER',
     defaultPort: 0
   },
-  KAFKA: {
-    value: 'KAFKA',
-    label: 'KAFKA',
-    defaultPort: 9092
+  K8S: {
+    value: 'K8S',
+    label: 'K8S',
+    defaultPort: 6443
   },
-  SOCKET_SERVER: {
-    value: 'SOCKET_SERVER',
-    label: 'SOCKET_SERVER',
-    defaultPort: 9999
+  ALIYUN_SERVERLESS_SPARK: {
+    value: 'ALIYUN_SERVERLESS_SPARK',
+    label: 'ALIYUN_SERVERLESS_SPARK',
+    defaultPort: 0
   },
-  HTTP_SERVER: {
-    value: 'HTTP_SERVER',
-    label: 'HTTP_SERVER',
-    defaultPort: 8999
-  },
-  UDP_MULTICAST: {
-    value: 'UDP_MULTICAST',
-    label: 'UDP_MULTICAST',
-    defaultPort: 9990
-  },
-  HDFS_FILE: {
-    value: 'HDFS_FILE',
-    label: 'HDFS_FILE',
-    defaultPort: 8020
-  },
-  MINIO: {
-    value: 'MINIO',
-    label: 'MINIO',
-    defaultPort: 9000
-  },
-  FTP: {
-    value: 'FTP',
-    label: 'FTP',
-    defaultPort: 21
-  },
-  SFTP: {
-    value: 'SFTP',
-    label: 'SFTP',
-    defaultPort: 22
-  },
-  OPENGAUSS:  {
-    value: 'OPENGAUSS',
-    label: 'OPENGAUSS',
-    defaultPort: 5432
+  DOLPHINDB: {
+    value: 'DOLPHINDB',
+    label: 'DOLPHINDB',
+    defaultPort: 8848
   }
 }
 

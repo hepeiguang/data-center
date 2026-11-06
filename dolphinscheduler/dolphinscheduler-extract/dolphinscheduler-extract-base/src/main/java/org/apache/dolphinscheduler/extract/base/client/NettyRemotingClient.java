@@ -19,22 +19,29 @@ package org.apache.dolphinscheduler.extract.base.client;
 
 import org.apache.dolphinscheduler.common.thread.ThreadUtils;
 import org.apache.dolphinscheduler.extract.base.IRpcResponse;
+import org.apache.dolphinscheduler.extract.base.RpcMethodRetryStrategy;
+import org.apache.dolphinscheduler.extract.base.SyncRequestDto;
 import org.apache.dolphinscheduler.extract.base.config.NettyClientConfig;
-import org.apache.dolphinscheduler.extract.base.exception.RemotingException;
-import org.apache.dolphinscheduler.extract.base.exception.RemotingTimeoutException;
+import org.apache.dolphinscheduler.extract.base.exception.RemoteException;
+import org.apache.dolphinscheduler.extract.base.exception.RemoteTimeoutException;
 import org.apache.dolphinscheduler.extract.base.future.ResponseFuture;
+import org.apache.dolphinscheduler.extract.base.metrics.ClientSyncDurationMetrics;
+import org.apache.dolphinscheduler.extract.base.metrics.ClientSyncExceptionMetrics;
+import org.apache.dolphinscheduler.extract.base.metrics.RpcMetrics;
 import org.apache.dolphinscheduler.extract.base.protocal.Transporter;
 import org.apache.dolphinscheduler.extract.base.protocal.TransporterDecoder;
 import org.apache.dolphinscheduler.extract.base.protocal.TransporterEncoder;
-import org.apache.dolphinscheduler.extract.base.utils.Constants;
 import org.apache.dolphinscheduler.extract.base.utils.Host;
 import org.apache.dolphinscheduler.extract.base.utils.NettyUtils;
 
 import java.net.InetSocketAddress;
+import java.util.Arrays;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.ReentrantLock;
 
 import lombok.extern.slf4j.Slf4j;
 import io.netty.bootstrap.Bootstrap;
@@ -54,7 +61,8 @@ public class NettyRemotingClient implements AutoCloseable {
 
     private final Bootstrap bootstrap = new Bootstrap();
 
-    private final ConcurrentHashMap<Host, Channel> channels = new ConcurrentHashMap<>(128);
+    private final ReentrantLock channelsLock = new ReentrantLock();
+    private final Map<Host, Channel> channels = new ConcurrentHashMap<>();
 
     private final AtomicBoolean isStarted = new AtomicBoolean(false);
 
@@ -94,8 +102,8 @@ public class NettyRemotingClient implements AutoCloseable {
                         ch.pipeline()
                                 .addLast("client-idle-handler",
                                         new IdleStateHandler(
-                                                Constants.NETTY_CLIENT_HEART_BEAT_TIME,
                                                 0,
+                                                clientConfig.getHeartBeatIntervalMillis(),
                                                 0,
                                                 TimeUnit.MILLISECONDS))
                                 .addLast(new TransporterDecoder(), clientHandler, new TransporterEncoder());
@@ -104,14 +112,57 @@ public class NettyRemotingClient implements AutoCloseable {
         isStarted.compareAndSet(false, true);
     }
 
-    public IRpcResponse sendSync(final Host host, final Transporter transporter,
-                                 final long timeoutMillis) throws InterruptedException, RemotingException {
-        final Channel channel = getChannel(host);
-        if (channel == null) {
-            throw new RemotingException(String.format("connect to : %s fail", host));
+    public IRpcResponse sendSync(final SyncRequestDto syncRequestDto) throws RemoteException {
+        final Host host = syncRequestDto.getServerHost();
+        final Transporter transporter = syncRequestDto.getTransporter();
+        final long timeoutMillis = syncRequestDto.getTimeoutMillis() < 0 ? clientConfig.getDefaultRpcTimeoutMillis()
+                : syncRequestDto.getTimeoutMillis();
+
+        final RpcMethodRetryStrategy retryStrategy = syncRequestDto.getRetryStrategy();
+
+        int maxRetryTimes = retryStrategy.maxRetryTimes();
+        int currentExecuteTimes = 1;
+
+        while (true) {
+            final long start = System.currentTimeMillis();
+            try {
+                return doSendSync(transporter, host, timeoutMillis);
+            } catch (Exception ex) {
+                ClientSyncExceptionMetrics clientSyncExceptionMetrics =
+                        ClientSyncExceptionMetrics.of(syncRequestDto, ex);
+                RpcMetrics.recordClientSyncRequestException(clientSyncExceptionMetrics);
+
+                if (currentExecuteTimes < maxRetryTimes
+                        && Arrays.stream(retryStrategy.retryFor()).anyMatch(e -> e.isInstance(ex))) {
+                    currentExecuteTimes++;
+                    if (retryStrategy.retryInterval() > 0) {
+                        ThreadUtils.sleep(retryStrategy.retryInterval());
+                    }
+                    continue;
+                }
+
+                if (ex instanceof RemoteException) {
+                    throw (RemoteException) ex;
+                } else {
+                    throw new RemoteException("Call method to " + host + " failed", ex);
+                }
+            } finally {
+                ClientSyncDurationMetrics clientSyncDurationMetrics = ClientSyncDurationMetrics
+                        .of(syncRequestDto)
+                        .withMilliseconds(System.currentTimeMillis() - start);
+                RpcMetrics.recordClientSyncRequestDuration(clientSyncDurationMetrics);
+            }
         }
-        final long opaque = transporter.getHeader().getOpaque();
-        final ResponseFuture responseFuture = new ResponseFuture(opaque, timeoutMillis);
+    }
+
+    private IRpcResponse doSendSync(final Transporter transporter,
+                                    final Host serverHost,
+                                    long timeoutMills) throws RemoteException, InterruptedException {
+        final Channel channel = getOrCreateChannel(serverHost);
+        if (channel == null) {
+            throw new RemoteException(String.format("connect to : %s fail", serverHost));
+        }
+        final ResponseFuture responseFuture = new ResponseFuture(transporter.getHeader().getOpaque(), timeoutMills);
         channel.writeAndFlush(transporter).addListener(future -> {
             if (future.isSuccess()) {
                 responseFuture.setSendOk(true);
@@ -121,52 +172,56 @@ public class NettyRemotingClient implements AutoCloseable {
             }
             responseFuture.setCause(future.cause());
             responseFuture.putResponse(null);
-            log.error("Send Sync request {} to host {} failed", transporter, host, responseFuture.getCause());
+            log.error("Send Sync request {} to host {} failed", transporter, serverHost, responseFuture.getCause());
         });
         /*
          * sync wait for result
          */
-        IRpcResponse iRpcResponse = responseFuture.waitResponse();
-        if (iRpcResponse == null) {
-            if (responseFuture.isSendOK()) {
-                throw new RemotingTimeoutException(host.toString(), timeoutMillis, responseFuture.getCause());
-            } else {
-                throw new RemotingException(host.toString(), responseFuture.getCause());
-            }
+        final IRpcResponse iRpcResponse = responseFuture.waitResponse();
+        if (iRpcResponse != null) {
+            return iRpcResponse;
         }
-        return iRpcResponse;
+        if (responseFuture.isSendOK()) {
+            throw new RemoteTimeoutException(serverHost.toString(), timeoutMills, responseFuture.getCause());
+        } else {
+            throw new RemoteException(serverHost.toString(), responseFuture.getCause());
+        }
     }
 
-    private Channel getChannel(Host host) {
+    Channel getOrCreateChannel(Host host) {
         Channel channel = channels.get(host);
         if (channel != null && channel.isActive()) {
             return channel;
         }
-        return createChannel(host, true);
+        try {
+            channelsLock.lock();
+            channel = channels.get(host);
+            if (channel != null && channel.isActive()) {
+                return channel;
+            }
+            channel = createChannel(host);
+            channels.put(host, channel);
+        } finally {
+            channelsLock.unlock();
+        }
+        return channel;
     }
 
     /**
      * create channel
      *
-     * @param host   host
-     * @param isSync sync flag
+     * @param host host
      * @return channel
      */
-    private Channel createChannel(Host host, boolean isSync) {
+    Channel createChannel(Host host) {
         try {
-            ChannelFuture future;
-            synchronized (bootstrap) {
-                future = bootstrap.connect(new InetSocketAddress(host.getIp(), host.getPort()));
-            }
-            if (isSync) {
-                future.sync();
-            }
+            ChannelFuture future = bootstrap.connect(new InetSocketAddress(host.getIp(), host.getPort()));
+            future = future.sync();
             if (future.isSuccess()) {
-                Channel channel = future.channel();
-                channels.put(host, channel);
-                return channel;
+                return future.channel();
+            } else {
+                throw new IllegalArgumentException("connect to host: " + host + " failed", future.cause());
             }
-            throw new IllegalArgumentException("connect to host: " + host + " failed");
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new RuntimeException("Connect to host: " + host + " failed", e);
@@ -189,16 +244,16 @@ public class NettyRemotingClient implements AutoCloseable {
     }
 
     private void closeChannels() {
-        for (Channel channel : this.channels.values()) {
-            channel.close();
+        try {
+            channelsLock.lock();
+            channels.values().forEach(Channel::close);
+            channels.clear();
+        } finally {
+            channelsLock.unlock();
         }
-        this.channels.clear();
     }
 
-    public void closeChannel(Host host) {
-        Channel channel = this.channels.remove(host);
-        if (channel != null) {
-            channel.close();
-        }
+    public void onChannelInactive(final Host host) {
+        channels.remove(host);
     }
 }

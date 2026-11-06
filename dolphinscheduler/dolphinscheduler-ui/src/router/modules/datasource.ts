@@ -31,7 +31,7 @@ export default {
     {
       path: '',
       name: 'datasource-list',
-      component: () => import('@/views/datasource/list'),
+      component: components['datasource-list'],
       meta: {
         title: '数据源中心',
         activeMenu: 'datasource',

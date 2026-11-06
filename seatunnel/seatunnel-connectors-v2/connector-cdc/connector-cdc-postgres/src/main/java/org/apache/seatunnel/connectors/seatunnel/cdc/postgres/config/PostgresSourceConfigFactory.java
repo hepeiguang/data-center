@@ -19,8 +19,8 @@ package org.apache.seatunnel.connectors.seatunnel.cdc.postgres.config;
 
 import org.apache.seatunnel.api.configuration.ReadonlyConfig;
 import org.apache.seatunnel.connectors.cdc.base.config.JdbcSourceConfigFactory;
+import org.apache.seatunnel.connectors.cdc.base.option.StartupMode;
 import org.apache.seatunnel.connectors.cdc.debezium.EmbeddedDatabaseHistory;
-import org.apache.seatunnel.connectors.seatunnel.cdc.postgres.option.PostgresOptions;
 
 import io.debezium.connector.postgresql.PostgresConnector;
 
@@ -33,22 +33,25 @@ import static org.apache.seatunnel.shade.com.google.common.base.Preconditions.ch
 
 public class PostgresSourceConfigFactory extends JdbcSourceConfigFactory {
 
+    private static final long serialVersionUID = 1L;
+
     private static final String DATABASE_SERVER_NAME = "postgres_cdc_source";
 
     private static final String DRIVER_CLASS_NAME = "org.postgresql.Driver";
 
-    private String decodingPluginName = PostgresOptions.DECODING_PLUGIN_NAME.defaultValue();
+    private String decodingPluginName =
+            PostgresIncrementalSourceOptions.DECODING_PLUGIN_NAME.defaultValue();
 
-    private String slotName = PostgresOptions.SLOT_NAME.defaultValue();
+    private String slotName = PostgresIncrementalSourceOptions.SLOT_NAME.defaultValue();
 
     private List<String> schemaList;
 
     @Override
     public JdbcSourceConfigFactory fromReadonlyConfig(ReadonlyConfig config) {
         super.fromReadonlyConfig(config);
-        this.decodingPluginName = config.get(PostgresOptions.DECODING_PLUGIN_NAME);
-        this.slotName = config.get(PostgresOptions.SLOT_NAME);
-        this.schemaList = config.get(PostgresOptions.SCHEMA_NAME);
+        this.decodingPluginName = config.get(PostgresIncrementalSourceOptions.DECODING_PLUGIN_NAME);
+        this.slotName = config.get(PostgresIncrementalSourceOptions.SLOT_NAME);
+        this.schemaList = config.get(PostgresIncrementalSourceOptions.SCHEMA_NAME);
         return this;
     }
 
@@ -77,8 +80,6 @@ public class PostgresSourceConfigFactory extends JdbcSourceConfigFactory {
         props.setProperty("database.history.refer.ddl", String.valueOf(true));
 
         props.setProperty("database.tcpKeepAlive", String.valueOf(true));
-        props.setProperty("include.schema.changes", String.valueOf(false));
-
         if (schemaList != null) {
             props.setProperty("schema.include.list", String.join(",", schemaList));
         }
@@ -108,30 +109,45 @@ public class PostgresSourceConfigFactory extends JdbcSourceConfigFactory {
         if (dbzProperties != null) {
             props.putAll(dbzProperties);
         }
+        // Debezium PostgreSQL does not emit DDL records, but SeaTunnel uses this flag to enable
+        // synthetic schema records produced from pgoutput RELATION messages. Apply it after the
+        // Debezium pass-through properties so the SeaTunnel option remains authoritative.
+        props.setProperty("include.schema.changes", String.valueOf(schemaChangeEnabled));
+        if (startupConfig != null && startupConfig.getStartupMode() == StartupMode.SNAPSHOT_ONLY) {
+            props.setProperty("snapshot.mode", "initial_only");
+        } else if (startupConfig != null
+                && startupConfig.getStartupMode() == StartupMode.COMMITTED_OFFSET) {
+            props.setProperty("snapshot.mode", "never");
+        }
 
-        return new PostgresSourceConfig(
-                startupConfig,
-                stopConfig,
-                databaseList,
-                tableList,
-                splitSize,
-                splitColumn,
-                distributionFactorUpper,
-                distributionFactorLower,
-                sampleShardingThreshold,
-                inverseSamplingRate,
-                props,
-                DRIVER_CLASS_NAME,
-                hostname,
-                port,
-                username,
-                password,
-                originUrl,
-                fetchSize,
-                serverTimeZone,
-                connectTimeoutMillis,
-                connectMaxRetries,
-                connectionPoolSize,
-                exactlyOnce);
+        PostgresSourceConfig config =
+                new PostgresSourceConfig(
+                        startupConfig,
+                        stopConfig,
+                        databaseList,
+                        tableList,
+                        splitSize,
+                        splitColumn,
+                        distributionFactorUpper,
+                        distributionFactorLower,
+                        sampleShardingThreshold,
+                        inverseSamplingRate,
+                        sampleShardingAllow,
+                        props,
+                        DRIVER_CLASS_NAME,
+                        hostname,
+                        port,
+                        username,
+                        password,
+                        originUrl,
+                        fetchSize,
+                        serverTimeZone,
+                        connectTimeoutMillis,
+                        connectMaxRetries,
+                        connectionPoolSize,
+                        exactlyOnce);
+        // Propagate the enableConcurrentRead flag so the chunk splitter can skip split analysis.
+        config.setEnableConcurrentRead(this.enableConcurrentRead);
+        return config;
     }
 }

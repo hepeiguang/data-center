@@ -17,19 +17,20 @@
 
 package org.apache.seatunnel.connectors.seatunnel.jdbc.catalog.saphana;
 
+import org.apache.seatunnel.shade.org.apache.commons.lang3.StringUtils;
+
 import org.apache.seatunnel.api.configuration.ReadonlyConfig;
+import org.apache.seatunnel.api.configuration.util.ConditionExtension;
 import org.apache.seatunnel.api.configuration.util.OptionRule;
 import org.apache.seatunnel.api.configuration.util.OptionValidationException;
 import org.apache.seatunnel.api.table.catalog.Catalog;
 import org.apache.seatunnel.api.table.factory.CatalogFactory;
 import org.apache.seatunnel.api.table.factory.Factory;
 import org.apache.seatunnel.common.utils.JdbcUrlUtil;
-import org.apache.seatunnel.connectors.seatunnel.jdbc.catalog.JdbcCatalogOptions;
+import org.apache.seatunnel.connectors.seatunnel.jdbc.config.JdbcCommonOptions;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.dialect.DatabaseIdentifier;
 
 import com.google.auto.service.AutoService;
-
-import java.util.Optional;
 
 @AutoService(Factory.class)
 public class SapHanaCatalogFactory implements CatalogFactory {
@@ -41,23 +42,43 @@ public class SapHanaCatalogFactory implements CatalogFactory {
 
     @Override
     public Catalog createCatalog(String catalogName, ReadonlyConfig options) {
-        String urlWithDatabase = options.get(JdbcCatalogOptions.BASE_URL);
+        String urlWithDatabase = options.get(JdbcCommonOptions.URL);
         JdbcUrlUtil.UrlInfo urlInfo = SapHanaURLParser.parse(urlWithDatabase);
-        Optional<String> defaultDatabase = urlInfo.getDefaultDatabase();
-        if (!defaultDatabase.isPresent()) {
-            throw new OptionValidationException(JdbcCatalogOptions.BASE_URL);
-        }
         return new SapHanaCatalog(
                 catalogName,
-                options.get(JdbcCatalogOptions.USERNAME),
-                options.get(JdbcCatalogOptions.PASSWORD),
+                options.get(JdbcCommonOptions.USERNAME),
+                options.get(JdbcCommonOptions.PASSWORD),
                 urlInfo,
-                options.get(JdbcCatalogOptions.SCHEMA),
-                options.get(JdbcCatalogOptions.DRIVER));
+                options.get(JdbcCommonOptions.SCHEMA),
+                options.get(JdbcCommonOptions.DRIVER));
     }
 
     @Override
     public OptionRule optionRule() {
-        return JdbcCatalogOptions.BASE_RULE.build();
+        return JdbcCommonOptions.baseCatalogRule(new SapHanaUrlValidator()).build();
+    }
+
+    static class SapHanaUrlValidator implements ConditionExtension<String> {
+        @Override
+        public String description() {
+            return "SAP HANA JDBC URL must be a valid format (e.g. jdbc:sap://host:port)";
+        }
+
+        @Override
+        public boolean evaluate(ReadonlyConfig config, String url) {
+            if (url == null || url.trim().isEmpty()) {
+                return false;
+            }
+            try {
+                JdbcUrlUtil.UrlInfo info = SapHanaURLParser.parse(url);
+                return StringUtils.isNotBlank(info.getHost());
+            } catch (IllegalArgumentException e) {
+                throw new OptionValidationException(
+                        String.format(
+                                "Invalid SAP HANA JDBC URL format: [%s], "
+                                        + "expected pattern: jdbc:sap://host:port",
+                                url));
+            }
+        }
     }
 }

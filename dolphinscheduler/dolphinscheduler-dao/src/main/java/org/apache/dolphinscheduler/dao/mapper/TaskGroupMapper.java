@@ -54,7 +54,7 @@ public interface TaskGroupMapper extends BaseMapper<TaskGroup> {
      * @param name   name
      * @return task group
      */
-    TaskGroup queryByName(@Param("userId") String userId, @Param("name") String name);
+    TaskGroup queryByName(@Param("userId") int userId, @Param("name") String name);
 
     IPage<TaskGroup> queryTaskGroupPagingByProjectCode(Page<TaskGroup> page, @Param("projectCode") Long projectCode);
 
@@ -64,7 +64,7 @@ public interface TaskGroupMapper extends BaseMapper<TaskGroup> {
      * @param userId
      * @return
      */
-    List<TaskGroup> listAuthorizedResource(@Param("userId") String userId);
+    List<TaskGroup> listAuthorizedResource(@Param("userId") int userId);
 
     List<TaskGroup> selectByProjectCode(@Param("projectCode") long projectCode);
 

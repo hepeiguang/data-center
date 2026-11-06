@@ -47,7 +47,6 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.Random;
 
 public class ExcelGenerator {
     private final List<Integer> sinkColumnsIndexInRow;
@@ -62,8 +61,26 @@ public class ExcelGenerator {
     private final CellStyle dateCellStyle;
     private final CellStyle dateTimeCellStyle;
     private final CellStyle timeCellStyle;
-    private final Sheet st;
-    private int row = 0;
+    private Sheet st;
+
+    private final int sheetMaxRows;
+    private static final int HEADER_ROWS = 1;
+
+    private int currentSheetIndex = 0;
+    private int currentRowInSheet = 0;
+
+    private void createNewSheet() {
+        currentSheetIndex++;
+        String newSheetName = String.format("Sheet%d", currentSheetIndex);
+        this.st = wb.createSheet(newSheetName);
+        Row headerRow = st.createRow(0);
+        int index = 0;
+        for (Integer i : sinkColumnsIndexInRow) {
+            String fieldName = seaTunnelRowType.getFieldName(i);
+            headerRow.createCell(index++).setCellValue(fieldName);
+        }
+        currentRowInSheet = 0;
+    }
 
     public ExcelGenerator(
             List<Integer> sinkColumnsIndexInRow,
@@ -77,37 +94,38 @@ public class ExcelGenerator {
             wb = new SXSSFWorkbook();
         }
         Optional<String> sheetName = Optional.ofNullable(fileSinkConfig.getSheetName());
-        Random random = new Random();
-        this.st =
-                wb.createSheet(
-                        sheetName.orElseGet(() -> String.format("Sheet%d", random.nextInt())));
-        Row row = st.createRow(this.row);
+        this.st = wb.createSheet(sheetName.orElseGet(() -> String.format("Sheet%d", 0)));
+        Row row = st.createRow(0);
+        int index = 0;
         for (Integer i : sinkColumnsIndexInRow) {
             String fieldName = seaTunnelRowType.getFieldName(i);
-            row.createCell(i).setCellValue(fieldName);
+            row.createCell(index++).setCellValue(fieldName);
         }
         this.dateFormat = fileSinkConfig.getDateFormat();
         this.dateTimeFormat = fileSinkConfig.getDatetimeFormat();
         this.timeFormat = fileSinkConfig.getTimeFormat();
         this.fieldDelimiter = fileSinkConfig.getFieldDelimiter();
+        this.sheetMaxRows = fileSinkConfig.getSheetMaxRows();
         wholeNumberCellStyle = createStyle(wb, "General");
         stringCellStyle = createStyle(wb, "@");
         dateCellStyle = createStyle(wb, dateFormat.getValue());
         dateTimeCellStyle = createStyle(wb, dateTimeFormat.getValue());
         timeCellStyle = createStyle(wb, timeFormat.getValue());
-
-        this.row += 1;
     }
 
     public void writeData(SeaTunnelRow seaTunnelRow) {
-        Row excelRow = this.st.createRow(this.row);
+        if (currentRowInSheet >= sheetMaxRows - HEADER_ROWS) {
+            createNewSheet();
+        }
+        Row excelRow = this.st.createRow(currentRowInSheet + HEADER_ROWS);
         SeaTunnelDataType<?>[] fieldTypes = seaTunnelRowType.getFieldTypes();
+        int index = 0;
         for (Integer i : sinkColumnsIndexInRow) {
-            Cell cell = excelRow.createCell(i);
-            Object value = seaTunnelRow.getField(i);
+            Cell cell = excelRow.createCell(index++);
+            Object value = i < seaTunnelRow.getArity() ? seaTunnelRow.getField(i) : null;
             setCellValue(fieldTypes[i], seaTunnelRowType.getFieldName(i), value, cell);
         }
-        this.row += 1;
+        currentRowInSheet++;
     }
 
     public void flushAndCloseExcel(OutputStream output) throws IOException {

@@ -17,8 +17,6 @@
 
 package org.apache.seatunnel.connectors.seatunnel.cdc.postgres;
 
-import org.apache.seatunnel.shade.com.google.common.collect.Lists;
-
 import org.apache.seatunnel.common.utils.SeaTunnelException;
 import org.apache.seatunnel.connectors.cdc.base.config.JdbcSourceConfigFactory;
 import org.apache.seatunnel.connectors.seatunnel.cdc.postgres.config.PostgresSourceConfigFactory;
@@ -30,21 +28,38 @@ import org.apache.seatunnel.e2e.common.container.EngineType;
 import org.apache.seatunnel.e2e.common.container.TestContainer;
 import org.apache.seatunnel.e2e.common.junit.DisabledOnContainer;
 import org.apache.seatunnel.e2e.common.junit.TestContainerExtension;
+import org.apache.seatunnel.e2e.common.util.DependencyJar;
 import org.apache.seatunnel.e2e.common.util.JobIdGenerator;
 
+import org.apache.kafka.clients.admin.AdminClient;
+import org.apache.kafka.clients.admin.AdminClientConfig;
+import org.apache.kafka.clients.admin.NewTopic;
+import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.clients.consumer.OffsetResetStrategy;
+import org.apache.kafka.common.IsolationLevel;
+import org.apache.kafka.common.TopicPartition;
+
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestTemplate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.Container;
+import org.testcontainers.containers.KafkaContainer;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.lifecycle.Startables;
 import org.testcontainers.utility.DockerImageName;
+import org.testcontainers.utility.DockerLoggerFactory;
 
+import io.debezium.connector.postgresql.connection.Lsn;
 import io.debezium.jdbc.JdbcConnection;
 import io.debezium.relational.TableId;
 import lombok.extern.slf4j.Slf4j;
@@ -59,19 +74,25 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.awaitility.Awaitility.await;
-import static org.junit.Assert.assertNotNull;
+import static org.awaitility.Awaitility.given;
 
 @Slf4j
 @DisabledOnContainer(
@@ -93,18 +114,53 @@ public class PostgresCDCIT extends TestSuiteBase implements TestResource {
     private static final String SOURCE_TABLE_1 = "postgres_cdc_table_1";
     private static final String SOURCE_TABLE_2 = "postgres_cdc_table_2";
     private static final String SOURCE_TABLE_3 = "postgres_cdc_table_3";
+    private static final String SOURCE_TABLE_4 = "postgres_cdc_table_4";
+    private static final String SOURCE_TABLE_5 = "postgres_cdc_table_5";
     private static final String SINK_TABLE_1 = "sink_postgres_cdc_table_1";
     private static final String SINK_TABLE_2 = "sink_postgres_cdc_table_2";
     private static final String SINK_TABLE_3 = "sink_postgres_cdc_table_3";
+    private static final String SINK_TABLE_4 = "sink_postgres_cdc_table_4";
+    private static final String SINK_TABLE_5 = "sink_postgres_cdc_table_5";
 
     private static final String SOURCE_TABLE_NO_PRIMARY_KEY = "full_types_no_primary_key";
 
-    private static final String SOURCE_SQL_TEMPLATE = "select * from %s.%s order by id";
+    private static final String SOURCE_TABLE_NO_PRIMARY_KEY_DEBEZIUM =
+            "full_types_no_primary_key_with_debezium";
 
+    private static final String SOURCE_SQL_TEMPLATE = "select * from %s.%s order by id";
+    private static final String GENERATED_SLOT_PREFIX = "seatunnel_";
+    /**
+     * Debezium JSON change events can lag under CI load, so snapshot and DML record waits use the
+     * same timeout budget.
+     */
+    private static final long DEBEZIUM_JSON_RECORD_WAIT_TIMEOUT_SECONDS = 180L;
+
+    /**
+     * Budget for assertions made immediately after a savepoint restore.
+     *
+     * <p>The plain 60s used elsewhere in this class only has to cover a CDC round trip on an
+     * already-running job. A post-restore assertion additionally has to absorb the restore itself -
+     * cluster restart, connector re-initialization and replication slot reattach - before the round
+     * trip it asserts on can even begin. On a loaded runner the restore alone can consume the whole
+     * 60s, so these waits get their own budget rather than sharing the round-trip one.
+     */
+    private static final long RESTORE_ASSERT_TIMEOUT_MILLIS = 180000L;
+
+    // kafka container
+    private static final String KAFKA_IMAGE_NAME = "confluentinc/cp-kafka:7.0.9";
+
+    private static final String KAFKA_HOST = "kafka_e2e";
+
+    private static KafkaContainer KAFKA_CONTAINER;
+
+    private static KafkaConsumer<String, String> kafkaConsumer;
+
+    private static final String DEBEZIUM_JSON_TOPIC = "debezium_json_topic";
     // use newer version of postgresql image to support pgoutput plugin
     // when testing postgres 13, only 13-alpine supports both amd64 and arm64
     protected static final DockerImageName PG_IMAGE =
             DockerImageName.parse("debezium/postgres:11").asCompatibleSubstituteFor("postgres");
+    private static final String POSTGRES_CDC_PLUGIN_LIB = "/tmp/seatunnel/plugins/Postgres-CDC/lib";
 
     public static final PostgreSQLContainer<?> POSTGRES_CONTAINER =
             new PostgreSQLContainer<>(PG_IMAGE)
@@ -122,45 +178,203 @@ public class PostgresCDCIT extends TestSuiteBase implements TestResource {
                             "-c",
                             "max_replication_slots=20");
 
-    private String driverUrl() {
-        return "https://repo1.maven.org/maven2/org/postgresql/postgresql/42.5.1/postgresql-42.5.1.jar";
+    private void createKafkaContainer() {
+        KAFKA_CONTAINER =
+                new KafkaContainer(DockerImageName.parse(KAFKA_IMAGE_NAME))
+                        .withNetwork(NETWORK)
+                        .withNetworkAliases(KAFKA_HOST)
+                        .withLogConsumer(
+                                new Slf4jLogConsumer(
+                                        DockerLoggerFactory.getLogger(KAFKA_IMAGE_NAME)));
     }
 
     @TestContainerExtension
     protected final ContainerExtendedFactory extendedFactory =
-            container -> {
-                Container.ExecResult extraCommands =
-                        container.execInContainer(
-                                "bash",
-                                "-c",
-                                "mkdir -p /tmp/seatunnel/plugins/Postgres-CDC/lib && cd /tmp/seatunnel/plugins/Postgres-CDC/lib && wget "
-                                        + driverUrl());
-                Assertions.assertEquals(0, extraCommands.getExitCode(), extraCommands.getStderr());
-            };
+            container ->
+                    DependencyJar.of(org.postgresql.Driver.class)
+                            .copyTo(container, POSTGRES_CDC_PLUGIN_LIB);
 
     @BeforeAll
     @Override
     public void startUp() {
         log.info("The second stage: Starting Postgres containers...");
-        POSTGRES_CONTAINER.setPortBindings(
-                Lists.newArrayList(
-                        String.format(
-                                "%s:%s",
-                                PostgreSQLContainer.POSTGRESQL_PORT,
-                                PostgreSQLContainer.POSTGRESQL_PORT)));
         Startables.deepStart(Stream.of(POSTGRES_CONTAINER)).join();
+
         log.info("Postgres Containers are started");
         initializePostgresTable(POSTGRES_CONTAINER, "inventory");
+
+        LOG.info("The third stage: Starting Kafka containers...");
+        createKafkaContainer();
+        Startables.deepStart(Stream.of(KAFKA_CONTAINER)).join();
+        LOG.info("Kafka Containers are started");
+
+        given().ignoreExceptions()
+                .atLeast(100, TimeUnit.MILLISECONDS)
+                .pollInterval(500, TimeUnit.MILLISECONDS)
+                .atMost(180, TimeUnit.SECONDS)
+                .untilAsserted(this::createTopic);
+        LOG.info("Kafka create topic: " + DEBEZIUM_JSON_TOPIC);
+    }
+
+    // Initialize the kafka Topic
+    private void createTopic() {
+        Properties props = new Properties();
+        props.put(
+                AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, KAFKA_CONTAINER.getBootstrapServers());
+
+        try (AdminClient adminClient = AdminClient.create(props)) {
+            // Create a new topic
+            NewTopic newTopic = new NewTopic(DEBEZIUM_JSON_TOPIC, 1, (short) 1);
+
+            // Create the topic (async operation)
+            adminClient.createTopics(Collections.singleton(newTopic)).all().get();
+
+            System.out.println("Topic " + DEBEZIUM_JSON_TOPIC + " created successfully");
+        } catch (InterruptedException | ExecutionException e) {
+            System.err.println("Error creating topic: " + e.getMessage());
+        }
+    }
+    // Initialize the kafka Consumer
+
+    private Properties kafkaConsumerConfig() {
+        Properties props = new Properties();
+        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, KAFKA_CONTAINER.getBootstrapServers());
+        props.put(
+                ConsumerConfig.AUTO_OFFSET_RESET_CONFIG,
+                OffsetResetStrategy.EARLIEST.toString().toLowerCase());
+        props.put(
+                ConsumerConfig.ISOLATION_LEVEL_CONFIG,
+                IsolationLevel.READ_COMMITTED.name().toLowerCase());
+        props.put(
+                ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG,
+                "org.apache.kafka.common.serialization.StringDeserializer");
+        props.put(
+                ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG,
+                "org.apache.kafka.common.serialization.StringDeserializer");
+
+        props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, true);
+        return props;
+    }
+
+    /**
+     * Replication slots are shared inside the reused Postgres test container, so each CDC job needs
+     * an isolated slot to avoid cross-test collisions when streaming jobs overlap.
+     */
+    private String createSlotName() {
+        return GENERATED_SLOT_PREFIX + Long.toHexString(JobIdGenerator.newJobId());
+    }
+
+    private String toSlotVariable(String slotName) {
+        return "slot_name=" + slotName;
+    }
+
+    @BeforeEach
+    public void beforeEach() {
+        cleanupGeneratedReplicationSlots();
+    }
+
+    @AfterEach
+    public void afterEach() {
+        cleanupGeneratedReplicationSlots();
+    }
+
+    private List<String> getKafkaData() {
+        long endOffset;
+        long lastProcessedOffset = -1L;
+        List<String> data = new ArrayList<>();
+        kafkaConsumer.subscribe(Collections.singletonList(PostgresCDCIT.DEBEZIUM_JSON_TOPIC));
+        Map<TopicPartition, Long> offsets =
+                kafkaConsumer.endOffsets(
+                        Collections.singletonList(
+                                new TopicPartition(PostgresCDCIT.DEBEZIUM_JSON_TOPIC, 0)));
+        endOffset = offsets.entrySet().iterator().next().getValue();
+        log.info("End offset: {}", endOffset);
+        do {
+            ConsumerRecords<String, String> consumerRecords =
+                    kafkaConsumer.poll(Duration.ofMillis(1000));
+            for (ConsumerRecord<String, String> record : consumerRecords) {
+                data.add(record.value());
+                lastProcessedOffset = record.offset();
+            }
+            log.info("Data size: {}", data.size());
+        } while (lastProcessedOffset < endOffset - 1);
+
+        return data;
+    }
+
+    @TestTemplate
+    @DisabledOnContainer(
+            value = {},
+            type = {EngineType.SPARK, EngineType.FLINK},
+            disabledReason = "Currently Only support Zeta engine")
+    public void testPostgresCdcWithDebeziumJsonFormat(TestContainer container) {
+        String slotName = createSlotName();
+        String slotVariable = toSlotVariable(slotName);
+        try {
+
+            log.info(
+                    "Table {} has {} rows.",
+                    SOURCE_TABLE_NO_PRIMARY_KEY_DEBEZIUM,
+                    query(getQuerySQL(POSTGRESQL_SCHEMA, SOURCE_TABLE_NO_PRIMARY_KEY_DEBEZIUM)));
+
+            Properties props = kafkaConsumerConfig();
+            props.put(ConsumerConfig.GROUP_ID_CONFIG, "group-" + slotName);
+            kafkaConsumer = new KafkaConsumer<>(props);
+
+            CompletableFuture.supplyAsync(
+                    () -> {
+                        try {
+                            container.executeJob(
+                                    "/postgrescdc_to_postgres_with_debezium_to_kafka.conf",
+                                    Collections.singletonList(slotVariable));
+                        } catch (Exception e) {
+                            log.error("Commit task exception :" + e.getMessage());
+                            throw new RuntimeException(e);
+                        }
+                        return null;
+                    });
+            AtomicReference<Integer> dataSize = new AtomicReference<>(0);
+
+            await().atMost(DEBEZIUM_JSON_RECORD_WAIT_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+                    .untilAsserted(
+                            () -> {
+                                dataSize.updateAndGet(v -> v + getKafkaData().size());
+                                Assertions.assertEquals(1, dataSize.get());
+                            });
+            // The snapshot row can reach Kafka before the WAL stream is fully attached.
+            // Wait for the replication slot to become active so the following DML is emitted as
+            // incremental change events instead of being skipped during the snapshot handoff.
+            waitForReplicationSlotActive(slotName);
+            // Keep each row-level mutation isolated so the exactly-once Kafka sink does not
+            // collapse same-key changes into only the final visible state under CI pressure.
+            insertSourceTableRow(POSTGRESQL_SCHEMA, SOURCE_TABLE_NO_PRIMARY_KEY_DEBEZIUM, 2);
+            awaitKafkaRecordCount(dataSize, 2);
+            insertSourceTableRow(POSTGRESQL_SCHEMA, SOURCE_TABLE_NO_PRIMARY_KEY_DEBEZIUM, 3);
+            awaitKafkaRecordCount(dataSize, 3);
+            deleteSourceTableRow(POSTGRESQL_SCHEMA, SOURCE_TABLE_NO_PRIMARY_KEY_DEBEZIUM, 2);
+            awaitKafkaRecordCount(dataSize, 4);
+            updateSourceTableBigField(
+                    POSTGRESQL_SCHEMA, SOURCE_TABLE_NO_PRIMARY_KEY_DEBEZIUM, 3, 10000);
+            awaitKafkaRecordCount(dataSize, 5);
+        } finally {
+            clearTable(POSTGRESQL_SCHEMA, SOURCE_TABLE_NO_PRIMARY_KEY_DEBEZIUM);
+            if (kafkaConsumer != null) {
+                kafkaConsumer.close();
+            }
+        }
     }
 
     @TestTemplate
     public void testMPostgresCdcCheckDataE2e(TestContainer container) {
+        String slotVariable = toSlotVariable(createSlotName());
 
         try {
             CompletableFuture.supplyAsync(
                     () -> {
                         try {
-                            container.executeJob("/postgrescdc_to_postgres.conf");
+                            container.executeJob(
+                                    "/postgrescdc_to_postgres.conf",
+                                    Collections.singletonList(slotVariable));
                         } catch (Exception e) {
                             log.error("Commit task exception :" + e.getMessage());
                             throw new RuntimeException(e);
@@ -198,15 +412,334 @@ public class PostgresCDCIT extends TestSuiteBase implements TestResource {
             value = {},
             type = {EngineType.SPARK, EngineType.FLINK},
             disabledReason =
+                    "This case validates bounded completion and manually cancels a streaming job, which is currently only supported by the zeta engine.")
+    public void testPostgresCdcSnapshotOnlyAndCommittedOffsetStartupModes(TestContainer container)
+            throws IOException, InterruptedException, ExecutionException, TimeoutException {
+        String snapshotSlotName = createSlotName();
+        String snapshotSlotVariable = toSlotVariable(snapshotSlotName);
+        String committedSlotName = createSlotName();
+        String committedSlotVariable = toSlotVariable(committedSlotName);
+        Long seedJobId = JobIdGenerator.newJobId();
+        Long committedOffsetJobId = JobIdGenerator.newJobId();
+        CompletableFuture<Void> seedJob = null;
+        CompletableFuture<Void> committedOffsetJob = null;
+
+        try {
+            clearTable(POSTGRESQL_SCHEMA, SOURCE_TABLE_1);
+            clearTable(POSTGRESQL_SCHEMA, SINK_TABLE_1);
+            insertSourceTableRow(POSTGRESQL_SCHEMA, SOURCE_TABLE_1, 10);
+
+            container.executeJob(
+                    "/postgrescdc_to_postgres_snapshot_only.conf",
+                    Collections.singletonList(snapshotSlotVariable));
+            Assertions.assertIterableEquals(
+                    query("select * from " + POSTGRESQL_SCHEMA + "." + SOURCE_TABLE_1),
+                    query("select * from " + POSTGRESQL_SCHEMA + "." + SINK_TABLE_1));
+
+            List<List<Object>> snapshotOnlySinkRows =
+                    query("select * from " + POSTGRESQL_SCHEMA + "." + SINK_TABLE_1);
+            insertSourceTableRow(POSTGRESQL_SCHEMA, SOURCE_TABLE_1, 11);
+            TimeUnit.SECONDS.sleep(5);
+            Assertions.assertIterableEquals(
+                    snapshotOnlySinkRows,
+                    query("select * from " + POSTGRESQL_SCHEMA + "." + SINK_TABLE_1));
+            Assertions.assertFalse(
+                    replicationSlotExists(snapshotSlotName),
+                    "Snapshot-only startup must not create or retain a replication slot");
+
+            clearTable(POSTGRESQL_SCHEMA, SINK_TABLE_1);
+            createLogicalReplicationSlot(committedSlotName);
+
+            seedJob =
+                    CompletableFuture.runAsync(
+                            () -> {
+                                try {
+                                    container.executeJob(
+                                            "/postgrescdc_to_postgres_committed_offset.conf",
+                                            String.valueOf(seedJobId),
+                                            committedSlotVariable);
+                                } catch (Exception e) {
+                                    log.error("Seed task exception :" + e.getMessage());
+                                    throw new RuntimeException(e);
+                                }
+                            });
+            CompletableFuture<Void> runningSeedJob = seedJob;
+            waitForReplicationSlotActive(committedSlotName);
+            insertSourceTableRow(POSTGRESQL_SCHEMA, SOURCE_TABLE_1, 12);
+            await().pollInterval(1, TimeUnit.SECONDS)
+                    .atMost(60000, TimeUnit.MILLISECONDS)
+                    .untilAsserted(
+                            () -> {
+                                assertJobHasNoAsyncFailure(runningSeedJob);
+                                List<List<Object>> seedRows =
+                                        query(
+                                                "select * from "
+                                                        + POSTGRESQL_SCHEMA
+                                                        + "."
+                                                        + SINK_TABLE_1
+                                                        + " where id = 12");
+                                if (seedRows.isEmpty()) {
+                                    updateSourceTableBigField(
+                                            POSTGRESQL_SCHEMA, SOURCE_TABLE_1, 12, 2147483646);
+                                }
+                                Assertions.assertEquals(1, seedRows.size());
+                            });
+            String postSeedLsn = getCurrentWalLsn();
+            await().atMost(30000, TimeUnit.MILLISECONDS)
+                    .untilAsserted(
+                            () ->
+                                    Assertions.assertTrue(
+                                            isLsnGreaterThanOrEqual(
+                                                    getReplicationSlotCommittedLsn(
+                                                            committedSlotName),
+                                                    postSeedLsn)));
+            container.cancelJob(String.valueOf(seedJobId));
+            seedJob.get(30, TimeUnit.SECONDS);
+            await().atMost(30000, TimeUnit.MILLISECONDS)
+                    .untilAsserted(
+                            () ->
+                                    Assertions.assertFalse(
+                                            isReplicationSlotActive(committedSlotName)));
+
+            clearTable(POSTGRESQL_SCHEMA, SINK_TABLE_1);
+            insertSourceTableRow(POSTGRESQL_SCHEMA, SOURCE_TABLE_1, 13);
+
+            committedOffsetJob =
+                    CompletableFuture.runAsync(
+                            () -> {
+                                try {
+                                    container.executeJob(
+                                            "/postgrescdc_to_postgres_committed_offset.conf",
+                                            String.valueOf(committedOffsetJobId),
+                                            committedSlotVariable);
+                                } catch (Exception e) {
+                                    log.error("Commit task exception :" + e.getMessage());
+                                    throw new RuntimeException(e);
+                                }
+                            });
+
+            CompletableFuture<Void> runningCommittedOffsetJob = committedOffsetJob;
+            await().atMost(60000, TimeUnit.MILLISECONDS)
+                    .untilAsserted(
+                            () -> {
+                                assertJobHasNoAsyncFailure(runningCommittedOffsetJob);
+                                Assertions.assertEquals(
+                                        1,
+                                        query(
+                                                        "select * from "
+                                                                + POSTGRESQL_SCHEMA
+                                                                + "."
+                                                                + SINK_TABLE_1
+                                                                + " where id = 13")
+                                                .size());
+                                Assertions.assertTrue(
+                                        query(
+                                                        "select * from "
+                                                                + POSTGRESQL_SCHEMA
+                                                                + "."
+                                                                + SINK_TABLE_1
+                                                                + " where id = 12")
+                                                .isEmpty());
+                            });
+
+            insertSourceTableRow(POSTGRESQL_SCHEMA, SOURCE_TABLE_1, 14);
+            await().atMost(60000, TimeUnit.MILLISECONDS)
+                    .untilAsserted(
+                            () -> {
+                                assertJobHasNoAsyncFailure(runningCommittedOffsetJob);
+                                List<List<Object>> insertedRows =
+                                        query(
+                                                "select f_big from "
+                                                        + POSTGRESQL_SCHEMA
+                                                        + "."
+                                                        + SINK_TABLE_1
+                                                        + " where id = 14");
+                                if (!Collections.singletonList(Collections.singletonList(10000L))
+                                        .equals(insertedRows)) {
+                                    updateSourceTableBigField(
+                                            POSTGRESQL_SCHEMA, SOURCE_TABLE_1, 14, 10000);
+                                }
+                                Assertions.assertEquals(
+                                        Collections.singletonList(
+                                                Collections.singletonList(10000L)),
+                                        insertedRows);
+                            });
+            deleteSourceTableRow(POSTGRESQL_SCHEMA, SOURCE_TABLE_1, 13);
+
+            await().atMost(60000, TimeUnit.MILLISECONDS)
+                    .untilAsserted(
+                            () -> {
+                                assertJobHasNoAsyncFailure(runningCommittedOffsetJob);
+                                Assertions.assertTrue(
+                                        query(
+                                                        "select * from "
+                                                                + POSTGRESQL_SCHEMA
+                                                                + "."
+                                                                + SINK_TABLE_1
+                                                                + " where id in (10, 11, 12, 13)")
+                                                .isEmpty());
+                                Assertions.assertEquals(
+                                        Collections.singletonList(
+                                                Collections.singletonList(10000L)),
+                                        query(
+                                                "select f_big from "
+                                                        + POSTGRESQL_SCHEMA
+                                                        + "."
+                                                        + SINK_TABLE_1
+                                                        + " where id = 14"));
+                            });
+
+            Assertions.assertEquals(
+                    0, container.savepointJob(String.valueOf(committedOffsetJobId)).getExitCode());
+            committedOffsetJob.get(30, TimeUnit.SECONDS);
+            // The completed job can retain the replication slot briefly after savepoint creation.
+            // Wait for that connection to close so the next active state belongs to the restored
+            // job.
+            await().atMost(30000, TimeUnit.MILLISECONDS)
+                    .untilAsserted(
+                            () ->
+                                    Assertions.assertFalse(
+                                            isReplicationSlotActive(committedSlotName)));
+
+            committedOffsetJob =
+                    CompletableFuture.runAsync(
+                            () -> {
+                                try {
+                                    container.restoreJob(
+                                            "/postgrescdc_to_postgres_committed_offset.conf",
+                                            String.valueOf(committedOffsetJobId),
+                                            committedSlotVariable);
+                                } catch (Exception e) {
+                                    log.error("Restore committed-offset task exception", e);
+                                    throw new RuntimeException(e);
+                                }
+                            });
+            CompletableFuture<Void> restoredCommittedOffsetJob = committedOffsetJob;
+            // Restoring the checkpoint and reconnecting the existing replication slot can take
+            // longer on shared GitHub runners than the initial CDC startup.
+            waitForReplicationSlotActive(committedSlotName);
+            // Insert only after the restored replication connection is active so this CDC record
+            // is not written before the restored slot can consume it.
+            insertSourceTableRow(POSTGRESQL_SCHEMA, SOURCE_TABLE_1, 15);
+            await().atMost(RESTORE_ASSERT_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS)
+                    .untilAsserted(
+                            () -> {
+                                assertJobHasNoAsyncFailure(restoredCommittedOffsetJob);
+                                Assertions.assertEquals(
+                                        1,
+                                        query(
+                                                        "select * from "
+                                                                + POSTGRESQL_SCHEMA
+                                                                + "."
+                                                                + SINK_TABLE_1
+                                                                + " where id = 15")
+                                                .size());
+                            });
+        } finally {
+            try {
+                try {
+                    container.cancelJob(String.valueOf(seedJobId));
+                } catch (Exception e) {
+                    log.warn("Failed to cancel committed-offset seed job", e);
+                }
+                try {
+                    container.cancelJob(String.valueOf(committedOffsetJobId));
+                } catch (Exception e) {
+                    log.warn("Failed to cancel committed-offset test job", e);
+                }
+                if (seedJob != null && !seedJob.isDone()) {
+                    seedJob.get(30, TimeUnit.SECONDS);
+                }
+                if (committedOffsetJob != null) {
+                    committedOffsetJob.get(30, TimeUnit.SECONDS);
+                }
+            } finally {
+                clearTable(POSTGRESQL_SCHEMA, SOURCE_TABLE_1);
+                clearTable(POSTGRESQL_SCHEMA, SINK_TABLE_1);
+            }
+        }
+    }
+
+    @TestTemplate
+    @DisabledOnContainer(
+            value = {},
+            type = {EngineType.SPARK, EngineType.FLINK},
+            disabledReason =
+                    "Heartbeat action query is currently only supported by the zeta engine.")
+    public void testMPostgresCdcCheckDataE2eWithHeartbeat(TestContainer container) {
+        String slotVariable = toSlotVariable(createSlotName());
+        executeSql(
+                "CREATE TABLE IF NOT EXISTS "
+                        + POSTGRESQL_SCHEMA
+                        + ".heartbeat ("
+                        + "  ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
+                        + ");");
+        clearTable(POSTGRESQL_SCHEMA, "heartbeat");
+
+        try {
+            CompletableFuture.supplyAsync(
+                    () -> {
+                        try {
+                            container.executeJob(
+                                    "/postgrescdc_to_postgres_with_heartbeat.conf",
+                                    Collections.singletonList(slotVariable));
+                        } catch (Exception e) {
+                            log.error("Commit task exception :" + e.getMessage());
+                            throw new RuntimeException(e);
+                        }
+                        return null;
+                    });
+            await().atMost(60000, TimeUnit.MILLISECONDS)
+                    .untilAsserted(
+                            () -> {
+                                Assertions.assertIterableEquals(
+                                        query(getQuerySQL(POSTGRESQL_SCHEMA, SOURCE_TABLE_1)),
+                                        query(getQuerySQL(POSTGRESQL_SCHEMA, SINK_TABLE_1)));
+                            });
+
+            // insert update delete
+            upsertDeleteSourceTable(POSTGRESQL_SCHEMA, SOURCE_TABLE_1);
+
+            // stream stage
+            await().atMost(60000, TimeUnit.MILLISECONDS)
+                    .untilAsserted(
+                            () -> {
+                                Assertions.assertIterableEquals(
+                                        query(getQuerySQL(POSTGRESQL_SCHEMA, SOURCE_TABLE_1)),
+                                        query(getQuerySQL(POSTGRESQL_SCHEMA, SINK_TABLE_1)));
+                            });
+
+            await().atMost(10000, TimeUnit.MILLISECONDS)
+                    .untilAsserted(
+                            () -> {
+                                List<List<Object>> query =
+                                        query("SELECT * FROM " + POSTGRESQL_SCHEMA + ".heartbeat");
+                                Assertions.assertFalse(query.isEmpty());
+                            });
+        } finally {
+            // Clear related content to ensure that multiple operations are not affected
+            clearTable(POSTGRESQL_SCHEMA, SOURCE_TABLE_1);
+            clearTable(POSTGRESQL_SCHEMA, SINK_TABLE_1);
+        }
+    }
+
+    @TestTemplate
+    @DisabledOnContainer(
+            value = {},
+            type = {EngineType.SPARK, EngineType.FLINK},
+            disabledReason =
                     "This case requires obtaining the task health status and manually canceling the canceled task, which is currently only supported by the zeta engine.")
     public void testMPostgresCdcMetadataTrans(TestContainer container) throws InterruptedException {
 
         Long jobId = JobIdGenerator.newJobId();
+        String slotVariable = toSlotVariable(createSlotName());
         CompletableFuture.runAsync(
                 () -> {
                     try {
                         container.executeJob(
-                                "/postgrescdc_to_postgres.conf", String.valueOf(jobId));
+                                "/postgrescdc_to_postgres.conf",
+                                String.valueOf(jobId),
+                                slotVariable);
                     } catch (Exception e) {
                         log.error("Commit task exception :" + e.getMessage());
                         throw new RuntimeException(e);
@@ -242,13 +775,15 @@ public class PostgresCDCIT extends TestSuiteBase implements TestResource {
             type = {EngineType.SPARK},
             disabledReason = "Currently SPARK do not support cdc")
     public void testPostgresCdcMultiTableE2e(TestContainer container) {
+        String slotVariable = toSlotVariable(createSlotName());
 
         try {
             CompletableFuture.supplyAsync(
                     () -> {
                         try {
                             container.executeJob(
-                                    "/pgcdc_to_pg_with_multi_table_mode_two_table.conf");
+                                    "/pgcdc_to_pg_with_multi_table_mode_two_table.conf",
+                                    Collections.singletonList(slotVariable));
                         } catch (Exception e) {
                             log.error("Commit task exception :" + e.getMessage());
                             throw new RuntimeException(e);
@@ -328,13 +863,15 @@ public class PostgresCDCIT extends TestSuiteBase implements TestResource {
     public void testMultiTableWithRestore(TestContainer container)
             throws IOException, InterruptedException {
         Long jobId = JobIdGenerator.newJobId();
+        String slotVariable = toSlotVariable(createSlotName());
         try {
             CompletableFuture.supplyAsync(
                     () -> {
                         try {
                             return container.executeJob(
                                     "/pgcdc_to_pg_with_multi_table_mode_one_table.conf",
-                                    String.valueOf(jobId));
+                                    String.valueOf(jobId),
+                                    slotVariable);
                         } catch (Exception e) {
                             log.error("Commit task exception :" + e.getMessage());
                             throw new RuntimeException(e);
@@ -368,7 +905,8 @@ public class PostgresCDCIT extends TestSuiteBase implements TestResource {
                         try {
                             container.restoreJob(
                                     "/pgcdc_to_pg_with_multi_table_mode_two_table.conf",
-                                    String.valueOf(jobId));
+                                    String.valueOf(jobId),
+                                    slotVariable);
                         } catch (Exception e) {
                             log.error("Commit task exception :" + e.getMessage());
                             throw new RuntimeException(e);
@@ -379,7 +917,7 @@ public class PostgresCDCIT extends TestSuiteBase implements TestResource {
             upsertDeleteSourceTable(POSTGRESQL_SCHEMA, SOURCE_TABLE_2);
 
             // stream stage
-            await().atMost(60000, TimeUnit.MILLISECONDS)
+            await().atMost(RESTORE_ASSERT_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS)
                     .untilAsserted(
                             () ->
                                     Assertions.assertAll(
@@ -424,16 +962,18 @@ public class PostgresCDCIT extends TestSuiteBase implements TestResource {
             value = {},
             type = {EngineType.SPARK, EngineType.FLINK},
             disabledReason = "Currently SPARK and FLINK do not support restore")
-    public void testAddFiledWithRestore(TestContainer container)
+    public void testAddColumnSchemaEvolutionWithRestore(TestContainer container)
             throws IOException, InterruptedException {
         Long jobId = JobIdGenerator.newJobId();
+        String slotVariable = toSlotVariable(createSlotName());
         try {
             CompletableFuture.supplyAsync(
                     () -> {
                         try {
                             return container.executeJob(
                                     "/postgrescdc_to_postgres_test_add_Filed.conf",
-                                    String.valueOf(jobId));
+                                    String.valueOf(jobId),
+                                    slotVariable);
                         } catch (Exception e) {
                             log.error("Commit task exception :" + e.getMessage());
                             throw new RuntimeException(e);
@@ -458,9 +998,9 @@ public class PostgresCDCIT extends TestSuiteBase implements TestResource {
 
             Assertions.assertEquals(0, container.savepointJob(String.valueOf(jobId)).getExitCode());
 
-            // add filed add insert source table data
+            // Change only the source table. The restored job must evolve the sink before writing
+            // the first row that contains the new column.
             addFieldsForTable(POSTGRESQL_SCHEMA, SOURCE_TABLE_3);
-            addFieldsForTable(POSTGRESQL_SCHEMA, SINK_TABLE_3);
             insertSourceTableForAddFields(POSTGRESQL_SCHEMA, SOURCE_TABLE_3);
 
             // Restore job
@@ -469,7 +1009,8 @@ public class PostgresCDCIT extends TestSuiteBase implements TestResource {
                         try {
                             container.restoreJob(
                                     "/postgrescdc_to_postgres_test_add_Filed.conf",
-                                    String.valueOf(jobId));
+                                    String.valueOf(jobId),
+                                    slotVariable);
                         } catch (Exception e) {
                             log.error("Commit task exception :" + e.getMessage());
                             throw new RuntimeException(e);
@@ -478,7 +1019,7 @@ public class PostgresCDCIT extends TestSuiteBase implements TestResource {
                     });
 
             // stream stage
-            await().atMost(60000, TimeUnit.MILLISECONDS)
+            await().atMost(RESTORE_ASSERT_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS)
                     .untilAsserted(
                             () ->
                                     Assertions.assertAll(
@@ -491,7 +1032,17 @@ public class PostgresCDCIT extends TestSuiteBase implements TestResource {
                                                             query(
                                                                     getQuerySQL(
                                                                             POSTGRESQL_SCHEMA,
-                                                                            SINK_TABLE_3)))));
+                                                                            SINK_TABLE_3))),
+                                            () ->
+                                                    Assertions.assertIterableEquals(
+                                                            Collections.singletonList(
+                                                                    Collections.singletonList(
+                                                                            "bigint")),
+                                                            query(
+                                                                    getColumnDataTypeQuery(
+                                                                            POSTGRESQL_SCHEMA,
+                                                                            SINK_TABLE_3,
+                                                                            "f_big")))));
 
             log.info("****************** container logs start ******************");
             String containerLogs = container.getServerLogs();
@@ -503,18 +1054,24 @@ public class PostgresCDCIT extends TestSuiteBase implements TestResource {
             // Clear related content to ensure that multiple operations are not affected
             clearTable(POSTGRESQL_SCHEMA, SOURCE_TABLE_3);
             clearTable(POSTGRESQL_SCHEMA, SINK_TABLE_3);
+            // Drop the columns after deleting rows so the running CDC job does not observe a
+            // cleanup DML under the intentionally unsupported DROP COLUMN relation.
+            dropFieldIfExists(POSTGRESQL_SCHEMA, SOURCE_TABLE_3, "f_big");
+            dropFieldIfExists(POSTGRESQL_SCHEMA, SINK_TABLE_3, "f_big");
         }
     }
 
     @TestTemplate
     public void testPostgresCdcCheckDataWithNoPrimaryKey(TestContainer container) throws Exception {
+        String slotVariable = toSlotVariable(createSlotName());
 
         try {
             CompletableFuture.supplyAsync(
                     () -> {
                         try {
                             container.executeJob(
-                                    "/postgrescdc_to_postgres_with_no_primary_key.conf");
+                                    "/postgrescdc_to_postgres_with_no_primary_key.conf",
+                                    Collections.singletonList(slotVariable));
                         } catch (Exception e) {
                             log.error("Commit task exception :" + e.getMessage());
                             throw new RuntimeException(e);
@@ -555,15 +1112,16 @@ public class PostgresCDCIT extends TestSuiteBase implements TestResource {
     }
 
     @TestTemplate
-    public void testPostgresCdcCheckDataWithCustomPrimaryKey(TestContainer container)
-            throws Exception {
+    public void testPostgresCdcCheckDataWithCustomPrimaryKey(TestContainer container) {
+        String slotVariable = toSlotVariable(createSlotName());
 
         try {
             CompletableFuture.supplyAsync(
                     () -> {
                         try {
                             container.executeJob(
-                                    "/postgrescdc_to_postgres_with_custom_primary_key.conf");
+                                    "/postgrescdc_to_postgres_with_custom_primary_key.conf",
+                                    Collections.singletonList(slotVariable));
                         } catch (Exception e) {
                             log.error("Commit task exception :" + e.getMessage());
                             throw new RuntimeException(e);
@@ -600,6 +1158,70 @@ public class PostgresCDCIT extends TestSuiteBase implements TestResource {
         } finally {
             clearTable(POSTGRESQL_SCHEMA, SOURCE_TABLE_NO_PRIMARY_KEY);
             clearTable(POSTGRESQL_SCHEMA, SINK_TABLE_1);
+        }
+    }
+
+    @TestTemplate
+    public void testPostgresCdcCheckDataWithIntervalDataType(TestContainer container)
+            throws Exception {
+        String slotVariable = toSlotVariable(createSlotName());
+
+        try {
+            CompletableFuture.supplyAsync(
+                    () -> {
+                        try {
+                            container.executeJob(
+                                    "/postgrescdc_to_postgres_with_interval_data_type.conf",
+                                    Collections.singletonList(slotVariable));
+                        } catch (Exception e) {
+                            log.error("Commit task exception :" + e.getMessage());
+                            throw new RuntimeException(e);
+                        }
+                        return null;
+                    });
+
+            // stream stage
+            await().atMost(60000, TimeUnit.MILLISECONDS)
+                    .untilAsserted(
+                            () -> {
+                                Assertions.assertIterableEquals(
+                                        query(getQuerySQL(POSTGRESQL_SCHEMA, SOURCE_TABLE_4)),
+                                        query(getQuerySQL(POSTGRESQL_SCHEMA, SINK_TABLE_4)));
+                            });
+        } finally {
+            clearTable(POSTGRESQL_SCHEMA, SOURCE_TABLE_4);
+            clearTable(POSTGRESQL_SCHEMA, SINK_TABLE_4);
+        }
+    }
+
+    @TestTemplate
+    public void testPostgresCdcCheckDataWithNetworkAddressTypes(TestContainer container) {
+        String slotVariable = toSlotVariable(createSlotName());
+        try {
+            CompletableFuture.supplyAsync(
+                    () -> {
+                        try {
+                            container.executeJob(
+                                    "/postgrescdc_to_postgres_with_network_address_types.conf",
+                                    Collections.singletonList(slotVariable));
+                        } catch (Exception e) {
+                            log.error("Commit task exception :" + e.getMessage());
+                            throw new RuntimeException(e);
+                        }
+                        return null;
+                    });
+
+            // stream stage
+            await().atMost(60000, TimeUnit.MILLISECONDS)
+                    .untilAsserted(
+                            () -> {
+                                Assertions.assertIterableEquals(
+                                        query(getQuerySQL(POSTGRESQL_SCHEMA, SOURCE_TABLE_5)),
+                                        query(getQuerySQL(POSTGRESQL_SCHEMA, SINK_TABLE_5)));
+                            });
+        } finally {
+            clearTable(POSTGRESQL_SCHEMA, SOURCE_TABLE_5);
+            clearTable(POSTGRESQL_SCHEMA, SINK_TABLE_5);
         }
     }
 
@@ -608,7 +1230,7 @@ public class PostgresCDCIT extends TestSuiteBase implements TestResource {
         JdbcSourceConfigFactory factory =
                 new PostgresSourceConfigFactory()
                         .hostname(POSTGRES_CONTAINER.getHost())
-                        .port(5432)
+                        .port(POSTGRES_CONTAINER.getMappedPort(PostgreSQLContainer.POSTGRESQL_PORT))
                         .username("postgres")
                         .password("postgres")
                         .databaseList(POSTGRESQL_DATABASE);
@@ -636,10 +1258,155 @@ public class PostgresCDCIT extends TestSuiteBase implements TestResource {
                 POSTGRES_CONTAINER.getPassword());
     }
 
+    /**
+     * The Postgres container is shared across all test methods in this class, so stale generated
+     * replication slots must be dropped before the next CDC job starts.
+     */
+    private void cleanupGeneratedReplicationSlots() {
+        for (String slotName : listGeneratedReplicationSlots()) {
+            await().ignoreExceptions()
+                    .atMost(30, TimeUnit.SECONDS)
+                    .untilAsserted(() -> dropReplicationSlot(slotName));
+        }
+    }
+
+    /**
+     * The Debezium JSON Kafka test verifies every row-level change event, so it must wait until the
+     * WAL stream is active before mutating the source table.
+     */
+    private void waitForReplicationSlotActive(String slotName) {
+        await().ignoreExceptions()
+                .atMost(30, TimeUnit.SECONDS)
+                .untilAsserted(
+                        () ->
+                                Assertions.assertTrue(
+                                        isReplicationSlotActive(slotName),
+                                        "Replication slot is not active yet: " + slotName));
+    }
+
+    private List<String> listGeneratedReplicationSlots() {
+        List<String> slotNames = new ArrayList<>();
+        try (Connection connection = getJdbcConnection();
+                Statement statement = connection.createStatement();
+                ResultSet resultSet =
+                        statement.executeQuery(
+                                "SELECT slot_name FROM pg_replication_slots WHERE slot_name LIKE '"
+                                        + GENERATED_SLOT_PREFIX
+                                        + "%'")) {
+            while (resultSet.next()) {
+                slotNames.add(resultSet.getString("slot_name"));
+            }
+            return slotNames;
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to query generated replication slots", e);
+        }
+    }
+
+    private boolean isReplicationSlotActive(String slotName) {
+        try (Connection connection = getJdbcConnection();
+                Statement statement = connection.createStatement();
+                ResultSet resultSet =
+                        statement.executeQuery(
+                                "SELECT active FROM pg_replication_slots WHERE slot_name = '"
+                                        + slotName
+                                        + "'")) {
+            return resultSet.next() && resultSet.getBoolean("active");
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to query replication slot activity: " + slotName, e);
+        }
+    }
+
+    private boolean replicationSlotExists(String slotName) {
+        try (Connection connection = getJdbcConnection();
+                Statement statement = connection.createStatement();
+                ResultSet resultSet =
+                        statement.executeQuery(
+                                "SELECT 1 FROM pg_replication_slots WHERE slot_name = '"
+                                        + slotName
+                                        + "'")) {
+            return resultSet.next();
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to query replication slot: " + slotName, e);
+        }
+    }
+
+    private void assertJobHasNoAsyncFailure(CompletableFuture<Void> future) {
+        if (future.isDone()) {
+            future.join();
+        }
+    }
+
+    private void createLogicalReplicationSlot(String slotName) {
+        try (Connection connection = getJdbcConnection();
+                Statement statement = connection.createStatement()) {
+            statement.execute(
+                    "SELECT * FROM pg_create_logical_replication_slot('"
+                            + slotName
+                            + "', 'decoderbufs')");
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to create replication slot: " + slotName, e);
+        }
+    }
+
+    private String getReplicationSlotCommittedLsn(String slotName) {
+        try (Connection connection = getJdbcConnection();
+                Statement statement = connection.createStatement();
+                ResultSet resultSet =
+                        statement.executeQuery(
+                                "SELECT confirmed_flush_lsn::text FROM pg_replication_slots WHERE slot_name = '"
+                                        + slotName
+                                        + "'")) {
+            if (!resultSet.next()) {
+                throw new IllegalStateException("Replication slot does not exist: " + slotName);
+            }
+            return resultSet.getString(1);
+        } catch (SQLException e) {
+            throw new RuntimeException(
+                    "Failed to query committed LSN for replication slot: " + slotName, e);
+        }
+    }
+
+    private String getCurrentWalLsn() {
+        try (Connection connection = getJdbcConnection();
+                Statement statement = connection.createStatement();
+                ResultSet resultSet = statement.executeQuery("SELECT pg_current_wal_lsn()::text")) {
+            if (!resultSet.next()) {
+                throw new IllegalStateException("Failed to query current WAL LSN");
+            }
+            return resultSet.getString(1);
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to query current WAL LSN", e);
+        }
+    }
+
+    private boolean isLsnGreaterThanOrEqual(String actualLsn, String expectedLsn) {
+        return Lsn.valueOf(actualLsn).compareTo(Lsn.valueOf(expectedLsn)) >= 0;
+    }
+
+    private void dropReplicationSlot(String slotName) {
+        try (Connection connection = getJdbcConnection();
+                Statement statement = connection.createStatement();
+                ResultSet resultSet =
+                        statement.executeQuery(
+                                "SELECT active FROM pg_replication_slots WHERE slot_name = '"
+                                        + slotName
+                                        + "'")) {
+            if (!resultSet.next()) {
+                return;
+            }
+            Assertions.assertFalse(
+                    resultSet.getBoolean("active"),
+                    "Replication slot is still active: " + slotName);
+            statement.execute("SELECT pg_drop_replication_slot('" + slotName + "')");
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to drop replication slot: " + slotName, e);
+        }
+    }
+
     protected void initializePostgresTable(PostgreSQLContainer container, String sqlFile) {
         final String ddlFile = String.format("ddl/%s.sql", sqlFile);
         final URL ddlTestFile = PostgresCDCIT.class.getClassLoader().getResource(ddlFile);
-        assertNotNull("Cannot locate " + ddlFile, ddlTestFile);
+        Assertions.assertNotNull(ddlTestFile, "Cannot locate " + ddlFile);
         try (Connection connection = getJdbcConnection();
                 Statement statement = connection.createStatement()) {
             final List<String> statements =
@@ -701,8 +1468,17 @@ public class PostgresCDCIT extends TestSuiteBase implements TestResource {
     }
 
     private void addFieldsForTable(String database, String tableName) {
-
         executeSql("ALTER TABLE " + database + "." + tableName + " ADD COLUMN f_big BIGINT");
+    }
+
+    private void dropFieldIfExists(String database, String tableName, String fieldName) {
+        executeSql(
+                "ALTER TABLE "
+                        + database
+                        + "."
+                        + tableName
+                        + " DROP COLUMN IF EXISTS "
+                        + fieldName);
     }
 
     private void insertSourceTableForAddFields(String database, String tableName) {
@@ -714,6 +1490,51 @@ public class PostgresCDCIT extends TestSuiteBase implements TestResource {
                         + " VALUES (2, '2', 32767, 65535, 2147483647);");
     }
 
+    /** Wait until the Debezium JSON test observes the expected number of Kafka change records. */
+    private void awaitKafkaRecordCount(AtomicReference<Integer> dataSize, int expectedCount) {
+        await().atMost(DEBEZIUM_JSON_RECORD_WAIT_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+                .untilAsserted(
+                        () -> {
+                            dataSize.updateAndGet(v -> v + getKafkaData().size());
+                            Assertions.assertEquals(expectedCount, dataSize.get());
+                        });
+    }
+
+    /**
+     * Insert one row so the CDC test can assert the emitted Kafka record before the next mutation.
+     */
+    private void insertSourceTableRow(String database, String tableName, int id) {
+        executeSql(
+                "INSERT INTO "
+                        + database
+                        + "."
+                        + tableName
+                        + " VALUES ("
+                        + id
+                        + ", '2', 32767, 65535, 2147483647, 5.5, 6.6, 123.12345, 404.4443, true,\n"
+                        + "        'Hello World', 'a', 'abc', 'abcd..xyz', '2020-07-17 18:00:22.123', '2020-07-17 18:00:22.123456',\n"
+                        + "        '2020-07-17', '18:00:22', 500, 88, '192.168.1.1');");
+    }
+
+    /** Delete one row after its insert event is already visible in Kafka. */
+    private void deleteSourceTableRow(String database, String tableName, int id) {
+        executeSql("DELETE FROM " + database + "." + tableName + " where id = " + id + ";");
+    }
+
+    /** Update the inserted row in a separate step so CI can assert the incremental change event. */
+    private void updateSourceTableBigField(String database, String tableName, int id, int value) {
+        executeSql(
+                "UPDATE "
+                        + database
+                        + "."
+                        + tableName
+                        + " SET f_big = "
+                        + value
+                        + " where id = "
+                        + id
+                        + ";");
+    }
+
     private void upsertDeleteSourceTable(String database, String tableName) {
 
         executeSql(
@@ -723,7 +1544,7 @@ public class PostgresCDCIT extends TestSuiteBase implements TestResource {
                         + tableName
                         + " VALUES (2, '2', 32767, 65535, 2147483647, 5.5, 6.6, 123.12345, 404.4443, true,\n"
                         + "        'Hello World', 'a', 'abc', 'abcd..xyz', '2020-07-17 18:00:22.123', '2020-07-17 18:00:22.123456',\n"
-                        + "        '2020-07-17', '18:00:22', 500,'192.168.1.1');");
+                        + "        '2020-07-17', '18:00:22', 500, 88, '192.168.1.1');");
 
         executeSql(
                 "INSERT INTO "
@@ -732,7 +1553,7 @@ public class PostgresCDCIT extends TestSuiteBase implements TestResource {
                         + tableName
                         + " VALUES (3, '2', 32767, 65535, 2147483647, 5.5, 6.6, 123.12345, 404.4443, true,\n"
                         + "        'Hello World', 'a', 'abc', 'abcd..xyz', '2020-07-17 18:00:22.123', '2020-07-17 18:00:22.123456',\n"
-                        + "        '2020-07-17', '18:00:22', 500,'192.168.1.1');");
+                        + "        '2020-07-17', '18:00:22', 500, 88,'192.168.1.1');");
 
         executeSql("DELETE FROM " + database + "." + tableName + " where id = 2;");
 
@@ -741,6 +1562,12 @@ public class PostgresCDCIT extends TestSuiteBase implements TestResource {
 
     private String getQuerySQL(String database, String tableName) {
         return String.format(SOURCE_SQL_TEMPLATE, database, tableName);
+    }
+
+    private String getColumnDataTypeQuery(String schemaName, String tableName, String columnName) {
+        return String.format(
+                "SELECT data_type FROM information_schema.columns WHERE table_schema = '%s' AND table_name = '%s' AND column_name = '%s'",
+                schemaName, tableName, columnName);
     }
 
     @Override

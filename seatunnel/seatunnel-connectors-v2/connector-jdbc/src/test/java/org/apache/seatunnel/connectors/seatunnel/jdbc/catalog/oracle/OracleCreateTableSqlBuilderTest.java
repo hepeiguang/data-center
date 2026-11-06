@@ -20,6 +20,7 @@ package org.apache.seatunnel.connectors.seatunnel.jdbc.catalog.oracle;
 import org.apache.seatunnel.shade.com.google.common.collect.Lists;
 
 import org.apache.seatunnel.api.table.catalog.CatalogTable;
+import org.apache.seatunnel.api.table.catalog.Column;
 import org.apache.seatunnel.api.table.catalog.ConstraintKey;
 import org.apache.seatunnel.api.table.catalog.PhysicalColumn;
 import org.apache.seatunnel.api.table.catalog.PrimaryKey;
@@ -29,6 +30,7 @@ import org.apache.seatunnel.api.table.catalog.TableSchema;
 import org.apache.seatunnel.api.table.type.BasicType;
 import org.apache.seatunnel.api.table.type.LocalTimeType;
 import org.apache.seatunnel.api.table.type.PrimitiveByteArrayType;
+import org.apache.seatunnel.api.table.type.SeaTunnelDataType;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -36,7 +38,13 @@ import org.junit.jupiter.api.Test;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class OracleCreateTableSqlBuilderTest {
 
@@ -106,16 +114,20 @@ public class OracleCreateTableSqlBuilderTest {
 
         OracleCreateTableSqlBuilder oracleCreateTableSqlBuilder =
                 new OracleCreateTableSqlBuilder(catalogTable, true);
-        String createTableSql = oracleCreateTableSqlBuilder.build(tablePath).get(0);
+        List<String> sqls = oracleCreateTableSqlBuilder.build(tablePath);
+        String createTableSql = sqls.get(0);
         // create table sql is change; The old unit tests are no longer applicable
+        // After the NTZ/LTZ fix (#10685), LOCAL_DATE_TIME_TYPE (NTZ) maps to TIMESTAMP
+        // (without timezone), while OFFSET_DATE_TIME_TYPE (LTZ) maps to TIMESTAMP WITH LOCAL
+        // TIME ZONE.
         String expect =
                 "CREATE TABLE \"test_table\" (\n"
                         + "\"id\" INTEGER NOT NULL,\n"
                         + "\"name\" VARCHAR2(128) NOT NULL,\n"
                         + "\"age\" INTEGER,\n"
                         + "\"blob_v\" BLOB,\n"
-                        + "\"createTime\" TIMESTAMP WITH LOCAL TIME ZONE,\n"
-                        + "\"lastUpdateTime\" TIMESTAMP WITH LOCAL TIME ZONE,\n"
+                        + "\"createTime\" TIMESTAMP,\n"
+                        + "\"lastUpdateTime\" TIMESTAMP,\n"
                         + "CONSTRAINT id_9a8b PRIMARY KEY (\"id\")\n"
                         + ")";
 
@@ -125,6 +137,8 @@ public class OracleCreateTableSqlBuilderTest {
         String replacedStr2 = expect.replaceAll(regex, "id_");
         CONSOLE.println(replacedStr2);
         Assertions.assertEquals(replacedStr2, replacedStr1);
+
+        Assertions.assertEquals("COMMENT ON TABLE \"test_table\" IS 'User table'", sqls.get(1));
 
         // skip index
         OracleCreateTableSqlBuilder oracleCreateTableSqlBuilderSkipIndex =
@@ -137,10 +151,85 @@ public class OracleCreateTableSqlBuilderTest {
                         + "\"name\" VARCHAR2(128) NOT NULL,\n"
                         + "\"age\" INTEGER,\n"
                         + "\"blob_v\" BLOB,\n"
-                        + "\"createTime\" TIMESTAMP WITH LOCAL TIME ZONE,\n"
-                        + "\"lastUpdateTime\" TIMESTAMP WITH LOCAL TIME ZONE\n"
+                        + "\"createTime\" TIMESTAMP,\n"
+                        + "\"lastUpdateTime\" TIMESTAMP\n"
                         + ")";
         CONSOLE.println(expectSkipIndex);
         Assertions.assertEquals(expectSkipIndex, createTableSqlSkipIndex);
+    }
+
+    @Test
+    public void testBuildCreateTableSqlWithTableOptions() {
+        String dataBaseName = "test_database";
+        String tableName = "test_table";
+        TablePath tablePath = TablePath.of(dataBaseName, tableName);
+        TableSchema tableSchema =
+                TableSchema.builder()
+                        .column(PhysicalColumn.of("id", BasicType.LONG_TYPE, 22, false, null, "id"))
+                        .primaryKey(PrimaryKey.of("id", Lists.newArrayList("id")))
+                        .build();
+        Map<String, String> options = new HashMap<>();
+        options.put(OracleCatalog.TABLE_OPTION_TABLESPACE, "USERS");
+        options.put(OracleCatalog.TABLE_OPTION_PCTFREE, "10");
+        CatalogTable catalogTable =
+                CatalogTable.of(
+                        TableIdentifier.of("test_catalog", dataBaseName, tableName),
+                        tableSchema,
+                        options,
+                        Collections.emptyList(),
+                        "table with options");
+
+        String createTableSql =
+                new OracleCreateTableSqlBuilder(catalogTable, false).build(tablePath).get(0);
+
+        Assertions.assertTrue(createTableSql.contains("PCTFREE 10"));
+        Assertions.assertTrue(createTableSql.contains("TABLESPACE \"USERS\""));
+    }
+
+    @Test
+    public void testBuildCreateTableSqlWithTableOptionsIgnoresFieldIde() {
+        String dataBaseName = "test_database";
+        String tableName = "test_table";
+        TablePath tablePath = TablePath.of(dataBaseName, tableName);
+        TableSchema tableSchema =
+                TableSchema.builder()
+                        .column(PhysicalColumn.of("id", BasicType.LONG_TYPE, 22, false, null, "id"))
+                        .primaryKey(PrimaryKey.of("id", Lists.newArrayList("id")))
+                        .build();
+        Map<String, String> options = new HashMap<>();
+        options.put("fieldIde", "LOWERCASE");
+        options.put(OracleCatalog.TABLE_OPTION_TABLESPACE, "USERS");
+        options.put(OracleCatalog.TABLE_OPTION_PCTFREE, "10");
+        CatalogTable catalogTable =
+                CatalogTable.of(
+                        TableIdentifier.of("test_catalog", dataBaseName, tableName),
+                        tableSchema,
+                        options,
+                        Collections.emptyList(),
+                        "table with options");
+
+        String createTableSql =
+                new OracleCreateTableSqlBuilder(catalogTable, false).build(tablePath).get(0);
+
+        Assertions.assertTrue(createTableSql.contains("PCTFREE 10"));
+        Assertions.assertTrue(
+                createTableSql.contains("TABLESPACE \"USERS\""),
+                "tablespace must not be rewritten by fieldIde; got: " + createTableSql);
+        Assertions.assertFalse(createTableSql.contains("TABLESPACE \"users\""));
+    }
+
+    @Test
+    public void testColumnSinkType() {
+        OracleCreateTableSqlBuilder sqlBuilder = mock(OracleCreateTableSqlBuilder.class);
+
+        Column column = mock(Column.class);
+        when(column.getSinkType()).thenReturn("VARCHAR(10)");
+        when(column.getDataType()).thenReturn((SeaTunnelDataType) BasicType.INT_TYPE);
+        when(column.getName()).thenReturn("col1");
+        when(sqlBuilder.buildColumnSql(column)).thenCallRealMethod();
+
+        String result = sqlBuilder.buildColumnSql(column);
+
+        Assertions.assertEquals("\"col1\" VARCHAR(10) NOT NULL", result);
     }
 }

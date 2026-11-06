@@ -18,6 +18,8 @@
 package org.apache.seatunnel.transform.rename;
 
 import org.apache.seatunnel.shade.com.google.common.annotations.VisibleForTesting;
+import org.apache.seatunnel.shade.org.apache.commons.lang3.BooleanUtils;
+import org.apache.seatunnel.shade.org.apache.commons.lang3.StringUtils;
 
 import org.apache.seatunnel.api.table.catalog.CatalogTable;
 import org.apache.seatunnel.api.table.catalog.Column;
@@ -31,6 +33,7 @@ import org.apache.seatunnel.api.table.schema.event.AlterTableColumnEvent;
 import org.apache.seatunnel.api.table.schema.event.AlterTableColumnsEvent;
 import org.apache.seatunnel.api.table.schema.event.AlterTableDropColumnEvent;
 import org.apache.seatunnel.api.table.schema.event.AlterTableModifyColumnEvent;
+import org.apache.seatunnel.api.table.schema.event.RestoreTableSchemaEvent;
 import org.apache.seatunnel.api.table.schema.event.SchemaChangeEvent;
 import org.apache.seatunnel.api.table.schema.handler.TableSchemaChangeEventDispatcher;
 import org.apache.seatunnel.api.table.schema.handler.TableSchemaChangeEventHandler;
@@ -38,13 +41,12 @@ import org.apache.seatunnel.api.table.type.SeaTunnelRow;
 import org.apache.seatunnel.transform.common.AbstractCatalogSupportMapTransform;
 
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.BooleanUtils;
-import org.apache.commons.lang3.StringUtils;
 
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Matcher;
@@ -78,6 +80,23 @@ public class FieldRenameTransform extends AbstractCatalogSupportMapTransform {
 
     @Override
     public SchemaChangeEvent mapSchemaChangeEvent(SchemaChangeEvent event) {
+        if (event instanceof RestoreTableSchemaEvent && event.getChangeAfter() != null) {
+            CatalogTable restoredTable = event.getChangeAfter();
+            this.inputTable =
+                    CatalogTable.of(
+                            restoredTable.getTableId(),
+                            restoredTable.getTableSchema(),
+                            restoredTable.getOptions(),
+                            restoredTable.getPartitionKeys(),
+                            restoredTable.getComment(),
+                            restoredTable.getCatalogName(),
+                            restoredTable.getMetadataSchema());
+            this.inputCatalogTable = this.inputTable;
+            this.outputCatalogTable = null;
+            event.setChangeAfter(getProducedCatalogTable());
+            return event;
+        }
+
         TableSchema newTableSchema =
                 tableSchemaChangeEventHandler.reset(inputTable.getTableSchema()).apply(event);
         this.inputTable =
@@ -143,7 +162,7 @@ public class FieldRenameTransform extends AbstractCatalogSupportMapTransform {
                 String replacement = replacementsWithRegex.getReplaceFrom();
                 if (StringUtils.isNotEmpty(replacement)) {
                     Map<Integer, Integer> matched = new LinkedHashMap<>();
-                    if (BooleanUtils.isNotTrue(isRegex)) {
+                    if (BooleanUtils.isFalse(isRegex)) {
                         if (StringUtils.equals(replacement, name)) {
                             matched.put(0, name.length());
                         }
@@ -164,10 +183,10 @@ public class FieldRenameTransform extends AbstractCatalogSupportMapTransform {
         if (config.getConvertCase() != null) {
             switch (config.getConvertCase()) {
                 case UPPER:
-                    name = name.toUpperCase();
+                    name = name.toUpperCase(Locale.ROOT);
                     break;
                 case LOWER:
-                    name = name.toLowerCase();
+                    name = name.toLowerCase(Locale.ROOT);
                     break;
                 default:
                     throw new UnsupportedOperationException(

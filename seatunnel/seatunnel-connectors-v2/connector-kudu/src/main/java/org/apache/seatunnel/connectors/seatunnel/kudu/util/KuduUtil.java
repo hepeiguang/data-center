@@ -17,20 +17,25 @@
 
 package org.apache.seatunnel.connectors.seatunnel.kudu.util;
 
+import org.apache.seatunnel.shade.org.apache.commons.lang3.StringUtils;
+
 import org.apache.seatunnel.common.exception.CommonErrorCodeDeprecated;
 import org.apache.seatunnel.connectors.seatunnel.kudu.config.CommonConfig;
 import org.apache.seatunnel.connectors.seatunnel.kudu.config.KuduSourceConfig;
 import org.apache.seatunnel.connectors.seatunnel.kudu.config.KuduSourceTableConfig;
 import org.apache.seatunnel.connectors.seatunnel.kudu.exception.KuduConnectorErrorCode;
 import org.apache.seatunnel.connectors.seatunnel.kudu.exception.KuduConnectorException;
+import org.apache.seatunnel.connectors.seatunnel.kudu.kuduclient.KuduClientResource;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.authentication.util.KerberosName;
+import org.apache.kudu.ColumnSchema;
 import org.apache.kudu.Schema;
+import org.apache.kudu.Type;
 import org.apache.kudu.client.AsyncKuduClient;
 import org.apache.kudu.client.KuduClient;
+import org.apache.kudu.client.KuduPredicate;
 import org.apache.kudu.client.KuduScanToken;
 import org.apache.kudu.client.KuduTable;
 
@@ -42,6 +47,11 @@ import java.io.IOException;
 import java.security.PrivilegedExceptionAction;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Slf4j
 public class KuduUtil {
@@ -62,13 +72,50 @@ public class KuduUtil {
                     UserGroupInformation ugi = loginAndReturnUgi(config);
                     return ugi.doAs(
                             (PrivilegedExceptionAction<KuduClient>)
-                                    () -> getKuduClientInternal(config));
+                                    () -> getKuduClientInternal(config, null));
                 }
             }
-            return getKuduClientInternal(config);
-
+            return getKuduClientInternal(config, null);
         } catch (IOException | InterruptedException e) {
             throw new KuduConnectorException(KuduConnectorErrorCode.INIT_KUDU_CLIENT_FAILED, e);
+        }
+    }
+
+    public static KuduClientResource getKuduClientResource(CommonConfig config) {
+        AtomicInteger threadCounter = new AtomicInteger();
+        ExecutorService executorService =
+                Executors.newCachedThreadPool(
+                        runnable -> {
+                            Thread thread =
+                                    new Thread(
+                                            runnable,
+                                            "seatunnel-kudu-nio-"
+                                                    + threadCounter.incrementAndGet());
+                            thread.setDaemon(true);
+                            return thread;
+                        });
+        boolean initialized = false;
+        try {
+            KuduClient kuduClient;
+            if (config.getEnableKerberos()) {
+                synchronized (UserGroupInformation.class) {
+                    UserGroupInformation ugi = loginAndReturnUgi(config);
+                    kuduClient =
+                            ugi.doAs(
+                                    (PrivilegedExceptionAction<KuduClient>)
+                                            () -> getKuduClientInternal(config, executorService));
+                }
+            } else {
+                kuduClient = getKuduClientInternal(config, executorService);
+            }
+            initialized = true;
+            return new KuduClientResource(kuduClient, executorService);
+        } catch (IOException | InterruptedException e) {
+            throw new KuduConnectorException(KuduConnectorErrorCode.INIT_KUDU_CLIENT_FAILED, e);
+        } finally {
+            if (!initialized) {
+                executorService.shutdownNow();
+            }
         }
     }
 
@@ -103,14 +150,18 @@ public class KuduUtil {
         }
     }
 
-    private static KuduClient getKuduClientInternal(CommonConfig config) {
-        return new AsyncKuduClient.AsyncKuduClientBuilder(
-                        Arrays.asList(config.getMasters().split(",")))
-                .workerCount(config.getWorkerCount())
-                .defaultAdminOperationTimeoutMs(config.getAdminOperationTimeout())
-                .defaultOperationTimeoutMs(config.getOperationTimeout())
-                .build()
-                .syncClient();
+    private static KuduClient getKuduClientInternal(
+            CommonConfig config, ExecutorService executorService) {
+        AsyncKuduClient.AsyncKuduClientBuilder builder =
+                new AsyncKuduClient.AsyncKuduClientBuilder(
+                                Arrays.asList(config.getMasters().split(",")))
+                        .workerCount(config.getWorkerCount())
+                        .defaultAdminOperationTimeoutMs(config.getAdminOperationTimeout())
+                        .defaultOperationTimeoutMs(config.getOperationTimeout());
+        if (executorService != null) {
+            builder.nioExecutor(executorService);
+        }
+        return builder.build().syncClient();
     }
 
     public static List<KuduScanToken> getKuduScanToken(
@@ -139,6 +190,107 @@ public class KuduUtil {
 
     private static void addPredicates(
             KuduScanToken.KuduScanTokenBuilder kuduScanTokenBuilder, String filter, Schema schema) {
-        // todo Support for where condition
+
+        log.info("Adding predicates to Kudu scan token: {}", filter);
+
+        List<ColumnSchema> columns = schema.getColumns();
+        for (ColumnSchema column : columns) {
+            log.info(" column name " + column.getName());
+        }
+
+        if (StringUtils.isBlank(filter)) {
+            return;
+        }
+
+        List<String> conditions = Arrays.asList(filter.trim().split("\\s+AND\\s+"));
+
+        Pattern pattern = Pattern.compile("(\\w+)\\s*([=><]=?|<=|>=)\\s*(.+)");
+        for (String condition : conditions) {
+            Matcher matcher = pattern.matcher(condition.trim());
+
+            String column = null;
+            String op = null;
+            String value = null;
+
+            if (matcher.matches()) {
+                column = matcher.group(1);
+                op = matcher.group(2);
+                value = matcher.group(3);
+            } else {
+                throw new IllegalArgumentException("Invalid filter condition: " + condition);
+            }
+
+            if (!schema.hasColumn(column)) {
+                throw new KuduConnectorException(
+                        CommonErrorCodeDeprecated.ILLEGAL_ARGUMENT,
+                        "Column not found in Kudu schema: " + column);
+            }
+
+            Type type = schema.getColumn(column).getType();
+
+            KuduPredicate.ComparisonOp comparisonOp = null;
+            switch (op) {
+                case "=":
+                    comparisonOp = KuduPredicate.ComparisonOp.EQUAL;
+                    break;
+                case ">":
+                    comparisonOp = KuduPredicate.ComparisonOp.GREATER;
+                    break;
+                case ">=":
+                    comparisonOp = KuduPredicate.ComparisonOp.GREATER_EQUAL;
+                    break;
+                case "<":
+                    comparisonOp = KuduPredicate.ComparisonOp.LESS;
+                    break;
+                case "<=":
+                    comparisonOp = KuduPredicate.ComparisonOp.LESS_EQUAL;
+                    break;
+                default:
+                    throw new KuduConnectorException(
+                            CommonErrorCodeDeprecated.ILLEGAL_ARGUMENT,
+                            "Unsupported operator: " + op);
+            }
+
+            Object parsedValue = parseValue(type, value);
+
+            KuduPredicate predicate =
+                    KuduPredicate.newComparisonPredicate(
+                            schema.getColumn(column), comparisonOp, parsedValue);
+            kuduScanTokenBuilder.addPredicate(predicate);
+        }
+    }
+
+    private static Object parseValue(Type type, String value) {
+        try {
+            switch (type.getDataType()) {
+                case INT8:
+                    return Byte.valueOf(value);
+                case INT16:
+                    return Short.valueOf(value);
+                case INT32:
+                    return Integer.valueOf(value);
+                case INT64:
+                    return Long.valueOf(value);
+                case STRING:
+                    return value.startsWith("'") && value.endsWith("'")
+                            ? value.substring(1, value.length() - 1)
+                            : value;
+                case BOOL:
+                    return Boolean.valueOf(value);
+                case UNIXTIME_MICROS:
+                    return new java.sql.Timestamp(Long.parseLong(value));
+                case FLOAT:
+                    return Float.valueOf(value);
+                case DOUBLE:
+                    return Double.valueOf(value);
+                default:
+                    throw new IllegalArgumentException("Unsupported type: " + type);
+            }
+        } catch (NumberFormatException e) {
+            throw new KuduConnectorException(
+                    CommonErrorCodeDeprecated.ILLEGAL_ARGUMENT,
+                    "Failed to parse value '" + value + "' as type " + type,
+                    e);
+        }
     }
 }

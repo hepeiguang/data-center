@@ -17,85 +17,47 @@
 
 package org.apache.dolphinscheduler.plugin.task.seatunnel;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.extern.slf4j.Slf4j;
+import org.apache.dolphinscheduler.plugin.task.api.model.ResourceInfo;
+import org.apache.dolphinscheduler.plugin.task.api.parameters.AbstractParameters;
+
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.dolphinscheduler.common.utils.JSONUtils;
-import org.apache.dolphinscheduler.plugin.task.api.enums.ResourceType;
-import org.apache.dolphinscheduler.plugin.task.api.model.ResourceInfo;
-import org.apache.dolphinscheduler.plugin.task.api.parameters.AbstractParameters;
-import org.apache.dolphinscheduler.plugin.task.api.parameters.resource.ResourceParametersHelper;
-import org.apache.dolphinscheduler.plugin.task.seatunnel.plugin.dto.SeatunnelTaskNodeVO;
 
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.regex.Pattern;
 
-@Getter
-@Setter
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
 @NoArgsConstructor
-@Slf4j
 public class SeatunnelParameters extends AbstractParameters {
+
+    private static final Pattern STARTUP_SCRIPT_PATTERN = Pattern.compile("^[A-Za-z0-9][A-Za-z0-9._-]*\\.sh$");
 
     private String startupScript;
 
     private Boolean useCustom;
 
-    private String scriptType;
-
     private String rawScript;
 
-    /**
-     * 前台维护节点关系
-     */
-    private String relation;
-
-    private DeployModeEnum deployMode;
-
-    /**
-     * resource list
-     */
     private List<ResourceInfo> resourceList;
-
-    private final static ObjectMapper mapper = new ObjectMapper();
 
     @Override
     public boolean checkParameters() {
-        return Objects.nonNull(startupScript)
+        return isValidStartupScript(startupScript)
                 && ((BooleanUtils.isTrue(useCustom) && StringUtils.isNotBlank(rawScript))
-                || (BooleanUtils.isFalse(useCustom) && CollectionUtils.isNotEmpty(resourceList)
-                && resourceList.size() == 1));
+                        || (BooleanUtils.isFalse(useCustom) && CollectionUtils.isNotEmpty(resourceList)
+                                && resourceList.size() == 1));
+    }
+
+    private static boolean isValidStartupScript(String startupScript) {
+        return StringUtils.isNotBlank(startupScript) && STARTUP_SCRIPT_PATTERN.matcher(startupScript).matches();
     }
 
     @Override
     public List<ResourceInfo> getResourceFilesList() {
         return resourceList;
-    }
-
-    @Override
-    public ResourceParametersHelper getResources() {
-        ResourceParametersHelper resources = super.getResources();
-        try {
-            List<SeatunnelTaskNodeVO> taskNodeList = mapper.readValue(rawScript, new TypeReference<List<SeatunnelTaskNodeVO>>() {
-            });
-            for (SeatunnelTaskNodeVO seatunnelTaskNodeVO : taskNodeList) {
-                Map<String,Object> params = seatunnelTaskNodeVO.getParams();
-                log.info("seatunnel load resource . params :{}" ,params);
-                if (params != null && params.containsKey("datasourceId") && params.get("datasourceId") != null) {
-                    resources.put(ResourceType.DATASOURCE, (Integer) params.get("datasourceId"));
-                }
-            }
-        } catch (JsonProcessingException e) {
-            log.error("Failed to get datasource form seatunnel ", e);
-        }
-        return resources;
     }
 }

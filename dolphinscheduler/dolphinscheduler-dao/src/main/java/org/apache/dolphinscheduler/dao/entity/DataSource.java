@@ -17,34 +17,27 @@
 
 package org.apache.dolphinscheduler.dao.entity;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
-import lombok.Data;
 import org.apache.dolphinscheduler.spi.enums.DbType;
 
 import java.util.Date;
 import java.util.Objects;
 
+import lombok.Data;
+
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
+
 @Data
 @TableName("t_ds_datasource")
 public class DataSource {
 
-    /**
-     * id
-     */
     @TableId(value = "id", type = IdType.AUTO)
     private Integer id;
 
-    /**
-     * user id
-     */
-    private String userId;
+    private int userId;
 
-    /**
-     * user name
-     */
     @TableField(exist = false)
     private String userName;
 
@@ -53,9 +46,6 @@ public class DataSource {
      */
     private String name;
 
-    /**
-     * note
-     */
     private String note;
 
     /**
@@ -63,24 +53,10 @@ public class DataSource {
      */
     private DbType type;
 
-    /**
-     * 保存类型：database,server,other
-     */
-    private String serverType;
-
-    /**
-     * connection parameters
-     */
     private String connectionParams;
 
-    /**
-     * create time
-     */
     private Date createTime;
 
-    /**
-     * update time
-     */
     private Date updateTime;
 
     @Override

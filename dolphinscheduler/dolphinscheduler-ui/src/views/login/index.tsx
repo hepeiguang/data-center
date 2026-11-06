@@ -20,8 +20,7 @@ import {
   getCurrentInstance,
   onMounted,
   toRefs,
-  withKeys,
-  ref
+  withKeys
 } from 'vue'
 import styles from './index.module.scss'
 import {
@@ -42,23 +41,23 @@ import { useLocalesStore } from '@/store/locales/locales'
 import { useThemeStore } from '@/store/theme/theme'
 import cookies from 'js-cookie'
 import { ssoLoginUrl } from '@/service/modules/login'
-import type { OAuth2Provider } from '@/service/modules/login/types'
-import router from '@/router'
-
+import type {
+  OAuth2Provider,
+  OidcProvider
+} from '@/service/modules/login/types'
 
 const login = defineComponent({
   name: 'login',
   setup() {
-    if (document.cookie.indexOf('sessionId') !== -1) {
-      router.push({ path: '/home' })
-    }
     window.$message = useMessage()
     const { state, t, locale } = useForm()
     const { handleChange } = useTranslate(locale)
     const {
       handleLogin,
       handleGetOAuth2Provider,
+      handleGetOidcProviders,
       oauth2Providers,
+      oidcProviders,
       gotoOAuth2Page,
       handleRedirect
     } = useLogin(state)
@@ -92,8 +91,7 @@ const login = defineComponent({
     })
 
     handleGetOAuth2Provider()
-    const logo = ref(`${import.meta.env.BASE_URL}images/imgs/logo1.png`)
-    
+    handleGetOidcProviders()
     return {
       t,
       handleChange,
@@ -102,8 +100,8 @@ const login = defineComponent({
       localesStore,
       trim,
       oauth2Providers,
-      gotoOAuth2Page,
-      logo
+      oidcProviders,
+      gotoOAuth2Page
     }
   },
   render() {
@@ -124,8 +122,7 @@ const login = defineComponent({
         </div>
         <div class={styles['login-model']}>
           <div class={styles.logo}>
-            {/* <div class={styles['logo-img']} /> */}
-            <NImage style={{marginRight: '10px'}} width='56' height='56' preview-disabled={true} src={this.logo} />
+            <div class={styles['logo-img']} />
           </div>
           <div
             class={styles['form-model']}
@@ -193,7 +190,8 @@ const login = defineComponent({
               </NButton>
             </a>
           </div>
-          {this.oauth2Providers.length > 0 && (
+          {(this.oauth2Providers.length > 0 ||
+            this.oidcProviders.length > 0) && (
             <NDivider>{this.t('login.loginWithOAuth2')}</NDivider>
           )}
 
@@ -207,6 +205,21 @@ const login = defineComponent({
                 <NButton onClick={() => this.gotoOAuth2Page(e)}>
                   {e.provider}
                 </NButton>
+              )
+            })}
+            {this.oidcProviders?.map((e: OidcProvider) => {
+              const authUrl = `/dolphinscheduler/oauth2/authorization/${e.id}`
+              return (
+                <a href={authUrl} class={styles['oidc-provider-link']}>
+                  <NButton block class={styles['oidc-provider-btn']}>
+                    <div class={styles['oidc-btn-content']}>
+                      {e.iconUri && (
+                        <img src={e.iconUri} class={styles['oidc-btn-icon']} />
+                      )}
+                      <span>{e.displayName}</span>
+                    </div>
+                  </NButton>
+                </a>
               )
             })}
           </NSpace>

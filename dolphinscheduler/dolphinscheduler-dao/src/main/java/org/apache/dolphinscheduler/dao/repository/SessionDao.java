@@ -23,8 +23,8 @@ import java.util.List;
 
 public interface SessionDao extends IDao<Session> {
 
-    void deleteByUserId(String userId);
+    void deleteByUserId(Integer userId);
 
-    List<Session> queryByUserId(String userId);
+    List<Session> queryByUserId(Integer userId);
 
 }

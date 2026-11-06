@@ -20,12 +20,8 @@ interface FileReq {
 }
 
 interface ResourceTypeReq {
-  type: 'FILE' | 'UDF'
+  type: 'FILE'
   programType?: string
-}
-
-interface UdfTypeReq {
-  type: 'HIVE' | 'SPARK'
 }
 
 interface NameReq {
@@ -84,15 +80,7 @@ interface ViewResourceReq {
   skipLineNum: number
 }
 
-interface UdfFuncReq extends UdfTypeReq, DescriptionReq, FullNameReq {
-  className: string
-  funcName: string
-  argTypes?: string
-  database?: string
-}
-
 interface ResourceFile {
-  customType: string
   id: number
   pid: number
   alias: string
@@ -123,7 +111,6 @@ interface ResourceViewRes {
 export {
   FileReq,
   ResourceTypeReq,
-  UdfTypeReq,
   NameReq,
   FileNameReq,
   FullNameReq,
@@ -137,7 +124,6 @@ export {
   ProgramTypeReq,
   ListReq,
   ViewResourceReq,
-  UdfFuncReq,
   ResourceListRes,
   ResourceViewRes,
   ResourceFile

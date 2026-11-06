@@ -21,13 +21,18 @@ import utils from '@/utils'
 import { TaskType } from '@/store/project/types'
 import { TASK_TYPES_MAP } from '@/store/project/task-type'
 import { WorkflowDefinition, Coordinate } from './types'
+import {
+  buildDefaultConnects,
+  isSeaTunnelChildType,
+  isSeaTunnelComputeParent,
+  parseStComputeGraph,
+  resolveTaskIconKey,
+  ST_COMPUTE_GROUP_DEFAULT_HEIGHT,
+  ST_COMPUTE_GROUP_DEFAULT_WIDTH,
+  toSeaTunnelChildType
+} from './seatunnel-compute-utils'
 
 export function useCustomCellBuilder() {
-  /**
-   * Convert locationStr to JSON
-   * @param {string} locationStr
-   * @returns
-   */
   function parseLocationStr(locationStr: string) {
     let locations = null
     if (!locationStr) return locations
@@ -35,12 +40,6 @@ export function useCustomCellBuilder() {
     return Array.isArray(locations) ? locations : null
   }
 
-  /**
-   * Build edge metadata
-   * @param {string} sourceId
-   * @param {string} targetId
-   * @param {string} label
-   */
   function buildEdge(
     sourceId: string,
     targetId: string,
@@ -64,27 +63,27 @@ export function useCustomCellBuilder() {
     }
   }
 
-  /**
-   * Build node metadata
-   * @param {string} id
-   * @param {string} taskType
-   * @param {Coordinate} coordinate Default is { x: 100, y: 100 }
-   */
+  function iconType(type: TaskType | string) {
+    if (type === ('FLINK_STREAM' as TaskType)) return 'flink'
+    return resolveTaskIconKey(String(type))
+  }
+
   function buildNode(
     id: string,
     type: TaskType,
     taskName: string,
     flag: string,
     coordinate: Coordinate = { x: 100, y: 100 },
-    mode: string,
+    scriptType?: string,
     useCustom: boolean = false
   ): Node.Metadata {
     const truncation = taskName ? utils.truncateText(taskName, 18) : id
-    console.log('truncation: ', truncation);
-    console.log('type: ', type);
-    const isGroup = ['SEATUNNEL'].includes(type) && mode === 'visualize' && useCustom
-    console.log('isGroup: ', isGroup);
-    let node = {
+    const isGroup =
+      isSeaTunnelComputeParent(type) &&
+      (scriptType === 'visualize' || !scriptType) &&
+      useCustom
+
+    const node: Node.Metadata = {
       id: id,
       shape: X6_NODE_NAME,
       x: coordinate.x,
@@ -93,16 +92,17 @@ export function useCustomCellBuilder() {
         taskType: type,
         taskName: taskName || id,
         flag: flag,
-        taskExecuteType: TASK_TYPES_MAP[type].taskExecuteType
+        taskExecuteType:
+          TASK_TYPES_MAP[type]?.taskExecuteType ||
+          (type === 'SEATUNNEL_COMPUTE' ? 'BATCH' : undefined),
+        useCustom,
+        scriptType
       },
       attrs: {
         image: {
-          // Use href instead of xlink:href, you may lose the icon when downloadPNG
-          'xlink:href': `${import.meta.env.BASE_URL
-            }images/task-icons/${(type !== ('FLINK_STREAM' as TaskType)
-              ? type
-              : 'FLINK'
-            ).toLocaleLowerCase()}.png`
+          'xlink:href': `${
+            import.meta.env.BASE_URL
+          }images/task-icons/${iconType(type)}.png`
         },
         title: {
           text: truncation
@@ -113,180 +113,140 @@ export function useCustomCellBuilder() {
       }
     }
     if (isGroup) {
-      node.width = 550;
-      node.height = 280;
-      node.zIndex = -1;
-      node.data.parent = true;
-      node.attrs.body = {
-        strokeDasharray: '5 5'
+      node.width = ST_COMPUTE_GROUP_DEFAULT_WIDTH
+      node.height = ST_COMPUTE_GROUP_DEFAULT_HEIGHT
+      node.zIndex = -1
+      ;(node.data as any).parent = true
+      node.attrs = {
+        ...node.attrs,
+        body: {
+          strokeDasharray: '5 5'
+        }
       }
     }
     return node
   }
 
-  /**
-   * Build graph JSON
-   * @param {WorkflowDefinition} definition
-   * @returns
-   */
   function buildGraph(definition: WorkflowDefinition) {
     const nodes: Node.Metadata[] = []
     const edges: Edge.Metadata[] = []
 
     const locations =
-      parseLocationStr(definition.processDefinition.locations) || []
+      parseLocationStr(definition.workflowDefinition.locations) || []
     const tasks = definition.taskDefinitionList
-    const connects = definition.processTaskRelationList
+    const connects = [...(definition.workflowTaskRelationList || [])]
     const taskTypeMap = {} as { [key in string]: TaskType }
-    // llxl 回显
+    const relationSet = new Set<string>()
 
-    let relation = { pre: {}, next: {} }
-    let subTaskIds = []
-    let parentTaskIds = []
-    let parent2Sub = {}
+    tasks.forEach((task: any) => {
+      const location: any =
+        locations.find((l: any) => l.taskCode === task.code) || {}
+      const params = task.taskParams || {}
+      const isVisualParent =
+        isSeaTunnelComputeParent(task.taskType) &&
+        (params.scriptType === 'visualize' ||
+          (!params.scriptType && params.useCustom))
 
-    let newConnects = [...connects]
-
-    let tasksObj = {}
-    let addConnectFlag = false
-    let outConntentss = []
-
-
-    tasks.forEach((item: any) => {
-      if (item.taskType == 'SEATUNNEL' && (item.taskParams.useCustom || item.taskParams.parent)) {
-        parentTaskIds.push(item.code)
-        tasksObj[item.code] = item
-        const location = locations.find((l) => l.taskCode == item.code) || {}
+      if (isVisualParent) {
         const node = buildNode(
-          item.code + '',
-          item.taskType,
-          item.name,
-          item.flag,
-          {
-            x: location.x,
-            y: location.y
-          },
-          item.taskParams.scriptType,
-          item.taskParams.useCustom
+          task.code + '',
+          task.taskType,
+          task.name,
+          task.flag,
+          { x: location.x, y: location.y },
+          params.scriptType || 'visualize',
+          true
         )
         node.children = []
-        node.width = location.width
-        node.height = location.height
+        if (location.width) node.width = location.width
+        if (location.height) node.height = location.height
+        const graph = parseStComputeGraph(params)
+        if (node.data) {
+          node.data.taskExecuteType = task.taskExecuteType || 'BATCH'
+        }
         nodes.push(node)
-        taskTypeMap[String(item.code)] = item.taskType
-        if (item.taskParams.rawScript) {
-          parent2Sub[item.code] = []
-          try {
-            const subTasks = JSON.parse(item.taskParams.rawScript)
-            subTasks.forEach((subItem: any) => {
-              subTaskIds.push(subItem.code)
-              parent2Sub[item.code].push(subItem.code)
-              if (subItem.postTaskcode) {
-                relation.next[subItem.code] = subItem.postTaskcode
-              }
-              if (subItem.preTaskcode) {
-                relation.pre[subItem.code] = subItem.preTaskcode
-              }
-
-              tasksObj[subItem.code] = subItem
-
-              const location = locations.find((l) => l.taskCode == subItem.code) || {}
-              const snode = buildNode(
-                subItem.code + '',
-                subItem.type ? `${subItem.pluginName}_${subItem.type}` : subItem.pluginName,
-                subItem.name || subItem.code,
-                subItem.flag || 'YES',
-                {
-                  x: location.x,
-                  y: location.y
-                },
-                // subItem.params.scriptType
-              )
-              snode.parent = node
-              nodes.push(snode)
-              node.children.push(snode)
-              taskTypeMap[String(subItem.code)] = subItem.type ? `${subItem.pluginName}_${subItem.type}` : subItem.pluginName
-            })
-
-            if (!addConnectFlag && item.taskParams.relation) {
-              let outConntent = JSON.parse(item.taskParams.relation)
-              const base = newConnects.length ? newConnects[0] : { id: 10 }
-              outConntent.forEach((connect: any, i: number) => {
-                const tempConn = { ...base, ...connect, id: base.id * 10 + i }
-                newConnects.push(tempConn)
-                outConntentss.push(tempConn)
-              })
-              addConnectFlag = true
+        taskTypeMap[String(task.code)] = task.taskType
+        graph.nodes.forEach((subItem) => {
+          const subLoc: any =
+            locations.find((l: any) => l.taskCode === Number(subItem.code)) ||
+            {}
+          const childType = toSeaTunnelChildType(
+            subItem.pluginName,
+            subItem.type
+          ) as TaskType
+          const snode = buildNode(
+            String(subItem.code),
+            childType,
+            subItem.name || subItem.pluginName,
+            'YES',
+            {
+              x: subLoc.x ?? (location.x || 0) + 40,
+              y: subLoc.y ?? (location.y || 0) + 60
             }
+          )
+          snode.parent = node.id
+          nodes.push(snode)
+          ;(node.children as any[]).push(snode)
+          taskTypeMap[String(subItem.code)] = childType
+        })
 
-            const childSet = new Set<any>(node.children)
-            outConntentss.forEach((tempConn: any) => {
-              if (parent2Sub[item.code].indexOf(tempConn.preTaskCode + '') > 0 || parent2Sub[item.code].indexOf(tempConn.postTaskCode + '') > 0) {
-                childSet.add(tempConn)
-              }
-            })
-            node.children = [...childSet]
-          } catch (error) {
+        // Child edges: prefer saved relation; otherwise synthesize Source→Transform→Sink
+        let childConnects: any[] = []
+        if (params.relation) {
+          try {
+            const rel = JSON.parse(params.relation)
+            if (Array.isArray(rel)) {
+              childConnects = rel.filter(
+                (c: any) => Number(c.preTaskCode) > 0 && Number(c.postTaskCode) > 0
+              )
+            }
+          } catch {
+            /* ignore */
           }
         }
-      }
-      else {
-        tasksObj[item.code] = item
-
-        const location = locations.find((l) => l.taskCode == item.code) || {}
+        if (!childConnects.length && graph.nodes.length > 1) {
+          childConnects = buildDefaultConnects(graph.nodes)
+        }
+        childConnects.forEach((connect: any, i: number) => {
+          const key = `${connect.preTaskCode}_${connect.postTaskCode}`
+          if (!relationSet.has(key) && Number(connect.preTaskCode) > 0) {
+            relationSet.add(key)
+            connects.push({
+              ...connect,
+              id: (connect.id || Date.now()) + i
+            })
+          }
+        })
+      } else if (!isSeaTunnelChildType(task.taskType)) {
         const node = buildNode(
-          item.code + '',
-          item.taskType,
-          item.name,
-          item.flag,
-          {
-            x: location.x,
-            y: location.y
-          },
+          task.code + '',
+          task.taskType,
+          task.name,
+          task.flag,
+          { x: location.x, y: location.y },
+          params.scriptType,
+          !!params.useCustom
         )
         nodes.push(node)
-        taskTypeMap[String(item.code)] = item.taskType
+        taskTypeMap[String(task.code)] = task.taskType
       }
     })
 
-
-    // let processDefinitionCode = 0
-    // if (connects && connects.length) {
-    //   processDefinitionCode = connects[0].processDefinitionCode
-    // }
-    // tasks.forEach((item: any) => {
-    //   if (item.taskType == 'SEATUNNEL' && item.taskParams.useCustom) {
-    //     if (item.taskParams.rawScript) {
-    //      try {
-    //        const subTasks = JSON.parse(item.taskParams.rawScript)
-    //        subTasks.forEach((subItem: any) => {
-    //          let newCon = {conditionParams :  {},  conditionType :  "NONE", createTim  :  "", id :  new Date().getTime(), name :  "",  operateTime :  "", operator:  1, postTaskCode :  0, postTaskVersion :  3, preTaskCode:  0, preTaskVersion :  0, processDefinitionCode :  processDefinitionCode,processDefinitionVersion :  3, projectCode :  item.projectCode, updateTime :  ""}
-
-    //          if (subItem.postTaskcode) {
-    //            newCon.postTaskcode = subItem.code
-    //          }
-    //          if (subItem.preTaskcode) {
-    //            newCon.preTaskcode = relation.pre[subItem.code]
-    //            newCon.postTaskCode = subItem.code
-    //          }
-    //          newConnects.push(newCon)
-    //        })
-    //      } catch (error) {
-    //      }
-    //     }
-    //   }
-    // })
-
-    // console.log('newConnects', newConnects)
-
-    newConnects
+    const streamCodes = new Set(
+      tasks
+        .filter((t: any) => t.taskExecuteType === 'STREAM')
+        .map((t: any) => String(t.code))
+    )
+    connects
       .filter((r) => !!r.preTaskCode)
       .forEach((c) => {
         const isStream =
-          TASK_TYPES_MAP[taskTypeMap[c.preTaskCode]].taskExecuteType ==
-          'STREAM' ||
-          TASK_TYPES_MAP[taskTypeMap[c.postTaskCode]].taskExecuteType ==
-          'STREAM'
+          streamCodes.has(String(c.preTaskCode)) ||
+          streamCodes.has(String(c.postTaskCode)) ||
+          TASK_TYPES_MAP[taskTypeMap[c.preTaskCode]]?.taskExecuteType ===
+            'STREAM' ||
+          TASK_TYPES_MAP[taskTypeMap[c.postTaskCode]]?.taskExecuteType ===
+            'STREAM'
         const edge = buildEdge(
           c.preTaskCode + '',
           c.postTaskCode + '',
@@ -295,44 +255,6 @@ export function useCustomCellBuilder() {
         )
         edges.push(edge)
       })
-    /* 
-      
-      tasks.forEach((task) => {
-        const location = locations.find((l) => l.taskCode === task.code) || {}
-        const node = buildNode(
-          task.code + '',
-          task.taskType,
-          task.name,
-          task.flag,
-          {
-            x: location.x,
-            y: location.y
-          },
-          task.taskParams.scriptType
-        )
-        nodes.push(node)
-        taskTypeMap[String(task.code)] = task.taskType
-      })
-  
-      connects
-        .filter((r) => !!r.preTaskCode)
-        .forEach((c) => {
-          const isStream =
-            TASK_TYPES_MAP[taskTypeMap[c.preTaskCode]].taskExecuteType ===
-              'STREAM' ||
-            TASK_TYPES_MAP[taskTypeMap[c.postTaskCode]].taskExecuteType ===
-              'STREAM'
-          const edge = buildEdge(
-            c.preTaskCode + '',
-            c.postTaskCode + '',
-            c.name,
-            isStream
-          )
-          edges.push(edge)
-        })
-      */
-
-
     return {
       nodes,
       edges

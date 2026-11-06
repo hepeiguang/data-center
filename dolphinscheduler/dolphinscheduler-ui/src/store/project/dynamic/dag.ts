@@ -16,44 +16,22 @@
  */
 
 import { defineStore } from 'pinia'
-import { ref, Ref } from 'vue'
 import { DagStore } from './types'
 
 export const useDagStore = defineStore({
   id: 'dag-store',
   state: (): DagStore => ({
-    tasks: [],
-    taskDefinitionList: [],
-    contrastStr: '',
-    graph: ref({}),
+    tasks: []
   }),
   persist: true,
   getters: {
     getDagTasks(): Array<any> {
       return this.tasks
-    },
-    getDagTaskDefinitionList(): Array<any> {
-      return this.taskDefinitionList
-    },
-    getContrastStr(): string {
-      return this.contrastStr
-    },
-    getGraph(): Ref<any> {
-      return this.graph
     }
   },
   actions: {
     setDagTasks(tasks: Array<any>): void {
       this.tasks = tasks
-    },
-    setDagTaskDefinitionList(taskDefinitionList: Array<any>): void {
-      this.taskDefinitionList = taskDefinitionList
-    },
-    setContrastStr(str: string): void {
-      this.contrastStr = str
-    },
-    setGraph(graph: Ref<any>): void {
-      this.graph = graph
     }
   }
 })

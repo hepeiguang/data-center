@@ -17,27 +17,23 @@
 
 package org.apache.seatunnel.engine.server.dag.execution;
 
-import org.apache.seatunnel.api.table.catalog.CatalogTable;
 import org.apache.seatunnel.api.transform.SeaTunnelTransform;
-import org.apache.seatunnel.common.utils.SeaTunnelException;
 import org.apache.seatunnel.engine.common.config.EngineConfig;
 import org.apache.seatunnel.engine.common.utils.IdGenerator;
 import org.apache.seatunnel.engine.core.dag.actions.Action;
-import org.apache.seatunnel.engine.core.dag.actions.ShuffleAction;
-import org.apache.seatunnel.engine.core.dag.actions.ShuffleConfig;
-import org.apache.seatunnel.engine.core.dag.actions.ShuffleMultipleRowStrategy;
-import org.apache.seatunnel.engine.core.dag.actions.ShuffleStrategy;
 import org.apache.seatunnel.engine.core.dag.actions.SinkAction;
 import org.apache.seatunnel.engine.core.dag.actions.SinkConfig;
 import org.apache.seatunnel.engine.core.dag.actions.SourceAction;
 import org.apache.seatunnel.engine.core.dag.actions.TransformAction;
 import org.apache.seatunnel.engine.core.dag.actions.TransformChainAction;
+import org.apache.seatunnel.engine.core.dag.actions.TransformChainConfig;
 import org.apache.seatunnel.engine.core.dag.actions.UnknownActionException;
 import org.apache.seatunnel.engine.core.dag.logical.LogicalDag;
 import org.apache.seatunnel.engine.core.dag.logical.LogicalEdge;
 import org.apache.seatunnel.engine.core.dag.logical.LogicalVertex;
 import org.apache.seatunnel.engine.core.job.ConnectorJarIdentifier;
 import org.apache.seatunnel.engine.core.job.JobImmutableInformation;
+import org.apache.seatunnel.engine.server.observability.ObservabilityConfig;
 
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
@@ -45,13 +41,12 @@ import lombok.extern.slf4j.Slf4j;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 
 import static org.apache.seatunnel.shade.com.google.common.base.Preconditions.checkArgument;
@@ -62,6 +57,7 @@ public class ExecutionPlanGenerator {
     private final JobImmutableInformation jobImmutableInformation;
     private final EngineConfig engineConfig;
     private final IdGenerator idGenerator = new IdGenerator();
+    private final ObservabilityConfig observabilityConfig;
 
     public ExecutionPlanGenerator(
             @NonNull LogicalDag logicalPlan,
@@ -72,6 +68,8 @@ public class ExecutionPlanGenerator {
         this.logicalPlan = logicalPlan;
         this.jobImmutableInformation = jobImmutableInformation;
         this.engineConfig = engineConfig;
+        this.observabilityConfig =
+                ObservabilityConfig.fromEnvOptions(logicalPlan.getJobConfig().getEnvOptions());
     }
 
     public ExecutionPlan generate() {
@@ -80,27 +78,21 @@ public class ExecutionPlanGenerator {
         Set<ExecutionEdge> executionEdges = generateExecutionEdges(logicalPlan.getEdges());
         log.debug("Phase 1: generate execution edge list {}", executionEdges);
 
-        executionEdges = generateShuffleEdges(executionEdges);
-        log.debug("Phase 2: generate shuffle edge list {}", executionEdges);
-
         executionEdges = generateTransformChainEdges(executionEdges);
-        log.debug("Phase 3: generate transform chain edge list {}", executionEdges);
+        log.debug("Phase 2: generate transform chain edge list {}", executionEdges);
 
         List<Pipeline> pipelines = generatePipelines(executionEdges);
-        log.debug("Phase 4: generate pipeline list {}", pipelines);
+        log.debug("Phase 3: generate pipeline list {}", pipelines);
 
         ExecutionPlan executionPlan = new ExecutionPlan(pipelines, jobImmutableInformation);
-        log.debug("Phase 5: generate execution plan: {}", executionPlan);
+        log.debug("Phase 4: generate execution plan: {}", executionPlan);
 
         return executionPlan;
     }
 
     public static Action recreateAction(Action action, Long id, int parallelism) {
         Action newAction;
-        if (action instanceof ShuffleAction) {
-            newAction =
-                    new ShuffleAction(id, action.getName(), ((ShuffleAction) action).getConfig());
-        } else if (action instanceof SinkAction) {
+        if (action instanceof SinkAction) {
             newAction =
                     new SinkAction<>(
                             id,
@@ -202,97 +194,17 @@ public class ExecutionPlanGenerator {
         return executionEdges;
     }
 
-    @SuppressWarnings("MagicNumber")
-    private Set<ExecutionEdge> generateShuffleEdges(Set<ExecutionEdge> executionEdges) {
-        Map<Long, List<ExecutionVertex>> targetVerticesMap = new LinkedHashMap<>();
-        Set<ExecutionVertex> sourceExecutionVertices = new HashSet<>();
-        executionEdges.forEach(
-                edge -> {
-                    ExecutionVertex leftVertex = edge.getLeftVertex();
-                    ExecutionVertex rightVertex = edge.getRightVertex();
-                    if (leftVertex.getAction() instanceof SourceAction) {
-                        sourceExecutionVertices.add(leftVertex);
-                    }
-                    targetVerticesMap
-                            .computeIfAbsent(leftVertex.getVertexId(), id -> new ArrayList<>())
-                            .add(rightVertex);
-                });
-        if (sourceExecutionVertices.size() != 1) {
-            return executionEdges;
-        }
-        ExecutionVertex sourceExecutionVertex = sourceExecutionVertices.stream().findFirst().get();
-        Action sourceAction = sourceExecutionVertex.getAction();
-        List<CatalogTable> producedCatalogTables = new ArrayList<>();
-        if (sourceAction instanceof SourceAction) {
-            try {
-                producedCatalogTables =
-                        ((SourceAction<?, ?, ?>) sourceAction)
-                                .getSource()
-                                .getProducedCatalogTables();
-            } catch (UnsupportedOperationException e) {
-            }
-        } else if (sourceAction instanceof TransformChainAction) {
-            return executionEdges;
-        } else {
-            throw new SeaTunnelException(
-                    "source action must be SourceAction or TransformChainAction");
-        }
-        if (producedCatalogTables.size() <= 1
-                || targetVerticesMap.get(sourceExecutionVertex.getVertexId()).size() <= 1) {
-            return executionEdges;
-        }
-
-        List<ExecutionVertex> sinkVertices =
-                targetVerticesMap.get(sourceExecutionVertex.getVertexId());
-        Optional<ExecutionVertex> hasOtherAction =
-                sinkVertices.stream()
-                        .filter(vertex -> !(vertex.getAction() instanceof SinkAction))
-                        .findFirst();
-        checkArgument(!hasOtherAction.isPresent());
-
-        Set<ExecutionEdge> newExecutionEdges = new LinkedHashSet<>();
-        ShuffleStrategy shuffleStrategy =
-                ShuffleMultipleRowStrategy.builder()
-                        .jobId(jobImmutableInformation.getJobId())
-                        .inputPartitions(sourceAction.getParallelism())
-                        .catalogTables(producedCatalogTables)
-                        .queueEmptyQueueTtl(
-                                (int)
-                                        (engineConfig.getCheckpointConfig().getCheckpointInterval()
-                                                * 3))
-                        .build();
-        ShuffleConfig shuffleConfig =
-                ShuffleConfig.builder().shuffleStrategy(shuffleStrategy).build();
-
-        long shuffleVertexId = idGenerator.getNextId();
-        String shuffleActionName = String.format("Shuffle [%s]", sourceAction.getName());
-        ShuffleAction shuffleAction =
-                new ShuffleAction(shuffleVertexId, shuffleActionName, shuffleConfig);
-        shuffleAction.setParallelism(sourceAction.getParallelism());
-        ExecutionVertex shuffleVertex =
-                new ExecutionVertex(shuffleVertexId, shuffleAction, shuffleAction.getParallelism());
-        ExecutionEdge sourceToShuffleEdge = new ExecutionEdge(sourceExecutionVertex, shuffleVertex);
-        newExecutionEdges.add(sourceToShuffleEdge);
-
-        for (ExecutionVertex sinkVertex : sinkVertices) {
-            sinkVertex.setParallelism(1);
-            sinkVertex.getAction().setParallelism(1);
-            ExecutionEdge shuffleToSinkEdge = new ExecutionEdge(shuffleVertex, sinkVertex);
-            newExecutionEdges.add(shuffleToSinkEdge);
-        }
-        return newExecutionEdges;
-    }
-
     private Set<ExecutionEdge> generateTransformChainEdges(Set<ExecutionEdge> executionEdges) {
         Map<Long, List<ExecutionVertex>> inputVerticesMap = new HashMap<>();
         Map<Long, List<ExecutionVertex>> targetVerticesMap = new HashMap<>();
-        Set<ExecutionVertex> sourceExecutionVertices = new HashSet<>();
+        // keep deterministic order to avoid UI refresh showing different pipeline prefixes
+        Map<Long, ExecutionVertex> sourceExecutionVerticesById = new HashMap<>();
         executionEdges.forEach(
                 edge -> {
                     ExecutionVertex leftVertex = edge.getLeftVertex();
                     ExecutionVertex rightVertex = edge.getRightVertex();
                     if (leftVertex.getAction() instanceof SourceAction) {
-                        sourceExecutionVertices.add(leftVertex);
+                        sourceExecutionVerticesById.put(leftVertex.getVertexId(), leftVertex);
                     }
                     inputVerticesMap
                             .computeIfAbsent(rightVertex.getVertexId(), id -> new ArrayList<>())
@@ -304,6 +216,10 @@ public class ExecutionPlanGenerator {
 
         Map<Long, ExecutionVertex> transformChainVertexMap = new HashMap<>();
         Map<Long, Long> chainedTransformVerticesMapping = new HashMap<>();
+        List<ExecutionVertex> sourceExecutionVertices =
+                sourceExecutionVerticesById.values().stream()
+                        .sorted(Comparator.comparingLong(ExecutionVertex::getVertexId))
+                        .collect(java.util.stream.Collectors.toList());
         for (ExecutionVertex sourceVertex : sourceExecutionVertices) {
             List<ExecutionVertex> vertices = new ArrayList<>();
             vertices.add(sourceVertex);
@@ -364,11 +280,16 @@ public class ExecutionPlanGenerator {
         collectChainedVertices(
                 currentVertex,
                 transformChainedVertices,
+                observabilityConfig,
                 executionEdges,
                 inputVerticesMap,
                 targetVerticesMap);
         if (transformChainedVertices.size() > 0) {
-            long newVertexId = idGenerator.getNextId();
+            // Use a deterministic ID for the chained vertex. Otherwise, repeated DAG rebuilding
+            // (for REST/UI polling) may assign different IDs to the same transform chain, which
+            // makes UI render edges between wrong vertices (especially for multi-pipeline jobs).
+            long newVertexId =
+                    computeChainedTransformVertexId(transformChainedVertices, idGenerator);
             List<SeaTunnelTransform> transforms = new ArrayList<>(transformChainedVertices.size());
             List<String> names = new ArrayList<>(transformChainedVertices.size());
             Set<URL> jars = new HashSet<>();
@@ -390,9 +311,15 @@ public class ExecutionPlanGenerator {
                             });
             String transformChainActionName =
                     String.format("TransformChain[%s]", String.join("->", names));
+            TransformChainConfig chainConfig = new TransformChainConfig(names);
             TransformChainAction transformChainAction =
                     new TransformChainAction(
-                            newVertexId, transformChainActionName, jars, identifiers, transforms);
+                            newVertexId,
+                            transformChainActionName,
+                            jars,
+                            identifiers,
+                            chainConfig,
+                            transforms);
             transformChainAction.setParallelism(currentVertex.getAction().getParallelism());
 
             ExecutionVertex executionVertex =
@@ -404,15 +331,33 @@ public class ExecutionPlanGenerator {
         }
     }
 
+    static long computeChainedTransformVertexId(
+            List<ExecutionVertex> transformChainedVertices, IdGenerator idGenerator) {
+        if (transformChainedVertices == null || transformChainedVertices.isEmpty()) {
+            return idGenerator.getNextId();
+        }
+        return transformChainedVertices.stream()
+                .mapToLong(ExecutionVertex::getVertexId)
+                .min()
+                .orElseGet(idGenerator::getNextId);
+    }
+
     private void collectChainedVertices(
             ExecutionVertex currentVertex,
             List<ExecutionVertex> chainedVertices,
+            ObservabilityConfig observabilityConfig,
             Set<ExecutionEdge> executionEdges,
             Map<Long, List<ExecutionVertex>> inputVerticesMap,
             Map<Long, List<ExecutionVertex>> targetVerticesMap) {
         Action action = currentVertex.getAction();
         // Currently only support Transform action chaining.
         if (action instanceof TransformAction) {
+            if (observabilityConfig.isEnabled()
+                    && !chainedVertices.isEmpty()
+                    && observabilityConfig.getAsyncBoundaries().contains(action.getName())) {
+                // start new chain at this transform (break chaining with its upstream)
+                return;
+            }
             if (chainedVertices.size() == 0) {
                 chainedVertices.add(currentVertex);
             } else if (inputVerticesMap.get(currentVertex.getVertexId()).size() == 1) {
@@ -433,6 +378,7 @@ public class ExecutionPlanGenerator {
             collectChainedVertices(
                     targetVerticesMap.get(currentVertex.getVertexId()).get(0),
                     chainedVertices,
+                    observabilityConfig,
                     executionEdges,
                     inputVerticesMap,
                     targetVerticesMap);
@@ -447,7 +393,7 @@ public class ExecutionPlanGenerator {
         }
         PipelineGenerator pipelineGenerator =
                 new PipelineGenerator(executionVertices, new ArrayList<>(executionEdges));
-        List<Pipeline> pipelines = pipelineGenerator.generatePipelines();
+        List<Pipeline> pipelines = normalizePipelines(pipelineGenerator.generatePipelines());
 
         Set<String> duplicatedActionNames = new HashSet<>();
         Set<String> actionNames = new HashSet<>();
@@ -468,5 +414,35 @@ public class ExecutionPlanGenerator {
                 "Action name is duplicated: " + duplicatedActionNames);
 
         return pipelines;
+    }
+
+    private static List<Pipeline> normalizePipelines(List<Pipeline> pipelines) {
+        if (pipelines == null || pipelines.size() <= 1) {
+            return pipelines;
+        }
+        // PipelineGenerator assigns pipeline IDs based on an internal traversal order which can be
+        // affected by collection iteration order. Normalize the pipeline ordering and re-assign
+        // stable sequential IDs so UI won't observe pipeline prefix "jumping" between refreshes.
+        List<Pipeline> sorted = new ArrayList<>(pipelines);
+        sorted.sort(
+                (p1, p2) -> {
+                    long k1 =
+                            p1.getVertexes().keySet().stream()
+                                    .mapToLong(Long::longValue)
+                                    .min()
+                                    .orElse(Long.MAX_VALUE);
+                    long k2 =
+                            p2.getVertexes().keySet().stream()
+                                    .mapToLong(Long::longValue)
+                                    .min()
+                                    .orElse(Long.MAX_VALUE);
+                    return Long.compare(k1, k2);
+                });
+        List<Pipeline> normalized = new ArrayList<>(sorted.size());
+        for (int i = 0; i < sorted.size(); i++) {
+            Pipeline p = sorted.get(i);
+            normalized.add(new Pipeline(i + 1, p.getEdges(), p.getVertexes()));
+        }
+        return normalized;
     }
 }

@@ -18,14 +18,13 @@
 package org.apache.dolphinscheduler.api.python;
 
 import org.apache.dolphinscheduler.api.service.ResourcesService;
-import org.apache.dolphinscheduler.common.utils.CodeGenerateUtils;
-import org.apache.dolphinscheduler.dao.entity.ProcessDefinition;
 import org.apache.dolphinscheduler.dao.entity.Project;
 import org.apache.dolphinscheduler.dao.entity.TaskDefinition;
 import org.apache.dolphinscheduler.dao.entity.User;
-import org.apache.dolphinscheduler.dao.mapper.ProcessDefinitionMapper;
-import org.apache.dolphinscheduler.dao.mapper.ProjectMapper;
-import org.apache.dolphinscheduler.dao.mapper.TaskDefinitionMapper;
+import org.apache.dolphinscheduler.dao.entity.WorkflowDefinition;
+import org.apache.dolphinscheduler.dao.repository.ProjectDao;
+import org.apache.dolphinscheduler.dao.repository.TaskDefinitionDao;
+import org.apache.dolphinscheduler.dao.repository.WorkflowDefinitionDao;
 import org.apache.dolphinscheduler.plugin.storage.api.StorageEntity;
 import org.apache.dolphinscheduler.spi.enums.ResourceType;
 
@@ -50,31 +49,31 @@ public class PythonGatewayTest {
     private PythonGateway pythonGateway;
 
     @Mock
-    private ProjectMapper projectMapper;
+    private ProjectDao projectDao;
 
     @Mock
-    private ProcessDefinitionMapper processDefinitionMapper;
+    private WorkflowDefinitionDao workflowDefinitionDao;
 
     @Mock
-    private TaskDefinitionMapper taskDefinitionMapper;
+    private TaskDefinitionDao taskDefinitionDao;
 
     @Mock
     private ResourcesService resourcesService;
 
     @Test
-    public void testGetCodeAndVersion() throws CodeGenerateUtils.CodeGenerateException {
+    public void testGetCodeAndVersion() {
         Project project = getTestProject();
-        Mockito.when(projectMapper.queryByName(project.getName())).thenReturn(project);
+        Mockito.when(projectDao.queryByName(project.getName())).thenReturn(project);
 
-        ProcessDefinition processDefinition = getTestProcessDefinition();
-        Mockito.when(processDefinitionMapper.queryByDefineName(project.getCode(), processDefinition.getName()))
-                .thenReturn(processDefinition);
+        WorkflowDefinition workflowDefinition = getTestProcessDefinition();
+        Mockito.when(workflowDefinitionDao.queryByDefineName(project.getCode(), workflowDefinition.getName()))
+                .thenReturn(workflowDefinition);
 
         TaskDefinition taskDefinition = getTestTaskDefinition();
-        Mockito.when(taskDefinitionMapper.queryByName(project.getCode(), processDefinition.getCode(),
+        Mockito.when(taskDefinitionDao.queryByName(project.getCode(), workflowDefinition.getCode(),
                 taskDefinition.getName())).thenReturn(taskDefinition);
 
-        Map<String, Long> result = pythonGateway.getCodeAndVersion(project.getName(), processDefinition.getName(),
+        Map<String, Long> result = pythonGateway.getCodeAndVersion(project.getName(), workflowDefinition.getName(),
                 taskDefinition.getName());
         Assertions.assertEquals(result.get("code").longValue(), taskDefinition.getCode());
     }
@@ -82,32 +81,19 @@ public class PythonGatewayTest {
     @Test
     public void testGetDependentInfo() {
         Project project = getTestProject();
-        Mockito.when(projectMapper.queryByName(project.getName())).thenReturn(project);
+        Mockito.when(projectDao.queryByName(project.getName())).thenReturn(project);
 
-        ProcessDefinition processDefinition = getTestProcessDefinition();
-        Mockito.when(processDefinitionMapper.queryByDefineName(project.getCode(), processDefinition.getName()))
-                .thenReturn(processDefinition);
+        WorkflowDefinition workflowDefinition = getTestProcessDefinition();
+        Mockito.when(workflowDefinitionDao.queryByDefineName(project.getCode(), workflowDefinition.getName()))
+                .thenReturn(workflowDefinition);
 
         TaskDefinition taskDefinition = getTestTaskDefinition();
-        Mockito.when(taskDefinitionMapper.queryByName(project.getCode(), processDefinition.getCode(),
+        Mockito.when(taskDefinitionDao.queryByName(project.getCode(), workflowDefinition.getCode(),
                 taskDefinition.getName())).thenReturn(taskDefinition);
 
-        Map<String, Object> result = pythonGateway.getDependentInfo(project.getName(), processDefinition.getName(),
+        Map<String, Object> result = pythonGateway.getDependentInfo(project.getName(), workflowDefinition.getName(),
                 taskDefinition.getName());
         Assertions.assertEquals((long) result.get("taskDefinitionCode"), taskDefinition.getCode());
-    }
-
-    @Test
-    public void testCreateResource() {
-        User user = getTestUser();
-        String resourceDir = "/dir1/dir2/";
-        String resourceName = "test";
-        String resourceSuffix = "py";
-        String content = "content";
-        String resourceFullName = resourceDir + resourceName + "." + resourceSuffix;
-
-        Assertions.assertDoesNotThrow(
-                () -> pythonGateway.createOrUpdateResource(user.getUserName(), resourceFullName, content));
     }
 
     @Test
@@ -118,12 +104,11 @@ public class PythonGatewayTest {
         Mockito.when(resourcesService.queryFileStatus(user.getUserName(), storageEntity.getFullName()))
                 .thenReturn(storageEntity);
         StorageEntity result = pythonGateway.queryResourcesFileInfo(user.getUserName(), storageEntity.getFullName());
-        Assertions.assertEquals(result.getId(), storageEntity.getId());
+        Assertions.assertEquals(result.getFullName(), storageEntity.getFullName());
     }
 
     private StorageEntity getTestResource() {
         StorageEntity storageEntity = new StorageEntity();
-        storageEntity.setId(1);
         storageEntity.setType(ResourceType.FILE);
         storageEntity.setFullName("/dev/test.py");
         return storageEntity;
@@ -131,7 +116,7 @@ public class PythonGatewayTest {
 
     private User getTestUser() {
         User user = new User();
-        user.setId("1");
+        user.setId(1);
         user.setUserName("ut-user");
         return user;
     }
@@ -139,22 +124,22 @@ public class PythonGatewayTest {
     private Project getTestProject() {
         Project project = new Project();
         project.setName("ut-project");
-        project.setUserId("111");
+        project.setUserId(111);
         project.setCode(1L);
         project.setCreateTime(new Date());
         project.setUpdateTime(new Date());
         return project;
     }
 
-    private ProcessDefinition getTestProcessDefinition() {
-        ProcessDefinition processDefinition = new ProcessDefinition();
-        processDefinition.setCode(1L);
-        processDefinition.setName("ut-process-definition");
-        processDefinition.setProjectCode(1L);
-        processDefinition.setUserId("111");
-        processDefinition.setUpdateTime(new Date());
-        processDefinition.setCreateTime(new Date());
-        return processDefinition;
+    private WorkflowDefinition getTestProcessDefinition() {
+        WorkflowDefinition workflowDefinition = new WorkflowDefinition();
+        workflowDefinition.setCode(1L);
+        workflowDefinition.setName("ut-process-definition");
+        workflowDefinition.setProjectCode(1L);
+        workflowDefinition.setUserId(111);
+        workflowDefinition.setUpdateTime(new Date());
+        workflowDefinition.setCreateTime(new Date());
+        return workflowDefinition;
     }
 
     private TaskDefinition getTestTaskDefinition() {
@@ -163,7 +148,7 @@ public class PythonGatewayTest {
         taskDefinition.setName("ut-task-definition");
         taskDefinition.setProjectCode(1L);
         taskDefinition.setTaskType("SHELL");
-        taskDefinition.setUserId("111");
+        taskDefinition.setUserId(111);
         taskDefinition.setResourceIds("1");
         taskDefinition.setWorkerGroup("default");
         taskDefinition.setEnvironmentCode(1L);

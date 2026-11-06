@@ -18,26 +18,38 @@
 package org.apache.dolphinscheduler.dao.utils;
 
 import org.apache.dolphinscheduler.common.utils.DateUtils;
-import org.apache.dolphinscheduler.dao.entity.ProcessInstance;
+import org.apache.dolphinscheduler.dao.entity.WorkflowInstance;
+import org.apache.dolphinscheduler.dao.model.WorkflowInstanceSummaryDto;
 
 import java.util.Date;
 
-/**
- * workflow utils
- */
 public class WorkflowUtils {
 
     /**
      * get workflow duration
      * if processInstance is running, the endTime will be the current time
      *
-     * @param processInstance workflow instance
+     * @param workflowInstance workflow instance
      * @return workflow duration
      */
-    public static String getWorkflowInstanceDuration(ProcessInstance processInstance) {
-        return processInstance.getState() != null && processInstance.getState().isFinished()
-                ? DateUtils.format2Duration(processInstance.getStartTime(), processInstance.getEndTime())
-                : DateUtils.format2Duration(processInstance.getStartTime(), new Date());
+    public static String getWorkflowInstanceDuration(WorkflowInstance workflowInstance) {
+        return workflowInstance.getState() != null && workflowInstance.getState().isFinalState()
+                ? DateUtils.format2Duration(workflowInstance.getStartTime(), workflowInstance.getEndTime())
+                : DateUtils.format2Duration(workflowInstance.getStartTime(), new Date());
+    }
+
+    /**
+     * get workflow duration from a {@link WorkflowInstanceSummaryDto}
+     *
+     * @param workflowInstanceSummaryDto workflow instance summary dto
+     * @return workflow duration
+     */
+    public static String getWorkflowInstanceDuration(WorkflowInstanceSummaryDto workflowInstanceSummaryDto) {
+        return workflowInstanceSummaryDto.getState() != null
+                && workflowInstanceSummaryDto.getState().isFinalState()
+                        ? DateUtils.format2Duration(workflowInstanceSummaryDto.getStartTime(),
+                                workflowInstanceSummaryDto.getEndTime())
+                        : DateUtils.format2Duration(workflowInstanceSummaryDto.getStartTime(), new Date());
     }
 
 }

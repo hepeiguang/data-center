@@ -14,10 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import { defineStore } from 'pinia'
 import type { UserState } from '@/store/user/types'
 import type { UserInfoRes } from '@/service/modules/users/types'
-
 
 export const useUserStore = defineStore({
   id: 'user',
@@ -25,9 +25,7 @@ export const useUserStore = defineStore({
     sessionId: '',
     securityConfigType: '',
     baseResDir: '',
-    baseUdfDir: '',
-    userInfo: {},
-    logoutUrl: ''
+    userInfo: {}
   }),
   persist: true,
   getters: {
@@ -42,12 +40,6 @@ export const useUserStore = defineStore({
     },
     getBaseResDir(): string {
       return this.baseResDir
-    },
-    getBaseUdfDir(): string {
-      return this.baseUdfDir
-    },
-    getLogoutUrl(): string {
-      return this.logoutUrl
     }
   },
   actions: {
@@ -62,20 +54,6 @@ export const useUserStore = defineStore({
     },
     setBaseResDir(baseResDir: string): void {
       this.baseResDir = baseResDir
-    },
-    setBaseUdfDir(baseUdfDir: string): void {
-      this.baseUdfDir = baseUdfDir
-    },
-    setLogoutUrl(logoutUrl: string): void {
-      this.logoutUrl = logoutUrl
-    },
-    clear(): void {
-      this.sessionId = ''
-      this.securityConfigType = ''
-      this.baseResDir = ''
-      this.baseUdfDir = ''
-      this.userInfo = {}
-      this.logoutUrl = ''
     }
   }
 })

@@ -22,12 +22,11 @@ import org.apache.dolphinscheduler.api.service.AuditService;
 import org.apache.dolphinscheduler.api.utils.PageInfo;
 import org.apache.dolphinscheduler.common.enums.AuditModelType;
 import org.apache.dolphinscheduler.common.enums.AuditOperationType;
+import org.apache.dolphinscheduler.common.enums.UserType;
 import org.apache.dolphinscheduler.dao.entity.AuditLog;
+import org.apache.dolphinscheduler.dao.entity.User;
 import org.apache.dolphinscheduler.dao.mapper.AuditLogMapper;
 
-import org.apache.parquet.Strings;
-
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -41,6 +40,7 @@ import org.springframework.stereotype.Service;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.google.common.base.Strings;
 
 @Service
 @Slf4j
@@ -61,6 +61,7 @@ public class AuditServiceImpl extends BaseServiceImpl implements AuditService {
     /**
      * query audit log paging
      *
+     * @param loginUser           login user
      * @param modelTypes          object types
      * @param operationTypes      operation types
      * @param startDate           start time
@@ -72,7 +73,8 @@ public class AuditServiceImpl extends BaseServiceImpl implements AuditService {
      * @return audit log string data
      */
     @Override
-    public PageInfo<AuditDto> queryLogListPaging(String modelTypes,
+    public PageInfo<AuditDto> queryLogListPaging(User loginUser,
+                                                 String modelTypes,
                                                  String operationTypes,
                                                  String startDate,
                                                  String endDate,
@@ -85,10 +87,11 @@ public class AuditServiceImpl extends BaseServiceImpl implements AuditService {
 
         Date start = checkAndParseDateParameters(startDate);
         Date end = checkAndParseDateParameters(endDate);
+        Integer userId = loginUser.getUserType() == UserType.ADMIN_USER ? null : loginUser.getId();
 
         IPage<AuditLog> logIPage =
                 auditLogMapper.queryAuditLog(new Page<>(pageNo, pageSize), objectTypeCodeList, operationTypeCodeList,
-                        userName, modelName, start, end);
+                        userId, userName, modelName, start, end);
         List<AuditDto> auditDtos =
                 logIPage.getRecords().stream().map(this::transformAuditLog).collect(Collectors.toList());
 
@@ -96,12 +99,6 @@ public class AuditServiceImpl extends BaseServiceImpl implements AuditService {
         pageInfo.setTotal((int) logIPage.getTotal());
         pageInfo.setTotalList(auditDtos);
         return pageInfo;
-    }
-
-    @Override
-    public List<AuditLog> queryLogList(LocalDateTime startTime, LocalDateTime endTime) {
-        List<AuditLog> auditLogs = auditLogMapper.queryAuditLogList(startTime,endTime);
-        return auditLogs;
     }
 
     private List<String> convertStringToList(String string) {

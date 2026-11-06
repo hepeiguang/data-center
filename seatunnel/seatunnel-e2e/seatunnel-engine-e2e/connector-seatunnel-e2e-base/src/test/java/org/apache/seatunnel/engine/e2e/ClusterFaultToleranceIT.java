@@ -28,7 +28,7 @@ import org.apache.seatunnel.engine.client.job.ClientJobProxy;
 import org.apache.seatunnel.engine.common.config.ConfigProvider;
 import org.apache.seatunnel.engine.common.config.JobConfig;
 import org.apache.seatunnel.engine.common.config.SeaTunnelConfig;
-import org.apache.seatunnel.engine.core.job.JobStatus;
+import org.apache.seatunnel.engine.common.job.JobStatus;
 import org.apache.seatunnel.engine.server.SeaTunnelServerStarter;
 
 import org.awaitility.Awaitility;
@@ -83,6 +83,7 @@ public class ClusterFaultToleranceIT {
         seaTunnelConfig
                 .getHazelcastConfig()
                 .setClusterName(TestUtils.getClusterName(testClusterName));
+        seaTunnelConfig.getEngineConfig().getHttpConfig().setEnabled(false);
 
         try {
             node1 = SeaTunnelServerStarter.createHazelcastInstance(seaTunnelConfig);
@@ -112,23 +113,29 @@ public class ClusterFaultToleranceIT {
                     engineClient.createExecutionContext(
                             testResources.getRight(), jobConfig, seaTunnelConfig);
             ClientJobProxy clientJobProxy = jobExecutionEnv.execute();
-
+            Awaitility.await()
+                    .atMost(10, TimeUnit.SECONDS)
+                    .untilAsserted(
+                            () ->
+                                    Assertions.assertTrue(
+                                            clientJobProxy.getJobStatus().ordinal()
+                                                    >= JobStatus.RUNNING.ordinal()));
             CompletableFuture<JobStatus> objectCompletableFuture =
                     CompletableFuture.supplyAsync(clientJobProxy::waitForJobComplete);
             Awaitility.await()
-                    .atMost(600000, TimeUnit.MILLISECONDS)
+                    .atMost(300000, TimeUnit.MILLISECONDS)
+                    .pollInterval(2000, TimeUnit.MILLISECONDS)
                     .untilAsserted(
                             () -> {
-                                Thread.sleep(2000);
                                 log.warn(
-                                        "\n================================="
-                                                + FileUtils.getFileLineNumberFromDir(
-                                                        testResources.getLeft())
-                                                + "=================================\n");
-                                Assertions.assertTrue(
-                                        objectCompletableFuture.isDone()
-                                                && JobStatus.FINISHED.equals(
-                                                        objectCompletableFuture.get()));
+                                        "\n================================={}=================================\n",
+                                        FileUtils.getFileLineNumberFromDir(
+                                                testResources.getLeft()));
+                                Assertions.assertEquals(
+                                        JobStatus.FINISHED, clientJobProxy.getJobStatus());
+                                Assertions.assertTrue(objectCompletableFuture.isDone());
+                                Assertions.assertEquals(
+                                        JobStatus.FINISHED, objectCompletableFuture.get());
                             });
 
             Long fileLineNumberFromDir =
@@ -205,6 +212,7 @@ public class ClusterFaultToleranceIT {
         seaTunnelConfig
                 .getHazelcastConfig()
                 .setClusterName(TestUtils.getClusterName(testClusterName));
+        seaTunnelConfig.getEngineConfig().getHttpConfig().setEnabled(false);
         try {
             node1 = SeaTunnelServerStarter.createHazelcastInstance(seaTunnelConfig);
 
@@ -233,37 +241,38 @@ public class ClusterFaultToleranceIT {
                     engineClient.createExecutionContext(
                             testResources.getRight(), jobConfig, seaTunnelConfig);
             ClientJobProxy clientJobProxy = jobExecutionEnv.execute();
-
             CompletableFuture<JobStatus> objectCompletableFuture =
                     CompletableFuture.supplyAsync(clientJobProxy::waitForJobComplete);
 
             Awaitility.await()
                     .atMost(2, TimeUnit.MINUTES)
+                    .pollInterval(2, TimeUnit.SECONDS)
                     .untilAsserted(
                             () -> {
-                                Thread.sleep(2000);
+                                Long lineNumberFromDir =
+                                        FileUtils.getFileLineNumberFromDir(testResources.getLeft());
                                 log.warn(
-                                        "\n================================="
-                                                + FileUtils.getFileLineNumberFromDir(
-                                                        testResources.getLeft())
-                                                + "=================================\n");
-                                Assertions.assertTrue(
-                                        JobStatus.RUNNING.equals(clientJobProxy.getJobStatus())
-                                                && testRowNumber * testParallelism
-                                                        == FileUtils.getFileLineNumberFromDir(
-                                                                testResources.getLeft()));
+                                        "\n================================={}=================================\n",
+                                        lineNumberFromDir);
+                                Assertions.assertEquals(
+                                        JobStatus.RUNNING, clientJobProxy.getJobStatus());
+                                Assertions.assertEquals(
+                                        testRowNumber * testParallelism, lineNumberFromDir);
                             });
 
             clientJobProxy.cancelJob();
 
             Awaitility.await()
-                    .atMost(600000, TimeUnit.MILLISECONDS)
+                    .atMost(300000, TimeUnit.MILLISECONDS)
+                    .pollInterval(2000, TimeUnit.MILLISECONDS)
                     .untilAsserted(
-                            () ->
-                                    Assertions.assertTrue(
-                                            objectCompletableFuture.isDone()
-                                                    && JobStatus.CANCELED.equals(
-                                                            objectCompletableFuture.get())));
+                            () -> {
+                                Assertions.assertEquals(
+                                        JobStatus.CANCELED, clientJobProxy.getJobStatus());
+                                Assertions.assertTrue(objectCompletableFuture.isDone());
+                                Assertions.assertEquals(
+                                        JobStatus.CANCELED, objectCompletableFuture.get());
+                            });
 
             Long fileLineNumberFromDir =
                     FileUtils.getFileLineNumberFromDir(testResources.getLeft());
@@ -298,6 +307,7 @@ public class ClusterFaultToleranceIT {
         seaTunnelConfig
                 .getHazelcastConfig()
                 .setClusterName(TestUtils.getClusterName(testClusterName));
+        seaTunnelConfig.getEngineConfig().getHttpConfig().setEnabled(false);
         try {
             node1 = SeaTunnelServerStarter.createHazelcastInstance(seaTunnelConfig);
 
@@ -329,26 +339,24 @@ public class ClusterFaultToleranceIT {
                             testResources.getRight(), jobConfig, seaTunnelConfig);
             ClientJobProxy clientJobProxy = jobExecutionEnv.execute();
 
-            CompletableFuture<JobStatus> objectCompletableFuture =
-                    CompletableFuture.supplyAsync(clientJobProxy::waitForJobComplete);
-
             Awaitility.await()
                     .atMost(180000, TimeUnit.MILLISECONDS)
+                    .pollInterval(2000, TimeUnit.MILLISECONDS)
                     .untilAsserted(
                             () -> {
-                                // Wait some tasks commit finished
-                                Thread.sleep(2000);
+                                Long lineNumberFromDir =
+                                        FileUtils.getFileLineNumberFromDir(testResources.getLeft());
                                 log.warn(
-                                        "\n================================="
-                                                + FileUtils.getFileLineNumberFromDir(
-                                                        testResources.getLeft())
-                                                + "=================================\n");
-                                Assertions.assertTrue(
-                                        JobStatus.RUNNING.equals(clientJobProxy.getJobStatus())
-                                                && FileUtils.getFileLineNumberFromDir(
-                                                                testResources.getLeft())
-                                                        > 1);
+                                        "\n================================={}=================================\n",
+                                        lineNumberFromDir);
+                                Assertions.assertEquals(
+                                        JobStatus.RUNNING, clientJobProxy.getJobStatus());
+                                Assertions.assertTrue(lineNumberFromDir > 1);
                             });
+            // In the restore case, ensure that JabStatus is in the RUNNING state before calling
+            // waitForJobComplete.
+            CompletableFuture<JobStatus> objectCompletableFuture =
+                    CompletableFuture.supplyAsync(clientJobProxy::waitForJobComplete);
 
             // shutdown on worker node
             log.info(
@@ -356,17 +364,21 @@ public class ClusterFaultToleranceIT {
             node2.shutdown();
 
             Awaitility.await()
-                    .atMost(600000, TimeUnit.MILLISECONDS)
+                    .atMost(300000, TimeUnit.MILLISECONDS)
                     .untilAsserted(
-                            () ->
-                                    Assertions.assertTrue(
-                                            objectCompletableFuture.isDone()
-                                                    && JobStatus.FINISHED.equals(
-                                                            objectCompletableFuture.get())));
+                            () -> {
+                                Assertions.assertEquals(
+                                        JobStatus.FINISHED, clientJobProxy.getJobStatus());
+                                Assertions.assertTrue(objectCompletableFuture.isDone());
+                                Assertions.assertEquals(
+                                        JobStatus.FINISHED, objectCompletableFuture.get());
+                            });
 
-            Long fileLineNumberFromDir =
-                    FileUtils.getFileLineNumberFromDir(testResources.getLeft());
-            Assertions.assertEquals(testRowNumber * testParallelism, fileLineNumberFromDir);
+            FaultToleranceFakeSourceAssertions.assertOutputRecoveredAndStable(
+                    testResources.getLeft(),
+                    testRowNumber * testParallelism,
+                    testRowNumber,
+                    60_000L);
 
         } finally {
             if (engineClient != null) {
@@ -397,6 +409,7 @@ public class ClusterFaultToleranceIT {
         seaTunnelConfig
                 .getHazelcastConfig()
                 .setClusterName(TestUtils.getClusterName(testClusterName));
+        seaTunnelConfig.getEngineConfig().getHttpConfig().setEnabled(false);
         try {
             node1 = SeaTunnelServerStarter.createHazelcastInstance(seaTunnelConfig);
 
@@ -425,66 +438,68 @@ public class ClusterFaultToleranceIT {
                     engineClient.createExecutionContext(
                             testResources.getRight(), jobConfig, seaTunnelConfig);
             ClientJobProxy clientJobProxy = jobExecutionEnv.execute();
-
-            CompletableFuture<JobStatus> objectCompletableFuture =
-                    CompletableFuture.supplyAsync(clientJobProxy::waitForJobComplete);
-
             Awaitility.await()
                     .atMost(60000, TimeUnit.MILLISECONDS)
+                    // Wait some tasks commit finished, and we can get rows from the sink target dir
+                    .pollInterval(2000, TimeUnit.MILLISECONDS)
                     .untilAsserted(
                             () -> {
-                                // Wait some tasks commit finished, and we can get rows from the
-                                // sink target dir
-                                Thread.sleep(2000);
+                                Long lineNumberFromDir =
+                                        FileUtils.getFileLineNumberFromDir(testResources.getLeft());
                                 log.warn(
-                                        "\n================================="
-                                                + FileUtils.getFileLineNumberFromDir(
-                                                        testResources.getLeft())
-                                                + "=================================\n");
-                                Assertions.assertTrue(
-                                        JobStatus.RUNNING.equals(clientJobProxy.getJobStatus())
-                                                && FileUtils.getFileLineNumberFromDir(
-                                                                testResources.getLeft())
-                                                        > 1);
+                                        "\n================================={}=================================\n",
+                                        lineNumberFromDir);
+                                Assertions.assertEquals(
+                                        JobStatus.RUNNING, clientJobProxy.getJobStatus());
+                                Assertions.assertTrue(lineNumberFromDir > 1);
                             });
+            // In the restore case, ensure that JabStatus is in the RUNNING state before calling
+            // waitForJobComplete.
+            CompletableFuture<JobStatus> waitForCompletableFuture =
+                    CompletableFuture.supplyAsync(clientJobProxy::waitForJobComplete);
 
             Thread.sleep(5000);
             // shutdown on worker node
             node2.shutdown();
 
             Awaitility.await()
-                    .atMost(600000, TimeUnit.MILLISECONDS)
+                    .atMost(300000, TimeUnit.MILLISECONDS)
+                    .pollInterval(2000, TimeUnit.MILLISECONDS)
                     .untilAsserted(
                             () -> {
-                                // Wait job write all rows in file
-                                Thread.sleep(2000);
+                                Long lineNumberFromDir =
+                                        FileUtils.getFileLineNumberFromDir(testResources.getLeft());
                                 log.warn(
-                                        FileUtils.getFileLineNumberFromDir(testResources.getLeft())
-                                                .toString());
-                                Assertions.assertTrue(
-                                        JobStatus.RUNNING.equals(clientJobProxy.getJobStatus())
-                                                && testRowNumber * testParallelism
-                                                        == FileUtils.getFileLineNumberFromDir(
-                                                                testResources.getLeft()));
+                                        "\n================================={}=================================\n",
+                                        lineNumberFromDir);
+                                Assertions.assertEquals(
+                                        JobStatus.RUNNING, clientJobProxy.getJobStatus());
+                                Assertions.assertTrue(lineNumberFromDir > 1);
                             });
 
-            // sleep 10s and expect the job don't write more rows.
-            Thread.sleep(10000);
+            FaultToleranceFakeSourceAssertions.assertOutputRecoveredAndStable(
+                    testResources.getLeft(),
+                    testRowNumber * testParallelism,
+                    testRowNumber,
+                    300_000L);
             clientJobProxy.cancelJob();
 
             Awaitility.await()
-                    .atMost(600000, TimeUnit.MILLISECONDS)
+                    .atMost(300000, TimeUnit.MILLISECONDS)
                     .untilAsserted(
-                            () ->
-                                    Assertions.assertTrue(
-                                            objectCompletableFuture.isDone()
-                                                    && JobStatus.CANCELED.equals(
-                                                            objectCompletableFuture.get())));
+                            () -> {
+                                Assertions.assertEquals(
+                                        JobStatus.CANCELED, clientJobProxy.getJobStatus());
+                                Assertions.assertTrue(waitForCompletableFuture.isDone());
+                                Assertions.assertEquals(
+                                        JobStatus.CANCELED, waitForCompletableFuture.get());
+                            });
 
-            // check the final rows
-            Long fileLineNumberFromDir =
-                    FileUtils.getFileLineNumberFromDir(testResources.getLeft());
-            Assertions.assertEquals(testRowNumber * testParallelism, fileLineNumberFromDir);
+            FaultToleranceFakeSourceAssertions.assertOutputRecoveredAndStable(
+                    testResources.getLeft(),
+                    testRowNumber * testParallelism,
+                    testRowNumber,
+                    60_000L);
 
         } finally {
             if (engineClient != null) {
@@ -515,6 +530,7 @@ public class ClusterFaultToleranceIT {
         seaTunnelConfig
                 .getHazelcastConfig()
                 .setClusterName(TestUtils.getClusterName(testClusterName));
+        seaTunnelConfig.getEngineConfig().getHttpConfig().setEnabled(false);
         try {
             node1 = SeaTunnelServerStarter.createHazelcastInstance(seaTunnelConfig);
 
@@ -544,49 +560,49 @@ public class ClusterFaultToleranceIT {
                             testResources.getRight(), jobConfig, seaTunnelConfig);
             ClientJobProxy clientJobProxy = jobExecutionEnv.execute();
 
-            CompletableFuture<JobStatus> objectCompletableFuture =
-                    CompletableFuture.supplyAsync(clientJobProxy::waitForJobComplete);
-
             Awaitility.await()
                     .atMost(60000, TimeUnit.MILLISECONDS)
+                    .pollInterval(2000, TimeUnit.MILLISECONDS)
                     .untilAsserted(
                             () -> {
-                                // Wait some tasks commit finished
-                                Thread.sleep(2000);
+                                Long lineNumberFromDir =
+                                        FileUtils.getFileLineNumberFromDir(testResources.getLeft());
                                 log.warn(
-                                        "\n================================="
-                                                + FileUtils.getFileLineNumberFromDir(
-                                                        testResources.getLeft())
-                                                + "=================================\n");
-                                Assertions.assertTrue(
-                                        JobStatus.RUNNING.equals(clientJobProxy.getJobStatus())
-                                                && FileUtils.getFileLineNumberFromDir(
-                                                                testResources.getLeft())
-                                                        > 1);
+                                        "\n================================={}=================================\n",
+                                        lineNumberFromDir);
+                                Assertions.assertEquals(
+                                        JobStatus.RUNNING, clientJobProxy.getJobStatus());
+                                Assertions.assertTrue(lineNumberFromDir > 1);
                             });
+            // In the restore case, ensure that JabStatus is in the RUNNING state before calling
+            // waitForJobComplete.
+            CompletableFuture<JobStatus> objectCompletableFuture =
+                    CompletableFuture.supplyAsync(clientJobProxy::waitForJobComplete);
 
             // shutdown master node
             node1.shutdown();
 
             Awaitility.await()
-                    .atMost(600000, TimeUnit.MILLISECONDS)
+                    .atMost(300000, TimeUnit.MILLISECONDS)
+                    .pollInterval(2000, TimeUnit.MILLISECONDS)
                     .untilAsserted(
                             () -> {
-                                Thread.sleep(2000);
                                 log.warn(
-                                        "\n================================="
-                                                + FileUtils.getFileLineNumberFromDir(
-                                                        testResources.getLeft())
-                                                + "=================================\n");
-                                Assertions.assertTrue(
-                                        objectCompletableFuture.isDone()
-                                                && JobStatus.FINISHED.equals(
-                                                        objectCompletableFuture.get()));
+                                        "\n================================={}=================================\n",
+                                        FileUtils.getFileLineNumberFromDir(
+                                                testResources.getLeft()));
+                                Assertions.assertEquals(
+                                        JobStatus.FINISHED, clientJobProxy.getJobStatus());
+                                Assertions.assertTrue(objectCompletableFuture.isDone());
+                                Assertions.assertEquals(
+                                        JobStatus.FINISHED, objectCompletableFuture.get());
                             });
 
-            Long fileLineNumberFromDir =
-                    FileUtils.getFileLineNumberFromDir(testResources.getLeft());
-            Assertions.assertEquals(testRowNumber * testParallelism, fileLineNumberFromDir);
+            FaultToleranceFakeSourceAssertions.assertOutputRecoveredAndStable(
+                    testResources.getLeft(),
+                    testRowNumber * testParallelism,
+                    testRowNumber,
+                    60_000L);
 
         } finally {
             if (engineClient != null) {
@@ -617,6 +633,7 @@ public class ClusterFaultToleranceIT {
         seaTunnelConfig
                 .getHazelcastConfig()
                 .setClusterName(TestUtils.getClusterName(testClusterName));
+        seaTunnelConfig.getEngineConfig().getHttpConfig().setEnabled(false);
         try {
             node1 = SeaTunnelServerStarter.createHazelcastInstance(seaTunnelConfig);
 
@@ -646,66 +663,65 @@ public class ClusterFaultToleranceIT {
                             testResources.getRight(), jobConfig, seaTunnelConfig);
             ClientJobProxy clientJobProxy = jobExecutionEnv.execute();
 
-            CompletableFuture<JobStatus> objectCompletableFuture =
-                    CompletableFuture.supplyAsync(clientJobProxy::waitForJobComplete);
-
             Awaitility.await()
                     .atMost(60000, TimeUnit.MILLISECONDS)
+                    .pollInterval(2000, TimeUnit.MILLISECONDS)
                     .untilAsserted(
                             () -> {
-                                // Wait some tasks commit finished, and we can get rows from the
-                                // sink target dir
-                                Thread.sleep(2000);
+                                Long lineNumberFromDir =
+                                        FileUtils.getFileLineNumberFromDir(testResources.getLeft());
                                 log.warn(
-                                        "\n================================="
-                                                + FileUtils.getFileLineNumberFromDir(
-                                                        testResources.getLeft())
-                                                + "=================================\n");
-                                Assertions.assertTrue(
-                                        JobStatus.RUNNING.equals(clientJobProxy.getJobStatus())
-                                                && FileUtils.getFileLineNumberFromDir(
-                                                                testResources.getLeft())
-                                                        > 1);
+                                        "\n================================={}=================================\n",
+                                        lineNumberFromDir);
+                                Assertions.assertEquals(
+                                        JobStatus.RUNNING, clientJobProxy.getJobStatus());
+                                Assertions.assertTrue(lineNumberFromDir > 1);
                             });
+            // In the restore case, ensure that JabStatus is in the RUNNING state before calling
+            // waitForJobComplete.
+            CompletableFuture<JobStatus> objectCompletableFuture =
+                    CompletableFuture.supplyAsync(clientJobProxy::waitForJobComplete);
 
             // shutdown master node
             node1.shutdown();
 
             Awaitility.await()
-                    .atMost(600000, TimeUnit.MILLISECONDS)
+                    .atMost(300000, TimeUnit.MILLISECONDS)
+                    .pollInterval(2000, TimeUnit.MILLISECONDS)
                     .untilAsserted(
                             () -> {
-                                // Wait job write all rows in file
-                                Thread.sleep(2000);
+                                Long lineNumberFromDir =
+                                        FileUtils.getFileLineNumberFromDir(testResources.getLeft());
                                 log.warn(
-                                        "\n================================="
-                                                + FileUtils.getFileLineNumberFromDir(
-                                                        testResources.getLeft())
-                                                + "=================================\n");
-                                Assertions.assertTrue(
-                                        JobStatus.RUNNING.equals(clientJobProxy.getJobStatus())
-                                                && testRowNumber * testParallelism
-                                                        == FileUtils.getFileLineNumberFromDir(
-                                                                testResources.getLeft()));
+                                        "\n================================={}=================================\n",
+                                        lineNumberFromDir);
+                                Assertions.assertEquals(
+                                        JobStatus.RUNNING, clientJobProxy.getJobStatus());
+                                Assertions.assertTrue(lineNumberFromDir > 1);
                             });
 
-            // sleep 10s and expect the job don't write more rows.
-            Thread.sleep(10000);
+            FaultToleranceFakeSourceAssertions.assertOutputRecoveredAndStable(
+                    testResources.getLeft(),
+                    testRowNumber * testParallelism,
+                    testRowNumber,
+                    300_000L);
             clientJobProxy.cancelJob();
 
             Awaitility.await()
-                    .atMost(600000, TimeUnit.MILLISECONDS)
+                    .atMost(300000, TimeUnit.MILLISECONDS)
+                    .pollInterval(2000, TimeUnit.MILLISECONDS)
                     .untilAsserted(
-                            () ->
-                                    Assertions.assertTrue(
-                                            objectCompletableFuture.isDone()
-                                                    && JobStatus.CANCELED.equals(
-                                                            objectCompletableFuture.get())));
+                            () -> {
+                                Assertions.assertTrue(objectCompletableFuture.isDone());
+                                Assertions.assertEquals(
+                                        JobStatus.CANCELED, objectCompletableFuture.get());
+                            });
 
-            // check the final rows
-            Long fileLineNumberFromDir =
-                    FileUtils.getFileLineNumberFromDir(testResources.getLeft());
-            Assertions.assertEquals(testRowNumber * testParallelism, fileLineNumberFromDir);
+            FaultToleranceFakeSourceAssertions.assertOutputRecoveredAndStable(
+                    testResources.getLeft(),
+                    testRowNumber * testParallelism,
+                    testRowNumber,
+                    60_000L);
 
         } finally {
             if (engineClient != null) {
@@ -786,6 +802,7 @@ public class ClusterFaultToleranceIT {
             hazelcastConfig.setClusterName(TestUtils.getClusterName(testClusterName));
             SeaTunnelConfig seaTunnelConfig = ConfigProvider.locateAndGetSeaTunnelConfig();
             seaTunnelConfig.setHazelcastConfig(hazelcastConfig);
+            seaTunnelConfig.getEngineConfig().getHttpConfig().setEnabled(false);
             node1 = SeaTunnelServerStarter.createHazelcastInstance(seaTunnelConfig);
 
             node2 = SeaTunnelServerStarter.createHazelcastInstance(seaTunnelConfig);
@@ -815,24 +832,19 @@ public class ClusterFaultToleranceIT {
             ClientJobProxy clientJobProxy = jobExecutionEnv.execute();
             Long jobId = clientJobProxy.getJobId();
 
-            ClientJobProxy finalClientJobProxy = clientJobProxy;
             Awaitility.await()
-                    .atMost(600000, TimeUnit.MILLISECONDS)
+                    .atMost(300000, TimeUnit.MILLISECONDS)
+                    .pollInterval(2000, TimeUnit.MILLISECONDS)
                     .untilAsserted(
                             () -> {
-                                // Wait some tasks commit finished, and we can get rows from the
-                                // sink target dir
-                                Thread.sleep(2000);
+                                Long lineNumberFromDir =
+                                        FileUtils.getFileLineNumberFromDir(testResources.getLeft());
                                 log.warn(
-                                        "\n================================="
-                                                + FileUtils.getFileLineNumberFromDir(
-                                                        testResources.getLeft())
-                                                + "=================================\n");
-                                Assertions.assertTrue(
-                                        JobStatus.RUNNING.equals(finalClientJobProxy.getJobStatus())
-                                                && FileUtils.getFileLineNumberFromDir(
-                                                                testResources.getLeft())
-                                                        > 1);
+                                        "\n================================={}=================================\n",
+                                        lineNumberFromDir);
+                                Assertions.assertEquals(
+                                        JobStatus.RUNNING, clientJobProxy.getJobStatus());
+                                Assertions.assertTrue(lineNumberFromDir > 1);
                             });
 
             Thread.sleep(5000);
@@ -864,54 +876,63 @@ public class ClusterFaultToleranceIT {
                     "==========================================All node is running========================================");
             engineClient = new SeaTunnelClient(clientConfig);
             ClientJobProxy newClientJobProxy = engineClient.createJobClient().getJobProxy(jobId);
-            CompletableFuture<JobStatus> waitForJobCompleteFuture =
-                    CompletableFuture.supplyAsync(newClientJobProxy::waitForJobComplete);
-
-            Thread.sleep(10000);
-
             Awaitility.await()
-                    .atMost(100000, TimeUnit.MILLISECONDS)
+                    .atMost(90000, TimeUnit.MILLISECONDS)
+                    .pollInterval(2000, TimeUnit.MILLISECONDS)
                     .untilAsserted(
                             () -> {
-                                // Wait job write all rows in file
-                                Thread.sleep(2000);
-                                log.warn(
-                                        "\n================================="
-                                                + FileUtils.getFileLineNumberFromDir(
-                                                        testResources.getLeft())
-                                                + "=================================\n");
                                 JobStatus jobStatus = null;
                                 try {
                                     jobStatus = newClientJobProxy.getJobStatus();
                                 } catch (Exception e) {
                                     log.error(ExceptionUtils.getMessage(e));
                                 }
+                                Assertions.assertEquals(JobStatus.RUNNING, jobStatus);
+                            });
+            // In the restore case, ensure that JabStatus is in the RUNNING state before calling
+            // waitForJobComplete.
+            CompletableFuture<JobStatus> waitForCompletableFuture =
+                    CompletableFuture.supplyAsync(newClientJobProxy::waitForJobComplete);
 
-                                Assertions.assertTrue(
-                                        JobStatus.RUNNING.equals(jobStatus)
-                                                && testRowNumber * testParallelism
-                                                        == FileUtils.getFileLineNumberFromDir(
-                                                                testResources.getLeft()));
+            Awaitility.await()
+                    .atMost(100000, TimeUnit.MILLISECONDS)
+                    .pollInterval(2000, TimeUnit.MILLISECONDS)
+                    .untilAsserted(
+                            () -> {
+                                Long lineNumberFromDir =
+                                        FileUtils.getFileLineNumberFromDir(testResources.getLeft());
+                                log.warn(
+                                        "\n================================={}=================================\n",
+                                        lineNumberFromDir);
+                                Assertions.assertTrue(lineNumberFromDir > 1);
                             });
 
-            // sleep 10s and expect the job don't write more rows.
-            Thread.sleep(10000);
+            FaultToleranceFakeSourceAssertions.assertOutputRecoveredAndStable(
+                    testResources.getLeft(),
+                    testRowNumber * testParallelism,
+                    testRowNumber,
+                    100_000L);
+
             log.warn(
                     "==========================================Cancel Job========================================");
             newClientJobProxy.cancelJob();
-
             Awaitility.await()
-                    .atMost(600000, TimeUnit.MILLISECONDS)
+                    .pollDelay(2000, TimeUnit.MILLISECONDS)
+                    .atMost(300000, TimeUnit.MILLISECONDS)
+                    .pollInterval(2000, TimeUnit.MILLISECONDS)
                     .untilAsserted(
-                            () ->
-                                    Assertions.assertTrue(
-                                            waitForJobCompleteFuture.isDone()
-                                                    && JobStatus.CANCELED.equals(
-                                                            waitForJobCompleteFuture.get())));
-            // prove that the task was restarted
-            Long fileLineNumberFromDir =
-                    FileUtils.getFileLineNumberFromDir(testResources.getLeft());
-            Assertions.assertEquals(testRowNumber * testParallelism, fileLineNumberFromDir);
+                            () -> {
+                                Assertions.assertEquals(
+                                        JobStatus.CANCELED, newClientJobProxy.getJobStatus());
+                                Assertions.assertTrue(waitForCompletableFuture.isDone());
+                                Assertions.assertEquals(
+                                        JobStatus.CANCELED, waitForCompletableFuture.get());
+                            });
+            FaultToleranceFakeSourceAssertions.assertOutputRecoveredAndStable(
+                    testResources.getLeft(),
+                    testRowNumber * testParallelism,
+                    testRowNumber,
+                    60_000L);
 
         } finally {
             log.warn(
@@ -1004,6 +1025,7 @@ public class ClusterFaultToleranceIT {
             hazelcastConfig.setClusterName(TestUtils.getClusterName(testClusterName));
             SeaTunnelConfig seaTunnelConfig = ConfigProvider.locateAndGetSeaTunnelConfig();
             seaTunnelConfig.setHazelcastConfig(hazelcastConfig);
+            seaTunnelConfig.getEngineConfig().getHttpConfig().setEnabled(false);
             node1 = SeaTunnelServerStarter.createHazelcastInstance(seaTunnelConfig);
 
             node2 = SeaTunnelServerStarter.createHazelcastInstance(seaTunnelConfig);
@@ -1033,24 +1055,19 @@ public class ClusterFaultToleranceIT {
             ClientJobProxy clientJobProxy = jobExecutionEnv.execute();
             Long jobId = clientJobProxy.getJobId();
 
-            ClientJobProxy finalClientJobProxy = clientJobProxy;
             Awaitility.await()
-                    .atMost(600000, TimeUnit.MILLISECONDS)
+                    .atMost(300000, TimeUnit.MILLISECONDS)
+                    .pollInterval(2000, TimeUnit.MILLISECONDS)
                     .untilAsserted(
                             () -> {
-                                // Wait some tasks commit finished, and we can get rows from the
-                                // sink target dir
-                                Thread.sleep(2000);
+                                Long lineNumberFromDir =
+                                        FileUtils.getFileLineNumberFromDir(testResources.getLeft());
                                 log.warn(
-                                        "\n================================="
-                                                + FileUtils.getFileLineNumberFromDir(
-                                                        testResources.getLeft())
-                                                + "=================================\n");
-                                Assertions.assertTrue(
-                                        JobStatus.RUNNING.equals(finalClientJobProxy.getJobStatus())
-                                                && FileUtils.getFileLineNumberFromDir(
-                                                                testResources.getLeft())
-                                                        > 1);
+                                        "\n================================={}=================================\n",
+                                        lineNumberFromDir);
+                                Assertions.assertEquals(
+                                        JobStatus.RUNNING, clientJobProxy.getJobStatus());
+                                Assertions.assertTrue(lineNumberFromDir > 1);
                             });
 
             Thread.sleep(5000);
@@ -1084,51 +1101,50 @@ public class ClusterFaultToleranceIT {
             CompletableFuture<JobStatus> waitForJobCompleteFuture =
                     CompletableFuture.supplyAsync(newClientJobProxy::waitForJobComplete);
 
-            Thread.sleep(10000);
-
             Awaitility.await()
                     .atMost(100000, TimeUnit.MILLISECONDS)
+                    .pollInterval(2000, TimeUnit.MILLISECONDS)
                     .untilAsserted(
                             () -> {
-                                // Wait job write all rows in file
-                                Thread.sleep(2000);
+                                Long lineNumberFromDir =
+                                        FileUtils.getFileLineNumberFromDir(testResources.getLeft());
                                 log.warn(
-                                        "\n================================="
-                                                + FileUtils.getFileLineNumberFromDir(
-                                                        testResources.getLeft())
-                                                + "=================================\n");
+                                        "\n================================={}=================================\n",
+                                        lineNumberFromDir);
                                 JobStatus jobStatus = null;
                                 try {
                                     jobStatus = newClientJobProxy.getJobStatus();
                                 } catch (Exception e) {
                                     log.error(ExceptionUtils.getMessage(e));
                                 }
-
-                                Assertions.assertTrue(
-                                        JobStatus.RUNNING.equals(jobStatus)
-                                                && testRowNumber * testParallelism
-                                                        == FileUtils.getFileLineNumberFromDir(
-                                                                testResources.getLeft()));
+                                Assertions.assertEquals(JobStatus.RUNNING, jobStatus);
+                                Assertions.assertTrue(lineNumberFromDir > 1);
                             });
 
-            // sleep 10s and expect the job don't write more rows.
-            Thread.sleep(10000);
+            FaultToleranceFakeSourceAssertions.assertOutputRecoveredAndStable(
+                    testResources.getLeft(),
+                    testRowNumber * testParallelism,
+                    testRowNumber,
+                    100_000L);
             log.info(
                     "==========================================Cancel Job========================================");
             newClientJobProxy.cancelJob();
 
             Awaitility.await()
-                    .atMost(600000, TimeUnit.MILLISECONDS)
+                    .atMost(300000, TimeUnit.MILLISECONDS)
                     .untilAsserted(
-                            () ->
-                                    Assertions.assertTrue(
-                                            waitForJobCompleteFuture.isDone()
-                                                    && JobStatus.CANCELED.equals(
-                                                            waitForJobCompleteFuture.get())));
-            // prove that the task was restarted
-            Long fileLineNumberFromDir =
-                    FileUtils.getFileLineNumberFromDir(testResources.getLeft());
-            Assertions.assertEquals(testRowNumber * testParallelism, fileLineNumberFromDir);
+                            () -> {
+                                Assertions.assertEquals(
+                                        JobStatus.CANCELED, newClientJobProxy.getJobStatus());
+                                Assertions.assertTrue(waitForJobCompleteFuture.isDone());
+                                Assertions.assertEquals(
+                                        JobStatus.CANCELED, waitForJobCompleteFuture.get());
+                            });
+            FaultToleranceFakeSourceAssertions.assertOutputRecoveredAndStable(
+                    testResources.getLeft(),
+                    testRowNumber * testParallelism,
+                    testRowNumber,
+                    60_000L);
 
         } finally {
             log.info(

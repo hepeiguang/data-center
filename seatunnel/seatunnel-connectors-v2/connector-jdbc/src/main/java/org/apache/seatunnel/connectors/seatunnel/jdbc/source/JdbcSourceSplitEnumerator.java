@@ -20,6 +20,7 @@ package org.apache.seatunnel.connectors.seatunnel.jdbc.source;
 import org.apache.seatunnel.api.source.SourceSplitEnumerator;
 import org.apache.seatunnel.api.table.catalog.TablePath;
 import org.apache.seatunnel.common.exception.CommonErrorCodeDeprecated;
+import org.apache.seatunnel.common.utils.HashUtils;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.config.JdbcSourceConfig;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.exception.JdbcConnectorException;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.state.JdbcSourceState;
@@ -103,16 +104,14 @@ public class JdbcSourceSplitEnumerator
     @Override
     public void addSplitsBack(List<JdbcSourceSplit> splits, int subtaskId) {
         if (!splits.isEmpty()) {
-            synchronized (stateLock) {
-                addPendingSplit(splits, subtaskId);
-                if (context.registeredReaders().contains(subtaskId)) {
-                    assignSplit(Collections.singletonList(subtaskId));
-                } else {
-                    LOG.warn(
-                            "Reader {} is not registered. Pending splits {} are not assigned.",
-                            subtaskId,
-                            splits);
-                }
+            addPendingSplit(splits, subtaskId);
+            if (context.registeredReaders().contains(subtaskId)) {
+                assignSplit(Collections.singletonList(subtaskId));
+            } else {
+                LOG.warn(
+                        "Reader {} is not registered. Pending splits {} are not assigned.",
+                        subtaskId,
+                        splits);
             }
         }
         LOG.info("Add back splits {} to JdbcSourceSplitEnumerator.", splits.size());
@@ -134,9 +133,7 @@ public class JdbcSourceSplitEnumerator
     public void registerReader(int subtaskId) {
         LOG.info("Register reader {} to JdbcSourceSplitEnumerator.", subtaskId);
         if (!pendingSplits.isEmpty()) {
-            synchronized (stateLock) {
-                assignSplit(Collections.singletonList(subtaskId));
-            }
+            assignSplit(Collections.singletonList(subtaskId));
         }
     }
 
@@ -177,6 +174,6 @@ public class JdbcSourceSplitEnumerator
     }
 
     private static int getSplitOwner(String tp, int numReaders) {
-        return (tp.hashCode() & Integer.MAX_VALUE) % numReaders;
+        return HashUtils.bucketIndex(tp.hashCode(), numReaders);
     }
 }

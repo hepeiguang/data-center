@@ -31,7 +31,7 @@ public class ServiceTestUtil {
         return new String(bitArray, StandardCharsets.UTF_8);
     }
 
-    private static User getUser(String userId, String userName, UserType userType) {
+    private static User getUser(Integer userId, String userName, UserType userType) {
         User user = new User();
         user.setUserType(userType);
         user.setId(userId);
@@ -40,9 +40,9 @@ public class ServiceTestUtil {
     }
 
     public static User getAdminUser() {
-        return getUser("1", "admin", UserType.ADMIN_USER);
+        return getUser(1, "admin", UserType.ADMIN_USER);
     }
     public static User getGeneralUser() {
-        return getUser("10", "user", UserType.GENERAL_USER);
+        return getUser(10, "user", UserType.GENERAL_USER);
     }
 }

@@ -1,0 +1,6 @@
+build/ds/**/logs
+build/ds/**/*.log
+build/seatunnel/logs
+build/seatunnel/**/*.log
+build/**/gc-*.log
+README.md

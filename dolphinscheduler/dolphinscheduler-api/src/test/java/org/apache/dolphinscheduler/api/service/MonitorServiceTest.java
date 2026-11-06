@@ -54,9 +54,6 @@ import org.slf4j.LoggerFactory;
 
 import com.baomidou.mybatisplus.annotation.DbType;
 
-/**
- * monitor service test
- */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class MonitorServiceTest {
@@ -83,7 +80,7 @@ public class MonitorServiceTest {
     public void init() {
         user = new User();
         user.setUserType(UserType.ADMIN_USER);
-        user.setId("1");
+        user.setId(1);
     }
 
     @Test
@@ -115,9 +112,9 @@ public class MonitorServiceTest {
     }
 
     private void mockPermissionCheck(String permissionKey, boolean result) {
-        Mockito.when(resourcePermissionCheckService.operationPermissionCheck(AuthorizationType.MONITOR, "1",
+        Mockito.when(resourcePermissionCheckService.operationPermissionCheck(AuthorizationType.MONITOR, 1,
                 permissionKey, serviceLogger)).thenReturn(result);
-        Mockito.when(resourcePermissionCheckService.resourcePermissionCheck(AuthorizationType.MONITOR, null, "",
+        Mockito.when(resourcePermissionCheckService.resourcePermissionCheck(AuthorizationType.MONITOR, null, 0,
                 serviceLogger)).thenReturn(true);
     }
 
@@ -131,7 +128,7 @@ public class MonitorServiceTest {
         Server server = new Server();
         server.setId(1);
         server.setHost("127.0.0.1");
-        server.setZkDirectory("ws/server");
+        server.setServerDirectory("ws/server");
         server.setPort(123);
         server.setCreateTime(new Date());
         server.setLastHeartbeatTime(new Date());

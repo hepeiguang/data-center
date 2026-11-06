@@ -26,7 +26,7 @@ import org.apache.seatunnel.api.table.type.PrimitiveByteArrayType;
 import org.apache.seatunnel.api.table.type.SeaTunnelDataType;
 import org.apache.seatunnel.api.table.type.SeaTunnelRowType;
 import org.apache.seatunnel.common.exception.CommonError;
-import org.apache.seatunnel.connectors.seatunnel.paimon.config.PaimonConfig;
+import org.apache.seatunnel.connectors.seatunnel.paimon.config.PaimonBaseOptions;
 
 import org.apache.paimon.schema.TableSchema;
 import org.apache.paimon.types.ArrayType;
@@ -185,7 +185,7 @@ public class RowTypeConverter {
                 seaTunnelDataType = paimonToSeaTunnelTypeVisitor.visit((ArrayType) dataType);
                 if (seaTunnelDataType == null) {
                     throw CommonError.unsupportedArrayGenericType(
-                            PaimonConfig.CONNECTOR_IDENTITY,
+                            PaimonBaseOptions.CONNECTOR_IDENTITY,
                             dataType.getTypeRoot().toString(),
                             typeDefine.getName());
                 }
@@ -198,7 +198,7 @@ public class RowTypeConverter {
                 break;
             default:
                 throw CommonError.unsupportedDataType(
-                        PaimonConfig.CONNECTOR_IDENTITY,
+                        PaimonBaseOptions.CONNECTOR_IDENTITY,
                         dataType.asSQLString(),
                         typeDefine.getName());
         }
@@ -222,10 +222,14 @@ public class RowTypeConverter {
             DataType dataType =
                     SeaTunnelTypeToPaimonVisitor.INSTANCE.visit(fieldName, fieldTypes[i]);
             DataTypeRoot typeRoot = dataType.getTypeRoot();
-            if (typeRoot.equals(DataTypeRoot.TIMESTAMP_WITHOUT_TIME_ZONE)
-                    || typeRoot.equals(DataTypeRoot.TIMESTAMP_WITH_LOCAL_TIME_ZONE)) {
+            if (typeRoot.equals(DataTypeRoot.TIMESTAMP_WITHOUT_TIME_ZONE)) {
                 DataField dataField = SchemaUtil.getDataField(fields, fieldName);
                 dataType = new TimestampType(((TimestampType) dataField.type()).getPrecision());
+            } else if (typeRoot.equals(DataTypeRoot.TIMESTAMP_WITH_LOCAL_TIME_ZONE)) {
+                DataField dataField = SchemaUtil.getDataField(fields, fieldName);
+                dataType =
+                        new LocalZonedTimestampType(
+                                ((LocalZonedTimestampType) dataField.type()).getPrecision());
             }
             if (typeRoot.equals(DataTypeRoot.TIME_WITHOUT_TIME_ZONE)) {
                 DataField dataField = SchemaUtil.getDataField(fields, fieldName);
@@ -288,6 +292,19 @@ public class RowTypeConverter {
                     builder.dataType(timestampType.getTypeRoot().name());
                     builder.columnType(timestampType.toString());
                     builder.scale(timestampScale);
+                    builder.length(column.getColumnLength());
+                    return builder.build();
+                case TIMESTAMP_TZ:
+                    int tzScale =
+                            Objects.isNull(scale)
+                                    ? LocalZonedTimestampType.DEFAULT_PRECISION
+                                    : scale;
+                    LocalZonedTimestampType tzType =
+                            DataTypes.TIMESTAMP_WITH_LOCAL_TIME_ZONE(tzScale);
+                    builder.nativeType(tzType.copy(column.isNullable()));
+                    builder.dataType(tzType.getTypeRoot().name());
+                    builder.columnType(tzType.toString());
+                    builder.scale(tzScale);
                     builder.length(column.getColumnLength());
                     return builder.build();
                 case TIME:
@@ -404,6 +421,9 @@ public class RowTypeConverter {
                     return DataTypes.TIME(TimeType.MAX_PRECISION);
                 case TIMESTAMP:
                     return DataTypes.TIMESTAMP(TimestampType.MAX_PRECISION);
+                case TIMESTAMP_TZ:
+                    return DataTypes.TIMESTAMP_WITH_LOCAL_TIME_ZONE(
+                            LocalZonedTimestampType.MAX_PRECISION);
                 case MAP:
                     SeaTunnelDataType<?> keyType =
                             ((org.apache.seatunnel.api.table.type.MapType<?, ?>) dataType)
@@ -422,16 +442,19 @@ public class RowTypeConverter {
                     SeaTunnelDataType<?>[] fieldTypes = row.getFieldTypes();
                     String[] fieldNames = row.getFieldNames();
                     int totalFields = row.getTotalFields();
-                    DataType[] dataTypes = new DataType[totalFields];
+                    DataField[] dataFields = new DataField[totalFields];
                     for (int i = 0; i < totalFields; i++) {
-                        dataTypes[i] =
-                                SeaTunnelTypeToPaimonVisitor.INSTANCE.visit(
-                                        fieldNames[i], fieldTypes[i]);
+                        dataFields[i] =
+                                new DataField(
+                                        i,
+                                        fieldNames[i],
+                                        SeaTunnelTypeToPaimonVisitor.INSTANCE.visit(
+                                                fieldNames[i], fieldTypes[i]));
                     }
-                    return DataTypes.ROW(dataTypes);
+                    return DataTypes.ROW(dataFields);
                 default:
                     throw CommonError.unsupportedDataType(
-                            PaimonConfig.CONNECTOR_IDENTITY,
+                            PaimonBaseOptions.CONNECTOR_IDENTITY,
                             dataType.getSqlType().toString(),
                             fieldName);
             }
@@ -527,7 +550,7 @@ public class RowTypeConverter {
 
         @Override
         public SeaTunnelDataType<?> visit(LocalZonedTimestampType localZonedTimestampType) {
-            return LocalTimeType.LOCAL_DATE_TIME_TYPE;
+            return LocalTimeType.OFFSET_DATE_TIME_TYPE;
         }
 
         @Override
@@ -576,7 +599,9 @@ public class RowTypeConverter {
         @Override
         protected SeaTunnelDataType defaultMethod(DataType dataType) {
             throw CommonError.unsupportedDataType(
-                    PaimonConfig.CONNECTOR_IDENTITY, dataType.getTypeRoot().name(), UNKNOWN_FIELD);
+                    PaimonBaseOptions.CONNECTOR_IDENTITY,
+                    dataType.getTypeRoot().name(),
+                    UNKNOWN_FIELD);
         }
     }
 }

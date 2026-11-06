@@ -19,6 +19,7 @@
 package org.apache.seatunnel.connectors.seatunnel.jdbc;
 
 import org.apache.seatunnel.shade.com.google.common.collect.Lists;
+import org.apache.seatunnel.shade.org.apache.commons.lang3.tuple.Pair;
 
 import org.apache.seatunnel.api.table.catalog.CatalogTable;
 import org.apache.seatunnel.api.table.catalog.Column;
@@ -28,8 +29,6 @@ import org.apache.seatunnel.common.utils.JdbcUrlUtil;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.catalog.mysql.MySqlCatalog;
 import org.apache.seatunnel.e2e.common.container.TestContainer;
 
-import org.apache.commons.lang3.tuple.Pair;
-
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.testcontainers.containers.Container;
@@ -37,6 +36,7 @@ import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.containers.wait.strategy.Wait;
+import org.testcontainers.images.PullPolicy;
 import org.testcontainers.utility.DockerImageName;
 import org.testcontainers.utility.DockerLoggerFactory;
 
@@ -47,6 +47,7 @@ import java.math.BigDecimal;
 import java.sql.Date;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -59,7 +60,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class JdbcMysqlSaveModeHandlerIT extends AbstractJdbcIT {
 
-    private static final String MYSQL_IMAGE = "mysql:8.0";
+    private static final String MYSQL_IMAGE = "mysql:8.0.43";
     private static final String MYSQL_CONTAINER_HOST = "mysql-e2e-2";
     private static final String MYSQL_DATABASE = "seatunnel";
     private static final String MYSQL_SOURCE = "source";
@@ -69,6 +70,7 @@ public class JdbcMysqlSaveModeHandlerIT extends AbstractJdbcIT {
     private static final String MYSQL_USERNAME = "root";
     private static final String MYSQL_PASSWORD = "Abc!@#135_seatunnel";
     private static final int MYSQL_PORT = 33063;
+    private static final int MYSQL_CONTAINER_PORT = 3306;
     private static final String MYSQL_URL = "jdbc:mysql://" + HOST + ":%s/%s?useSSL=false";
 
     private static final String DRIVER_CLASS = "com.mysql.cj.jdbc.Driver";
@@ -141,7 +143,7 @@ public class JdbcMysqlSaveModeHandlerIT extends AbstractJdbcIT {
                 .containerEnv(containerEnv)
                 .driverClass(DRIVER_CLASS)
                 .host(HOST)
-                .port(MYSQL_PORT)
+                .port(MYSQL_CONTAINER_PORT)
                 .localPort(MYSQL_PORT)
                 .jdbcTemplate(MYSQL_URL)
                 .jdbcUrl(jdbcUrl)
@@ -173,11 +175,6 @@ public class JdbcMysqlSaveModeHandlerIT extends AbstractJdbcIT {
         Assertions.assertIterableEquals(
                 Collections.singletonList("id"),
                 table.getTableSchema().getPrimaryKey().getColumnNames());
-    }
-
-    @Override
-    String driverUrl() {
-        return "https://repo1.maven.org/maven2/com/mysql/mysql-connector-j/8.0.32/mysql-connector-j-8.0.32.jar";
     }
 
     @Override
@@ -300,17 +297,16 @@ public class JdbcMysqlSaveModeHandlerIT extends AbstractJdbcIT {
 
         GenericContainer<?> container =
                 new MySQLContainer<>(imageName)
+                        .withImagePullPolicy(PullPolicy.ageBased(Duration.ofDays(7)))
                         .withUsername(MYSQL_USERNAME)
                         .withPassword(MYSQL_PASSWORD)
                         .withDatabaseName(MYSQL_DATABASE)
                         .withNetwork(NETWORK)
                         .withNetworkAliases(MYSQL_CONTAINER_HOST)
-                        .withExposedPorts(MYSQL_PORT)
+                        .withExposedPorts(MYSQL_CONTAINER_PORT)
                         .waitingFor(Wait.forHealthcheck())
                         .withLogConsumer(
                                 new Slf4jLogConsumer(DockerLoggerFactory.getLogger(MYSQL_IMAGE)));
-
-        container.setPortBindings(Lists.newArrayList(String.format("%s:%s", MYSQL_PORT, 3306)));
 
         return container;
     }

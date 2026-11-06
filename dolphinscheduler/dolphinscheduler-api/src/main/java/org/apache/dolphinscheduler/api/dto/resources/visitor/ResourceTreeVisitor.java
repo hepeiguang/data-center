@@ -14,6 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.apache.dolphinscheduler.api.dto.resources.visitor;
 
 import org.apache.dolphinscheduler.api.dto.resources.Directory;
@@ -25,14 +26,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-/**
- * resource tree visitor
- */
 public class ResourceTreeVisitor implements Visitor {
 
-    /**
-     * resource list
-     */
     private List<StorageEntity> resourceList;
 
     public ResourceTreeVisitor() {
@@ -122,13 +117,10 @@ public class ResourceTreeVisitor implements Visitor {
             tempResourceComponent = new FileLeaf();
         }
 
-        tempResourceComponent.setName(resource.getAlias());
-        // tempResourceComponent.setFullName(resource.getFullName().replaceFirst("/",""));
+        tempResourceComponent.setName(resource.getFileName());
         tempResourceComponent.setFullName(resource.getFullName());
-        tempResourceComponent.setId(resource.getId());
-        tempResourceComponent.setPid(resource.getPfullName());
-        tempResourceComponent.setIdValue(resource.getId(), resource.isDirectory());
         tempResourceComponent.setType(resource.getType());
+        tempResourceComponent.setCurrentDir(resource.getRelativePath());
         return tempResourceComponent;
     }
 

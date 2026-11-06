@@ -1,0 +1,123 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.apache.dolphinscheduler.plugin.task.seatunnel;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.BooleanUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.dolphinscheduler.common.utils.JSONUtils;
+import org.apache.dolphinscheduler.plugin.task.api.enums.ResourceType;
+import org.apache.dolphinscheduler.plugin.task.api.model.ResourceInfo;
+import org.apache.dolphinscheduler.plugin.task.api.parameters.AbstractParameters;
+import org.apache.dolphinscheduler.plugin.task.api.parameters.resource.ResourceParametersHelper;
+import org.apache.dolphinscheduler.plugin.task.seatunnel.plugin.dto.SeatunnelTaskNodeVO;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+
+@Getter
+@Setter
+@NoArgsConstructor
+@Slf4j
+public class SeatunnelParameters extends AbstractParameters {
+
+    private String startupScript;
+
+    private Boolean useCustom;
+
+    private String scriptType;
+
+    private String rawScript;
+
+    /**
+     * 前台维护节点关系
+     */
+    private String relation;
+
+    private DeployModeEnum deployMode;
+
+    /**
+     * resource list
+     */
+    private List<ResourceInfo> resourceList;
+
+    private final static ObjectMapper mapper = new ObjectMapper();
+
+    @Override
+    public boolean checkParameters() {
+        return Objects.nonNull(startupScript)
+                && ((BooleanUtils.isTrue(useCustom) && StringUtils.isNotBlank(rawScript))
+                || (BooleanUtils.isFalse(useCustom) && CollectionUtils.isNotEmpty(resourceList)
+                && resourceList.size() == 1));
+    }
+
+    @Override
+    public List<ResourceInfo> getResourceFilesList() {
+        return resourceList;
+    }
+
+    @Override
+    public ResourceParametersHelper getResources() {
+        ResourceParametersHelper resources = super.getResources();
+        if (StringUtils.isBlank(rawScript) || BooleanUtils.isNotTrue(useCustom)) {
+            return resources;
+        }
+        // custom HOCON script has no nested datasource ids
+        if (StringUtils.isBlank(scriptType) || "custom".equalsIgnoreCase(scriptType)) {
+            return resources;
+        }
+        try {
+            List<SeatunnelTaskNodeVO> taskNodeList = parseTaskNodes(rawScript);
+            for (SeatunnelTaskNodeVO seatunnelTaskNodeVO : taskNodeList) {
+                Map<String, Object> params = seatunnelTaskNodeVO.getParams();
+                log.info("seatunnel load resource . params :{}", params);
+                if (params != null && params.containsKey("datasourceId") && params.get("datasourceId") != null) {
+                    resources.put(ResourceType.DATASOURCE, (Integer) params.get("datasourceId"));
+                }
+            }
+        } catch (Exception e) {
+            log.error("Failed to get datasource form seatunnel ", e);
+        }
+        return resources;
+    }
+
+    private List<SeatunnelTaskNodeVO> parseTaskNodes(String script) throws JsonProcessingException {
+        JsonNode root = mapper.readTree(script);
+        if (root.isArray()) {
+            return mapper.convertValue(root, new TypeReference<List<SeatunnelTaskNodeVO>>() {
+            });
+        }
+        if (root.isObject()) {
+            JsonNode nodes = root.has("nodes") ? root.get("nodes") : root.get("taskNodes");
+            if (nodes != null && nodes.isArray()) {
+                return mapper.convertValue(nodes, new TypeReference<List<SeatunnelTaskNodeVO>>() {
+                });
+            }
+        }
+        return java.util.Collections.emptyList();
+    }
+}

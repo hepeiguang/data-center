@@ -17,15 +17,16 @@
 
 package org.apache.seatunnel.connectors.seatunnel.jdbc.internal.dialect.xugu;
 
+import org.apache.seatunnel.shade.org.apache.commons.lang3.StringUtils;
+
 import org.apache.seatunnel.api.table.catalog.TablePath;
+import org.apache.seatunnel.common.utils.SeaTunnelException;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.converter.JdbcRowConverter;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.dialect.DatabaseIdentifier;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.dialect.JdbcDialect;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.dialect.JdbcDialectTypeMapper;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.dialect.dialectenum.FieldIdeEnum;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.source.JdbcSourceTable;
-
-import org.apache.commons.lang3.StringUtils;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -86,11 +87,6 @@ public class XuguDialect implements JdbcDialect {
     }
 
     @Override
-    public String extractTableName(TablePath tablePath) {
-        return tablePath.getSchemaAndTableName();
-    }
-
-    @Override
     public TablePath parse(String tablePath) {
         return TablePath.of(tablePath, true);
     }
@@ -102,11 +98,15 @@ public class XuguDialect implements JdbcDialect {
 
     @Override
     public Optional<String> getUpsertStatement(
-            String database, String tableName, String[] fieldNames, String[] uniqueKeyFields) {
+            String database, String tableName, String[] fieldNames, String[] pkNames) {
         List<String> nonUniqueKeyFields =
                 Arrays.stream(fieldNames)
-                        .filter(fieldName -> !Arrays.asList(uniqueKeyFields).contains(fieldName))
+                        .filter(fieldName -> !Arrays.asList(pkNames).contains(fieldName))
                         .collect(Collectors.toList());
+        if (nonUniqueKeyFields.isEmpty()) {
+            throw new SeaTunnelException(
+                    "The non-primary key field cannot be empty. Please set other fields");
+        }
         String valuesBinding =
                 Arrays.stream(fieldNames)
                         .map(fieldName -> ":" + fieldName + " " + quoteIdentifier(fieldName))
@@ -114,7 +114,7 @@ public class XuguDialect implements JdbcDialect {
 
         String usingClause = String.format("SELECT %s FROM DUAL", valuesBinding);
         String onConditions =
-                Arrays.stream(uniqueKeyFields)
+                Arrays.stream(pkNames)
                         .map(
                                 fieldName ->
                                         String.format(
@@ -139,7 +139,6 @@ public class XuguDialect implements JdbcDialect {
                 Arrays.stream(fieldNames)
                         .map(fieldName -> "SOURCE." + quoteIdentifier(fieldName))
                         .collect(Collectors.joining(", "));
-
         String upsertSQL =
                 String.format(
                         " MERGE INTO %s TARGET"

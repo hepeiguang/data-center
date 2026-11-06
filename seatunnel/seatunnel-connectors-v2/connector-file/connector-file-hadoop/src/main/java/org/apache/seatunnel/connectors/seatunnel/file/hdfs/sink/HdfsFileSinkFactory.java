@@ -17,18 +17,33 @@
 
 package org.apache.seatunnel.connectors.seatunnel.file.hdfs.sink;
 
+import org.apache.seatunnel.shade.com.typesafe.config.Config;
+
+import org.apache.seatunnel.api.configuration.ReadonlyConfig;
 import org.apache.seatunnel.api.configuration.util.OptionRule;
+import org.apache.seatunnel.api.options.SinkConnectorCommonOptions;
+import org.apache.seatunnel.api.table.catalog.CatalogTable;
+import org.apache.seatunnel.api.table.connector.TableSink;
 import org.apache.seatunnel.api.table.factory.Factory;
-import org.apache.seatunnel.api.table.factory.TableSinkFactory;
-import org.apache.seatunnel.connectors.seatunnel.file.config.BaseSinkConfig;
+import org.apache.seatunnel.api.table.factory.TableSinkFactoryContext;
+import org.apache.seatunnel.api.table.type.SeaTunnelRow;
 import org.apache.seatunnel.connectors.seatunnel.file.config.FileFormat;
 import org.apache.seatunnel.connectors.seatunnel.file.config.FileSystemType;
-import org.apache.seatunnel.connectors.seatunnel.file.hdfs.source.config.HdfsSourceConfigOptions;
+import org.apache.seatunnel.connectors.seatunnel.file.config.HadoopConf;
+import org.apache.seatunnel.connectors.seatunnel.file.factory.BaseMultipleTableFileSinkFactory;
+import org.apache.seatunnel.connectors.seatunnel.file.hdfs.config.HdfsFileSinkOptions;
+import org.apache.seatunnel.connectors.seatunnel.file.sink.commit.FileAggregatedCommitInfo;
+import org.apache.seatunnel.connectors.seatunnel.file.sink.commit.FileCommitInfo;
+import org.apache.seatunnel.connectors.seatunnel.file.sink.state.FileSinkState;
 
 import com.google.auto.service.AutoService;
 
+import java.util.Arrays;
+
+import static org.apache.hadoop.fs.CommonConfigurationKeysPublic.FS_DEFAULT_NAME_KEY;
+
 @AutoService(Factory.class)
-public class HdfsFileSinkFactory implements TableSinkFactory {
+public class HdfsFileSinkFactory extends BaseMultipleTableFileSinkFactory {
     @Override
     public String factoryIdentifier() {
         return FileSystemType.HDFS.getFileSystemPluginName();
@@ -37,68 +52,117 @@ public class HdfsFileSinkFactory implements TableSinkFactory {
     @Override
     public OptionRule optionRule() {
         return OptionRule.builder()
-                .required(HdfsSourceConfigOptions.DEFAULT_FS)
-                .required(BaseSinkConfig.FILE_PATH)
-                .optional(BaseSinkConfig.FILE_FORMAT_TYPE)
+                .required(HdfsFileSinkOptions.DEFAULT_FS)
+                .required(HdfsFileSinkOptions.FILE_PATH)
+                .optional(HdfsFileSinkOptions.FILE_FORMAT_TYPE)
+                .optional(SinkConnectorCommonOptions.MULTI_TABLE_SINK_REPLICA)
                 .conditional(
-                        BaseSinkConfig.FILE_FORMAT_TYPE,
+                        HdfsFileSinkOptions.FILE_FORMAT_TYPE,
                         FileFormat.TEXT,
-                        BaseSinkConfig.ROW_DELIMITER,
-                        BaseSinkConfig.FIELD_DELIMITER,
-                        BaseSinkConfig.TXT_COMPRESS,
-                        BaseSinkConfig.ENABLE_HEADER_WRITE)
+                        HdfsFileSinkOptions.ROW_DELIMITER,
+                        HdfsFileSinkOptions.FIELD_DELIMITER,
+                        HdfsFileSinkOptions.TXT_COMPRESS,
+                        HdfsFileSinkOptions.ENABLE_HEADER_WRITE)
                 .conditional(
-                        BaseSinkConfig.FILE_FORMAT_TYPE,
+                        HdfsFileSinkOptions.FILE_FORMAT_TYPE,
                         FileFormat.CSV,
-                        BaseSinkConfig.ROW_DELIMITER,
-                        BaseSinkConfig.TXT_COMPRESS,
-                        BaseSinkConfig.ENABLE_HEADER_WRITE)
+                        HdfsFileSinkOptions.ROW_DELIMITER,
+                        HdfsFileSinkOptions.TXT_COMPRESS,
+                        HdfsFileSinkOptions.ENABLE_HEADER_WRITE)
                 .conditional(
-                        BaseSinkConfig.FILE_FORMAT_TYPE,
+                        HdfsFileSinkOptions.FILE_FORMAT_TYPE,
                         FileFormat.JSON,
-                        BaseSinkConfig.ROW_DELIMITER,
-                        BaseSinkConfig.TXT_COMPRESS)
+                        HdfsFileSinkOptions.ROW_DELIMITER,
+                        HdfsFileSinkOptions.TXT_COMPRESS)
                 .conditional(
-                        BaseSinkConfig.FILE_FORMAT_TYPE,
+                        HdfsFileSinkOptions.FILE_FORMAT_TYPE,
                         FileFormat.ORC,
-                        BaseSinkConfig.ORC_COMPRESS)
+                        HdfsFileSinkOptions.ORC_COMPRESS)
                 .conditional(
-                        BaseSinkConfig.FILE_FORMAT_TYPE,
+                        HdfsFileSinkOptions.FILE_FORMAT_TYPE,
                         FileFormat.PARQUET,
-                        BaseSinkConfig.PARQUET_COMPRESS,
-                        BaseSinkConfig.PARQUET_AVRO_WRITE_FIXED_AS_INT96,
-                        BaseSinkConfig.PARQUET_AVRO_WRITE_TIMESTAMP_AS_INT96)
+                        HdfsFileSinkOptions.PARQUET_COMPRESS,
+                        HdfsFileSinkOptions.PARQUET_AVRO_WRITE_FIXED_AS_INT96,
+                        HdfsFileSinkOptions.PARQUET_AVRO_WRITE_TIMESTAMP_AS_INT96)
                 .conditional(
-                        BaseSinkConfig.FILE_FORMAT_TYPE,
+                        HdfsFileSinkOptions.FILE_FORMAT_TYPE,
                         FileFormat.XML,
-                        BaseSinkConfig.XML_USE_ATTR_FORMAT)
-                .optional(BaseSinkConfig.CUSTOM_FILENAME)
+                        HdfsFileSinkOptions.XML_USE_ATTR_FORMAT,
+                        HdfsFileSinkOptions.XML_ROOT_TAG,
+                        HdfsFileSinkOptions.XML_ROW_TAG)
+                .optional(HdfsFileSinkOptions.CUSTOM_FILENAME)
                 .conditional(
-                        BaseSinkConfig.CUSTOM_FILENAME,
+                        HdfsFileSinkOptions.CUSTOM_FILENAME,
                         true,
-                        BaseSinkConfig.FILE_NAME_EXPRESSION,
-                        BaseSinkConfig.FILENAME_TIME_FORMAT)
-                .optional(BaseSinkConfig.HAVE_PARTITION)
+                        HdfsFileSinkOptions.FILE_NAME_EXPRESSION,
+                        HdfsFileSinkOptions.FILENAME_TIME_FORMAT)
+                .optional(HdfsFileSinkOptions.HAVE_PARTITION)
                 .conditional(
-                        BaseSinkConfig.HAVE_PARTITION,
+                        HdfsFileSinkOptions.HAVE_PARTITION,
                         true,
-                        BaseSinkConfig.PARTITION_BY,
-                        BaseSinkConfig.PARTITION_DIR_EXPRESSION,
-                        BaseSinkConfig.IS_PARTITION_FIELD_WRITE_IN_FILE)
-                .optional(BaseSinkConfig.SINK_COLUMNS)
-                .optional(BaseSinkConfig.IS_ENABLE_TRANSACTION)
-                .optional(BaseSinkConfig.DATE_FORMAT)
-                .optional(BaseSinkConfig.DATETIME_FORMAT)
-                .optional(BaseSinkConfig.TIME_FORMAT)
-                .optional(BaseSinkConfig.SINGLE_FILE_MODE)
-                .optional(BaseSinkConfig.BATCH_SIZE)
-                .optional(BaseSinkConfig.HDFS_SITE_PATH)
-                .optional(BaseSinkConfig.KERBEROS_PRINCIPAL)
-                .optional(BaseSinkConfig.KERBEROS_KEYTAB_PATH)
-                .optional(BaseSinkConfig.KRB5_PATH)
-                .optional(BaseSinkConfig.REMOTE_USER)
-                .optional(BaseSinkConfig.CREATE_EMPTY_FILE_WHEN_NO_DATA)
-                .optional(BaseSinkConfig.FILENAME_EXTENSION)
+                        HdfsFileSinkOptions.PARTITION_BY,
+                        HdfsFileSinkOptions.PARTITION_DIR_EXPRESSION,
+                        HdfsFileSinkOptions.IS_PARTITION_FIELD_WRITE_IN_FILE)
+                .conditional(
+                        HdfsFileSinkOptions.FILE_FORMAT_TYPE,
+                        Arrays.asList(
+                                FileFormat.TEXT, FileFormat.JSON, FileFormat.CSV, FileFormat.XML),
+                        HdfsFileSinkOptions.ENCODING)
+                .optional(HdfsFileSinkOptions.SINK_COLUMNS)
+                .optional(HdfsFileSinkOptions.IS_ENABLE_TRANSACTION)
+                .optional(HdfsFileSinkOptions.DATE_FORMAT_LEGACY)
+                .optional(HdfsFileSinkOptions.DATETIME_FORMAT_LEGACY)
+                .optional(HdfsFileSinkOptions.TIME_FORMAT_LEGACY)
+                .optional(HdfsFileSinkOptions.SINGLE_FILE_MODE)
+                .optional(HdfsFileSinkOptions.BATCH_SIZE)
+                .optional(HdfsFileSinkOptions.HDFS_SITE_PATH)
+                .optional(HdfsFileSinkOptions.KERBEROS_PRINCIPAL)
+                .optional(HdfsFileSinkOptions.KERBEROS_KEYTAB_PATH)
+                .optional(HdfsFileSinkOptions.KRB5_PATH)
+                .optional(HdfsFileSinkOptions.REMOTE_USER)
+                .optional(HdfsFileSinkOptions.CREATE_EMPTY_FILE_WHEN_NO_DATA)
+                .optional(HdfsFileSinkOptions.FILENAME_EXTENSION)
+                .optional(HdfsFileSinkOptions.TMP_PATH)
+                .optional(HdfsFileSinkOptions.SCHEMA_SAVE_MODE)
+                .optional(HdfsFileSinkOptions.DATA_SAVE_MODE)
                 .build();
+    }
+
+    @Override
+    public TableSink<SeaTunnelRow, FileSinkState, FileCommitInfo, FileAggregatedCommitInfo>
+            createSink(TableSinkFactoryContext context) {
+        ReadonlyConfig readonlyConfig = context.getOptions();
+        CatalogTable catalogTable = context.getCatalogTable();
+        HadoopConf hadoopConf = initHadoopConf(readonlyConfig);
+        return () -> new HdfsFileSink(hadoopConf, readonlyConfig, catalogTable);
+    }
+
+    public HadoopConf initHadoopConf(ReadonlyConfig readonlyConfig) {
+        Config pluginConfig = readonlyConfig.toConfig();
+        HadoopConf hadoopConf = new HadoopConf(pluginConfig.getString(FS_DEFAULT_NAME_KEY));
+
+        if (pluginConfig.hasPath(HdfsFileSinkOptions.HDFS_SITE_PATH.key())) {
+            hadoopConf.setHdfsSitePath(
+                    pluginConfig.getString(HdfsFileSinkOptions.HDFS_SITE_PATH.key()));
+        }
+
+        if (pluginConfig.hasPath(HdfsFileSinkOptions.REMOTE_USER.key())) {
+            hadoopConf.setRemoteUser(pluginConfig.getString(HdfsFileSinkOptions.REMOTE_USER.key()));
+        }
+
+        if (pluginConfig.hasPath(HdfsFileSinkOptions.KRB5_PATH.key())) {
+            hadoopConf.setKrb5Path(pluginConfig.getString(HdfsFileSinkOptions.KRB5_PATH.key()));
+        }
+
+        if (pluginConfig.hasPath(HdfsFileSinkOptions.KERBEROS_PRINCIPAL.key())) {
+            hadoopConf.setKerberosPrincipal(
+                    pluginConfig.getString(HdfsFileSinkOptions.KERBEROS_PRINCIPAL.key()));
+        }
+        if (pluginConfig.hasPath(HdfsFileSinkOptions.KERBEROS_KEYTAB_PATH.key())) {
+            hadoopConf.setKerberosKeytabPath(
+                    pluginConfig.getString(HdfsFileSinkOptions.KERBEROS_KEYTAB_PATH.key()));
+        }
+
+        return hadoopConf;
     }
 }

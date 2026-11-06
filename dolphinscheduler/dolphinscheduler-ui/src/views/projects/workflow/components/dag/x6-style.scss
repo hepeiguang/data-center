@@ -40,3 +40,30 @@ $BG_WHITE: #ffffff;
 [class*="dag-dark"] {
   --custom-disable-bg: #d3d3d3
 }
+
+/* Minimap: override X6 solid #fff so frosted glass shows through */
+.x6-widget-minimap {
+  background-color: transparent !important;
+  background: transparent !important;
+
+  .x6-graph {
+    box-shadow: none !important;
+    background: transparent !important;
+  }
+
+  .x6-graph-background {
+    background: transparent !important;
+  }
+}
+
+.x6-widget-minimap-viewport {
+  border-color: rgba(40, 143, 255, 0.75) !important;
+  background: rgba(40, 143, 255, 0.06);
+}
+
+.x6-widget-minimap-viewport-zoom {
+  background-color: rgba(255, 255, 255, 0.7) !important;
+  border-color: rgba(40, 143, 255, 0.75) !important;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}

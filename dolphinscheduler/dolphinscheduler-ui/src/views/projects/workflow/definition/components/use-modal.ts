@@ -23,12 +23,11 @@ import type { Router } from 'vue-router'
 import { format } from 'date-fns'
 import {
   batchCopyByCodes,
-  importProcessDefinition,
-  queryProcessDefinitionByCode
-} from '@/service/modules/process-definition'
+  queryWorkflowDefinitionByCode
+} from '@/service/modules/workflow-definition'
 import { queryAllEnvironmentList } from '@/service/modules/environment'
-import { listNormalAlertGroupById } from '@/service/modules/alert-group'
-import { startProcessInstance } from '@/service/modules/executors'
+import { listAlertGroupById } from '@/service/modules/alert-group'
+import { startWorkflowInstance } from '@/service/modules/executors'
 import {
   createSchedule,
   updateSchedule,
@@ -36,7 +35,7 @@ import {
 } from '@/service/modules/schedules'
 import { parseTime } from '@/common/common'
 import { EnvironmentItem } from '@/service/modules/environment/types'
-import { ITimingState, ProcessInstanceReq } from './types'
+import { ITimingState, WorkflowInstanceReq } from './types'
 import { queryTenantList } from '@/service/modules/tenants'
 import { queryWorkerGroupsByProjectCode } from '@/service/modules/projects-worker-group'
 
@@ -62,44 +61,19 @@ export function useModal(
     [key: string]: { prop: string; value: string }[]
   }
 
-  const resetImportForm = () => {
-    state.importForm.name = ''
-    state.importForm.file = ''
-  }
-
-  const handleImportDefinition = async () => {
-    await state.importFormRef.validate()
-
-    if (state.saving) return
-    state.saving = true
-    try {
-      const formData = new FormData()
-      formData.append('file', state.importForm.file)
-      const code = Number(router.currentRoute.value.params.projectCode)
-      await importProcessDefinition(formData, code)
-      window.$message.success(t('project.workflow.success'))
-      state.saving = false
-      ctx.emit('updateList')
-      ctx.emit('update:show')
-      resetImportForm()
-    } catch (err) {
-      state.saving = false
-    }
-  }
-
   const handleStartDefinition = async (code: number, version: number) => {
     await state.startFormRef.validate()
 
     if (state.saving) return
     state.saving = true
     try {
-      state.startForm.processDefinitionCode = code
+      state.startForm.workflowDefinitionCode = code
       state.startForm.version = version
       const params = omit(state.startForm, [
         'startEndTime',
         'scheduleTime',
         'dataDateType'
-      ]) as ProcessInstanceReq
+      ]) as WorkflowInstanceReq
       if (state.startForm.dataDateType === 1) {
         const start = format(
           new Date(state.startForm.startEndTime[0]),
@@ -119,16 +93,10 @@ export function useModal(
         })
       }
 
-      const startParams = {} as any
-      for (const item of variables.startParamsList) {
-        if (item.value !== '') {
-          startParams[item.prop] = item.value
-        }
-      }
-      params.startParams = !_.isEmpty(startParams)
-        ? JSON.stringify(startParams)
+      params.startParams = !_.isEmpty(variables.startParamsList)
+        ? JSON.stringify(variables.startParamsList)
         : ''
-      await startProcessInstance(params, variables.projectCode)
+      await startWorkflowInstance(params, variables.projectCode)
       window.$message.success(t('project.workflow.success'))
       state.saving = false
       ctx.emit('updateList')
@@ -145,7 +113,7 @@ export function useModal(
     state.saving = true
     try {
       const data: any = getTimingData()
-      data.processDefinitionCode = code
+      data.workflowDefinitionCode = code
 
       await createSchedule(data, variables.projectCode)
       window.$message.success(t('project.workflow.success'))
@@ -212,11 +180,12 @@ export function useModal(
         startTime: start,
         endTime: end,
         crontab: state.timingForm.crontab,
-        timezoneId: state.timingForm.timezoneId
+        timezoneId: state.timingForm.timezoneId,
+        missedFirePolicy: state.timingForm.missedFirePolicy
       }),
       failureStrategy: state.timingForm.failureStrategy,
       warningType: state.timingForm.warningType,
-      processInstancePriority: state.timingForm.processInstancePriority,
+      workflowInstancePriority: state.timingForm.workflowInstancePriority,
       warningGroupId: state.timingForm.warningGroupId
         ? state.timingForm.warningGroupId
         : 0,
@@ -256,7 +225,7 @@ export function useModal(
   }
 
   const getAlertGroups = () => {
-    listNormalAlertGroupById().then((res: any) => {
+    listAlertGroupById().then((res: any) => {
       variables.alertGroups = res.map((item: any) => ({
         label: item.groupName,
         value: item.id
@@ -269,9 +238,9 @@ export function useModal(
       variables.startParamsList = cloneDeep(cachedStartParams[code])
       return
     }
-    queryProcessDefinitionByCode(code, variables.projectCode).then(
+    queryWorkflowDefinitionByCode(code, variables.projectCode).then(
       (res: any) => {
-        variables.startParamsList = res.processDefinition.globalParamList
+        variables.startParamsList = res.workflowDefinition.globalParamList
         cachedStartParams[code] = cloneDeep(variables.startParamsList)
       }
     )
@@ -306,7 +275,6 @@ export function useModal(
 
   return {
     variables,
-    handleImportDefinition,
     handleStartDefinition,
     handleCreateTiming,
     handleUpdateTiming,

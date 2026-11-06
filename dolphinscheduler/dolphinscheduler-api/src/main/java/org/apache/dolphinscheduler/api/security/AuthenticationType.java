@@ -19,18 +19,12 @@ package org.apache.dolphinscheduler.api.security;
 
 import com.baomidou.mybatisplus.annotation.EnumValue;
 
-/**
- * authentication type
- */
 public enum AuthenticationType {
 
     PASSWORD(0, "verify via user name and password"),
     LDAP(1, "verify via LDAP server"),
     CASDOOR_SSO(2, "verify via casdoor sso provider"),
-    DAM(3, "verify via DAM server"),
-    HTZH(4, "verify via htzh server"),
-
-    ;
+    OIDC(3, "verify via OpenID Connect provider");
 
     AuthenticationType(int code, String desc) {
         this.code = code;

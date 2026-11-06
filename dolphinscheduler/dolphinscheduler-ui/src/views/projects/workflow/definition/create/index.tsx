@@ -15,9 +15,9 @@
  * limitations under the License.
  */
 
-import { defineComponent, defineAsyncComponent } from 'vue'
+import { defineComponent } from 'vue'
 import { useMessage } from 'naive-ui'
-// import Dag from '../../components/dag'
+import Dag from '../../components/dag'
 import { DynamicDag } from '@/views/projects/workflow/components/dynamic-dag'
 import { useThemeStore } from '@/store/theme/theme'
 import { useRoute, useRouter } from 'vue-router'
@@ -27,7 +27,7 @@ import {
   Connect,
   Location
 } from '../../components/dag/types'
-import { createProcessDefinition, jgCreateProcessDefinition } from '@/service/modules/process-definition'
+import { createWorkflowDefinition } from '@/service/modules/workflow-definition'
 import { useI18n } from 'vue-i18n'
 import Styles from './index.module.scss'
 
@@ -41,9 +41,6 @@ interface SaveData {
 export default defineComponent({
   name: 'WorkflowDefinitionCreate',
   setup() {
-    const Dag = defineAsyncComponent(() => 
-      import('@/views/projects/workflow/components/dag')
-    )
     const theme = useThemeStore()
     const message = useMessage()
     const { t } = useI18n()
@@ -51,9 +48,6 @@ export default defineComponent({
     const router = useRouter()
     const projectCode = Number(route.params.projectCode)
 
-    // 增加给基改使用内容
-    // 查看路由跳转是否有类型参数
-    const queryParamsType = route.query.type
     const onSave = ({
       taskDefinitions,
       saveForm,
@@ -65,44 +59,21 @@ export default defineComponent({
           prop: p.key,
           value: p.value,
           direct: p.direct,
-          type: 'VARCHAR'
+          type: p.type
         }
       })
-      let params = {
-        taskDefinitionJson: JSON.stringify(taskDefinitions),
-        taskRelationJson: JSON.stringify(connects),
-        locations: JSON.stringify(locations),
-        name: saveForm.name,
-        executionType: saveForm.executionType,
-        description: saveForm.description,
-        globalParams: JSON.stringify(globalParams),
-        timeout: saveForm.timeoutFlag ? saveForm.timeout : 0,
-        projectCode
-      }
-      // 基改项目需要走的上传接口  如果存在类型 则
-      if (queryParamsType) {
-        // 处理下数据
-        // params.projectCode = projectCode
-        let jgparams: any = {
-          "policyName": saveForm.name,
-          "taskType": saveForm.taskType,
-          "description": saveForm.description,
-          "type": queryParamsType == "stategy" ? 0 : 1,
-          "workflow": params
-        }
 
-        jgCreateProcessDefinition(
-          jgparams
-        ).then((ignored: any) => {
-          message.success(t('project.dag.success'))
-        }).finally(() => {
-          window.parent.postMessage('clone', '*')
-        })
-        return
-      }
-      // 原始数据 上传
-      createProcessDefinition(
-        params,
+      createWorkflowDefinition(
+        {
+          taskDefinitionJson: JSON.stringify(taskDefinitions),
+          taskRelationJson: JSON.stringify(connects),
+          locations: JSON.stringify(locations),
+          name: saveForm.name,
+          executionType: saveForm.executionType,
+          description: saveForm.description,
+          globalParams: JSON.stringify(globalParams),
+          timeout: saveForm.timeoutFlag ? saveForm.timeout : 0
+        },
         projectCode
       ).then((ignored: any) => {
         message.success(t('project.dag.success'))
@@ -120,7 +91,7 @@ export default defineComponent({
         {route.query.dynamic === 'true' ? (
           <DynamicDag />
         ) : (
-          <Dag projectCode={projectCode} externalParam={queryParamsType} onSave={onSave} />
+          <Dag projectCode={projectCode} onSave={onSave} />
         )}
       </div>
     )

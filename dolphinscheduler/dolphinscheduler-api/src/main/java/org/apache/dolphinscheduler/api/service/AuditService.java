@@ -20,9 +20,7 @@ package org.apache.dolphinscheduler.api.service;
 import org.apache.dolphinscheduler.api.dto.AuditDto;
 import org.apache.dolphinscheduler.api.utils.PageInfo;
 import org.apache.dolphinscheduler.dao.entity.AuditLog;
-
-import java.time.LocalDateTime;
-import java.util.List;
+import org.apache.dolphinscheduler.dao.entity.User;
 
 /**
  * audit information service
@@ -39,6 +37,7 @@ public interface AuditService {
     /**
      * query audit log list
      *
+     * @param loginUser           login user
      * @param modelTypes          model types
      * @param modelName           model name
      * @param operationTypes      operation types
@@ -49,11 +48,10 @@ public interface AuditService {
      * @param pageSize            page size
      * @return                    audit log string
      */
-    PageInfo<AuditDto> queryLogListPaging(String modelTypes,
+    PageInfo<AuditDto> queryLogListPaging(User loginUser,
+                                          String modelTypes,
                                           String operationTypes, String startTime,
                                           String endTime, String userName, String modelName,
                                           Integer pageNo, Integer pageSize);
-
-    List<AuditLog> queryLogList(LocalDateTime startTime, LocalDateTime endTime);
 
 }

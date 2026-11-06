@@ -30,26 +30,19 @@ export default function getElementByJson(
   const elements: IFormItem[] = []
   for (const item of json) {
     const mergedItem = isFunction(item) ? item() : item
-    const { name, value, field, children, validate, tooltip, ...rest } = mergedItem
+    const { name, value, field, children, validate, ...rest } = mergedItem
     if (value || value === 0) {
       fields[field] = value
       initialValues[field] = value
     }
-
-    if (validate) {
-      console.log(mergedItem)
-
-      rules[field] = formatValidate(validate)
-    }
+    if (validate) rules[field] = formatValidate(validate)
     const element: IFormItem = {
       showLabel: !!name,
       ...omit(rest, ['type', 'props', 'options']),
       label: name,
       path: !children ? field : '',
       widget: () => getField(item, fields, rules),
-      span: toRef(mergedItem, 'span') as Ref<number>,
-      showTooltip: !!tooltip,
-      tooltip: tooltip
+      span: toRef(mergedItem, 'span') as Ref<number>
     }
     elements.push(element)
   }

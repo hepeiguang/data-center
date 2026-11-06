@@ -56,7 +56,7 @@ public interface K8sNamespaceMapper extends BaseMapper<K8sNamespace> {
      * @param userId userId
      * @return namespace list
      */
-    List<K8sNamespace> queryNamespaceExceptUserId(@Param("userId") String userId);
+    List<K8sNamespace> queryNamespaceExceptUserId(@Param("userId") int userId);
 
     /**
      * query authed namespace list by userId
@@ -64,7 +64,7 @@ public interface K8sNamespaceMapper extends BaseMapper<K8sNamespace> {
      * @param userId userId
      * @return namespace list
      */
-    List<K8sNamespace> queryAuthedNamespaceListByUserId(@Param("userId") String userId);
+    List<K8sNamespace> queryAuthedNamespaceListByUserId(@Param("userId") Integer userId);
 
     /**
      * check the target namespace

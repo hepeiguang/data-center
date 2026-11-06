@@ -1,0 +1,28 @@
+[Unit]
+Description=DolphinScheduler Data API (instance %i)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=dsdataapi
+# /etc/data-api/data-api.env:
+#   JAVA_HOME=/opt/jdk-11
+#   SPRING_PROFILES_ACTIVE=h2,cluster
+#   SPRING_DATASOURCE_URL=...
+#   SPRING_DATASOURCE_USERNAME=...
+#   SPRING_DATASOURCE_PASSWORD=...
+#   DATA_API_DATASOURCE_HEALTH_WEBHOOK=https://alert.example.com/hook
+EnvironmentFile=/etc/data-api/data-api.env
+WorkingDirectory=/opt/data-api
+ExecStart=${JAVA_HOME}/bin/java -Xms512m -Xmx2g \
+    -jar /opt/data-api/dolphinscheduler-data-api.jar \
+    --spring.profiles.active=${SPRING_PROFILES_ACTIVE} \
+    --server.port=%i
+Restart=always
+RestartSec=5
+SuccessExitStatus=143
+LimitNOFILE=65535
+
+[Install]
+WantedBy=multi-user.target

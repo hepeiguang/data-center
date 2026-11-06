@@ -18,14 +18,15 @@
 
 package org.apache.seatunnel.connectors.seatunnel.jdbc;
 
+import org.apache.seatunnel.shade.org.apache.commons.lang3.tuple.Pair;
+
 import org.apache.seatunnel.api.table.type.SeaTunnelRow;
 import org.apache.seatunnel.e2e.common.TestResource;
 import org.apache.seatunnel.e2e.common.TestSuiteBase;
 import org.apache.seatunnel.e2e.common.container.ContainerExtendedFactory;
 import org.apache.seatunnel.e2e.common.container.TestContainer;
 import org.apache.seatunnel.e2e.common.junit.TestContainerExtension;
-
-import org.apache.commons.lang3.tuple.Pair;
+import org.apache.seatunnel.e2e.common.util.DependencyJar;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
@@ -62,7 +63,7 @@ import java.util.stream.Stream;
 
 @Slf4j
 public class JdbcMysqlMultipleTablesIT extends TestSuiteBase implements TestResource {
-    private static final String MYSQL_IMAGE = "mysql:8.0";
+    private static final String MYSQL_IMAGE = "mysql:8.0.43";
     private static final String MYSQL_CONTAINER_HOST = "mysql-e2e";
     private static final String MYSQL_DATABASE = "seatunnel";
     private static final String MYSQL_USERNAME = "root";
@@ -87,7 +88,7 @@ public class JdbcMysqlMultipleTablesIT extends TestSuiteBase implements TestReso
                     + "    `c_bit_16`               bit(16)               DEFAULT NULL,\n"
                     + "    `c_bit_32`               bit(32)               DEFAULT NULL,\n"
                     + "    `c_bit_64`               bit(64)               DEFAULT NULL,\n"
-                    + "    `c_boolean`              tinyint(1)            DEFAULT NULL,\n"
+                    + "    `c_tinyint_1`              tinyint(1)            DEFAULT NULL,\n"
                     + "    `c_tinyint`              tinyint(4)            DEFAULT NULL,\n"
                     + "    `c_tinyint_unsigned`     tinyint(3) unsigned   DEFAULT NULL,\n"
                     + "    `c_smallint`             smallint(6)           DEFAULT NULL,\n"
@@ -133,15 +134,9 @@ public class JdbcMysqlMultipleTablesIT extends TestSuiteBase implements TestReso
 
     @TestContainerExtension
     protected final ContainerExtendedFactory extendedFactory =
-            container -> {
-                Container.ExecResult extraCommands =
-                        container.execInContainer(
-                                "bash",
-                                "-c",
-                                "mkdir -p /tmp/seatunnel/plugins/Jdbc/lib && cd /tmp/seatunnel/plugins/Jdbc/lib && wget "
-                                        + "https://repo1.maven.org/maven2/com/mysql/mysql-connector-j/8.0.32/mysql-connector-j-8.0.32.jar");
-                Assertions.assertEquals(0, extraCommands.getExitCode(), extraCommands.getStderr());
-            };
+            container ->
+                    DependencyJar.ofClassName("com.mysql.cj.jdbc.Driver")
+                            .copyTo(container, "/tmp/seatunnel/plugins/Jdbc/lib");
 
     @BeforeAll
     @Override
@@ -202,6 +197,70 @@ public class JdbcMysqlMultipleTablesIT extends TestSuiteBase implements TestReso
                 container.executeJob("/jdbc_mysql_source_and_sink_with_multiple_tables.sql");
         Assertions.assertEquals(
                 0, sqlConfEexecResult.getExitCode(), sqlConfEexecResult.getStderr());
+    }
+
+    @TestTemplate
+    public void testMysqlJdbcRegexPatternE2e(TestContainer container)
+            throws IOException, InterruptedException, SQLException {
+        clearSinkTables();
+
+        Container.ExecResult execResult =
+                container.executeJob("/jdbc_mysql_source_and_sink_with_pattern_tables.conf");
+        Assertions.assertEquals(0, execResult.getExitCode(), execResult.getStderr());
+
+        List<Executable> asserts =
+                TABLES.stream()
+                        .map(
+                                (Function<String, Executable>)
+                                        table ->
+                                                () ->
+                                                        Assertions.assertIterableEquals(
+                                                                query(
+                                                                        String.format(
+                                                                                "SELECT * FROM %s.%s",
+                                                                                SOURCE_DATABASE,
+                                                                                table)),
+                                                                query(
+                                                                        String.format(
+                                                                                "SELECT * FROM %s.%s",
+                                                                                SINK_DATABASE,
+                                                                                table))))
+                        .collect(Collectors.toList());
+        Assertions.assertAll(asserts);
+    }
+
+    @TestTemplate
+    public void testMysqlJdbcContinueOtherTablesWhenSinkSchemaMissing(TestContainer container)
+            throws IOException, InterruptedException, SQLException {
+        clearSinkTables();
+        dropTable(SINK_DATABASE, "table2");
+
+        try {
+            Container.ExecResult execResult =
+                    container.executeJob(
+                            "/jdbc_mysql_source_and_sink_with_missing_sink_table_continue_other_tables.conf");
+
+            String errorOutput =
+                    String.valueOf(execResult.getStderr())
+                            + String.valueOf(execResult.getStdout())
+                            + container.getServerLogs();
+            Assertions.assertTrue(
+                    errorOutput.contains("sink.table2") || errorOutput.contains("table2"),
+                    "job output should contain the failed sink table, but was: " + errorOutput);
+            Assertions.assertTrue(
+                    errorOutput.contains("phase=save_mode")
+                            || errorOutput.contains("save_mode")
+                            || errorOutput.contains("The sink table not exist"),
+                    "job output should contain the save-mode failure detail, but was: "
+                            + errorOutput);
+
+            Assertions.assertIterableEquals(
+                    query(String.format("SELECT * FROM %s.%s", SOURCE_DATABASE, "table1")),
+                    query(String.format("SELECT * FROM %s.%s", SINK_DATABASE, "table1")));
+        } finally {
+            createTables(SINK_DATABASE, Arrays.asList("table2"));
+            clearSinkTables();
+        }
     }
 
     @AfterAll
@@ -297,6 +356,12 @@ public class JdbcMysqlMultipleTablesIT extends TestSuiteBase implements TestReso
         }
     }
 
+    private void dropTable(String database, String table) throws SQLException {
+        try (Statement statement = connection.createStatement()) {
+            statement.execute(String.format("drop table if exists %s.%s", database, table));
+        }
+    }
+
     private static Pair<String[], List<SeaTunnelRow>> generateTestDataset() {
         String[] fieldNames =
                 new String[] {
@@ -305,7 +370,7 @@ public class JdbcMysqlMultipleTablesIT extends TestSuiteBase implements TestReso
                     "c_bit_16",
                     "c_bit_32",
                     "c_bit_64",
-                    "c_boolean",
+                    "c_tinyint_1",
                     "c_tinyint",
                     "c_tinyint_unsigned",
                     "c_smallint",

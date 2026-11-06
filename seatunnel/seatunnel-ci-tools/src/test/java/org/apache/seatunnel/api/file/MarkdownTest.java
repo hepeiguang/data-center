@@ -45,10 +45,10 @@ public class MarkdownTest {
     public static void setup() {
         docsDirectories.add(Paths.get("..", "docs", "en"));
         docsDirectories.add(Paths.get("..", "docs", "zh"));
-        connectorsDirectories.add(Paths.get("..", "docs", "en", "connector-v2", "source"));
-        connectorsDirectories.add(Paths.get("..", "docs", "en", "connector-v2", "sink"));
-        connectorsDirectories.add(Paths.get("..", "docs", "zh", "connector-v2", "source"));
-        connectorsDirectories.add(Paths.get("..", "docs", "zh", "connector-v2", "sink"));
+        connectorsDirectories.add(Paths.get("..", "docs", "en", "connectors", "source"));
+        connectorsDirectories.add(Paths.get("..", "docs", "en", "connectors", "sink"));
+        connectorsDirectories.add(Paths.get("..", "docs", "zh", "connectors", "source"));
+        connectorsDirectories.add(Paths.get("..", "docs", "zh", "connectors", "sink"));
     }
 
     @Test
@@ -164,6 +164,36 @@ public class MarkdownTest {
     }
 
     @Test
+    public void testAllHeaderNotEndWithSymbol() {
+        connectorsDirectories.forEach(
+                docsDirectory -> {
+                    try (Stream<Path> paths = Files.walk(docsDirectory)) {
+                        List<Path> mdFiles =
+                                paths.filter(Files::isRegularFile)
+                                        .filter(path -> path.toString().endsWith(".md"))
+                                        .collect(Collectors.toList());
+
+                        for (Path mdPath : mdFiles) {
+                            List<String> lines = Files.readAllLines(mdPath, StandardCharsets.UTF_8);
+                            for (String line : lines) {
+                                String trimmedLine = line.trim();
+                                if (trimmedLine.startsWith("#")) {
+                                    if (trimmedLine.endsWith(":") || trimmedLine.endsWith("：")) {
+                                        Assertions.fail(
+                                                String.format(
+                                                        "The header in the file %s ends with a symbol. Header content: “%s”",
+                                                        mdPath, trimmedLine));
+                                    }
+                                }
+                            }
+                        }
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+    }
+
+    @Test
     public void testConnectorDocWithChangeLogFlagAndFile() {
         Pattern importPattern =
                 Pattern.compile("import ChangeLog from '../changelog/(connector-.*).md';");
@@ -197,7 +227,7 @@ public class MarkdownTest {
                                                         "..",
                                                         "docs",
                                                         "en",
-                                                        "connector-v2",
+                                                        "connectors",
                                                         "changelog",
                                                         connector + ".md")),
                                         "The change log file for "
@@ -211,7 +241,7 @@ public class MarkdownTest {
                                                         "..",
                                                         "docs",
                                                         "zh",
-                                                        "connector-v2",
+                                                        "connectors",
                                                         "changelog",
                                                         connector + ".md")),
                                         "The change log file for "

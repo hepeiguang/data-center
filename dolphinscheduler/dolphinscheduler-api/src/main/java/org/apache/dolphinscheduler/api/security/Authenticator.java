@@ -44,6 +44,4 @@ public interface Authenticator {
      * @return user
      */
     User getAuthUser(HttpServletRequest request);
-
-    Result<Map<String, String>> validation(String token, String extra);
 }

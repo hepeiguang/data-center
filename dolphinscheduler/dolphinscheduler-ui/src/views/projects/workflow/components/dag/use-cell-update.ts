@@ -23,25 +23,22 @@ import { TASK_TYPES_MAP } from '@/store/project/task-type'
 import { useCustomCellBuilder } from './dag-hooks'
 import utils from '@/utils'
 import type { Edge } from '@antv/x6'
+import {
+  isSeaTunnelChildType,
+  isSeaTunnelComputeParent
+} from './seatunnel-compute-utils'
+import { useI18n } from 'vue-i18n'
 
 interface Options {
   graph: Ref<Graph | undefined>
 }
 
-/**
- * Expose some cell query
- * @param {Options} options
- */
 export function useCellUpdate(options: Options) {
   const { graph } = options
+  const { t } = useI18n()
 
   const { buildNode, buildEdge } = useCustomCellBuilder()
 
-  /**
-   * Set node name by id
-   * @param {string} id
-   * @param {string} name
-   */
   function setNodeName(id: string, newName: string) {
     const node = graph.value?.getCellById(id)
     if (node) {
@@ -51,32 +48,6 @@ export function useCellUpdate(options: Options) {
     }
   }
 
-  /**
- * Set node mode by id
- * @param {string} id
- * @param {string} mode
- */
-  function setNodeMode(id: string, mode: string) {
-    console.log('mode: ', mode);
-    const node = graph.value?.getCellById(id)
-    if (node) {
-      if (mode !== 'visualize') {
-        node.resize(220, 48);
-        node.setZIndex(1);
-        node.setData({ parent: false })
-      } else {
-        node.resize(550, 180);
-        node.setZIndex(-1);
-        node.setData({ parent: true })
-      }
-    }
-  }
-
-  /**
-   * Set the node's fill color by id
-   * @param {string} id
-   * @param {string} color
-   */
   function setNodeFillColor(id: string, color: string) {
     const node = graph.value?.getCellById(id)
     if (!node) {
@@ -85,78 +56,76 @@ export function useCellUpdate(options: Options) {
     node.attr('rect/fill', color)
   }
 
-  /**
-   * Add a node to the graph
-   * @param {string} id
-   * @param {string} taskType
-   * @param {Coordinate} coordinate Default is { x: 100, y: 100 }
-   */
+  function findSeaTunnelParent(coordinate: Coordinate, parentCode?: string) {
+    if (parentCode) {
+      const pItem: any = graph.value?.getCellById(parentCode)
+      if (
+        pItem?.data &&
+        isSeaTunnelComputeParent(pItem.data.taskType) &&
+        (pItem.data.useCustom || pItem.data.parent)
+      ) {
+        return pItem
+      }
+    }
+    const nodes = graph.value?.getNodes() || []
+    for (const item of nodes as any[]) {
+      if (
+        !(
+          item?.data &&
+          isSeaTunnelComputeParent(item.data.taskType) &&
+          (item.data.useCustom || item.data.parent)
+        )
+      ) {
+        continue
+      }
+      const { x, y } = item.getPosition()
+      const { width, height } = item.getSize()
+      if (
+        coordinate.x > x - 60 &&
+        coordinate.x < x + width &&
+        coordinate.y > y &&
+        coordinate.y < y + height
+      ) {
+        return item
+      }
+    }
+    return null
+  }
+
   function addNode(
     id: string,
     type: TaskType,
     name: string,
     flag: string,
-    coordinate: Coordinate = { x: 100, y: 100 }
+    coordinate: Coordinate = { x: 100, y: 100 },
+    scriptType: string = 'visualize',
+    useCustom: boolean = true,
+    parentCode?: string
   ) {
-    if (!TASK_TYPES_MAP[type as TaskType]) {
+    if (!TASK_TYPES_MAP[type as TaskType] && !isSeaTunnelChildType(String(type))) {
       return null
     }
-    const isSeaTunnelChild = type.indexOf('_SOURCE') > 0 || type.indexOf('_SINK') > 0 || type.indexOf('_TRANSFORM') > 0
-    let parentNode = null
-    // llxl 注入分组
-    if (isSeaTunnelChild) {
-      let addChildFlag = false
-      const nodes = graph.value?.getNodes() || []
-      console.log('nodes: ', nodes);
-      if (nodes && nodes.length) {
-        nodes.forEach((item: any) => {
-          if (!addChildFlag && item.data && item.data.taskType == 'SEATUNNEL' && (item.data.useCustom || item.data.parent)) {
-            let { x, y } = item.getPosition()
-            let { width, height } = item.getSize()
-            if (coordinate.x > x - 60 && coordinate.x < x + width && coordinate.y > y && coordinate.y < y + height) {
-              // node.parent = item
-              // if (!item.children) {
-              //   item.children = []
-              // }
-              // item.children.push(node)
-              // item.addChild(child)
-              let flag = false
-              if (coordinate.x + 220 > x + width) {
-                width += 220
-                flag = true
-              }
-              if (coordinate.y + 48 > y + height) {
-                height += 48
-                flag = true
-              }
-              if (coordinate.x - 180 < x) {
-                x -= 180
-                width += 180
-                flag = true
-              }
-              // if (coordinate.y - 48 < y) {
-              //   y -= 48
-              //   flag = true
-              // }
-              if (flag) {
-                item.setPosition({x, y})
-                item.setSize({width, height})
-              }
-              console.log('注入分组')
-              parentNode = item
-              addChildFlag = true
-            }
-          }
-        })
-      }
+
+    let parentNode: any = null
+    if (isSeaTunnelChildType(String(type))) {
+      parentNode = findSeaTunnelParent(coordinate, parentCode)
       if (!parentNode) {
-        window.$message.error('请把seaTunnel的子算子，拖入seaTunnel分组')
+        window.$message.error(t('project.node.st_compute_drop_into_group'))
         return null
       }
     }
-    const node = buildNode(id, type, name, flag, coordinate)
+
+    const node = buildNode(
+      id,
+      type,
+      name,
+      flag,
+      coordinate,
+      isSeaTunnelComputeParent(String(type)) ? scriptType : undefined,
+      isSeaTunnelComputeParent(String(type)) ? useCustom : false
+    )
     const child = graph.value?.addNode(node)
-    if (isSeaTunnelChild && parentNode) {
+    if (isSeaTunnelChildType(String(type)) && parentNode && child) {
       parentNode.addChild(child)
     }
     return child
@@ -215,7 +184,6 @@ export function useCellUpdate(options: Options) {
 
   return {
     setNodeName,
-    setNodeMode,
     setNodeFillColor,
     setNodeEdge,
     addNode,

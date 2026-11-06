@@ -79,7 +79,7 @@ public class ProjectPreferenceControllerTest {
         User loginUser = new User();
         loginUser.setUserType(UserType.GENERAL_USER);
         loginUser.setUserName("userName");
-        loginUser.setId("1");
+        loginUser.setId(1);
         return loginUser;
     }
 

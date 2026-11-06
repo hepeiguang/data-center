@@ -23,19 +23,20 @@ export function useShell(model: { [field: string]: any }): IJsonItem[] {
 
   return [
     {
-      type: 'mirror',
+      type: 'editor',
       field: 'rawScript',
       name: t('project.node.script'),
       validate: {
         trigger: ['input', 'trigger'],
         required: true,
         message: t('project.node.script_tips')
-      },
-      props: {
-        language: 'sql'
       }
     },
     useResources(),
-    ...useCustomParams({ model, field: 'localParams', isSimple: false })
+    ...useCustomParams({
+      model,
+      field: 'localParams',
+      isSimple: model.readonly
+    })
   ]
 }

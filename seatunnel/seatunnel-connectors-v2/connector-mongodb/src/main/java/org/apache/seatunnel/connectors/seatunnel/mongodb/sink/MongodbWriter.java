@@ -18,6 +18,7 @@
 package org.apache.seatunnel.connectors.seatunnel.mongodb.sink;
 
 import org.apache.seatunnel.api.sink.SinkWriter;
+import org.apache.seatunnel.api.sink.SupportMultiTableSinkWriter;
 import org.apache.seatunnel.api.table.type.RowKind;
 import org.apache.seatunnel.api.table.type.SeaTunnelRow;
 import org.apache.seatunnel.connectors.seatunnel.mongodb.exception.MongodbConnectorException;
@@ -47,7 +48,9 @@ import java.util.stream.IntStream;
 import static org.apache.seatunnel.common.exception.CommonErrorCodeDeprecated.WRITER_OPERATION_FAILED;
 
 @Slf4j
-public class MongodbWriter implements SinkWriter<SeaTunnelRow, MongodbCommitInfo, DocumentBulk> {
+public class MongodbWriter
+        implements SinkWriter<SeaTunnelRow, MongodbCommitInfo, DocumentBulk>,
+                SupportMultiTableSinkWriter<Void> {
 
     private MongodbClientProvider collectionProvider;
 
@@ -67,17 +70,16 @@ public class MongodbWriter implements SinkWriter<SeaTunnelRow, MongodbCommitInfo
 
     private boolean transaction;
 
-    // TODO：Reserve parameters.
-    private final SinkWriter.Context context;
-
     public MongodbWriter(
             DocumentSerializer<SeaTunnelRow> serializer,
             MongodbWriterOptions options,
             SinkWriter.Context context) {
         initOptions(options);
-        this.context = context;
         this.serializer = serializer;
         this.bulkRequests = new ArrayList<>();
+        if (!transaction) {
+            context.registerFlushAction(this::timerFlush);
+        }
     }
 
     private void initOptions(MongodbWriterOptions options) {
@@ -128,6 +130,11 @@ public class MongodbWriter implements SinkWriter<SeaTunnelRow, MongodbCommitInfo
         return Optional.of(new MongodbCommitInfo(bsonDocuments));
     }
 
+    /** Flushes pending bulk requests when the Zeta engine delivers a timer flush signal. */
+    private void timerFlush() {
+        doBulkWrite();
+    }
+
     private BsonDocument convertModelToBsonDocument(WriteModel<BsonDocument> model) {
         if (model instanceof InsertOneModel) {
             return ((InsertOneModel<BsonDocument>) model).getDocument();
@@ -148,11 +155,14 @@ public class MongodbWriter implements SinkWriter<SeaTunnelRow, MongodbCommitInfo
 
     @Override
     public void close() {
-        if (!transaction) {
-            doBulkWrite();
-        }
-        if (collectionProvider != null) {
-            collectionProvider.close();
+        try {
+            if (!transaction) {
+                doBulkWrite();
+            }
+        } finally {
+            if (collectionProvider != null) {
+                collectionProvider.close();
+            }
         }
     }
 

@@ -20,6 +20,7 @@ package org.apache.dolphinscheduler.api.vo;
 import org.apache.dolphinscheduler.common.enums.FailureStrategy;
 import org.apache.dolphinscheduler.common.enums.Priority;
 import org.apache.dolphinscheduler.common.enums.ReleaseState;
+import org.apache.dolphinscheduler.common.enums.ScheduleMissedFirePolicy;
 import org.apache.dolphinscheduler.common.enums.WarningType;
 import org.apache.dolphinscheduler.common.utils.DateUtils;
 import org.apache.dolphinscheduler.dao.entity.Schedule;
@@ -34,34 +35,16 @@ public class ScheduleVO {
 
     private int id;
 
-    /**
-     * process definition code
-     */
-    private long processDefinitionCode;
+    private long workflowDefinitionCode;
 
-    /**
-     * process definition name
-     */
-    private String processDefinitionName;
+    private String workflowDefinitionName;
 
-    /**
-     * project name
-     */
     private String projectName;
 
-    /**
-     * schedule description
-     */
     private String definitionDescription;
 
-    /**
-     * schedule start time
-     */
     private String startTime;
 
-    /**
-     * schedule end time
-     */
     private String endTime;
 
     /**
@@ -70,79 +53,40 @@ public class ScheduleVO {
      */
     private String timezoneId;
 
-    /**
-     * crontab expression
-     */
     private String crontab;
 
-    /**
-     * failure strategy
-     */
+    private ScheduleMissedFirePolicy missedFirePolicy;
+
     private FailureStrategy failureStrategy;
 
-    /**
-     * warning type
-     */
     private WarningType warningType;
 
-    /**
-     * create time
-     */
     private Date createTime;
 
-    /**
-     * update time
-     */
     private Date updateTime;
 
-    /**
-     * created user id
-     */
-    private String userId;
+    private int userId;
 
-    /**
-     * created user name
-     */
     private String userName;
 
-    /**
-     * release state
-     */
     private ReleaseState releaseState;
 
-    /**
-     * warning group id
-     */
     private int warningGroupId;
 
-    /**
-     * process instance priority
-     */
-    private Priority processInstancePriority;
+    private Priority workflowInstancePriority;
 
-    /**
-     *  worker group
-     */
     private String workerGroup;
 
-    /**
-     * tenantCode
-     */
     private String tenantCode;
 
-    /**
-     * environment code
-     */
     private Long environmentCode;
 
-    /**
-     * environment name
-     */
     private String environmentName;
 
     public ScheduleVO(Schedule schedule) {
         this.setId(schedule.getId());
         this.setCrontab(schedule.getCrontab());
+        this.setMissedFirePolicy(schedule.getMissedFirePolicy());
         this.setProjectName(schedule.getProjectName());
         this.setUserName(schedule.getUserName());
         this.setWorkerGroup(schedule.getWorkerGroup());
@@ -153,9 +97,9 @@ public class ScheduleVO {
         this.setUpdateTime(schedule.getUpdateTime());
         this.setTimezoneId(schedule.getTimezoneId());
         this.setReleaseState(schedule.getReleaseState());
-        this.setProcessInstancePriority(schedule.getProcessInstancePriority());
-        this.setProcessDefinitionName(schedule.getProcessDefinitionName());
-        this.setProcessDefinitionCode(schedule.getProcessDefinitionCode());
+        this.setWorkflowInstancePriority(schedule.getWorkflowInstancePriority());
+        this.setWorkflowDefinitionName(schedule.getWorkflowDefinitionName());
+        this.setWorkflowDefinitionCode(schedule.getWorkflowDefinitionCode());
         this.setFailureStrategy(schedule.getFailureStrategy());
         this.setEnvironmentCode(schedule.getEnvironmentCode());
         this.setStartTime(DateUtils.dateToString(schedule.getStartTime(), ZoneId.systemDefault().getId()));

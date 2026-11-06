@@ -36,29 +36,14 @@ public class AccessToken {
      */
     @TableId(value = "id", type = IdType.AUTO)
     private Integer id;
-    /**
-     * user_id
-     */
     @TableField(value = "user_id")
-    private String userId;
-    /**
-     * token
-     */
+    private int userId;
     @TableField(value = "token")
     private String token;
-    /**
-     * expire_time
-     */
     @TableField(value = "expire_time")
     private Date expireTime;
-    /**
-     * create_time
-     */
     @TableField(value = "create_time")
     private Date createTime;
-    /**
-     * update_time
-     */
     @TableField(value = "update_time")
     private Date updateTime;
     @TableField(exist = false)
@@ -101,7 +86,7 @@ public class AccessToken {
     @Override
     public int hashCode() {
         int result = id;
-        result = 31 * result + (userId != null ? userId.hashCode() : 0);
+        result = 31 * result + userId;
         result = 31 * result + (userName != null ? userName.hashCode() : 0);
         result = 31 * result + (token != null ? token.hashCode() : 0);
         result = 31 * result + (expireTime != null ? expireTime.hashCode() : 0);

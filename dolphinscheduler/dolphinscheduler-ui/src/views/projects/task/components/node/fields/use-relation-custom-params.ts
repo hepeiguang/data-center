@@ -23,8 +23,7 @@ export function useRelationCustomParams({
   model,
   children,
   childrenField,
-  name,
-  span = true
+  name
 }: {
   model: {
     [field: string]: any
@@ -32,12 +31,10 @@ export function useRelationCustomParams({
   children: IJsonItem
   childrenField: string
   name: string
-  span: boolean
 }): IJsonItem[] {
   const { t } = useI18n()
   const firstLevelRelationSpan = computed(() =>
-    model.dependTaskList.length ? span? 3 :0 : 0
-    // model.dependTaskList.length ? 3  : 0
+    model.dependTaskList.length ? 3 : 0
   )
 
   watchEffect(() => {

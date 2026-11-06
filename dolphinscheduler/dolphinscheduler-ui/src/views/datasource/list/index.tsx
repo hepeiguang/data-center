@@ -136,14 +136,14 @@ const list = defineComponent({
       <NSpace vertical>
         <Card>
           <NSpace justify='space-between'>
-            {/* <NButton
+            <NButton
               onClick={onCreate}
               type='primary'
               size='small'
               class='btn-create-data-source'
             >
               {t('datasource.create_datasource')}
-            </NButton> */}
+            </NButton>
             <NSpace justify='end' wrap={false}>
               <Search
                 v-model:value={this.searchVal}
@@ -159,42 +159,28 @@ const list = defineComponent({
           </NSpace>
         </Card>
         <Card title={t('menu.datasource')}>
-          {{
-            default: () => (
-              <NSpace vertical>
-                <NDataTable
-                  row-class-name='data-source-items'
-                  columns={columns.columns}
-                  data={list}
-                  loading={loading}
-                  striped
-                  scrollX={columns.tableWidth}
-                />
-                <NSpace justify='center'>
-                  <NPagination
-                    page={page}
-                    page-size={pageSize}
-                    item-count={itemCount}
-                    show-quick-jumper
-                    show-size-picker
-                    page-sizes={[10, 30, 50]}
-                    on-update:page={changePage}
-                    on-update:page-size={changePageSize}
-                  />
-                </NSpace>
-              </NSpace>
-            ),
-            'header-extra': () => (
-              <NButton
-              onClick={onCreate}
-              type='primary'
-              size='small'
-              class='btn-create-data-source'
-            >
-              {t('datasource.create_datasource')}
-            </NButton>
-            )
-          }}
+          <NSpace vertical>
+            <NDataTable
+              row-class-name='data-source-items'
+              columns={columns.columns}
+              data={list}
+              loading={loading}
+              striped
+              scrollX={columns.tableWidth}
+            />
+            <NSpace justify='center'>
+              <NPagination
+                page={page}
+                page-size={pageSize}
+                item-count={itemCount}
+                show-quick-jumper
+                show-size-picker
+                page-sizes={[10, 30, 50]}
+                on-update:page={changePage}
+                on-update:page-size={changePageSize}
+              />
+            </NSpace>
+          </NSpace>
         </Card>
         <SourceModal
           show={showSourceModal}

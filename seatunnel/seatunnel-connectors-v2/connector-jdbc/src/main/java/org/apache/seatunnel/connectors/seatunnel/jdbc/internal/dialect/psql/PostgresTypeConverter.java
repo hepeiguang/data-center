@@ -34,6 +34,8 @@ import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.dialect.DatabaseI
 import com.google.auto.service.AutoService;
 import lombok.extern.slf4j.Slf4j;
 
+import java.sql.Types;
+
 // reference http://www.postgres.cn/docs/13/datatype.html
 @Slf4j
 @AutoService(TypeConverter.class)
@@ -83,6 +85,9 @@ public class PostgresTypeConverter implements TypeConverter<BasicTypeDefine> {
     // character varying <=> varchar
     public static final String PG_VARCHAR = "varchar";
     public static final String PG_INET = "inet";
+    public static final String PG_CIDR = "cidr";
+    public static final String PG_MAC_ADDR = "macaddr";
+    public static final String PG_MAC_ADDR8 = "macaddr8";
     public static final String PG_CHARACTER_VARYING = "character varying";
     // character varying[] <=> varchar[] <=> _varchar
     public static final String PG_VARCHAR_ARRAY = "_varchar";
@@ -92,9 +97,11 @@ public class PostgresTypeConverter implements TypeConverter<BasicTypeDefine> {
     public static final String PG_JSONB = "jsonb";
     public static final String PG_XML = "xml";
     public static final String PG_UUID = "uuid";
-    private static final String PG_GEOMETRY = "geometry";
-    private static final String PG_GEOGRAPHY = "geography";
+    public static final String PG_GEOMETRY = "geometry";
+    public static final String PG_GEOGRAPHY = "geography";
     public static final String PG_DATE = "date";
+    public static final String PG_INTERVAL = "interval";
+
     // time without time zone <=> time
     public static final String PG_TIME = "time";
     // time with time zone <=> timetz
@@ -225,6 +232,10 @@ public class PostgresTypeConverter implements TypeConverter<BasicTypeDefine> {
             case PG_GEOMETRY:
             case PG_GEOGRAPHY:
             case PG_INET:
+            case PG_INTERVAL:
+            case PG_CIDR:
+            case PG_MAC_ADDR:
+            case PG_MAC_ADDR8:
                 builder.dataType(BasicType.STRING_TYPE);
                 builder.sourceType(pgDataType);
                 break;
@@ -253,7 +264,6 @@ public class PostgresTypeConverter implements TypeConverter<BasicTypeDefine> {
                 }
                 break;
             case PG_TIMESTAMP:
-            case PG_TIMESTAMP_TZ:
                 builder.dataType(LocalTimeType.LOCAL_DATE_TIME_TYPE);
                 if (typeDefine.getScale() != null && typeDefine.getScale() > MAX_TIMESTAMP_SCALE) {
                     builder.scale(MAX_TIMESTAMP_SCALE);
@@ -265,7 +275,21 @@ public class PostgresTypeConverter implements TypeConverter<BasicTypeDefine> {
                     builder.scale(typeDefine.getScale());
                 }
                 break;
+            case PG_TIMESTAMP_TZ:
+                // timestamptz -> TIMESTAMP_TZ
+                builder.dataType(LocalTimeType.OFFSET_DATE_TIME_TYPE);
+                if (typeDefine.getScale() != null && typeDefine.getScale() > MAX_TIMESTAMP_SCALE) {
+                    builder.scale(MAX_TIMESTAMP_SCALE);
+                } else {
+                    builder.scale(typeDefine.getScale());
+                }
+                break;
             default:
+                if (typeDefine.getSqlType() == Types.OTHER) {
+                    builder.dataType(BasicType.STRING_TYPE);
+                    builder.sourceType(typeDefine.getColumnType());
+                    break;
+                }
                 throw CommonError.convertToSeaTunnelTypeError(
                         identifier(), typeDefine.getDataType(), typeDefine.getName());
         }
@@ -434,6 +458,19 @@ public class PostgresTypeConverter implements TypeConverter<BasicTypeDefine> {
                 }
                 builder.dataType(PG_TIMESTAMP);
                 builder.scale(timestampScale);
+                break;
+            case TIMESTAMP_TZ:
+                Integer timestampTzScale = column.getScale();
+                if (timestampTzScale != null && timestampTzScale > MAX_TIMESTAMP_SCALE) {
+                    timestampTzScale = MAX_TIMESTAMP_SCALE;
+                }
+                String timestampTzColumnType =
+                        (timestampTzScale != null && timestampTzScale > 0)
+                                ? String.format("%s(%s)", PG_TIMESTAMP_TZ, timestampTzScale)
+                                : PG_TIMESTAMP_TZ;
+                builder.columnType(timestampTzColumnType);
+                builder.dataType(PG_TIMESTAMP_TZ);
+                builder.scale(timestampTzScale);
                 break;
             case ARRAY:
                 ArrayType arrayType = (ArrayType) column.getDataType();

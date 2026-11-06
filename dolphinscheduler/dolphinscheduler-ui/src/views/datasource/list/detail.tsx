@@ -32,8 +32,8 @@ import {
   NInputNumber,
   NRadioGroup,
   NRadio,
-  NSpace, NTooltip
-} from "naive-ui";
+  NSpace
+} from 'naive-ui'
 import Modal from '@/components/modal'
 import { useI18n } from 'vue-i18n'
 import { useForm, datasourceType } from './use-form'
@@ -155,6 +155,10 @@ const DetailModal = defineComponent({
       showHost,
       showPort,
       showRestEndpoint,
+      showAccessKeyId,
+      showAccessKeySecret,
+      showRegionId,
+      showEndpoint,
       showAwsRegion,
       showCompatibleMode,
       showConnectType,
@@ -162,13 +166,9 @@ const DetailModal = defineComponent({
       showMode,
       showDataBaseName,
       showJDBCConnectParameters,
-      showKAFKAConnectParameters,
-      showSocketServerParameters,
-      showHttpServerParameters,
-      showUdpMulticastParameters,
-      showHdfsFileParameters,
-      showMinioParameters,
-      showPublicKey,
+      showPrivateKey,
+      showNamespace,
+      showKubeConfig,
       modeOptions,
       redShiftModeOptions,
       sagemakerModeOption,
@@ -260,38 +260,6 @@ const DetailModal = defineComponent({
                   />
                 </NFormItem>
                 <NFormItem
-                  v-show={showUdpMulticastParameters}
-                  label={t('datasource.udp_multicast_type')}
-                  path='udpMulticastType'
-                  show-require-mark
-                >
-                  <NSelect
-                    v-model={[detailForm.udpMulticastType, 'value']}
-                    options={[
-                      { label: 'SOURCE', value: 'SOURCE' },
-                      { label: 'SINK', value: 'SINK' }
-                    ]}
-                  ></NSelect>
-                </NFormItem>
-                <NFormItem
-                  v-show={showUdpMulticastParameters}
-                  label={t('datasource.multicast_address')}
-                  path='multicastAddress'
-                  show-require-mark
-                >
-                  <NInput
-                    allowInput={this.trim}
-                    class='input-ip'
-                    v-model={[detailForm.multicastAddress, 'value']}
-                    type='text'
-                    maxlength={255}
-                    placeholder={`${t(
-                      'datasource.multicast_address_tips'
-                    )} IPv4地址为224.0.0.0 到 239.255.255.255，IPv6 为 ff00::/8 
-                    `}
-                  />
-                </NFormItem>
-                <NFormItem
                   v-show={showRestEndpoint}
                   label={t('datasource.zeppelin_rest_endpoint')}
                   path='restEndPoint'
@@ -304,6 +272,65 @@ const DetailModal = defineComponent({
                     type='text'
                     maxlength={255}
                     placeholder={t('datasource.zeppelin_rest_endpoint_tips')}
+                  />
+                </NFormItem>
+                <NFormItem
+                  v-show={showAccessKeyId}
+                  label={t('datasource.access_key_id')}
+                  path='accessKeyId'
+                  show-require-mark
+                >
+                  <NInput
+                    allowInput={this.trim}
+                    class='input-access_key_id'
+                    v-model={[detailForm.accessKeyId, 'value']}
+                    type='text'
+                    maxlength={255}
+                    placeholder={t('datasource.access_key_id_tips')}
+                  />
+                </NFormItem>
+                <NFormItem
+                  v-show={showAccessKeySecret}
+                  label={t('datasource.access_key_secret')}
+                  path='accessKeySecret'
+                  show-require-mark
+                >
+                  <NInput
+                    allowInput={this.trim}
+                    class='input-access_key_secret'
+                    v-model={[detailForm.accessKeySecret, 'value']}
+                    type='text'
+                    maxlength={255}
+                    placeholder={t('datasource.access_key_secret_tips')}
+                  />
+                </NFormItem>
+                <NFormItem
+                  v-show={showRegionId}
+                  label={t('datasource.region_id')}
+                  path='regionId'
+                  show-require-mark
+                >
+                  <NInput
+                    allowInput={this.trim}
+                    class='input-region_id'
+                    v-model={[detailForm.regionId, 'value']}
+                    type='text'
+                    maxlength={255}
+                    placeholder={t('datasource.region_id_tips')}
+                  />
+                </NFormItem>
+                <NFormItem
+                  v-show={showEndpoint}
+                  label={t('datasource.endpoint')}
+                  path='endpoint'
+                >
+                  <NInput
+                    allowInput={this.trim}
+                    class='input-endpoint'
+                    v-model={[detailForm.endpoint, 'value']}
+                    type='text'
+                    maxlength={255}
+                    placeholder={t('datasource.endpoint_tips')}
                   />
                 </NFormItem>
                 <NFormItem
@@ -580,16 +607,14 @@ const DetailModal = defineComponent({
                   />
                 </NFormItem>
                 <NFormItem
+                  v-show={
+                    (!showMode || detailForm.mode === 'password') &&
+                    detailForm.type != 'K8S' &&
+                    detailForm.type != 'ALIYUN_SERVERLESS_SPARK'
+                  }
                   label={t('datasource.user_name')}
                   path='userName'
                   show-require-mark
-                  v-show={
-                    !showKAFKAConnectParameters &&
-                    !showSocketServerParameters &&
-                    !showHttpServerParameters &&
-                    !showUdpMulticastParameters &&
-                    !showHdfsFileParameters
-                  }
                 >
                   <NInput
                     allowInput={this.trim}
@@ -601,15 +626,13 @@ const DetailModal = defineComponent({
                   />
                 </NFormItem>
                 <NFormItem
+                  v-show={
+                    (!showMode || detailForm.mode === 'password') &&
+                    detailForm.type != 'K8S' &&
+                    detailForm.type != 'ALIYUN_SERVERLESS_SPARK'
+                  }
                   label={t('datasource.user_password')}
                   path='password'
-                  v-show={
-                    !showKAFKAConnectParameters &&
-                    !showSocketServerParameters &&
-                    !showHttpServerParameters &&
-                    !showUdpMulticastParameters &&
-                    !showHdfsFileParameters
-                  }
                 >
                   <NInput
                     allowInput={this.trim}
@@ -716,48 +739,12 @@ const DetailModal = defineComponent({
                   />
                 </NFormItem>
                 <NFormItem
-                  v-show={showKAFKAConnectParameters || showHdfsFileParameters}
-                  label={t('datasource.host')}
-                  path='host'
-                  show-require-mark
-                >
-                  {/* llxl 需修改参数名 */}
-                  <NInput
-                    allowInput={this.trim}
-                    class='input-ip'
-                    v-model={[detailForm.host, 'value']}
-                    type='text'
-                    maxlength={255}
-                    placeholder={t('datasource.host_tips')}
-                  />
-                </NFormItem>
-                <NFormItem
-                  v-show={showKAFKAConnectParameters}
-                  label={t('datasource.kafka_connect_parameters')}
-                  path='other'
+                  v-show={showPrivateKey}
+                  label='PrivateKey'
+                  path='privateKey'
                 >
                   <NInput
-                    allowInput={this.trim}
-                    class='input-jdbc-params'
-                    v-model={[detailForm.other, 'value']}
-                    type='textarea'
-                    autosize={{
-                      minRows: 2
-                    }}
-                    placeholder={`${t(
-                      'datasource.format_tips'
-                    )} {"key1":"value1","key2":"value2"...} ${t(
-                      'datasource.connection_parameter'
-                    )}`}
-                  />
-                </NFormItem>
-                <NFormItem
-                  v-show={showPublicKey}
-                  label='PublicKey'
-                  path='publicKey'
-                >
-                  <NInput
-                    v-model={[detailForm.publicKey, 'value']}
+                    v-model={[detailForm.privateKey, 'value']}
                     type='textarea'
                     autosize={{
                       minRows: 4
@@ -765,236 +752,33 @@ const DetailModal = defineComponent({
                   />
                 </NFormItem>
                 <NFormItem
-                  v-show={showHttpServerParameters}
-                  label={t('datasource.http_endpoint')}
-                  path='httpEndpoint'
+                  v-show={showKubeConfig}
+                  label={t('datasource.kubeConfig')}
+                  path='kubeConfig'
                   show-require-mark
                 >
                   <NInput
                     allowInput={this.trim}
-                    class='input-zeppelin_rest_endpoint'
-                    v-model={[detailForm.httpEndpoint, 'value']}
-                    type='text'
-                    maxlength={255}
-                    placeholder={t('datasource.http_endpoint_tips')}
-                  />
-                </NFormItem>
-                <NFormItem
-                  v-show={showHttpServerParameters}
-                  label={t('datasource.http_method')}
-                  path='httpMethod'
-                  show-require-mark
-                >
-                  <NSelect
-                    v-model={[detailForm.httpMethod, 'value']}
-                    options={[
-                      { label: 'GET', value: 'GET' },
-                      { label: 'POST', value: 'POST' }
-                    ]}
-                  ></NSelect>
-                </NFormItem>
-                <NFormItem
-                  v-show={showHttpServerParameters}
-                  label={t('datasource.http_auth_type')}
-                  path='httpAuthType'
-                  show-require-mark
-                >
-                  <NSelect
-                    v-model={[detailForm.httpAuthType, 'value']}
-                    options={[
-                      { label: 'NONE', value: 'none' },
-                      { label: 'BASIC', value: 'basic' },
-                      { label: 'BEARER', value: 'bearer' },
-                      { label: 'API_KEY', value: 'api_key' }
-                    ]}
-                  ></NSelect>
-                </NFormItem>
-                <NFormItem
-                  v-show={showHttpServerParameters}
-                  label={t('datasource.http_auth_config')}
-                  path='httpAuthConfig'
-                >
-                  <NTooltip trigger='hover' placement='top'>
-                    {{
-                      default: () => (
-                        <div style={{ whiteSpace: 'pre-line' }}>
-                          {
-                            {
-                              basic: `${t(
-                                'datasource.basic_tip'
-                              )}\n{"credentials":"base64编码后的认证参数"}`,
-                              bearer: `${t(
-                                'datasource.bearer_tip'
-                              )}\n{"token":"token值"}`,
-                              api_key: `${t(
-                                'datasource.api_key_tip'
-                              )}\n{"header_name":"认证参数名称","api_key":"认证参数值"}`,
-                              none: t('datasource.none_tip')
-                            }[detailForm.httpAuthType]
-                          }
-                        </div>
-                      ),
-                      trigger: () => (
-                        <NInput
-                          v-model={[detailForm.httpAuthConfig, 'value']}
-                          type='textarea'
-                          autosize={{ minRows: 2 }}
-                          placeholder={`${t(
-                            'datasource.http_auth_config_tips'
-                          )} {"key1":"value1","key2":"value2"...}`}
-                        />
-                      )
-                    }}
-                  </NTooltip>
-                </NFormItem>
-                <NFormItem
-                  v-show={
-                    showHttpServerParameters || showUdpMulticastParameters
-                  }
-                  label={t('datasource.connect_timeout')}
-                  path='connectTimeout'
-                >
-                  <NInputNumber
-                    class='input-number'
-                    v-model={[detailForm.connectTimeout, 'value']}
-                    show-button={false}
-                    placeholder={t('datasource.connectTimeout_tips')}
-                    on-blur={onChangePort}
-                    style={{ width: '100%' }}
-                  />
-                </NFormItem>
-                <NFormItem
-                  v-show={showSocketServerParameters}
-                  label={t('datasource.socket_timeout')}
-                  path='socketTimeout'
-                >
-                  <NInputNumber
-                    class='input-number'
-                    v-model={[detailForm.socketTimeout, 'value']}
-                    show-button={false}
-                    placeholder={t('datasource.socketTimeout_tips')}
-                    on-blur={onChangePort}
-                    style={{ width: '100%' }}
-                  />
-                </NFormItem>
-                <NFormItem
-                  v-show={showSocketServerParameters}
-                  label={t('datasource.max_connections')}
-                  path='maxConnections'
-                >
-                  <NInputNumber
-                    class='input-number'
-                    v-model={[detailForm.maxConnections, 'value']}
-                    show-button={false}
-                    placeholder={t('datasource.max_connections_tips')}
-                    on-blur={onChangePort}
-                    style={{ width: '100%' }}
-                  />
-                </NFormItem>
-                <NFormItem
-                  v-show={
-                    showUdpMulticastParameters || showSocketServerParameters
-                  }
-                  label={t('datasource.buffer_size')}
-                  path='bufferSize'
-                >
-                  <NInputNumber
-                    class='input-number'
-                    v-model={[detailForm.bufferSize, 'value']}
-                    show-button={false}
-                    placeholder={t('datasource.buffer_size_tips')}
-                    on-blur={onChangePort}
-                    style={{ width: '100%' }}
-                  />
-                </NFormItem>
-                <NFormItem
-                  v-show={showUdpMulticastParameters}
-                  label={t('datasource.udp_multicast_connect_parameters')}
-                  path='other'
-                >
-                  <NTooltip trigger='hover' placement='top'>
-                    {{
-                      default: () => (
-                        detailForm.udpMulticastType === 'SOURCE'
-                          ? t('datasource.udp_multicast_connect_source_tip')
-                          : t('datasource.udp_multicast_connect_sink_tip')
-                      ),
-                      trigger: () => (
-                        <NInput
-                          v-model={[detailForm.other, 'value']}
-                          type='textarea'
-                          autosize={{ minRows: 2 }}
-                          placeholder={`${t(
-                            'datasource.format_tips'
-                          )} {"key1":"value1","key2":"value2"...} ${t(
-                            'datasource.connection_parameter'
-                          )}`}
-                        />
-                      )
-                    }}
-                  </NTooltip>
-                </NFormItem>
-
-                <NFormItem
-                  label={t('datasource.hdfs_remote_user')}
-                  path='remoteUser'
-                  show-require-mark
-                  v-show={showHdfsFileParameters}
-                >
-                  <NInput
-                    allowInput={this.trim}
-                    class='input-username'
-                    v-model={[detailForm.remoteUser, 'value']}
-                    type='text'
-                    maxlength={60}
-                    placeholder={t('datasource.hdfs_remote_user_tips')}
-                  />
-                </NFormItem>
-                <NFormItem
-                  label={t('datasource.hdfs_site_path')}
-                  path='hdfsSitePath'
-                  v-show={showHdfsFileParameters}
-                >
-                  <NInput
-                    allowInput={this.trim}
-                    v-model={[detailForm.hdfsSitePath, 'value']}
-                    type='text'
-                    maxlength={255}
-                    placeholder={t('datasource.hdfs_site_path_tips')}
-                  />
-                </NFormItem>
-                <NFormItem
-                  v-show={showHdfsFileParameters}
-                  label={t('datasource.hdfs_kbs_parameters')}
-                  path='other'
-                >
-                  <NInput
-                    allowInput={this.trim}
-                    class='input-jdbc-params'
-                    v-model={[detailForm.other, 'value']}
+                    class='input-kubeConfig'
+                    v-model={[detailForm.kubeConfig, 'value']}
                     type='textarea'
                     autosize={{
-                      minRows: 2
+                      minRows: 14
                     }}
-                    placeholder={`${t(
-                      'datasource.format_tips'
-                    )} {"key1":"value1","key2":"value2"...} ${t(
-                      'datasource.connection_parameter'
-                    )}`}
+                    placeholder={t('datasource.kubeConfig_tips')}
                   />
                 </NFormItem>
                 <NFormItem
-                  v-show={showMinioParameters}
-                  label={t('datasource.minio_datasource_secure')}
-                  path='secure'
+                  v-show={showNamespace}
+                  label={t('datasource.namespace')}
+                  path='namespace'
+                  show-require-mark
                 >
-                  <NSelect
-                    v-model={[detailForm.secure, 'value']}
-                    options={[
-                      { label: '是', value: true },
-                      { label: '否', value: false }
-                    ]}
-                  ></NSelect>
+                  <NInput
+                    allowInput={this.trim}
+                    v-model={[detailForm.namespace, 'value']}
+                    placeholder={t('datasource.namespace_tips')}
+                  />
                 </NFormItem>
               </NForm>
             </NSpin>

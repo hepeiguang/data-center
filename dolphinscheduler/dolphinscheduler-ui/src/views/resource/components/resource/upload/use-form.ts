@@ -28,9 +28,7 @@ const defaultValue: IUploadDefaultValue = () => ({
   file: '',
   type: undefined!,
   pid: -1,
-  currentDir: '/',
-  //自定义字段
-  customType:  'HIVE',
+  currentDir: '/'
 })
 
 export function useForm() {

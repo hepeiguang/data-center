@@ -18,6 +18,7 @@
 package org.apache.seatunnel.connectors.doris.catalog;
 
 import org.apache.seatunnel.shade.com.google.common.base.Preconditions;
+import org.apache.seatunnel.shade.org.apache.commons.lang3.StringUtils;
 
 import org.apache.seatunnel.api.sink.SaveModePlaceHolder;
 import org.apache.seatunnel.api.table.catalog.Catalog;
@@ -45,7 +46,6 @@ import org.apache.seatunnel.connectors.doris.datatype.DorisTypeConverterV2;
 import org.apache.seatunnel.connectors.doris.util.DorisCatalogUtil;
 
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -471,9 +471,21 @@ public class DorisCatalog implements Catalog {
 
     public void truncateTable(TablePath tablePath, boolean ignoreIfNotExists)
             throws TableNotExistException, CatalogException {
+        truncateTable(tablePath, ignoreIfNotExists, Collections.emptyList());
+    }
+
+    /**
+     * Truncates the requested partitions, or the complete table when no partitions are supplied.
+     */
+    public void truncateTable(
+            TablePath tablePath, boolean ignoreIfNotExists, List<String> partitions)
+            throws TableNotExistException, CatalogException {
         try {
             if (ignoreIfNotExists) {
-                conn.createStatement().execute(DorisCatalogUtil.getTruncateTableQuery(tablePath));
+                try (Statement statement = conn.createStatement()) {
+                    statement.execute(
+                            DorisCatalogUtil.getTruncateTableQuery(tablePath, partitions));
+                }
             }
         } catch (Exception e) {
             throw new CatalogException(

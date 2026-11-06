@@ -17,7 +17,6 @@
 
 package org.apache.seatunnel.e2e.connector.hudi;
 
-import org.apache.seatunnel.common.utils.FileUtils;
 import org.apache.seatunnel.common.utils.JsonUtils;
 import org.apache.seatunnel.connectors.seatunnel.cdc.mysql.testutils.MySqlContainer;
 import org.apache.seatunnel.connectors.seatunnel.cdc.mysql.testutils.MySqlVersion;
@@ -29,6 +28,8 @@ import org.apache.seatunnel.e2e.common.container.EngineType;
 import org.apache.seatunnel.e2e.common.container.TestContainer;
 import org.apache.seatunnel.e2e.common.junit.DisabledOnContainer;
 import org.apache.seatunnel.e2e.common.junit.TestContainerExtension;
+import org.apache.seatunnel.e2e.common.util.DependencyJar;
+import org.apache.seatunnel.e2e.common.util.JobIdGenerator;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileUtil;
@@ -43,11 +44,11 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.TestTemplate;
 import org.testcontainers.containers.Container;
-import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.lifecycle.Startables;
 import org.testcontainers.utility.DockerLoggerFactory;
 
+import com.mysql.cj.jdbc.Driver;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -65,6 +66,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 import static java.lang.Thread.sleep;
+import static org.apache.seatunnel.e2e.common.container.AbstractTestContainer.HOST_VOLUME_MOUNT_PATH;
 import static org.awaitility.Awaitility.given;
 
 @DisabledOnContainer(
@@ -83,12 +85,11 @@ public class HudiSinkCDCIT extends TestSuiteBase implements TestResource {
     private static final MySqlContainer MYSQL_CONTAINER = createMySqlContainer(MySqlVersion.V8_0);
     private static final String SOURCE_TABLE = "mysql_cdc_e2e_source_table";
 
-    private static final String MYSQL_DRIVER =
-            "https://repo1.maven.org/maven2/com/mysql/mysql-connector-j/8.0.32/mysql-connector-j-8.0.32.jar";
-
     private static final String DATABASE = "st";
     private static final String TABLE_NAME = "st_test";
-    private static final String TABLE_PATH = "/tmp/hudi/";
+    private static final String TIMER_FLUSH_DATABASE = "timer_flush_db";
+    private static final String TIMER_FLUSH_TABLE = "timer_flush_table";
+    private static final String TABLE_PATH = HOST_VOLUME_MOUNT_PATH + "/hudi/";
     private static final String NAMESPACE = "hudi";
     private static final String NAMESPACE_TAR = "hudi.tar.gz";
 
@@ -111,51 +112,13 @@ public class HudiSinkCDCIT extends TestSuiteBase implements TestResource {
                         new Slf4jLogConsumer(DockerLoggerFactory.getLogger("mysql-mysql-image")));
     }
 
-    protected final ContainerExtendedFactory containerExtendedFactory =
-            new ContainerExtendedFactory() {
-                @Override
-                public void extend(GenericContainer<?> container)
-                        throws IOException, InterruptedException {
-                    container.execInContainer(
-                            "sh",
-                            "-c",
-                            "cd /tmp" + " && tar -czvf " + NAMESPACE_TAR + " " + NAMESPACE);
-                    container.copyFileFromContainer(
-                            "/tmp/" + NAMESPACE_TAR, "/tmp/" + NAMESPACE_TAR);
-
-                    extractFiles();
-                }
-
-                private void extractFiles() {
-                    ProcessBuilder processBuilder = new ProcessBuilder();
-                    processBuilder.command(
-                            "sh", "-c", "cd /tmp" + " && tar -zxvf " + NAMESPACE_TAR);
-                    try {
-                        Process process = processBuilder.start();
-                        int exitCode = process.waitFor();
-                        if (exitCode == 0) {
-                            log.info("Extract files successful.");
-                        } else {
-                            log.error("Extract files failed with exit code " + exitCode);
-                        }
-                    } catch (IOException | InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
-            };
-
     @TestContainerExtension
     protected final ContainerExtendedFactory extendedFactory =
             container -> {
                 container.execInContainer("sh", "-c", "mkdir -p " + TABLE_PATH);
                 container.execInContainer("sh", "-c", "chmod -R 777  " + TABLE_PATH);
-                Container.ExecResult extraCommands =
-                        container.execInContainer(
-                                "sh",
-                                "-c",
-                                "mkdir -p /tmp/seatunnel/plugins/MySQL-CDC/lib && cd /tmp/seatunnel/plugins/MySQL-CDC/lib && wget "
-                                        + MYSQL_DRIVER);
-                Assertions.assertEquals(0, extraCommands.getExitCode(), extraCommands.getStderr());
+                DependencyJar.of(Driver.class)
+                        .copyTo(container, "/tmp/seatunnel/plugins/MySQL-CDC/lib");
             };
 
     @BeforeAll
@@ -207,6 +170,117 @@ public class HudiSinkCDCIT extends TestSuiteBase implements TestResource {
         upsertAndCheckData(container);
     }
 
+    @TestTemplate
+    public void testHudiTimerFlush(TestContainer container) throws Exception {
+        clearTable(MYSQL_DATABASE, SOURCE_TABLE);
+        FileUtil.fullyDelete(
+                new File(
+                        TABLE_PATH
+                                + File.separator
+                                + TIMER_FLUSH_DATABASE
+                                + File.separator
+                                + TIMER_FLUSH_TABLE));
+        String jobId = String.valueOf(JobIdGenerator.newJobId());
+        CompletableFuture<Container.ExecResult> jobFuture =
+                CompletableFuture.supplyAsync(
+                        () -> {
+                            try {
+                                return container.executeJob(
+                                        "/hudi/mysql_cdc_to_hudi_timer_flush.conf", jobId);
+                            } catch (Exception e) {
+                                throw new RuntimeException(e);
+                            }
+                        });
+
+        try {
+            given().ignoreExceptions()
+                    .await()
+                    .atMost(2, TimeUnit.MINUTES)
+                    .pollInterval(2, TimeUnit.SECONDS)
+                    .untilAsserted(
+                            () -> {
+                                assertJobStillRunning(
+                                        jobFuture,
+                                        "The streaming job terminated before reaching RUNNING");
+                                Assertions.assertEquals("RUNNING", container.getJobStatus(jobId));
+                            });
+
+            executeSql(
+                    "INSERT INTO "
+                            + MYSQL_DATABASE
+                            + "."
+                            + SOURCE_TABLE
+                            + " (id, f_bigint, f_json) VALUES (1001, 1, JSON_OBJECT('phase', 1))");
+            awaitTimerFlush(jobFuture, 1);
+
+            executeSql(
+                    "INSERT INTO "
+                            + MYSQL_DATABASE
+                            + "."
+                            + SOURCE_TABLE
+                            + " (id, f_bigint, f_json) VALUES (1002, 2, JSON_OBJECT('phase', 2))");
+            awaitTimerFlush(jobFuture, 2);
+        } finally {
+            if (!jobFuture.isDone()) {
+                Container.ExecResult cancelResult = container.cancelJob(jobId);
+                Assertions.assertEquals(0, cancelResult.getExitCode(), cancelResult.getStderr());
+            }
+        }
+
+        Container.ExecResult jobResult = jobFuture.get(120, TimeUnit.SECONDS);
+        Assertions.assertEquals(0, jobResult.getExitCode(), jobResult.getStderr());
+    }
+
+    private void awaitTimerFlush(
+            CompletableFuture<Container.ExecResult> jobFuture, long expectedRows) {
+        given().ignoreExceptions()
+                .await()
+                .atMost(120, TimeUnit.SECONDS)
+                .pollInterval(2, TimeUnit.SECONDS)
+                .untilAsserted(
+                        () -> {
+                            assertJobStillRunning(
+                                    jobFuture,
+                                    "The streaming job terminated before timer flush published "
+                                            + expectedRows
+                                            + " rows");
+                            Assertions.assertEquals(
+                                    expectedRows,
+                                    countNewestCommitRows(),
+                                    "Timer flush should publish buffered rows while the job is running");
+                        });
+    }
+
+    private long countNewestCommitRows() throws IOException {
+        File tablePath =
+                new File(
+                        TABLE_PATH
+                                + File.separator
+                                + TIMER_FLUSH_DATABASE
+                                + File.separator
+                                + TIMER_FLUSH_TABLE);
+        Configuration configuration = new Configuration();
+        configuration.set("fs.defaultFS", LocalFileSystem.DEFAULT_FS);
+        long rowCount = 0;
+        try (ParquetReader<Group> reader =
+                ParquetReader.builder(new GroupReadSupport(), getNewestCommitFilePath(tablePath))
+                        .withConf(configuration)
+                        .build()) {
+            while (reader.read() != null) {
+                rowCount++;
+            }
+        }
+        return rowCount;
+    }
+
+    private void assertJobStillRunning(
+            CompletableFuture<Container.ExecResult> jobFuture, String message) throws Exception {
+        if (jobFuture.isDone()) {
+            Container.ExecResult jobResult = jobFuture.get();
+            Assertions.fail(message + ":\n" + jobResult.getStderr());
+        }
+    }
+
     private void insertAndCheckData(TestContainer container) throws InterruptedException {
         // Init table data
         initSourceTableData(MYSQL_DATABASE, SOURCE_TABLE);
@@ -220,8 +294,6 @@ public class HudiSinkCDCIT extends TestSuiteBase implements TestResource {
                 .atMost(60000, TimeUnit.MILLISECONDS)
                 .untilAsserted(
                         () -> {
-                            // copy hudi to local
-                            container.executeExtraCommands(containerExtendedFactory);
                             Path newestCommitFilePath =
                                     getNewestCommitFilePath(
                                             new File(
@@ -246,7 +318,6 @@ public class HudiSinkCDCIT extends TestSuiteBase implements TestResource {
                             }
                             Assertions.assertEquals(3, rowCount);
                         });
-        FileUtils.deleteFile(TABLE_PATH);
     }
 
     private void upsertAndCheckData(TestContainer container)
@@ -262,8 +333,6 @@ public class HudiSinkCDCIT extends TestSuiteBase implements TestResource {
                 .atMost(60000, TimeUnit.MILLISECONDS)
                 .untilAsserted(
                         () -> {
-                            // copy hudi to local
-                            container.executeExtraCommands(containerExtendedFactory);
                             Path newestCommitFilePath =
                                     getNewestCommitFilePath(
                                             new File(
@@ -287,7 +356,6 @@ public class HudiSinkCDCIT extends TestSuiteBase implements TestResource {
                             }
                             Assertions.assertEquals(4, rowCount);
                         });
-        FileUtils.deleteFile(TABLE_PATH);
     }
 
     public static Path getNewestCommitFilePath(File tablePathDir) throws IOException {

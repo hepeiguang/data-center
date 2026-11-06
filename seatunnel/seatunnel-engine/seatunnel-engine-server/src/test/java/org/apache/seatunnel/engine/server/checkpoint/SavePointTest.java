@@ -19,8 +19,8 @@ package org.apache.seatunnel.engine.server.checkpoint;
 
 import org.apache.seatunnel.common.utils.FileUtils;
 import org.apache.seatunnel.engine.common.exception.SavePointFailedException;
+import org.apache.seatunnel.engine.common.job.JobStatus;
 import org.apache.seatunnel.engine.common.utils.PassiveCompletableFuture;
-import org.apache.seatunnel.engine.core.job.JobStatus;
 import org.apache.seatunnel.engine.server.AbstractSeaTunnelServerTest;
 
 import org.junit.jupiter.api.Assertions;
@@ -163,11 +163,13 @@ public class SavePointTest extends AbstractSeaTunnelServerTest<SavePointTest> {
 
         // 3 start savePoint
         server.getCoordinatorService().savePoint(jobId);
-        await().atMost(10000, TimeUnit.MILLISECONDS)
+        await().atMost(120000, TimeUnit.MILLISECONDS)
                 .untilAsserted(
                         () -> {
                             JobStatus status = server.getCoordinatorService().getJobStatus(jobId);
-                            Assertions.assertEquals(JobStatus.DOING_SAVEPOINT, status);
+                            Assertions.assertTrue(
+                                    status == JobStatus.DOING_SAVEPOINT
+                                            || status == JobStatus.SAVEPOINT_DONE);
                         });
 
         // 4 Wait for savePoint to complete

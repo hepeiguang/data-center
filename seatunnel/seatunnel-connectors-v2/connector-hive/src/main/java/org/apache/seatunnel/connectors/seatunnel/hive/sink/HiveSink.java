@@ -24,10 +24,13 @@ import org.apache.seatunnel.api.common.JobContext;
 import org.apache.seatunnel.api.configuration.ReadonlyConfig;
 import org.apache.seatunnel.api.serialization.DefaultSerializer;
 import org.apache.seatunnel.api.serialization.Serializer;
+import org.apache.seatunnel.api.sink.SaveModeHandler;
+import org.apache.seatunnel.api.sink.SchemaSaveMode;
 import org.apache.seatunnel.api.sink.SeaTunnelSink;
 import org.apache.seatunnel.api.sink.SinkAggregatedCommitter;
 import org.apache.seatunnel.api.sink.SinkWriter;
 import org.apache.seatunnel.api.sink.SupportMultiTableSink;
+import org.apache.seatunnel.api.sink.SupportSaveMode;
 import org.apache.seatunnel.api.table.catalog.CatalogTable;
 import org.apache.seatunnel.api.table.type.SeaTunnelRow;
 import org.apache.seatunnel.common.exception.CommonErrorCodeDeprecated;
@@ -41,7 +44,7 @@ import org.apache.seatunnel.connectors.seatunnel.file.sink.writer.WriteStrategy;
 import org.apache.seatunnel.connectors.seatunnel.file.sink.writer.WriteStrategyFactory;
 import org.apache.seatunnel.connectors.seatunnel.hive.commit.HiveSinkAggregatedCommitter;
 import org.apache.seatunnel.connectors.seatunnel.hive.config.HiveConstants;
-import org.apache.seatunnel.connectors.seatunnel.hive.config.HiveOptions;
+import org.apache.seatunnel.connectors.seatunnel.hive.config.HiveSinkOptions;
 import org.apache.seatunnel.connectors.seatunnel.hive.exception.HiveConnectorException;
 import org.apache.seatunnel.connectors.seatunnel.hive.sink.writter.HiveSinkWriter;
 import org.apache.seatunnel.connectors.seatunnel.hive.storage.StorageFactory;
@@ -50,25 +53,29 @@ import org.apache.seatunnel.connectors.seatunnel.hive.utils.HiveTableUtils;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.Table;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static org.apache.seatunnel.connectors.seatunnel.file.config.BaseSinkConfig.FIELD_DELIMITER;
-import static org.apache.seatunnel.connectors.seatunnel.file.config.BaseSinkConfig.FILE_FORMAT_TYPE;
-import static org.apache.seatunnel.connectors.seatunnel.file.config.BaseSinkConfig.FILE_NAME_EXPRESSION;
-import static org.apache.seatunnel.connectors.seatunnel.file.config.BaseSinkConfig.FILE_PATH;
-import static org.apache.seatunnel.connectors.seatunnel.file.config.BaseSinkConfig.IS_PARTITION_FIELD_WRITE_IN_FILE;
-import static org.apache.seatunnel.connectors.seatunnel.file.config.BaseSinkConfig.PARTITION_BY;
-import static org.apache.seatunnel.connectors.seatunnel.file.config.BaseSinkConfig.ROW_DELIMITER;
-import static org.apache.seatunnel.connectors.seatunnel.file.config.BaseSinkConfig.SINK_COLUMNS;
+import static org.apache.seatunnel.connectors.seatunnel.file.config.FileBaseSinkOptions.FIELD_DELIMITER;
+import static org.apache.seatunnel.connectors.seatunnel.file.config.FileBaseSinkOptions.FILE_FORMAT_TYPE;
+import static org.apache.seatunnel.connectors.seatunnel.file.config.FileBaseSinkOptions.FILE_NAME_EXPRESSION;
+import static org.apache.seatunnel.connectors.seatunnel.file.config.FileBaseSinkOptions.FILE_PATH;
+import static org.apache.seatunnel.connectors.seatunnel.file.config.FileBaseSinkOptions.IS_PARTITION_FIELD_WRITE_IN_FILE;
+import static org.apache.seatunnel.connectors.seatunnel.file.config.FileBaseSinkOptions.PARTITION_BY;
+import static org.apache.seatunnel.connectors.seatunnel.file.config.FileBaseSinkOptions.ROW_DELIMITER;
+import static org.apache.seatunnel.connectors.seatunnel.file.config.FileBaseSinkOptions.SINK_COLUMNS;
 
 public class HiveSink
         implements SeaTunnelSink<
                         SeaTunnelRow, FileSinkState, FileCommitInfo, FileAggregatedCommitInfo>,
-                SupportMultiTableSink {
-
+                SupportMultiTableSink,
+                SupportSaveMode {
+    private static final Logger LOGGER = LoggerFactory.getLogger(HiveSink.class);
     // Since Table might contain some unserializable fields, we need to make it transient
     // And use getTableInformation to get the Table object
     private transient Table tableInformation;
@@ -92,6 +99,61 @@ public class HiveSink
             ReadonlyConfig readonlyConfig, CatalogTable catalogTable) {
         Table tableInformation = getTableInformation();
         Config pluginConfig = readonlyConfig.toConfig();
+
+        if (tableInformation == null) {
+            LOGGER.info(
+                    "Table information is null, creating default config aligned with template if present");
+            List<String> sinkFields =
+                    catalogTable.getTableSchema().getColumns().stream()
+                            .map(column -> column.getName())
+                            .collect(Collectors.toList());
+
+            String fileFormatStr = FileFormat.PARQUET.toString();
+            if (readonlyConfig.getOptional(HiveSinkOptions.SAVE_MODE_CREATE_TEMPLATE).isPresent()) {
+                String template = readonlyConfig.get(HiveSinkOptions.SAVE_MODE_CREATE_TEMPLATE);
+                String upper = template.toUpperCase();
+                if (upper.contains("STORED AS ORC")) {
+                    fileFormatStr = FileFormat.ORC.toString();
+                } else if (upper.contains("STORED AS TEXTFILE")) {
+                    fileFormatStr = FileFormat.TEXT.toString();
+                } else if (upper.contains("STORED AS PARQUET")) {
+                    fileFormatStr = FileFormat.PARQUET.toString();
+                }
+            }
+
+            java.util.List<String> partitionFields = new java.util.ArrayList<>();
+            if (readonlyConfig.getOptional(HiveSinkOptions.SAVE_MODE_CREATE_TEMPLATE).isPresent()) {
+                String template = readonlyConfig.get(HiveSinkOptions.SAVE_MODE_CREATE_TEMPLATE);
+                partitionFields =
+                        org.apache.seatunnel.connectors.seatunnel.hive.utils.HiveTableTemplateUtils
+                                .extractPartitionFieldsFromTemplate(template);
+            }
+
+            pluginConfig =
+                    pluginConfig
+                            .withValue(
+                                    FILE_FORMAT_TYPE.key(),
+                                    ConfigValueFactory.fromAnyRef(fileFormatStr))
+                            .withValue(
+                                    IS_PARTITION_FIELD_WRITE_IN_FILE.key(),
+                                    ConfigValueFactory.fromAnyRef(false))
+                            .withValue(
+                                    FILE_NAME_EXPRESSION.key(),
+                                    ConfigValueFactory.fromAnyRef("${transactionId}"))
+                            .withValue(
+                                    SINK_COLUMNS.key(), ConfigValueFactory.fromAnyRef(sinkFields))
+                            .withValue(
+                                    PARTITION_BY.key(),
+                                    ConfigValueFactory.fromAnyRef(partitionFields))
+                            .withValue(
+                                    FILE_PATH.key(),
+                                    ConfigValueFactory.fromAnyRef(
+                                            getDefaultTableLocation(readonlyConfig)));
+
+            return new FileSinkConfig(
+                    ReadonlyConfig.fromConfig(pluginConfig), catalogTable.getSeaTunnelRowType());
+        }
+
         List<String> sinkFields =
                 tableInformation.getSd().getCols().stream()
                         .map(FieldSchema::getName)
@@ -144,17 +206,22 @@ public class HiveSink
                                 IS_PARTITION_FIELD_WRITE_IN_FILE.key(),
                                 ConfigValueFactory.fromAnyRef(false))
                         .withValue(
-                                FILE_NAME_EXPRESSION.key(),
-                                ConfigValueFactory.fromAnyRef("${transactionId}"))
-                        .withValue(
                                 FILE_PATH.key(),
                                 ConfigValueFactory.fromAnyRef(
                                         tableInformation.getSd().getLocation()))
                         .withValue(SINK_COLUMNS.key(), ConfigValueFactory.fromAnyRef(sinkFields))
                         .withValue(
                                 PARTITION_BY.key(), ConfigValueFactory.fromAnyRef(partitionKeys));
+        // Only set a default file_name_expression when it's not provided by user config.
+        if (!pluginConfig.hasPath(FILE_NAME_EXPRESSION.key())) {
+            pluginConfig =
+                    pluginConfig.withValue(
+                            FILE_NAME_EXPRESSION.key(),
+                            ConfigValueFactory.fromAnyRef("${transactionId}"));
+        }
 
-        return new FileSinkConfig(pluginConfig, catalogTable.getSeaTunnelRowType());
+        return new FileSinkConfig(
+                ReadonlyConfig.fromConfig(pluginConfig), catalogTable.getSeaTunnelRowType());
     }
 
     @Override
@@ -165,12 +232,21 @@ public class HiveSink
     @Override
     public Optional<SinkAggregatedCommitter<FileCommitInfo, FileAggregatedCommitInfo>>
             createAggregatedCommitter() {
+        String dbName;
+        String tableName;
+        if (getTableInformation() != null) {
+            dbName = getTableInformation().getDbName();
+            tableName = getTableInformation().getTableName();
+        } else {
+            // Derive from config to ensure non-null values during commit
+            String table = readonlyConfig.get(HiveSinkOptions.TABLE_NAME);
+            org.apache.seatunnel.api.table.catalog.TablePath path =
+                    org.apache.seatunnel.api.table.catalog.TablePath.of(table);
+            dbName = path.getDatabaseName();
+            tableName = path.getTableName();
+        }
         return Optional.of(
-                new HiveSinkAggregatedCommitter(
-                        readonlyConfig,
-                        getTableInformation().getDbName(),
-                        getTableInformation().getTableName(),
-                        hadoopConf));
+                new HiveSinkAggregatedCommitter(readonlyConfig, dbName, tableName, hadoopConf));
     }
 
     @Override
@@ -204,7 +280,8 @@ public class HiveSink
     }
 
     private HadoopConf createHadoopConf(ReadonlyConfig readonlyConfig) {
-        String hdfsLocation = getTableInformation().getSd().getLocation();
+        // Default to Hive's conventional warehouse path when table info is not available yet
+        String hdfsLocation = getDefaultTableLocation(readonlyConfig);
 
         /**
          * Build hadoop conf(support s3、cos、oss、hdfs). The returned hadoop conf can be
@@ -212,26 +289,54 @@ public class HiveSink
          * Schema and FsHdfsImpl that can be filled into hadoop configuration in {@link
          * org.apache.seatunnel.connectors.seatunnel.file.hadoop.HadoopFileSystemProxy#createConfiguration()}
          */
+        if (getTableInformation() != null) {
+            hdfsLocation = getTableInformation().getSd().getLocation();
+        }
         HadoopConf hadoopConf =
                 StorageFactory.getStorageType(hdfsLocation)
                         .buildHadoopConfWithReadOnlyConfig(readonlyConfig);
         readonlyConfig
-                .getOptional(HiveOptions.HDFS_SITE_PATH)
+                .getOptional(HiveSinkOptions.HDFS_SITE_PATH)
                 .ifPresent(hadoopConf::setHdfsSitePath);
-        readonlyConfig.getOptional(HiveOptions.REMOTE_USER).ifPresent(hadoopConf::setRemoteUser);
-        readonlyConfig.getOptional(HiveOptions.KRB5_PATH).ifPresent(hadoopConf::setKrb5Path);
         readonlyConfig
-                .getOptional(HiveOptions.KERBEROS_PRINCIPAL)
+                .getOptional(HiveSinkOptions.REMOTE_USER)
+                .ifPresent(hadoopConf::setRemoteUser);
+        readonlyConfig.getOptional(HiveSinkOptions.KRB5_PATH).ifPresent(hadoopConf::setKrb5Path);
+        readonlyConfig
+                .getOptional(HiveSinkOptions.KERBEROS_PRINCIPAL)
                 .ifPresent(hadoopConf::setKerberosPrincipal);
         readonlyConfig
-                .getOptional(HiveOptions.KERBEROS_KEYTAB_PATH)
+                .getOptional(HiveSinkOptions.KERBEROS_KEYTAB_PATH)
                 .ifPresent(hadoopConf::setKerberosKeytabPath);
         return hadoopConf;
     }
 
+    // Try to read from configuration, qualify default location via HiveLocationUtils
+    private String getDefaultTableLocation(ReadonlyConfig config) {
+        try {
+            String table = config.get(HiveSinkOptions.TABLE_NAME);
+            org.apache.seatunnel.api.table.catalog.TablePath path =
+                    org.apache.seatunnel.api.table.catalog.TablePath.of(table);
+            return org.apache.seatunnel.connectors.seatunnel.hive.utils.HiveLocationUtils
+                    .qualifiedDefaultLocation(config, path.getDatabaseName(), path.getTableName());
+        } catch (Exception e) {
+            LOGGER.warn(
+                    "Failed to derive qualified default table location, fallback to file:/tmp/hive/warehouse: {}",
+                    e.getMessage());
+            return "file:/tmp/hive/warehouse";
+        }
+    }
+
     private Table getTableInformation() {
         if (tableInformation == null) {
-            tableInformation = HiveTableUtils.getTableInfo(readonlyConfig);
+            try {
+                tableInformation = HiveTableUtils.getTableInfo(readonlyConfig);
+            } catch (Exception e) {
+                LOGGER.warn(
+                        "Hive table not available yet or metastore not reachable: {}. Will continue with lazy creation via SaveMode.",
+                        e.getMessage());
+                tableInformation = null;
+            }
         }
         return tableInformation;
     }
@@ -247,5 +352,11 @@ public class HiveSink
     @Override
     public Optional<CatalogTable> getWriteCatalogTable() {
         return Optional.ofNullable(catalogTable);
+    }
+
+    @Override
+    public Optional<SaveModeHandler> getSaveModeHandler() {
+        SchemaSaveMode schemaSaveMode = readonlyConfig.get(HiveSinkOptions.SCHEMA_SAVE_MODE);
+        return Optional.of(new HiveSaveModeHandler(readonlyConfig, catalogTable, schemaSaveMode));
     }
 }

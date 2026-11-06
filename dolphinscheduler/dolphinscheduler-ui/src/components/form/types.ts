@@ -19,11 +19,9 @@ import type { GridProps, FormProps, FormItemRule, FormRules } from 'naive-ui'
 
 type IType =
   | 'input'
-  | 'button'
   | 'radio'
   | 'editor'
   | 'custom-parameters'
-  | 'env-parameters'
   | 'custom-labels'
   | 'switch'
   | 'input-number'
@@ -33,9 +31,6 @@ type IType =
   | 'multi-input'
   | 'custom'
   | 'multi-condition'
-  | 'sql-transformers'
-  | 'mirror'
-  | 'dict-transformers'
 
 interface IOption {
   [key: string]: any
@@ -48,16 +43,13 @@ interface IFormItem {
   widget: any
   span?: number | Ref<number>
   type?: 'custom'
-  class?: string,
-  showTooltip?: boolean,
-  tooltip?: string | Ref<string>,
+  class?: string
 }
 
 interface IMeta extends Omit<FormProps, 'model' | 'rules'> {
   elements?: IFormItem[]
   model: object
   rules: IFormRules
-  hint?: string
 }
 
 interface IFormItemRule extends Omit<FormItemRule, 'required'> {
@@ -66,16 +58,15 @@ interface IFormItemRule extends Omit<FormItemRule, 'required'> {
 
 type IFormRules =
   | {
-    [path: string]: IFormItemRule | IFormItemRule[]
-  }
+      [path: string]: IFormItemRule | IFormItemRule[]
+    }
   | FormRules
 
 interface IJsonItemParams {
   field: string
-  name?: string | Ref<string>
+  name?: string
   props?: any
   title?: string
-  single?: boolean
   type?: IType
   validate?: IFormItemRule
   value?: any
@@ -83,12 +74,10 @@ interface IJsonItemParams {
   children?: IJsonItem[]
   slots?: object
   span?: number | Ref<number>
-  offset?: number | Ref<number>
   widget?: any
   class?: string
   path?: string
   rule?: IFormItemRule
-  tooltip?: string | Ref<string>
 }
 
 type IJsonItemFn = (i?: number) => IJsonItemParams

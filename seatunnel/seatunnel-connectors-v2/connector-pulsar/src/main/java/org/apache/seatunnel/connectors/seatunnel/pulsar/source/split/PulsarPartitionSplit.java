@@ -18,6 +18,7 @@
 package org.apache.seatunnel.connectors.seatunnel.pulsar.source.split;
 
 import org.apache.seatunnel.api.source.SourceSplit;
+import org.apache.seatunnel.api.table.catalog.TablePath;
 import org.apache.seatunnel.connectors.seatunnel.pulsar.source.enumerator.cursor.stop.StopCursor;
 import org.apache.seatunnel.connectors.seatunnel.pulsar.source.enumerator.topic.TopicPartition;
 
@@ -29,21 +30,33 @@ import java.util.Objects;
 
 public class PulsarPartitionSplit implements SourceSplit {
 
+    private static final long serialVersionUID = 3261816890422404491L;
     private final TopicPartition partition;
 
     private final StopCursor stopCursor;
 
     @Nullable private MessageId latestConsumedId;
 
+    @Nullable private final TablePath tablePath;
+
     public PulsarPartitionSplit(TopicPartition partition, StopCursor stopCursor) {
-        this(partition, stopCursor, null);
+        this(partition, stopCursor, null, null);
     }
 
     public PulsarPartitionSplit(
             TopicPartition partition, StopCursor stopCursor, MessageId latestConsumedId) {
+        this(partition, stopCursor, latestConsumedId, null);
+    }
+
+    public PulsarPartitionSplit(
+            TopicPartition partition,
+            StopCursor stopCursor,
+            MessageId latestConsumedId,
+            @Nullable TablePath tablePath) {
         this.partition = Preconditions.checkNotNull(partition);
         this.stopCursor = Preconditions.checkNotNull(stopCursor);
         this.latestConsumedId = latestConsumedId;
+        this.tablePath = tablePath;
     }
 
     public TopicPartition getPartition() {
@@ -84,7 +97,11 @@ public class PulsarPartitionSplit implements SourceSplit {
         this.latestConsumedId = latestConsumedId;
     }
 
+    @Nullable public TablePath getTablePath() {
+        return tablePath;
+    }
+
     public PulsarPartitionSplit copy() {
-        return new PulsarPartitionSplit(partition, stopCursor, latestConsumedId);
+        return new PulsarPartitionSplit(partition, stopCursor, latestConsumedId, tablePath);
     }
 }

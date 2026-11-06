@@ -62,16 +62,19 @@ export function useTask({
       getElements()
     }
   }
-  console.log('useTask data: ', data);
-  const { model, json } = nodes[data.taskType || 'SHELL'](params)
+
+  const taskType = data.taskType || 'SHELL'
+  const nodeFactory = nodes[taskType] || nodes.SHELL
+  const { model, json } = nodeFactory(params)
   jsonRef.value = json
   model.preTasks = taskStore.getPreTasks
   model.name = taskStore.getName
   model.taskExecuteType =
-    TASK_TYPES_MAP[data.taskType || 'SHELL'].taskExecuteType || 'BATCH'
+    data.taskExecuteType ||
+    TASK_TYPES_MAP[taskType]?.taskExecuteType ||
+    'BATCH'
 
   const getElements = () => {
-    console.log(JSON.parse(JSON.stringify(jsonRef.value)),JSON.parse(JSON.stringify(model)))
     const { rules, elements } = getElementByJson(jsonRef.value, model)
     elementsRef.value = elements
     rulesRef.value = rules

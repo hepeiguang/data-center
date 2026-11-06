@@ -17,42 +17,39 @@
 
 package org.apache.seatunnel.connectors.seatunnel.tablestore.config;
 
-import org.apache.seatunnel.api.configuration.Option;
-import org.apache.seatunnel.api.configuration.Options;
+import org.apache.seatunnel.api.configuration.ReadonlyConfig;
+
+import lombok.Data;
 
 import java.io.Serializable;
+import java.util.List;
 
-public class TablestoreConfig implements Serializable {
-    public static final Option<String> END_POINT =
-            Options.key("end_point")
-                    .stringType()
-                    .noDefaultValue()
-                    .withDescription(" Tablestore end_point");
-    public static final Option<String> INSTANCE_NAME =
-            Options.key("instance_name")
-                    .stringType()
-                    .noDefaultValue()
-                    .withDescription(" Tablestore instance_name");
-    public static final Option<String> ACCESS_KEY_ID =
-            Options.key("access_key_id")
-                    .stringType()
-                    .noDefaultValue()
-                    .withDescription(" Tablestore access_key_id");
-    public static final Option<String> ACCESS_KEY_SECRET =
-            Options.key("access_key_secret")
-                    .stringType()
-                    .noDefaultValue()
-                    .withDescription(" Tablestore access_key_secret");
-    public static final Option<String> TABLE =
-            Options.key("table").stringType().noDefaultValue().withDescription(" Tablestore table");
-    public static final Option<String> BATCH_SIZE =
-            Options.key("batch_size")
-                    .stringType()
-                    .defaultValue("25")
-                    .withDescription(" Tablestore batch_size");
-    public static final Option<String> PRIMARY_KEYS =
-            Options.key("primary_keys")
-                    .stringType()
-                    .noDefaultValue()
-                    .withDescription(" Tablestore primary_keys");
+@Data
+public class TableStoreConfig implements Serializable {
+
+    private String endpoint;
+
+    private String instanceName;
+
+    private String accessKeyId;
+
+    private String accessKeySecret;
+
+    private String table;
+
+    private List<String> primaryKeys;
+
+    public int batchSize;
+
+    public TableStoreConfig() {}
+
+    public TableStoreConfig(ReadonlyConfig config) {
+        this.endpoint = config.get(TableStoreCommonOptions.END_POINT);
+        this.instanceName = config.get(TableStoreCommonOptions.INSTANCE_NAME);
+        this.accessKeyId = config.get(TableStoreCommonOptions.ACCESS_KEY_ID);
+        this.accessKeySecret = config.get(TableStoreCommonOptions.ACCESS_KEY_SECRET);
+        this.table = config.get(TableStoreCommonOptions.TABLE);
+        this.primaryKeys = config.get(TableStoreCommonOptions.PRIMARY_KEYS);
+        this.batchSize = config.get(TableStoreSinkOptions.BATCH_SIZE);
+    }
 }

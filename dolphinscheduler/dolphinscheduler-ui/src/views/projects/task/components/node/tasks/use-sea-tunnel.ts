@@ -37,11 +37,7 @@ export function useSeaTunnel({
     flag: 'YES',
     description: '',
     timeoutFlag: false,
-    localParams: [
-      { prop: 'parallelism', value: '2', direct: "IN", type: "VARCHAR" },
-      { prop: 'job.mode', value: 'BATCH', direct: "IN", type: "VARCHAR" },
-      { prop: 'checkpoint.interval', value: '10000', direct: "IN", type: "VARCHAR" }
-    ],
+    localParams: [],
     environmentCode: null,
     failRetryInterval: 1,
     failRetryTimes: 0,
@@ -53,8 +49,7 @@ export function useSeaTunnel({
     startupScript: 'seatunnel.sh',
     runMode: 'RUN',
     useCustom: true,
-    scriptType: 'visualize',
-    deployMode: 'cluster',
+    deployMode: 'client',
     master: 'YARN',
     masterUrl: '',
     resourceFiles: [],
@@ -86,13 +81,11 @@ export function useSeaTunnel({
       '}'
   } as INodeData)
 
-
   return {
     json: [
       Fields.useName(from),
       ...Fields.useTaskDefinition({ projectCode, from, readonly, data, model }),
       Fields.useRunFlag(),
-      Fields.useCache(),
       Fields.useDescription(),
       Fields.useTaskPriority(),
       Fields.useWorkerGroup(projectCode),

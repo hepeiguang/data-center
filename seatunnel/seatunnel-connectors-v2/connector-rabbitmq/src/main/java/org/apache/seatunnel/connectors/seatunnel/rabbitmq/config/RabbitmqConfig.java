@@ -52,6 +52,9 @@ public class RabbitmqConfig implements Serializable {
     private Boolean durable;
     private Boolean exclusive;
     private Boolean autoDelete;
+    private RabbitmqMessageFormat format;
+    private String protobufSchema;
+    private String protobufMessageName;
     private String routingKey;
     private boolean logFailuresOnly = false;
     private String exchange = "";
@@ -61,10 +64,17 @@ public class RabbitmqConfig implements Serializable {
 
     private Map<String, String> sinkOptionProps = new HashMap<>();
 
+    /**
+     * Constructor using ReadonlyConfig.
+     *
+     * @param config configuration.
+     */
     public RabbitmqConfig(ReadonlyConfig config) {
         this.host = config.get(RabbitmqBaseOptions.HOST);
         this.port = config.get(RabbitmqBaseOptions.PORT);
-        this.queueName = config.get(RabbitmqBaseOptions.QUEUE_NAME);
+        if (config.getOptional(RabbitmqBaseOptions.QUEUE_NAME).isPresent()) {
+            this.queueName = config.get(RabbitmqBaseOptions.QUEUE_NAME);
+        }
         if (config.getOptional(RabbitmqBaseOptions.USERNAME).isPresent()) {
             this.username = config.get(RabbitmqBaseOptions.USERNAME);
         }
@@ -114,15 +124,21 @@ public class RabbitmqConfig implements Serializable {
         if (config.getOptional(RabbitmqSourceOptions.USE_CORRELATION_ID).isPresent()) {
             this.usesCorrelationId = config.get(RabbitmqSourceOptions.USE_CORRELATION_ID);
         }
-        if (config.getOptional(RabbitmqBaseOptions.DURABLE).isPresent()) {
-            this.durable = config.get(RabbitmqBaseOptions.DURABLE);
+        this.durable = config.get(RabbitmqBaseOptions.DURABLE);
+        this.exclusive = config.get(RabbitmqBaseOptions.EXCLUSIVE);
+        this.autoDelete = config.get(RabbitmqBaseOptions.AUTO_DELETE);
+        this.format = config.get(RabbitmqBaseOptions.FORMAT);
+        if (config.getOptional(RabbitmqBaseOptions.PROTOBUF_SCHEMA).isPresent()) {
+            this.protobufSchema = config.get(RabbitmqBaseOptions.PROTOBUF_SCHEMA);
         }
-        if (config.getOptional(RabbitmqBaseOptions.EXCLUSIVE).isPresent()) {
-            this.exclusive = config.get(RabbitmqBaseOptions.EXCLUSIVE);
+        if (config.getOptional(RabbitmqBaseOptions.PROTOBUF_MESSAGE_NAME).isPresent()) {
+            this.protobufMessageName = config.get(RabbitmqBaseOptions.PROTOBUF_MESSAGE_NAME);
         }
-        if (config.getOptional(RabbitmqBaseOptions.AUTO_DELETE).isPresent()) {
-            this.autoDelete = config.get(RabbitmqBaseOptions.AUTO_DELETE);
+        if (config.getOptional(RabbitmqSinkOptions.RABBITMQ_CONFIG).isPresent()) {
+            this.sinkOptionProps = config.get(RabbitmqSinkOptions.RABBITMQ_CONFIG);
         }
-        this.sinkOptionProps = config.get(RabbitmqSinkOptions.RABBITMQ_CONFIG);
+        if (config.getOptional(RabbitmqBaseOptions.URL).isPresent()) {
+            this.uri = config.get(RabbitmqBaseOptions.URL);
+        }
     }
 }

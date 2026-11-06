@@ -23,7 +23,6 @@ import downloadFile from './downloadFile'
 import copy from './clipboard'
 import removeUselessChildren from './tree-format'
 import isJson from './json'
-import deepClone from './deepClone'
 
 const utils = {
   mapping,
@@ -33,8 +32,7 @@ const utils = {
   downloadFile,
   copy,
   removeUselessChildren,
-  isJson,
-  deepClone
+  isJson
 }
 
 export default utils

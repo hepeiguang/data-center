@@ -38,7 +38,6 @@ import {
   DeleteOutlined,
   RightCircleOutlined,
   FundViewOutlined,
-  GroupOutlined,
   SyncOutlined
 } from '@vicons/antd'
 import { useNodeSearch, useTextCopy } from './dag-hooks'
@@ -55,7 +54,7 @@ import { useDependencies } from '@/views/projects/components/dependencies/use-de
 const props = {
   layoutToggle: {
     type: Function as PropType<(bool?: boolean) => void>,
-    default: () => { }
+    default: () => {}
   },
   // If this prop is passed, it means from definition detail
   instance: {
@@ -63,7 +62,7 @@ const props = {
     default: null
   },
   definition: {
-    // The same as the structure responsed by the queryProcessDefinitionByCode api
+    // The same as the structure responsed by the queryWorkflowDefinitionByCode api
     type: Object as PropType<WorkflowDefinition>,
     default: null
   },
@@ -76,13 +75,7 @@ const props = {
 export default defineComponent({
   name: 'workflow-dag-toolbar',
   props,
-  emits: [
-    'versionToggle',
-    'saveModelToggle',
-    'removeTasks',
-    'refresh',
-    'groupSet'
-  ],
+  emits: ['versionToggle', 'saveModelToggle', 'removeTasks', 'refresh'],
   setup(props, context) {
     const { t } = useI18n()
 
@@ -150,17 +143,12 @@ export default defineComponent({
     const onFormat = () => {
       props.layoutToggle(true)
     }
-    const queryParamsType = route.query.type
+
     /**
      * Back to the entrance
      */
     const onClose = () => {
       const { back, current } = history.state
-      if (queryParamsType) {
-        window.parent.postMessage('clone', '*')
-        return
-      }
-
       if (back && back !== '/login') {
         router.go(-1)
         return
@@ -189,22 +177,11 @@ export default defineComponent({
      */
     const removeCells = async () => {
       if (graph.value) {
-        let cells = graph.value.getSelectedCells()
+        const cells = graph.value.getSelectedCells()
         if (cells) {
-          let codes = cells
+          const codes = cells
             .filter((cell) => cell.isNode())
             .map((cell) => +cell.id)
-          let temp = []
-          cells.forEach(item => {
-            if (item.isNode() && item.data.taskType == 'SEATUNNEL' && item.data.parent && item.children) {
-              item.children.forEach(sItem => {
-                if (sItem.isNode()) {
-                  temp.push(sItem)
-                  codes.push(+sItem.id)
-                }
-              })
-            }
-          })
           const res = await getDependentTaskLinksByMultipleTasks(
             projectCode,
             workflowCode,
@@ -218,23 +195,9 @@ export default defineComponent({
             )
             dependenciesData.required = true
           } else {
-            context.emit('removeTasks', codes, [].concat(cells).concat(temp))
-            graph.value?.removeCells([].concat(cells).concat(temp))
+            context.emit('removeTasks', codes, cells)
+            graph.value?.removeCells(cells)
           }
-        }
-      }
-    }
-
-    const groupCells = () => {
-      if (graph.value) {
-        const cells = graph.value.getSelectedCells()
-        if (cells) {
-          context.emit(
-            'groupSet',
-            cells[0].store.data.position.x,
-            cells[0].store.data.position.y,
-            cells[0].store.data.data.taskType
-          )
         }
       }
     }
@@ -249,10 +212,10 @@ export default defineComponent({
         <span class={Styles['workflow-name']}>
           {route.name === 'workflow-instance-detail'
             ? props.instance?.name
-            : props.definition?.processDefinition?.name ||
-            t('project.dag.create')}
+            : props.definition?.workflowDefinition?.name ||
+              t('project.dag.create')}
         </span>
-        {props.definition?.processDefinition?.name && (
+        {props.definition?.workflowDefinition?.name && (
           <NTooltip
             v-slots={{
               trigger: () => (
@@ -263,7 +226,7 @@ export default defineComponent({
                     const name =
                       route.name === 'workflow-instance-detail'
                         ? props.instance?.name
-                        : props.definition?.processDefinition?.name
+                        : props.definition?.workflowDefinition?.name
                     copy(name)
                   }}
                   class={Styles['toolbar-btn']}
@@ -277,7 +240,7 @@ export default defineComponent({
             }}
           ></NTooltip>
         )}
-        {props.definition?.processDefinition?.name && (
+        {props.definition?.workflowDefinition?.name && (
           <NTooltip
             v-slots={{
               trigger: () => (
@@ -310,7 +273,7 @@ export default defineComponent({
         )}
         <div class={Styles['toolbar-left-part']}>
           {route.name !== 'workflow-instance-detail' &&
-            props.definition?.processDefinition?.releaseState === 'ONLINE' && (
+            props.definition?.workflowDefinition?.releaseState === 'ONLINE' && (
               <NTag round size='small' type='info'>
                 {t('project.dag.online')}
               </NTag>
@@ -375,8 +338,9 @@ export default defineComponent({
             }}
           ></NTooltip>
           <div
-            class={`${Styles['toolbar-right-item']} ${Styles['node-selector']
-              } ${searchInputVisible.value ? Styles['visible'] : ''}`}
+            class={`${Styles['toolbar-right-item']} ${
+              Styles['node-selector']
+            } ${searchInputVisible.value ? Styles['visible'] : ''}`}
           >
             <NSelect
               size='small'
@@ -460,28 +424,6 @@ export default defineComponent({
               default: () => t('project.dag.delete_cell')
             }}
           ></NTooltip>
-          {/* <NTooltip
-            v-slots={{
-              trigger: () => (
-                <NButton
-                  class={Styles['toolbar-right-item']}
-                  strong
-                  secondary
-                  circle
-                  type='info'
-                  onClick={() => groupCells()}
-                  v-slots={{
-                    icon: () => (
-                      <NIcon>
-                        <GroupOutlined />
-                      </NIcon>
-                    )
-                  }}
-                />
-              ),
-              default: () => t('project.dag.delete_cell')
-            }}
-          ></NTooltip> */}
           {/* Toggle fullscreen */}
           <NTooltip
             v-slots={{
@@ -567,7 +509,7 @@ export default defineComponent({
             secondary
             round
             disabled={
-              props.definition?.processDefinition?.releaseState === 'ONLINE' &&
+              props.definition?.workflowDefinition?.releaseState === 'ONLINE' &&
               !props.instance
             }
             onClick={() => {

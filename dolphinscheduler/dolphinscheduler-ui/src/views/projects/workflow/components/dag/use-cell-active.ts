@@ -31,6 +31,7 @@ import {
   EDGE_SELECTED,
   EDGE_HOVER
 } from './dag-config'
+import { resolveTaskIconFile } from './seatunnel-compute-utils'
 
 interface Options {
   graph: Ref<Graph | undefined>
@@ -54,8 +55,6 @@ export function useCellActive(options: Options) {
   function setEdgeStyle(edge: Edge) {
     const isHover = edge === hoverCell.value
     const isSelected = graph.value?.isSelected(edge)
-    // TODO
-    // const labelName = this.getEdgeLabelName ? this.getEdgeLabelName(edge) : ''
     let edgeProps = null
 
     if (isHover) {
@@ -69,14 +68,9 @@ export function useCellActive(options: Options) {
     edge.setAttrs(edgeProps.attrs)
     edge.setLabels([
       {
-        ..._.merge(
-          {
-            attrs: _.cloneDeep(edgeProps.defaultLabel.attrs)
-          }
-          // {
-          //   attrs: { label: { text: labelName } }
-          // }
-        )
+        ..._.merge({
+          attrs: _.cloneDeep(edgeProps.defaultLabel.attrs)
+        })
       }
     ])
   }
@@ -97,11 +91,12 @@ export function useCellActive(options: Options) {
     let portAttrs = null
 
     if (isHover || isSelected) {
-      img = `${import.meta.env.BASE_URL}images/task-icons/${(node.data
-        .taskType !== 'FLINK_STREAM'
-        ? node.data.taskType
-        : 'FLINK'
-      ).toLocaleLowerCase()}_hover.png`
+      const iconType =
+        node.data.taskType !== 'FLINK_STREAM' ? node.data.taskType : 'FLINK'
+      img = `${import.meta.env.BASE_URL}images/task-icons/${resolveTaskIconFile(
+        iconType,
+        true
+      )}`
       if (isHover) {
         nodeAttrs = nodeHover
         portAttrs = _.merge(portDefault, portHover)
@@ -110,17 +105,13 @@ export function useCellActive(options: Options) {
         portAttrs = _.merge(portDefault, portSelected)
       }
     } else {
-      img = `${import.meta.env.BASE_URL}images/task-icons/${(node.data
-        .taskType !== 'FLINK_STREAM'
-        ? node.data.taskType
-        : 'FLINK'
-      ).toLocaleLowerCase()}.png`
+      const iconType =
+        node.data.taskType !== 'FLINK_STREAM' ? node.data.taskType : 'FLINK'
+      img = `${import.meta.env.BASE_URL}images/task-icons/${resolveTaskIconFile(
+        iconType,
+        false
+      )}`
       nodeAttrs = NODE.attrs
-      if (node.data && node.data.taskType == 'SEATUNNEL' && (node.data.useCustom || node.data.parent)) {
-        nodeAttrs.body.strokeDasharray = '5 5'
-      }else{
-        nodeAttrs.body.strokeDasharray = 'none'
-      }
       portAttrs = portDefault
     }
     node.setAttrByPath('image/xlink:href', img)

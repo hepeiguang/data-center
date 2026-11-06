@@ -1,0 +1,837 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.apache.dolphinscheduler.plugin.task.seatunnel;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import lombok.extern.slf4j.Slf4j;
+import net.sf.jsqlparser.statement.select.Select;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.BooleanUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.SystemUtils;
+import org.apache.dolphinscheduler.common.utils.JSONUtils;
+import org.apache.dolphinscheduler.plugin.task.api.*;
+import org.apache.dolphinscheduler.plugin.task.api.enums.Direct;
+import org.apache.dolphinscheduler.plugin.task.api.model.Property;
+import org.apache.dolphinscheduler.plugin.task.api.model.TaskResponse;
+import org.apache.dolphinscheduler.plugin.task.api.parameters.AbstractParameters;
+import org.apache.dolphinscheduler.plugin.task.api.shell.IShellInterceptorBuilder;
+import org.apache.dolphinscheduler.plugin.task.api.shell.ShellInterceptorBuilderFactory;
+import org.apache.dolphinscheduler.plugin.task.api.utils.ParameterUtils;
+import org.apache.dolphinscheduler.plugin.task.seatunnel.plugin.SeatunnelPluginManager;
+import org.apache.dolphinscheduler.plugin.task.seatunnel.plugin.TaskTypeFactory;
+import org.apache.dolphinscheduler.plugin.task.seatunnel.plugin.dto.OutputFieldDTO;
+import org.apache.dolphinscheduler.plugin.task.seatunnel.plugin.dto.SeatunnelConfigDTO;
+import org.apache.dolphinscheduler.plugin.task.seatunnel.plugin.dto.SeatunnelEnvDTO;
+import org.apache.dolphinscheduler.plugin.task.seatunnel.plugin.dto.SeatunnelTaskNodeVO;
+import org.apache.dolphinscheduler.plugin.task.seatunnel.plugin.enums.DsSeatunnelTaskEnum;
+import org.apache.dolphinscheduler.plugin.task.seatunnel.plugin.utils.EncryptUtils;
+import org.springframework.util.CollectionUtils;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.FileAlreadyExistsException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
+
+import static org.apache.dolphinscheduler.plugin.task.api.TaskConstants.EXIT_CODE_FAILURE;
+import static org.apache.dolphinscheduler.plugin.task.seatunnel.Constants.CONFIG_OPTIONS;
+
+@Slf4j
+public class SeatunnelTask extends AbstractRemoteTask {
+
+    private static final String seatunnelHome = System.getenv("SEATUNNEL_HOME");
+    private static final String SEATUNNEL_BIN_DIR = seatunnelHome + "/bin/";
+
+    /**
+     * seatunnel parameters
+     */
+    private SeatunnelParameters seatunnelParameters;
+
+    /**
+     * shell command executor
+     */
+    private ShellCommandExecutor shellCommandExecutor;
+
+    /**
+     * taskExecutionContext
+     */
+    protected final TaskExecutionContext taskExecutionContext;
+
+    protected static final JsonNodeFactory factory = JsonNodeFactory.instance;
+
+    private static final ObjectMapper mapper = new ObjectMapper()
+            // 忽略null值字段
+            .setDefaultPropertyInclusion(JsonInclude.Include.NON_NULL)
+            // 忽略空数组/集合
+            .setDefaultPropertyInclusion(JsonInclude.Include.NON_EMPTY);
+
+    /**
+     * constructor
+     *
+     * @param taskExecutionContext taskExecutionContext
+     */
+    public SeatunnelTask(TaskExecutionContext taskExecutionContext) {
+        super(taskExecutionContext);
+
+        this.taskExecutionContext = taskExecutionContext;
+        this.shellCommandExecutor = new ShellCommandExecutor(this::logHandle, taskExecutionContext);
+    }
+
+    @Override
+    public List<String> getApplicationIds() throws TaskException {
+        return Collections.emptyList();
+    }
+
+    @Override
+    public void init() {
+        if (seatunnelParameters == null || !seatunnelParameters.checkParameters()) {
+            log.warn("Check SeaTunnel task params failed. {}", JSONUtils.toPrettyJsonString(seatunnelParameters));
+            throw new TaskException("SeaTunnel task params is not valid");
+        }
+    }
+
+    // todo split handle to submit and track
+    @Override
+    public void handle(TaskCallBack taskCallBack) throws TaskException {
+        try {
+            // construct process
+            String command = buildCommand();
+            IShellInterceptorBuilder<?, ?> shellActuatorBuilder = ShellInterceptorBuilderFactory.newBuilder()
+                    .appendScript(command);
+
+            TaskResponse commandExecuteResult = shellCommandExecutor.run(shellActuatorBuilder, taskCallBack);
+            setExitStatusCode(commandExecuteResult.getExitStatusCode());
+            setAppIds(String.join(TaskConstants.COMMA, getApplicationIds()));
+            setProcessId(commandExecuteResult.getProcessId());
+            seatunnelParameters.dealOutParam(shellCommandExecutor.getTaskOutputParams());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            log.error("The current SeaTunnel task has been interrupted", e);
+            setExitStatusCode(EXIT_CODE_FAILURE);
+            throw new TaskException("The current SeaTunnel task has been interrupted", e);
+        } catch (Exception e) {
+            log.error("SeaTunnel task error", e);
+            setExitStatusCode(EXIT_CODE_FAILURE);
+            throw new TaskException("Execute Seatunnel task failed", e);
+        }
+    }
+
+    @Override
+    public void submitApplication() throws TaskException {
+
+    }
+
+    @Override
+    public void trackApplicationStatus() throws TaskException {
+
+    }
+
+    @Override
+    public void cancelApplication() throws TaskException {
+        log.info("Start to cancel SeaTunnel task, taskInstanceId: {}", taskExecutionContext.getTaskInstanceId());
+
+        try {
+            // 1. 首先尝试强制kill进程（确保进程终止）
+            shellCommandExecutor.cancelApplication();
+
+            // 2. 然后发送正式的SeaTunnel停止命令
+            sendSeatunnelCancelCommand();
+
+        } catch (Exception e) {
+            log.error("Failed to cancel SeaTunnel task", e);
+            setExitStatusCode(EXIT_CODE_FAILURE);
+            throw new TaskException("Execute Seatunnel task failed", e);
+        }
+    }
+
+
+    private void sendSeatunnelCancelCommand() throws Exception {
+        String command = buildCancelCommand();
+        log.info("SeaTunnel cancel command: {}", command);
+
+        try {
+            // 使用ProcessBuilder直接执行，而不是通过shellCommandExecutor
+            // 这样可以避免创建脚本文件
+            ProcessBuilder pb = new ProcessBuilder("bash", "-c", command);
+            pb.redirectErrorStream(true);
+
+            Process process = pb.start();
+
+            // 读取输出
+            StringBuilder output = new StringBuilder();
+            try (BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(process.getInputStream()))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    output.append(line).append("\n");
+                    log.info("SeaTunnel cancel output: {}", line);
+                }
+            }
+
+            // 等待命令完成
+            boolean finished = process.waitFor(10, TimeUnit.SECONDS);
+            if (!finished) {
+                log.warn("Cancel command timeout, but process is already killed");
+                process.destroy();
+            }
+
+            int exitCode = process.exitValue();
+            log.info("SeaTunnel cancel command completed, exit code: {}", exitCode);
+
+        } catch (FileAlreadyExistsException e) {
+            // 如果还有这个异常，说明其他地方还在创建脚本文件
+            // 可能是shellCommandExecutor在别的地方被调用了
+            log.warn("Script file conflict, trying direct execution");
+
+            // 重试直接执行
+            executeCommandDirectly(command);
+        }
+    }
+
+    private void executeCommandDirectly(String command) {
+        try {
+            Runtime runtime = Runtime.getRuntime();
+            Process process = runtime.exec(new String[]{"bash", "-c", command});
+
+            // 读取输出
+            try (BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(process.getInputStream()))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    log.info("Command output: {}", line);
+                }
+            }
+
+            process.waitFor();
+
+        } catch (Exception e) {
+            log.warn("Direct command execution failed", e);
+        }
+    }
+
+    private String buildCancelCommand() {
+        List<String> args = new ArrayList<>();
+        args.add(SEATUNNEL_BIN_DIR + seatunnelParameters.getStartupScript());
+        if (!Objects.isNull(seatunnelParameters.getDeployMode())) {
+            args.add(Constants.DEPLOY_MODE_OPTIONS);
+            args.add(seatunnelParameters.getDeployMode().getCommand());
+        }
+        args.add(Constants.CANCEL_JOB);
+        args.add(String.valueOf(taskExecutionContext.getTaskInstanceId()));
+
+        String command = String.join(" ", args);
+        return command;
+    }
+
+
+    protected List<String> buildOptions() throws Exception {
+        List<String> args = new ArrayList<>();
+        if (BooleanUtils.isTrue(seatunnelParameters.getUseCustom())) {
+            args.add(CONFIG_OPTIONS);
+            args.add(buildCustomConfigCommand());
+        } else {
+            seatunnelParameters.getResourceList().forEach(resourceInfo -> {
+                args.add(CONFIG_OPTIONS);
+                // TODO: Need further check for refactored resource center
+                // TODO Currently resourceName is `/xxx.sh`, it has more `/` and needs to be optimized
+                args.add(resourceInfo.getResourceName().replaceFirst(".*:", ""));
+            });
+        }
+        log.info("SeaTunnel start task command: {}", args);
+        return args;
+    }
+
+    public String buildCommand() throws Exception {
+
+        List<String> args = new ArrayList<>();
+        args.add(SEATUNNEL_BIN_DIR + seatunnelParameters.getStartupScript());
+        args.addAll(buildOptions());
+        log.info("SeaTunnel task================ command: {}", args);
+        args.add(Constants.SET_JOB_ID);
+        args.add(String.valueOf(taskExecutionContext.getTaskInstanceId()));
+
+        String command = String.join(" ", args);
+        log.info("SeaTunnel task command: {}", command);
+
+        return command;
+    }
+
+
+    public String buildCustomConfigCommand() throws Exception {
+        String config = buildCustomConfigContent();
+        String filePath = buildConfigFilePath();
+        createConfigFileIfNotExists(config, filePath);
+        return filePath;
+    }
+
+    private String buildCustomConfigContent() {
+        //根据scriptType不同生成文件的内容方式不同
+        String script = null;
+        String scriptType = seatunnelParameters.getScriptType();
+        if (StringUtils.isBlank(scriptType)) {
+            scriptType = "custom";
+        }
+        if (scriptType.equalsIgnoreCase("custom")) {
+            script = seatunnelParameters.getRawScript().replaceAll("\\r\\n", System.lineSeparator());
+            script = addDefaultTransform(script);
+        } else if (scriptType.equalsIgnoreCase("visualize")) {
+            script = assemblyScript(seatunnelParameters.getRawScript());
+            // 旧版可视化编排的默认加密/脱敏 transform（不用于 V2）
+            script = addDefaultTransform(script);
+        } else if (scriptType.equalsIgnoreCase(SeatunnelV2ConfigAssembler.SCRIPT_TYPE)) {
+            // 新版 Connector-V2 通用组装，不走旧版 TaskTypeFactory 插件
+            script = SeatunnelV2ConfigAssembler.assemble(seatunnelParameters.getRawScript());
+        } else {
+            throw new TaskException("Unsupported SeaTunnel scriptType: " + scriptType);
+        }
+        script = parseScript(script);
+        return script;
+    }
+
+    private String assemblyScript(String script) {
+        log.info("SeaTunnel task assemblyScript : {}", script);
+        //定义config文件的最外层节点
+        String configData = "";
+        SeatunnelConfigDTO seatunnelConfigDTO = new SeatunnelConfigDTO();
+        try {
+            // 添加env配置
+            assemblyEnvData(seatunnelConfigDTO);
+            LinkedList<SeatunnelTaskNodeVO> nodes = mapper.readValue(script, new TypeReference<LinkedList<SeatunnelTaskNodeVO>>() {
+            });
+//            System.out.println(JSONUtils.toJsonString(nodes));
+            boolean needCustomSqlTask = hasNeedCustomSqlTask(nodes);
+            if (needCustomSqlTask) {
+                LinkedList<SeatunnelTaskNodeVO> taskNodeQueue = convertToLinkedList(nodes);
+                customSqlProcess(taskNodeQueue, seatunnelConfigDTO);
+            } else {
+                // 添加source、sink、transform配置
+                normalProcess(nodes, seatunnelConfigDTO);
+            }
+            configData = mapper.writeValueAsString(seatunnelConfigDTO);
+        } catch (JsonProcessingException e) {
+            log.error("assembly config data error", e);
+        }
+        return configData;
+    }
+
+    private void customSqlProcess(LinkedList<SeatunnelTaskNodeVO> taskNodeQueue, SeatunnelConfigDTO seatunnelConfigDTO) {
+        List<OutputFieldDTO> outputFields = null;
+        Select select = null;
+
+        LinkedList<SeatunnelTaskNodeVO> result = new LinkedList<>();
+        for (SeatunnelTaskNodeVO vo : taskNodeQueue) {
+            TaskTypeFactory factory = SeatunnelPluginManager.getTaskTypeFactory(vo.getType(), vo.getPluginName());
+            if (!factory.getDsSeatunnelTaskEnum().getSupportCustomSql()) {
+                log.error("SeaTunnel task type {} {} is not supported custom sql operator", vo.getType(), vo.getPluginName());
+                throw new TaskException("SeaTunnel task type " + vo.getType() + " " + vo.getPluginName() + " is not supported custom sql operator");
+            }
+            if (vo.getOutputFields() != null) {
+                List<OutputFieldDTO> firstOutputFields = (List<OutputFieldDTO>) vo.getOutputFields();
+                vo.setOutputFields(firstOutputFields);
+            }
+            if (outputFields != null && !outputFields.isEmpty()) {
+                vo.setInputFields(outputFields);
+            }
+            if (CollectionUtils.isEmpty(vo.getOutputFields())) {
+                vo.setOutputFields(factory.getOutputFields(vo));
+            }
+            outputFields = vo.getOutputFields();
+            select = factory.getCustomerSqlSelect(select, vo, taskExecutionContext);
+            log.info("SeaTunnel task custom sql select111 : {}", select);
+            if (!DsSeatunnelTaskEnum.needCustomSql(vo.getType(), vo.getPluginName())) {
+                if (result.size() > 0) {
+                    vo.setPreTaskcode(result.get(result.size() - 1).getCode());
+                }
+                result.add(vo);
+            }
+        }
+//        log.info("SeaTunnel task custom sql result : {}", JSONUtils.toJsonString(result));
+//        log.info("SeaTunnel task custom sql select : {}", select.toString());
+        result.getFirst().setSelect(select);
+        //处理完成后按照常规逻辑处理
+        normalProcess(result, seatunnelConfigDTO);
+    }
+
+    private void normalProcess(LinkedList<SeatunnelTaskNodeVO> taskNodeQueue, SeatunnelConfigDTO seatunnelConfigDTO) {
+        boolean needOutputFieldTask = hasNeedOutputFieldTask(taskNodeQueue);
+        List<OutputFieldDTO> outputFields = null;
+        for (SeatunnelTaskNodeVO seatunnelTaskNodeVO : taskNodeQueue) {
+            TaskTypeFactory factory = SeatunnelPluginManager.getTaskTypeFactory(seatunnelTaskNodeVO.getType(), seatunnelTaskNodeVO.getPluginName());
+            if (!CollectionUtils.isEmpty(seatunnelTaskNodeVO.getOutputFields())) {
+                List<OutputFieldDTO> firstOutputFields = seatunnelTaskNodeVO.getOutputFields();
+                seatunnelTaskNodeVO.setOutputFields(firstOutputFields);
+            }
+            if (outputFields != null && !outputFields.isEmpty()) {
+                seatunnelTaskNodeVO.setInputFields(outputFields);
+            }
+            if (needOutputFieldTask && CollectionUtils.isEmpty(seatunnelTaskNodeVO.getOutputFields())) {
+                seatunnelTaskNodeVO.setOutputFields(factory.getOutputFields(seatunnelTaskNodeVO));
+            }
+            outputFields = seatunnelTaskNodeVO.getOutputFields();
+            factory.assemblyConfigData(seatunnelConfigDTO, seatunnelTaskNodeVO, taskExecutionContext);
+
+        }
+    }
+
+    private String addDefaultTransform(String script) {
+        /**
+         * {
+         *     "env": {
+         *         "job.mode": "BATCH",
+         *         "checkpoint.interval": 10000,
+         *         "parallelism": 2
+         *     },
+         *     "source": [
+         *         {
+         *             "parallelism": 6,
+         *             "datasourceId": 2,
+         *             "url": "jdbc:mysql://8.152.212.25:4406/ta?useSSL=false&serverTimezone=Asia/Shanghai",
+         *             "driver": "com.mysql.cj.jdbc.Driver",
+         *             "user": "tata",
+         *             "password": "*********",
+         *             "plugin_name": "Jdbc",
+         *             "plugin_output": "142131179034336",
+         *             "connection_check_timeout_sec": 30,
+         *             "fetch_size": "0",
+         *             "table_path": "ta.gbp_jieci"
+         *         }
+         *     ],
+         *     "sink": [
+         *         {
+         *             "datasourceId": 2,
+         *             "url": "jdbc:mysql://8.152.212.25:4406/ta?useSSL=false&serverTimezone=Asia/Shanghai",
+         *             "driver": "com.mysql.cj.jdbc.Driver",
+         *             "user": "tata",
+         *             "password": "*********",
+         *             "database": "ta",
+         *             "table": "aaaaaaa",
+         *             "plugin_name": "JDBC",
+         *             "plugin_input": "142131276160736",
+         *             "max_retries": 0,
+         *             "batch_size": 1000,
+         *             "auto_commit": true,
+         *             "field_ide": "ORIGINAL",
+         *             "is_exactly_once": false,
+         *             "generate_sink_sql": true,
+         *             "transaction_timeout_sec": -1,
+         *             "schema_save_mode": "CREATE_SCHEMA_WHEN_NOT_EXIST",
+         *             "data_save_mode": "APPEND_DATA",
+         *             "enable_upsert": true,
+         *             "use_copy_statement": false
+         *         }
+         *     ],
+         *     "transform": [
+         *         {
+         *             "plugin_name": "ENCRYPT",
+         *             "custom_list": [
+         *                 {
+         *                     "encrypt_field": "jienum",
+         *                     "encrypt_type": "AES_128"
+         *                 }
+         *             ],
+         *             "plugin_input": "142131179034336",
+         *             "plugin_output": "142131199137504"
+         *         },
+         *         {
+         *             "plugin_name": "DESENSITIZE",
+         *             "custom_list": [
+         *                 {
+         *                     "desensitize_field": "cinum",
+         *                     "desensitize_type": "PHONE"
+         *                 }
+         *             ],
+         *             "plugin_input": "142131199137504",
+         *             "plugin_output": "142131212851936"
+         *         },
+         *         {
+         *             "plugin_name": "DECRYPT",
+         *             "custom_list": [
+         *                 {
+         *                     "decrypt_field": "jienum",
+         *                     "decrypt_type": "AES_128"
+         *                 }
+         *             ],
+         *             "plugin_input": "142131212851936",
+         *             "plugin_output": "142131276160736"
+         *         }
+         *     ]
+         * }
+         */
+        // 把上面这个json字符串转换成jsonnode
+        ObjectNode rootNode = null;
+        try {
+            rootNode = (ObjectNode) mapper.readTree(script);
+        } catch (Exception e) {
+            log.error("assembly json config data error", e);
+        }
+        // 判断taskNodeQueue是否有sink和source，且sink数据源是table
+        if (rootNode.get("sink") == null || rootNode.get("source") == null) {
+            return script;
+        }
+        ArrayNode sinkNode = (ArrayNode) rootNode.get("sink");
+        if (sinkNode.isEmpty() || sinkNode.get(0).get("table") == null) {
+            return script;
+        }
+        String sinkTableName = sinkNode.get(0).get("table").asText();
+        int sinkDatasourceId = sinkNode.get(0).get("datasourceId").asInt();
+        if (sinkTableName == null) {
+            return script;
+        }
+        if (sinkTableName.contains(".")) {
+            sinkTableName = sinkTableName.substring(sinkTableName.lastIndexOf(".") + 1);
+        }
+        // 查询sink表需要加密和脱敏的字段，需要和已有的transform的加密字段进行对比，有则不添加
+        //String encryptUrl = "http://43.136.32.15:8008/api/system/inner/data/security/single/table/store/encrypt/data?datasourceId=" + sinkDatasourceId + "&tableName=" + sinkTableName;
+        //String encryptUrl = "http://43.136.32.15:8008/api/system/inner/data/security/single/table/store/encrypt/data?datasourceId=1924485316184989697&tableName=dam_sys_user";
+        //String encryptObj = HttpUtils.get(encryptUrl);
+        String encryptObj = EncryptUtils.getEncryptFieldBySinkTable(sinkDatasourceId, sinkTableName);
+        // 判断encryptObj是否为空 或者空字符串
+        if (encryptObj == null || encryptObj.isEmpty()) {
+            return script;
+        }
+        Map<String, Object> map = JSONUtils.json2Map(encryptObj);
+        ObjectNode jsonNodes = addEncryptTransform(rootNode, map);
+        return jsonNodes.toString();
+    }
+
+    private ObjectNode addEncryptTransform(ObjectNode rootNode, Map<String, Object> map) {
+        /**
+         * {
+         * 	"password": {
+         * 		"tableName": "dam_sys_user",
+         * 		"columnName": "password",
+         * 		"rule": "DES",
+         * 		"type": "1",
+         * 		"secretKey": "WM5hfDGnQxU=",
+         * 		"encrypt": true
+         *        },
+         * 	"phone": {
+         * 		"tableName": "dam_sys_user",
+         * 		"columnName": "phone",
+         * 		"rule": "MOBILE_PHONE",
+         * 		"type": "2",
+         * 		"secretKey": null,
+         * 		"encrypt": false
+         *    }
+         * }
+         */
+        // 加密类型集合
+        Set<String> ENCRYPT_TYPE = new HashSet<>();
+        for (Map.Entry<String, Object> entry : map.entrySet()) {
+            Map<String, Object> value = (Map<String, Object>) entry.getValue();
+            if (value.get("cryptoType").equals("1")) {
+                ENCRYPT_TYPE.add(value.get("cryptoRule").toString());
+            }
+        }
+        String algorithms = String.join(",", ENCRYPT_TYPE);
+        String encryptJson = EncryptUtils.getSecretKey("encrypt", algorithms);
+        ObjectNode encryptKeyRootNode;
+        try {
+            encryptKeyRootNode = (ObjectNode) mapper.readTree(encryptJson);
+        } catch (JsonProcessingException e) {
+            log.error("-------------------------------------获取获取密钥接口处理失败， 接口返回值为: {}", e.getMessage());
+            throw new RuntimeException(e);
+        }
+
+        ArrayNode sinkNode = (ArrayNode) rootNode.get("sink");
+        ArrayNode sourceNode = (ArrayNode) rootNode.get("source");
+        ArrayNode transformNode = (ArrayNode) rootNode.get("transform");
+        // 原source
+        ObjectNode source = (ObjectNode) sourceNode.get(0);
+        // 原source的plugin_output, 会设置为新transform的plugin_input
+        String sourceCode = source.get("plugin_output").asText();
+
+        // 原sink
+        ObjectNode sink = (ObjectNode) sinkNode.get(0);
+
+        // 原json没有transform
+        if (transformNode == null) {
+            // 只有source和sink，没有transform 新建一个transform来处理encrypt和desensitize
+            transformNode = mapper.createArrayNode();
+
+
+            // 下面是transform中encrypt和desensitize的处理逻辑
+            ObjectNode encryptNode = mapper.createObjectNode();
+            ArrayNode encryptCustomList = encryptNode.putArray("custom_list");
+
+            ObjectNode desensitizeNode = mapper.createObjectNode();
+            ArrayNode desensitizeCustomList = desensitizeNode.putArray("custom_list");
+
+            for (Map.Entry<String, Object> entry : map.entrySet()) {
+                Map<String, Object> value = (Map<String, Object>) entry.getValue();
+                if (value.get("cryptoType").equals("1")) {
+                    encryptCustomList.addObject()
+                            .put("encrypt_field", entry.getKey())
+                            .put("encrypt_type", value.get("cryptoRule").toString())
+                            .put("secret_key", encryptKeyRootNode.get(value.get("cryptoRule").toString()).get("secretKey").asText())
+                    ;
+                } else if (value.get("cryptoType").equals("2")) {
+                    desensitizeCustomList.addObject()
+                            .put("desensitize_field", entry.getKey())
+                            .put("desensitize_type", value.get("rule").toString());
+                }
+            }
+            // 如果有encryptCustomList，则添加encrypt
+            if (!encryptCustomList.isEmpty()) {
+                encryptNode.put("plugin_name", "ENCRYPT");
+                encryptNode.put("plugin_input", sourceCode);
+                encryptNode.put("plugin_output", "11111111");
+                if (desensitizeCustomList.isEmpty()) {
+                    sink.put("plugin_input", "11111111");
+                } else {
+                    sink.put("plugin_input", "22222222");
+                }
+                transformNode.add(encryptNode);
+            }
+            // 如果有desensitizeCustomList，则添加desensitize
+            if (!desensitizeCustomList.isEmpty()) {
+                desensitizeNode.put("plugin_name", "DESENSITIZE");
+                if (!encryptCustomList.isEmpty()) {
+                    desensitizeNode.put("plugin_input", "11111111");
+                    desensitizeNode.put("plugin_output", "22222222");
+                    sink.put("plugin_input", "22222222");
+                } else {
+                    desensitizeNode.put("plugin_input", sourceCode);
+                    desensitizeNode.put("plugin_output", "11111111");
+                    sink.put("plugin_input", "11111111");
+                }
+                transformNode.add(desensitizeNode);
+            }
+            rootNode.set("sink", sinkNode);
+            rootNode.set("transform", transformNode);
+            return rootNode;
+        }
+
+        // 原json有transform
+        String sinkCode = sink.get("plugin_input").asText();
+
+        ObjectNode[] encryptNodeList = {mapper.createObjectNode()};
+        ObjectNode[] desensitizeNodeList = {mapper.createObjectNode()};
+        Set<String> fieldSet = new HashSet<>();
+        transformNode.forEach(node -> {
+            if (node.get("plugin_name").asText().equalsIgnoreCase("ENCRYPT")) {
+                encryptNodeList[0] = (ObjectNode) node;
+            }
+            if (node.get("plugin_name").asText().equalsIgnoreCase("DESENSITIZE")) {
+                desensitizeNodeList[0] = (ObjectNode) node;
+            }
+        });
+        ArrayNode encryptCustomList = mapper.createArrayNode();
+        ArrayNode desensitizeCustomList = mapper.createArrayNode();
+
+        if (!encryptNodeList[0].isEmpty()) {
+            encryptCustomList = (ArrayNode) encryptNodeList[0].get("custom_list");
+            encryptCustomList.forEach(node -> fieldSet.add(node.get("encrypt_field").asText()));
+        }
+        if (!desensitizeNodeList[0].isEmpty()) {
+            desensitizeCustomList = (ArrayNode) desensitizeNodeList[0].get("custom_list");
+            desensitizeCustomList.forEach(node -> fieldSet.add(node.get("desensitize_field").asText()));
+        }
+        for (Map.Entry<String, Object> entry : map.entrySet()) {
+            Map<String, Object> value = (Map<String, Object>) entry.getValue();
+            if (value.get("cryptoType").equals("1") && !fieldSet.contains(entry.getKey())) {
+                encryptCustomList.addObject()
+                        .put("encrypt_field", entry.getKey())
+                        .put("encrypt_type", value.get("cryptoRule").toString())
+                        .put("secret_key", encryptKeyRootNode.get(value.get("cryptoRule").toString()).get("secretKey").asText())
+                ;
+            } else if (value.get("cryptoType").equals("2") && !fieldSet.contains(entry.getKey())) {
+                desensitizeCustomList.addObject()
+                        .put("desensitize_field", entry.getKey())
+                        .put("desensitize_type", value.get("rule").toString());
+            }
+        }
+        if (!encryptNodeList[0].isEmpty()) {
+            // 原来有encrypt
+            if (desensitizeNodeList[0].isEmpty() && !desensitizeCustomList.isEmpty()) {
+                // 会新增一个 desensitize， 需要修改sink的plugin_input
+                sink.put("plugin_input", "11111111");
+            }
+        } else {
+            // 原来没有encrypt, 需要新增一个encrypt
+            if (!encryptCustomList.isEmpty()) {
+                encryptNodeList[0].put("plugin_name", "ENCRYPT");
+                encryptNodeList[0].set("custom_list", encryptCustomList);
+                encryptNodeList[0].put("plugin_input", sinkCode);
+                encryptNodeList[0].put("plugin_output", "11111111");
+                if (!desensitizeNodeList[0].isEmpty()) {
+                    sink.put("plugin_input", "11111111");
+                } else if (!desensitizeCustomList.isEmpty()) {
+                    sink.put("plugin_input", "22222222");
+                }
+                transformNode.add(encryptNodeList[0]);
+            }
+        }
+        if (!desensitizeNodeList[0].isEmpty()) {
+            // 原来有desensitize
+            if (encryptNodeList[0].isEmpty() && !encryptCustomList.isEmpty()) {
+                // 会新增一个 encrypt transform
+                sink.put("plugin_input", "11111111");
+            }
+        } else {
+            // 原来没有desensitize, 需要新增一个desensitize
+            if (!desensitizeCustomList.isEmpty()) {
+                desensitizeNodeList[0].put("plugin_name", "DESENSITIZE");
+                desensitizeNodeList[0].set("custom_list", desensitizeCustomList);
+                if (!encryptNodeList[0].isEmpty()) {
+                    desensitizeNodeList[0].put("plugin_input", sinkCode);
+                    desensitizeNodeList[0].put("plugin_output", "11111111");
+                    sink.put("plugin_input", "11111111");
+                } else if (!encryptCustomList.isEmpty()) {
+                    desensitizeNodeList[0].put("plugin_input", "11111111");
+                    desensitizeNodeList[0].put("plugin_output", "22222222");
+                    sink.put("plugin_input", "22222222");
+                } else {
+                    desensitizeNodeList[0].put("plugin_input", sinkCode);
+                    desensitizeNodeList[0].put("plugin_output", "11111111");
+                    sink.put("plugin_input", "11111111");
+                }
+                transformNode.add(desensitizeNodeList[0]);
+            }
+        }
+        rootNode.set("sink", sinkNode);
+        rootNode.set("transform", transformNode);
+        return rootNode;
+    }
+
+    private boolean hasNeedOutputFieldTask(LinkedList<SeatunnelTaskNodeVO> taskNodeQueue) {
+        boolean needOutputField = false;
+        for (SeatunnelTaskNodeVO node : taskNodeQueue) {
+            if (DsSeatunnelTaskEnum.needOutputField(node.getType(), node.getPluginName())) {
+                needOutputField = true;
+                break;
+            }
+        }
+        return needOutputField;
+    }
+
+    private boolean hasNeedCustomSqlTask(LinkedList<SeatunnelTaskNodeVO> taskNodeQueue) {
+        boolean needCustomSql = false;
+        for (SeatunnelTaskNodeVO node : taskNodeQueue) {
+            if (DsSeatunnelTaskEnum.needCustomSql(node.getType(), node.getPluginName())) {
+                needCustomSql = true;
+                break;
+            }
+        }
+        return needCustomSql;
+    }
+
+    public LinkedList<SeatunnelTaskNodeVO> convertToLinkedList(LinkedList<SeatunnelTaskNodeVO> nodes) throws JsonProcessingException {
+        if (nodes == null || nodes.isEmpty()) {
+            return new LinkedList<>();
+        }
+        // 创建节点映射
+        Map<String, SeatunnelTaskNodeVO> nodeMap = new HashMap<>();
+        for (SeatunnelTaskNodeVO node : nodes) {
+            nodeMap.put(node.getCode(), node);
+        }
+
+        // 找到头节点（preTaskcode为null）
+        SeatunnelTaskNodeVO head = null;
+        for (SeatunnelTaskNodeVO node : nodes) {
+
+            if (node.getPreTaskcode() == null || !nodeMap.containsKey(node.getPreTaskcode())) {
+                head = node;
+                break;
+            }
+        }
+
+        // 如果没有明确的头节点，取第一个节点作为起点
+        if (head == null) {
+            head = nodes.get(0);
+        }
+
+        // 按照链表顺序添加到LinkedList中
+        LinkedList<SeatunnelTaskNodeVO> result = new LinkedList<>();
+        SeatunnelTaskNodeVO current = head;
+        while (result.size() < nodes.size() && current != null) {
+            result.add(current);
+            if (current.getPostTaskcode() != null && nodeMap.containsKey(current.getPostTaskcode())) {
+                current = nodeMap.get(current.getPostTaskcode());
+            } else {
+                current = null; // 链表结束
+            }
+        }
+        return result;
+    }
+
+    private void assemblyEnvData(SeatunnelConfigDTO seatunnelConfigDTO) {
+        List<Property> localParams = seatunnelParameters.getLocalParams();
+        ObjectNode node = factory.objectNode();
+        for (Property property : localParams) {
+            // The direct of some tasks is empty, default IN
+            if (property.getDirect() == null || Objects.equals(Direct.IN, property.getDirect())) {
+                node.put(property.getProp(), property.getValue());
+            }
+        }
+        try {
+            SeatunnelEnvDTO seatunnelEnvDTO = mapper.readValue(node.toString(), SeatunnelEnvDTO.class);
+            seatunnelConfigDTO.setEnv(seatunnelEnvDTO);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private String buildConfigFilePath() {
+        return String.format("%s/seatunnel_%s.%s", taskExecutionContext.getExecutePath(),
+                taskExecutionContext.getTaskAppId(), formatDetector());
+    }
+
+    private String formatDetector() {
+        return JSONUtils.checkJsonValid(seatunnelParameters.getRawScript(), false) ? Constants.JSON_SUFFIX
+                : Constants.CONF_SUFFIX;
+    }
+
+    private void createConfigFileIfNotExists(String script, String scriptFile) throws IOException {
+        log.info("Seatunnel task script file: {}", scriptFile);
+        log.info("Seatunnel task script content: \r\n{}", script);
+
+        if (!Files.exists(Paths.get(scriptFile))) {
+            // write data to file
+            FileUtils.writeStringToFile(new File(scriptFile), script, StandardCharsets.UTF_8);
+        } else {
+            log.info("Seatunnel task script file: {} already exists, skip writing", scriptFile);
+        }
+    }
+
+    @Override
+    public AbstractParameters getParameters() {
+        return seatunnelParameters;
+    }
+
+    private String parseScript(String script) {
+        Map<String, Property> paramsMap = taskExecutionContext.getPrepareParamsMap();
+        return ParameterUtils.convertParameterPlaceholders(script, ParameterUtils.convert(paramsMap));
+    }
+
+    public void setSeatunnelParameters(SeatunnelParameters seatunnelParameters) {
+        this.seatunnelParameters = seatunnelParameters;
+    }
+}

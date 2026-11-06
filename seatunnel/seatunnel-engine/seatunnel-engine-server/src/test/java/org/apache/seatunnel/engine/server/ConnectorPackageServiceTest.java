@@ -18,6 +18,8 @@
 package org.apache.seatunnel.engine.server;
 
 import org.apache.seatunnel.shade.com.typesafe.config.Config;
+import org.apache.seatunnel.shade.org.apache.commons.lang3.StringUtils;
+import org.apache.seatunnel.shade.org.apache.commons.lang3.tuple.ImmutablePair;
 
 import org.apache.seatunnel.api.common.JobContext;
 import org.apache.seatunnel.api.configuration.ReadonlyConfig;
@@ -32,6 +34,7 @@ import org.apache.seatunnel.engine.common.config.ConfigProvider;
 import org.apache.seatunnel.engine.common.config.JobConfig;
 import org.apache.seatunnel.engine.common.config.SeaTunnelConfig;
 import org.apache.seatunnel.engine.common.exception.SeaTunnelEngineException;
+import org.apache.seatunnel.engine.common.job.JobStatus;
 import org.apache.seatunnel.engine.common.utils.IdGenerator;
 import org.apache.seatunnel.engine.common.utils.MDUtil;
 import org.apache.seatunnel.engine.core.dag.actions.Action;
@@ -42,13 +45,9 @@ import org.apache.seatunnel.engine.core.job.ConnectorJar;
 import org.apache.seatunnel.engine.core.job.ConnectorJarIdentifier;
 import org.apache.seatunnel.engine.core.job.ConnectorJarType;
 import org.apache.seatunnel.engine.core.job.JobImmutableInformation;
-import org.apache.seatunnel.engine.core.job.JobStatus;
 import org.apache.seatunnel.engine.core.job.PipelineStatus;
 import org.apache.seatunnel.engine.core.parse.MultipleTableJobConfigParser;
 import org.apache.seatunnel.engine.server.service.jar.ConnectorPackageService;
-
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.ImmutablePair;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
@@ -62,6 +61,7 @@ import com.hazelcast.internal.serialization.Data;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.spi.impl.NodeEngineImpl;
+import com.hazelcast.spi.properties.ClusterProperty;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.ByteArrayOutputStream;
@@ -120,6 +120,13 @@ public class ConnectorPackageServiceTest {
                         + "            connector-jar-expiry-time: 600";
 
         SEATUNNEL_CONFIG = ConfigProvider.locateAndGetSeaTunnelConfigFromString(yaml);
+        // Keep the failover test fast when a listener registration briefly targets the old master.
+        SEATUNNEL_CONFIG
+                .getHazelcastConfig()
+                .setProperty(ClusterProperty.INVOCATION_MAX_RETRY_COUNT.getName(), "3");
+        SEATUNNEL_CONFIG
+                .getHazelcastConfig()
+                .setProperty(ClusterProperty.INVOCATION_RETRY_PAUSE.getName(), "1");
     }
 
     @Test
@@ -129,38 +136,44 @@ public class ConnectorPackageServiceTest {
                 .setClusterName(
                         TestUtils.getClusterName(
                                 "ConnectorPackageServiceTest_testMasterNodeActive"));
-        HazelcastInstanceImpl instance1 =
-                SeaTunnelServerStarter.createHazelcastInstance(SEATUNNEL_CONFIG);
-        HazelcastInstanceImpl instance2 =
-                SeaTunnelServerStarter.createHazelcastInstance(SEATUNNEL_CONFIG);
-
-        SeaTunnelServer server1 =
-                instance1.node.getNodeEngine().getService(SeaTunnelServer.SERVICE_NAME);
-        SeaTunnelServer server2 =
-                instance2.node.getNodeEngine().getService(SeaTunnelServer.SERVICE_NAME);
-
-        Assertions.assertTrue(server1.isMasterNode());
-        Assertions.assertTrue(server1.getConnectorPackageService() != null);
-
+        HazelcastInstanceImpl instance1 = null;
+        HazelcastInstanceImpl instance2 = null;
         try {
-            server2.getConnectorPackageService();
-        } catch (Exception e) {
-            Assertions.assertTrue(e instanceof SeaTunnelEngineException);
-        }
+            instance1 = SeaTunnelServerStarter.createHazelcastInstance(SEATUNNEL_CONFIG);
+            instance2 = SeaTunnelServerStarter.createHazelcastInstance(SEATUNNEL_CONFIG);
 
-        // shutdown instance1
-        instance1.shutdown();
-        await().atMost(20000, TimeUnit.MILLISECONDS)
-                .untilAsserted(
-                        () -> {
-                            try {
-                                Assertions.assertTrue(server2.isMasterNode());
-                                Assertions.assertTrue(server2.getConnectorPackageService() != null);
-                            } catch (SeaTunnelEngineException e) {
-                                Assertions.assertTrue(false);
-                            }
-                        });
-        instance2.shutdown();
+            SeaTunnelServer server1 =
+                    instance1.node.getNodeEngine().getService(SeaTunnelServer.SERVICE_NAME);
+            SeaTunnelServer server2 =
+                    instance2.node.getNodeEngine().getService(SeaTunnelServer.SERVICE_NAME);
+
+            Assertions.assertTrue(server1.isMasterNode());
+            Assertions.assertNotNull(server1.getConnectorPackageService());
+            Assertions.assertThrows(
+                    SeaTunnelEngineException.class, server2::getConnectorPackageService);
+
+            // shutdown instance1
+            instance1.shutdown();
+            await().atMost(20000, TimeUnit.MILLISECONDS)
+                    .untilAsserted(
+                            () -> {
+                                try {
+                                    Assertions.assertTrue(server2.isMasterNode());
+                                    Assertions.assertNotNull(server2.getConnectorPackageService());
+                                } catch (SeaTunnelEngineException e) {
+                                    Assertions.fail(
+                                            "Connector package service is not ready on the new master",
+                                            e);
+                                }
+                            });
+        } finally {
+            if (instance2 != null && instance2.node.isRunning()) {
+                instance2.shutdown();
+            }
+            if (instance1 != null && instance1.node.isRunning()) {
+                instance1.shutdown();
+            }
+        }
     }
 
     @Test

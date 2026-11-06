@@ -541,6 +541,43 @@ public class OracleTypeConverterTest {
     }
 
     @Test
+    public void testConvertBlobAsByte() {
+        BasicTypeDefine typeDefine =
+                BasicTypeDefine.builder()
+                        .name("test_blob")
+                        .columnType("BLOB")
+                        .dataType("BLOB")
+                        .build();
+
+        Column column = INSTANCE.convert(typeDefine);
+
+        Assertions.assertEquals("test_blob", column.getName());
+        Assertions.assertEquals(PrimitiveByteArrayType.INSTANCE, column.getDataType());
+        Assertions.assertEquals("BLOB", column.getSourceType());
+        Assertions.assertEquals(
+                Long.valueOf((1L << 32) - 1), ((PhysicalColumn) column).getColumnLength());
+    }
+
+    @Test
+    public void testConvertBlobAsString() {
+        BasicTypeDefine typeDefine =
+                BasicTypeDefine.builder()
+                        .name("test_blob")
+                        .columnType("BLOB")
+                        .dataType("BLOB")
+                        .build();
+
+        OracleTypeConverter converterWithBlobAsString = new OracleTypeConverter(true, true);
+        Column column = converterWithBlobAsString.convert(typeDefine);
+
+        Assertions.assertEquals("test_blob", column.getName());
+        Assertions.assertEquals(BasicType.STRING_TYPE, column.getDataType());
+        Assertions.assertEquals("BLOB", column.getSourceType());
+        Assertions.assertEquals(
+                Long.valueOf((1L << 32) - 1), ((PhysicalColumn) column).getColumnLength());
+    }
+
+    @Test
     public void testConvertDatetime() {
         BasicTypeDefine<Object> typeDefine =
                 BasicTypeDefine.builder().name("test").columnType("date").dataType("date").build();
@@ -575,7 +612,8 @@ public class OracleTypeConverterTest {
         column = INSTANCE.convert(typeDefine);
 
         Assertions.assertEquals(typeDefine.getName(), column.getName());
-        Assertions.assertEquals(LocalTimeType.LOCAL_DATE_TIME_TYPE, column.getDataType());
+        // TIMESTAMP WITH TIME ZONE is LTZ → should map to OFFSET_DATE_TIME_TYPE
+        Assertions.assertEquals(LocalTimeType.OFFSET_DATE_TIME_TYPE, column.getDataType());
         Assertions.assertEquals(6, column.getScale());
         Assertions.assertEquals(typeDefine.getColumnType(), column.getSourceType());
 
@@ -589,7 +627,8 @@ public class OracleTypeConverterTest {
         column = INSTANCE.convert(typeDefine);
 
         Assertions.assertEquals(typeDefine.getName(), column.getName());
-        Assertions.assertEquals(LocalTimeType.LOCAL_DATE_TIME_TYPE, column.getDataType());
+        // TIMESTAMP WITH LOCAL TIME ZONE is LTZ → should map to OFFSET_DATE_TIME_TYPE
+        Assertions.assertEquals(LocalTimeType.OFFSET_DATE_TIME_TYPE, column.getDataType());
         Assertions.assertEquals(6, column.getScale());
         Assertions.assertEquals(typeDefine.getColumnType(), column.getSourceType());
     }
@@ -845,10 +884,40 @@ public class OracleTypeConverterTest {
 
     @Test
     public void testReconvertDatetime() {
+        // TIMESTAMP (NTZ) should map to ORACLE_TIMESTAMP
         Column column =
                 PhysicalColumn.builder()
                         .name("test")
                         .dataType(LocalTimeType.LOCAL_DATE_TIME_TYPE)
+                        .build();
+
+        BasicTypeDefine typeDefine = INSTANCE.reconvert(column);
+        Assertions.assertEquals(column.getName(), typeDefine.getName());
+        Assertions.assertEquals(OracleTypeConverter.ORACLE_TIMESTAMP, typeDefine.getColumnType());
+        Assertions.assertEquals(OracleTypeConverter.ORACLE_TIMESTAMP, typeDefine.getDataType());
+
+        column =
+                PhysicalColumn.builder()
+                        .name("test")
+                        .dataType(LocalTimeType.LOCAL_DATE_TIME_TYPE)
+                        .scale(3)
+                        .build();
+
+        typeDefine = INSTANCE.reconvert(column);
+        Assertions.assertEquals(column.getName(), typeDefine.getName());
+        Assertions.assertEquals(
+                String.format("TIMESTAMP(%s)", column.getScale()), typeDefine.getColumnType());
+        Assertions.assertEquals(OracleTypeConverter.ORACLE_TIMESTAMP, typeDefine.getDataType());
+        Assertions.assertEquals(column.getScale(), typeDefine.getScale());
+    }
+
+    @Test
+    public void testReconvertTimestampTz() {
+        // TIMESTAMP_TZ (LTZ) should map to ORACLE_TIMESTAMP_WITH_LOCAL_TIME_ZONE
+        Column column =
+                PhysicalColumn.builder()
+                        .name("test")
+                        .dataType(LocalTimeType.OFFSET_DATE_TIME_TYPE)
                         .build();
 
         BasicTypeDefine typeDefine = INSTANCE.reconvert(column);
@@ -863,7 +932,7 @@ public class OracleTypeConverterTest {
         column =
                 PhysicalColumn.builder()
                         .name("test")
-                        .dataType(LocalTimeType.LOCAL_DATE_TIME_TYPE)
+                        .dataType(LocalTimeType.OFFSET_DATE_TIME_TYPE)
                         .scale(3)
                         .build();
 

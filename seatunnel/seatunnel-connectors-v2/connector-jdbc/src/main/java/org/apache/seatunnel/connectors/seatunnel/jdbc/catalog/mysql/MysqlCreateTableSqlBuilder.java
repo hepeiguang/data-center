@@ -17,6 +17,8 @@
 
 package org.apache.seatunnel.connectors.seatunnel.jdbc.catalog.mysql;
 
+import org.apache.seatunnel.shade.org.apache.commons.lang3.StringUtils;
+
 import org.apache.seatunnel.api.table.catalog.CatalogTable;
 import org.apache.seatunnel.api.table.catalog.Column;
 import org.apache.seatunnel.api.table.catalog.ConstraintKey;
@@ -30,7 +32,6 @@ import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.dialect.DatabaseI
 import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.dialect.mysql.MySqlTypeConverter;
 
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
 
 import com.mysql.cj.MysqlType;
 
@@ -84,9 +85,9 @@ public class MysqlCreateTableSqlBuilder {
 
         return new MysqlCreateTableSqlBuilder(tablePath.getTableName(), typeConverter, createIndex)
                 .comment(catalogTable.getComment())
-                // todo: set charset and collate
-                .engine(null)
-                .charset(null)
+                .engine(catalogTable.getOptions().get(MySqlCatalog.TABLE_OPTION_ENGINE))
+                .charset(catalogTable.getOptions().get(MySqlCatalog.TABLE_OPTION_CHARSET))
+                .collate(catalogTable.getOptions().get(MySqlCatalog.TABLE_OPTION_COLLATE))
                 .primaryKey(tableSchema.getPrimaryKey())
                 .constraintKeys(tableSchema.getConstraintKeys())
                 .addColumn(tableSchema.getColumns())
@@ -151,7 +152,7 @@ public class MysqlCreateTableSqlBuilder {
             sqls.add("COLLATE = " + collate);
         }
         if (comment != null) {
-            sqls.add("COMMENT = '" + comment + "'");
+            sqls.add("COMMENT = '" + escapeComment(comment) + "'");
         }
         return String.join(" ", sqls) + ";";
     }
@@ -179,12 +180,14 @@ public class MysqlCreateTableSqlBuilder {
         return String.join(", \n", columnSqls);
     }
 
-    private String buildColumnIdentifySql(
+    String buildColumnIdentifySql(
             Column column, String catalogName, Map<String, String> columnTypeMap) {
         final List<String> columnSqls = new ArrayList<>();
         columnSqls.add(CatalogUtils.quoteIdentifier(column.getName(), fieldIde, "`"));
         String type;
-        if ((SqlType.TIME.equals(column.getDataType().getSqlType())
+        if (column.getSinkType() != null) {
+            type = column.getSinkType();
+        } else if ((SqlType.TIME.equals(column.getDataType().getSqlType())
                         || SqlType.TIMESTAMP.equals(column.getDataType().getSqlType()))
                 && column.getScale() != null) {
             BasicTypeDefine<MysqlType> typeDefine = typeConverter.reconvert(column);
@@ -206,13 +209,14 @@ public class MysqlCreateTableSqlBuilder {
         }
 
         if (column.getComment() != null) {
-            columnSqls.add(
-                    "COMMENT '"
-                            + column.getComment().replace("'", "''").replace("\\", "\\\\")
-                            + "'");
+            columnSqls.add("COMMENT '" + escapeComment(column.getComment()) + "'");
         }
 
         return String.join(" ", columnSqls);
+    }
+
+    private String escapeComment(String comment) {
+        return comment.replace("'", "''").replace("\\", "\\\\");
     }
 
     private String buildPrimaryKeySql() {
@@ -262,9 +266,14 @@ public class MysqlCreateTableSqlBuilder {
                 keyName = "UNIQUE KEY";
                 break;
             case FOREIGN_KEY:
-                keyName = "FOREIGN KEY";
-                // todo:
-                break;
+                // Foreign key constraints require referenced table/column info which is
+                // not available in ConstraintKey. Skip generation to avoid producing
+                // invalid DDL.
+                return null;
+            case VECTOR_INDEX_KEY:
+                // VECTOR INDEX is MySQL 8.0+ specific, not supported in generic CREATE
+                // TABLE.
+                return null;
             default:
                 throw new UnsupportedOperationException(
                         "Unsupported constraint type: " + constraintType);

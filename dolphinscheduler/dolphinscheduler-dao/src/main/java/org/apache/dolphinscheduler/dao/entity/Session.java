@@ -14,6 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.apache.dolphinscheduler.dao.entity;
 
 import java.util.Date;
@@ -37,7 +38,7 @@ public class Session {
     @TableId(value = "id", type = IdType.INPUT)
     private String id;
 
-    private String userId;
+    private int userId;
 
     private Date lastLoginTime;
 

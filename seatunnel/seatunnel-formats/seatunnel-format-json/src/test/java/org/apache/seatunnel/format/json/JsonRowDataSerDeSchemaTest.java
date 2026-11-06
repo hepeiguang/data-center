@@ -35,6 +35,7 @@ import org.apache.seatunnel.api.table.type.SeaTunnelRowType;
 import org.apache.seatunnel.common.exception.CommonError;
 import org.apache.seatunnel.common.exception.SeaTunnelRuntimeException;
 import org.apache.seatunnel.common.utils.JsonUtils;
+import org.apache.seatunnel.common.utils.VectorUtils;
 import org.apache.seatunnel.format.json.exception.SeaTunnelJsonFormatException;
 
 import org.junit.jupiter.api.Assertions;
@@ -42,10 +43,13 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalQueries;
 import java.util.HashMap;
@@ -61,9 +65,12 @@ import static org.apache.seatunnel.api.table.type.BasicType.INT_TYPE;
 import static org.apache.seatunnel.api.table.type.BasicType.LONG_TYPE;
 import static org.apache.seatunnel.api.table.type.BasicType.SHORT_TYPE;
 import static org.apache.seatunnel.api.table.type.BasicType.STRING_TYPE;
+import static org.apache.seatunnel.api.table.type.VectorType.VECTOR_FLOAT_TYPE;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class JsonRowDataSerDeSchemaTest {
 
@@ -75,6 +82,7 @@ public class JsonRowDataSerDeSchemaTest {
         String name = "asdlkjasjkdla998y1122";
         LocalDate date = LocalDate.parse("1990-10-14");
         LocalTime time = LocalTime.parse("12:12:43");
+        OffsetDateTime offsetDateTime = OffsetDateTime.parse("2025-09-12T23:46:25+08:00");
         Timestamp timestamp3 = Timestamp.valueOf("1990-10-14 12:12:43.123");
         Timestamp timestamp9 = Timestamp.valueOf("1990-10-14 12:12:43.123456789");
         Map<String, Long> map = new HashMap<>();
@@ -99,6 +107,7 @@ public class JsonRowDataSerDeSchemaTest {
         root.put("name", name);
         root.put("date", "1990-10-14");
         root.put("time", "12:12:43");
+        root.put("timestamp_tz", "2025-09-12T23:46:25+08:00");
         root.put("timestamp3", "1990-10-14T12:12:43.123");
         root.put("timestamp9", "1990-10-14T12:12:43.123456789");
         root.putObject("map").put("element", 123);
@@ -120,6 +129,7 @@ public class JsonRowDataSerDeSchemaTest {
                             "name",
                             "date",
                             "time",
+                            "timestamp_tz",
                             "timestamp3",
                             "timestamp9",
                             "map",
@@ -135,6 +145,7 @@ public class JsonRowDataSerDeSchemaTest {
                             STRING_TYPE,
                             LocalTimeType.LOCAL_DATE_TYPE,
                             LocalTimeType.LOCAL_TIME_TYPE,
+                            LocalTimeType.OFFSET_DATE_TIME_TYPE,
                             LocalTimeType.LOCAL_DATE_TIME_TYPE,
                             LocalTimeType.LOCAL_DATE_TIME_TYPE,
                             new MapType(STRING_TYPE, LONG_TYPE),
@@ -149,6 +160,7 @@ public class JsonRowDataSerDeSchemaTest {
                                         "name",
                                         "date",
                                         "time",
+                                        "timestamp_tz",
                                         "timestamp3",
                                         "timestamp9",
                                         "map",
@@ -163,6 +175,7 @@ public class JsonRowDataSerDeSchemaTest {
                                         STRING_TYPE,
                                         LocalTimeType.LOCAL_DATE_TIME_TYPE,
                                         LocalTimeType.LOCAL_TIME_TYPE,
+                                        LocalTimeType.OFFSET_DATE_TIME_TYPE,
                                         LocalTimeType.LOCAL_DATE_TIME_TYPE,
                                         LocalTimeType.LOCAL_DATE_TIME_TYPE,
                                         new MapType(STRING_TYPE, LONG_TYPE),
@@ -174,7 +187,7 @@ public class JsonRowDataSerDeSchemaTest {
         JsonDeserializationSchema deserializationSchema =
                 new JsonDeserializationSchema(catalogTables, false, false);
 
-        SeaTunnelRow expected = new SeaTunnelRow(13);
+        SeaTunnelRow expected = new SeaTunnelRow(14);
         expected.setField(0, true);
         expected.setField(1, intValue);
         expected.setField(2, longValue);
@@ -182,13 +195,14 @@ public class JsonRowDataSerDeSchemaTest {
         expected.setField(4, name);
         expected.setField(5, date);
         expected.setField(6, time);
-        expected.setField(7, timestamp3.toLocalDateTime());
-        expected.setField(8, timestamp9.toLocalDateTime());
-        expected.setField(9, map);
-        expected.setField(10, multiSet);
-        expected.setField(11, nestedMap);
+        expected.setField(7, offsetDateTime);
+        expected.setField(8, timestamp3.toLocalDateTime());
+        expected.setField(9, timestamp9.toLocalDateTime());
+        expected.setField(10, map);
+        expected.setField(11, multiSet);
+        expected.setField(12, nestedMap);
 
-        SeaTunnelRow rowFieldRow = new SeaTunnelRow(12);
+        SeaTunnelRow rowFieldRow = new SeaTunnelRow(13);
         rowFieldRow.setField(0, true);
         rowFieldRow.setField(1, intValue);
         rowFieldRow.setField(2, longValue);
@@ -196,13 +210,14 @@ public class JsonRowDataSerDeSchemaTest {
         rowFieldRow.setField(4, name);
         rowFieldRow.setField(5, timestamp3.toLocalDateTime());
         rowFieldRow.setField(6, time);
-        rowFieldRow.setField(7, timestamp3.toLocalDateTime());
-        rowFieldRow.setField(8, timestamp9.toLocalDateTime());
-        rowFieldRow.setField(9, map);
-        rowFieldRow.setField(10, multiSet);
-        rowFieldRow.setField(11, nestedMap);
+        rowFieldRow.setField(7, offsetDateTime);
+        rowFieldRow.setField(8, timestamp3.toLocalDateTime());
+        rowFieldRow.setField(9, timestamp9.toLocalDateTime());
+        rowFieldRow.setField(10, map);
+        rowFieldRow.setField(11, multiSet);
+        rowFieldRow.setField(12, nestedMap);
 
-        expected.setField(12, rowFieldRow);
+        expected.setField(13, rowFieldRow);
 
         SeaTunnelRow seaTunnelRow = deserializationSchema.deserialize(serializedJson);
         assertEquals(expected, seaTunnelRow);
@@ -568,6 +583,36 @@ public class JsonRowDataSerDeSchemaTest {
     }
 
     @Test
+    public void testFloatVectorConverter() throws JsonProcessingException {
+        JsonToRowConverters converters = new JsonToRowConverters(true, false);
+        JsonToRowConverters.JsonToObjectConverter converter =
+                converters.createConverter(VECTOR_FLOAT_TYPE);
+
+        ByteBuffer result =
+                (ByteBuffer)
+                        converter.convert(
+                                JsonUtils.stringToJsonNode("[0.1, 0.2, 0.3, 0.4]"), "vector");
+
+        assertArrayEquals(new Float[] {0.1f, 0.2f, 0.3f, 0.4f}, VectorUtils.toFloatArray(result));
+    }
+
+    @Test
+    public void testFloatVectorConverterRejectsInvalidElement() throws JsonProcessingException {
+        JsonToRowConverters converters = new JsonToRowConverters(true, false);
+        JsonToRowConverters.JsonToObjectConverter converter =
+                converters.createConverter(VECTOR_FLOAT_TYPE);
+
+        SeaTunnelJsonFormatException exception =
+                assertThrows(
+                        SeaTunnelJsonFormatException.class,
+                        () ->
+                                converter.convert(
+                                        JsonUtils.stringToJsonNode("[0.1, null]"), "vector"));
+
+        assertTrue(exception.getMessage().contains("element at index 1"));
+    }
+
+    @Test
     public void testParseUnsupportedDateTimeFormat() throws IOException {
         SeaTunnelRowType rowType =
                 new SeaTunnelRowType(
@@ -677,5 +722,72 @@ public class JsonRowDataSerDeSchemaTest {
         assertEquals(
                 "{\"timestamp\":\"2022-09-24T22:45:00.000123456\"}",
                 new String(new JsonSerializationSchema(schema, "\\N").serialize(row)));
+
+        schema =
+                new SeaTunnelRowType(
+                        new String[] {"timestamp_tz"},
+                        new SeaTunnelDataType[] {LocalTimeType.OFFSET_DATE_TIME_TYPE});
+        OffsetDateTime offsetDateTime = OffsetDateTime.parse("2025-09-12T23:46:25+08:00");
+        row = new SeaTunnelRow(new Object[] {offsetDateTime});
+        assertEquals(
+                "{\"timestamp_tz\":\"2025-09-12T23:46:25+08:00\"}",
+                new String(new JsonSerializationSchema(schema, "\\N").serialize(row)));
+    }
+
+    @Test
+    public void testSerializationWithNumber() throws JsonProcessingException {
+        SeaTunnelRowType schema =
+                new SeaTunnelRowType(
+                        new String[] {"id", "code", "fe_result"},
+                        new SeaTunnelDataType[] {INT_TYPE, STRING_TYPE, new DecimalType(10, 2)});
+        JsonSerializationSchema jsonSerializationSchema =
+                new JsonSerializationSchema(schema, StandardCharsets.UTF_8.name());
+        Object[] fields = new Object[] {1, "1001015", BigDecimal.valueOf(80.00)};
+        SeaTunnelRow row = new SeaTunnelRow(fields);
+        byte[] serialize = jsonSerializationSchema.serialize(row);
+        JsonNode jsonNode = new ObjectMapper().readTree(new String(serialize));
+        assertEquals(1, jsonNode.get("id").asInt());
+        assertEquals("1001015", jsonNode.get("code").asText());
+        assertEquals(0, BigDecimal.valueOf(80).compareTo(jsonNode.get("fe_result").decimalValue()));
+    }
+
+    @Test
+    public void testMultipleDateColumnsWithDifferentFormats() throws IOException {
+        SeaTunnelRowType rowType =
+                new SeaTunnelRowType(
+                        new String[] {"date_dash", "date_dot"},
+                        new SeaTunnelDataType<?>[] {
+                            LocalTimeType.LOCAL_DATE_TYPE, LocalTimeType.LOCAL_DATE_TYPE
+                        });
+        JsonDeserializationSchema deserializationSchema =
+                new JsonDeserializationSchema(false, false, rowType);
+
+        String json = "{\"date_dash\":\"2024-01-15\",\"date_dot\":\"2024.06.20\"}";
+        SeaTunnelRow row = deserializationSchema.deserialize(json.getBytes());
+
+        assertEquals(LocalDate.of(2024, 1, 15), row.getField(0));
+        assertEquals(LocalDate.of(2024, 6, 20), row.getField(1));
+    }
+
+    @Test
+    public void testTimestampFieldSupportsMixedPrecisionAcrossRows() throws IOException {
+        SeaTunnelRowType rowType =
+                new SeaTunnelRowType(
+                        new String[] {"timestamp_field"},
+                        new SeaTunnelDataType<?>[] {LocalTimeType.LOCAL_DATE_TIME_TYPE});
+        JsonDeserializationSchema deserializationSchema =
+                new JsonDeserializationSchema(false, false, rowType);
+
+        SeaTunnelRow secondPrecisionRow =
+                deserializationSchema.deserialize(
+                        "{\"timestamp_field\":\"2022-09-24T22:45:00\"}".getBytes());
+        SeaTunnelRow fractionalPrecisionRow =
+                deserializationSchema.deserialize(
+                        "{\"timestamp_field\":\"2022-09-24T22:45:00.123\"}".getBytes());
+
+        assertEquals(LocalDateTime.of(2022, 9, 24, 22, 45, 0), secondPrecisionRow.getField(0));
+        assertEquals(
+                LocalDateTime.of(2022, 9, 24, 22, 45, 0, 123_000_000),
+                fractionalPrecisionRow.getField(0));
     }
 }

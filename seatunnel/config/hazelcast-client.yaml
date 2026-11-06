@@ -24,4 +24,4 @@ hazelcast-client:
       cluster-connect-timeout-millis: 3000
   network:
     cluster-members:
-      - seatunnel-master:5801
+      - localhost:5801

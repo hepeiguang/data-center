@@ -17,13 +17,17 @@
 
 package org.apache.seatunnel.connectors.seatunnel.jdbc.catalog.sqlserver;
 
+import org.apache.seatunnel.shade.org.apache.commons.lang3.StringUtils;
+
 import org.apache.seatunnel.api.configuration.ReadonlyConfig;
+import org.apache.seatunnel.api.configuration.util.ConditionExtension;
 import org.apache.seatunnel.api.configuration.util.OptionRule;
+import org.apache.seatunnel.api.configuration.util.OptionValidationException;
 import org.apache.seatunnel.api.table.catalog.Catalog;
 import org.apache.seatunnel.api.table.factory.CatalogFactory;
 import org.apache.seatunnel.api.table.factory.Factory;
 import org.apache.seatunnel.common.utils.JdbcUrlUtil;
-import org.apache.seatunnel.connectors.seatunnel.jdbc.catalog.JdbcCatalogOptions;
+import org.apache.seatunnel.connectors.seatunnel.jdbc.config.JdbcCommonOptions;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.dialect.DatabaseIdentifier;
 
 import com.google.auto.service.AutoService;
@@ -38,19 +42,44 @@ public class SqlServerCatalogFactory implements CatalogFactory {
 
     @Override
     public Catalog createCatalog(String catalogName, ReadonlyConfig options) {
-        String url = options.get(JdbcCatalogOptions.BASE_URL);
+        String url = options.get(JdbcCommonOptions.URL);
         JdbcUrlUtil.UrlInfo urlInfo = SqlServerURLParser.parse(url);
         return new SqlServerCatalog(
                 catalogName,
-                options.get(JdbcCatalogOptions.USERNAME),
-                options.get(JdbcCatalogOptions.PASSWORD),
+                options.get(JdbcCommonOptions.USERNAME),
+                options.get(JdbcCommonOptions.PASSWORD),
                 urlInfo,
-                options.get(JdbcCatalogOptions.SCHEMA),
-                options.get(JdbcCatalogOptions.DRIVER));
+                options.get(JdbcCommonOptions.SCHEMA),
+                options.get(JdbcCommonOptions.DRIVER));
     }
 
     @Override
     public OptionRule optionRule() {
-        return JdbcCatalogOptions.BASE_RULE.build();
+        return JdbcCommonOptions.baseCatalogRule(new SqlServerUrlValidator()).build();
+    }
+
+    /** Validates URL format only; database may be provided via separate config option. */
+    static class SqlServerUrlValidator implements ConditionExtension<String> {
+        @Override
+        public String description() {
+            return "SqlServer JDBC URL must be a valid format (e.g. jdbc:sqlserver://host:port;databaseName=db)";
+        }
+
+        @Override
+        public boolean evaluate(ReadonlyConfig config, String url) {
+            if (url == null || url.trim().isEmpty()) {
+                return false;
+            }
+            try {
+                JdbcUrlUtil.UrlInfo info = SqlServerURLParser.parse(url);
+                return info != null && StringUtils.isNotBlank(info.getHost());
+            } catch (IllegalArgumentException e) {
+                throw new OptionValidationException(
+                        String.format(
+                                "Invalid SqlServer JDBC URL format: [%s], "
+                                        + "expected pattern: jdbc:sqlserver://host:port[;databaseName=db]",
+                                url));
+            }
+        }
     }
 }

@@ -49,10 +49,53 @@ public enum CommonOptions {
     ROW_KIND("RowKind", true),
     /**
      * The key of {@link SeaTunnelRow#getOptions()} to store the EVENT_TIME value of the row value.
+     * And the data should be milliseconds.
      */
     EVENT_TIME("EventTime", true),
-    /** The key of {@link SeaTunnelRow#getOptions()} to store the DELAY value of the row value. */
-    DELAY("Delay", true);
+    /**
+     * The key of {@link SeaTunnelRow#getOptions()} to store the DELAY value of the row value. And
+     * the data should be milliseconds.
+     */
+    DELAY("Delay", true),
+    /**
+     * The key of {@link SeaTunnelRow#getOptions()} to store the binlog filename of the CDC event.
+     * Only available for MySQL-CDC source.
+     */
+    BINLOG_FILE("BinlogFile", true),
+    /**
+     * The key of {@link SeaTunnelRow#getOptions()} to store the binlog position of the CDC event.
+     * Only available for MySQL-CDC source.
+     */
+    BINLOG_POS("BinlogPos", true),
+    /**
+     * The key of {@link SeaTunnelRow#getOptions()} to store the row index within the binlog event.
+     * Only available for MySQL-CDC source.
+     */
+    BINLOG_ROW("BinlogRow", true),
+    /**
+     * The key of {@link SeaTunnelRow#getOptions()} to store the GTID of the CDC event. Only
+     * available for MySQL-CDC source when GTID mode is enabled. Format: {@code
+     * server_uuid:transaction_id}, e.g. {@code 3E11FA47-71CA-11E1-9E33-C80AA9429562:23}. Null for
+     * snapshot rows and when GTID is disabled.
+     */
+    GTID("Gtid", true),
+    /**
+     * The key of {@link SeaTunnelRow#getOptions()} to store the timestamp (ms) at which the change
+     * was committed in the source database ({@code source.ts_ms} in the Debezium envelope).
+     * Available for all CDC connectors. Distinct from {@link #EVENT_TIME}, which is the time the
+     * connector processed the event. Null if the connector does not populate {@code source.ts_ms}.
+     */
+    SOURCE_TIMESTAMP("SourceTimestamp", true),
+    /**
+     * The key of {@link SeaTunnelRow#getOptions()} to indicate whether the row represents a
+     * complete file.
+     */
+    IS_COMPLETE("is_complete", true),
+    /**
+     * The key of {@link SeaTunnelRow#getOptions()} to indicate whether the row contains binary
+     * format data.
+     */
+    IS_BINARY_FORMAT("is_binary_format", true);
 
     private final String name;
     private final boolean supportMetadataTrans;

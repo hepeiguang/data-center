@@ -19,7 +19,9 @@ package org.apache.seatunnel.connectors.seatunnel.redis.client;
 
 import org.apache.seatunnel.api.table.type.RowKind;
 import org.apache.seatunnel.common.utils.JsonUtils;
+import org.apache.seatunnel.connectors.seatunnel.redis.config.RedisDataType;
 import org.apache.seatunnel.connectors.seatunnel.redis.config.RedisParameters;
+import org.apache.seatunnel.connectors.seatunnel.redis.config.RedisTableConfig;
 import org.apache.seatunnel.connectors.seatunnel.redis.exception.RedisConnectorException;
 import org.apache.seatunnel.connectors.seatunnel.redis.exception.RedisErrorCode;
 
@@ -29,6 +31,8 @@ import redis.clients.jedis.Jedis;
 import redis.clients.jedis.Pipeline;
 import redis.clients.jedis.Response;
 import redis.clients.jedis.exceptions.JedisException;
+import redis.clients.jedis.params.ScanParams;
+import redis.clients.jedis.resps.ScanResult;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -96,7 +100,7 @@ public class RedisSingleClient extends RedisClient {
     }
 
     @Override
-    public List<Map<String, String>> batchGetHash(List<String> keys) {
+    public List<Map<String, String>> batchGetHash(List<String> keys, RedisTableConfig tableConfig) {
         if (CollectionUtils.isEmpty(keys)) {
             return new ArrayList<>();
         }
@@ -110,12 +114,13 @@ public class RedisSingleClient extends RedisClient {
 
         pipeline.sync();
 
+        String keyFieldName = tableConfig.getKeyFieldName();
         List<Map<String, String>> resultList = new ArrayList<>(keys.size());
         for (int i = 0; i < keys.size(); i++) {
             Response<Map<String, String>> response = responses.get(i);
             Map<String, String> map = response.get();
             if (map != null) {
-                map.put("hash_key", keys.get(i));
+                map.put(keyFieldName, keys.get(i));
             }
             resultList.add(map);
         }
@@ -258,6 +263,19 @@ public class RedisSingleClient extends RedisClient {
         }
         pipelined.sync();
         processResponses(responses);
+    }
+
+    @Override
+    public ScanResult<String> scanKeyResult(
+            String cursor, ScanParams scanParams, RedisDataType type) {
+
+        if (type == null) {
+            // redis 5
+            return jedis.scan(cursor, scanParams);
+        } else {
+            // redis 7
+            return jedis.scan(cursor, scanParams, type.name());
+        }
     }
 
     private void processResponses(List<Response<?>> responseList) {

@@ -16,7 +16,6 @@
  */
 
 import crontab from '@/locales/en_US/crontab'
-import data_quality from '@/locales/en_US/data-quality'
 import datasource from '@/locales/en_US/datasource'
 import home from '@/locales/en_US/home'
 import input_search from '@/locales/en_US/input-search'
@@ -32,7 +31,8 @@ import security from '@/locales/en_US/security'
 import theme from '@/locales/en_US/theme'
 import user_dropdown from '@/locales/en_US/user-dropdown'
 import ui_setting from '@/locales/en_US/ui_setting'
-import seaTunnel from '@/locales/en_US/seaTunnel'
+import about from '@/locales/en_US/about'
+import data_api from '@/locales/en_US/data-api'
 
 export default {
   login,
@@ -42,15 +42,15 @@ export default {
   menu,
   home,
   password,
+  about,
   profile,
   monitor,
   resource,
   project,
   security,
   datasource,
-  data_quality,
   crontab,
   ui_setting,
   input_search,
-  seaTunnel
+  data_api
 }

@@ -16,13 +16,7 @@
  */
 
 import { axios } from '@/service/service'
-import {
-  ExecuteReq,
-  ExecuteTaskReq,
-  ProjectCodeReq,
-  ProcessDefinitionCodeReq,
-  ProcessInstanceReq
-} from './types'
+import { ExecuteReq, ExecuteTaskReq, WorkflowInstanceReq } from './types'
 
 export function execute(data: ExecuteReq, code: number): any {
   return axios({
@@ -40,23 +34,33 @@ export function executeTask(data: ExecuteTaskReq, code: number): any {
   })
 }
 
-export function startCheckProcessDefinition(
-  data: ProcessDefinitionCodeReq,
-  code: ProjectCodeReq
+export function startWorkflowInstance(
+  data: WorkflowInstanceReq,
+  code: number
 ): any {
   return axios({
-    url: `/projects/${code}/executors/start-check`,
+    url: `/projects/${code}/executors/start-workflow-instance`,
     method: 'post',
     data
   })
 }
 
-export function startProcessInstance(
-  data: ProcessInstanceReq,
-  code: number
+/** Start a STREAM task definition (realtime), e.g. UDP SEATUNNEL_COMPUTE. */
+export function startStreamTaskInstance(
+  projectCode: number,
+  taskCode: number,
+  data: {
+    version: number
+    warningGroupId?: number
+    workerGroup?: string
+    tenantCode?: string
+    environmentCode?: number
+    startParams?: string
+    dryRun?: number
+  }
 ): any {
   return axios({
-    url: `/projects/${code}/executors/start-process-instance`,
+    url: `/projects/${projectCode}/executors/task-instance/${taskCode}/start`,
     method: 'post',
     data
   })

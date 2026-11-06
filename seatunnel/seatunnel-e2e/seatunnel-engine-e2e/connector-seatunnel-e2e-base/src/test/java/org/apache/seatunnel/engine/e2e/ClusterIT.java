@@ -23,9 +23,9 @@ import org.apache.seatunnel.engine.client.job.ClientJobProxy;
 import org.apache.seatunnel.engine.common.config.ConfigProvider;
 import org.apache.seatunnel.engine.common.config.JobConfig;
 import org.apache.seatunnel.engine.common.config.SeaTunnelConfig;
+import org.apache.seatunnel.engine.common.job.JobResult;
+import org.apache.seatunnel.engine.common.job.JobStatus;
 import org.apache.seatunnel.engine.common.utils.PassiveCompletableFuture;
-import org.apache.seatunnel.engine.core.job.JobResult;
-import org.apache.seatunnel.engine.core.job.JobStatus;
 import org.apache.seatunnel.engine.server.SeaTunnelServerStarter;
 
 import org.awaitility.Awaitility;
@@ -55,6 +55,7 @@ public class ClusterIT {
         seaTunnelConfig
                 .getHazelcastConfig()
                 .setClusterName(TestUtils.getClusterName(testClusterName));
+        seaTunnelConfig.getEngineConfig().getHttpConfig().setEnabled(false);
 
         try {
             node1 = SeaTunnelServerStarter.createHazelcastInstance(seaTunnelConfig);
@@ -109,6 +110,7 @@ public class ClusterIT {
                 .getHazelcastConfig()
                 .setClusterName(TestUtils.getClusterName(testClusterName));
         seaTunnelConfig.getEngineConfig().setClassloaderCacheMode(true);
+        seaTunnelConfig.getEngineConfig().getHttpConfig().setEnabled(false);
 
         try {
             node1 = SeaTunnelServerStarter.createHazelcastInstance(seaTunnelConfig);
@@ -133,14 +135,15 @@ public class ClusterIT {
 
             final ClientJobProxy clientJobProxy = jobExecutionEnv.execute();
 
+            TimeUnit.SECONDS.sleep(2);
             CompletableFuture<PassiveCompletableFuture<JobResult>> objectCompletableFuture =
                     CompletableFuture.supplyAsync(clientJobProxy::doWaitForJobComplete);
 
             Awaitility.await()
                     .atMost(120000, TimeUnit.MILLISECONDS)
+                    .pollInterval(2000, TimeUnit.MILLISECONDS)
                     .untilAsserted(
                             () -> {
-                                Thread.sleep(2000);
                                 Assertions.assertTrue(objectCompletableFuture.isDone());
 
                                 PassiveCompletableFuture<JobResult>

@@ -60,7 +60,7 @@ public class EnvironmentWorkerGroupRelationMapperTest extends BaseDaoTest {
         EnvironmentWorkerGroupRelation relation = new EnvironmentWorkerGroupRelation();
         relation.setEnvironmentCode(1L);
         relation.setWorkerGroup("default");
-        relation.setOperator("1");
+        relation.setOperator(1);
         relation.setUpdateTime(new Date());
         relation.setCreateTime(new Date());
         environmentWorkerGroupRelationMapper.insert(relation);

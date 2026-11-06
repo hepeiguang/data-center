@@ -20,11 +20,14 @@ package org.apache.seatunnel.connectors.seatunnel.jdbc;
 
 import org.apache.seatunnel.shade.com.google.common.collect.Lists;
 import org.apache.seatunnel.shade.com.zaxxer.hikari.pool.HikariProxyConnection;
+import org.apache.seatunnel.shade.org.apache.commons.lang3.tuple.Pair;
 
 import org.apache.seatunnel.api.configuration.ReadonlyConfig;
+import org.apache.seatunnel.api.sink.DefaultSinkWriterContext;
 import org.apache.seatunnel.api.table.catalog.CatalogTable;
 import org.apache.seatunnel.api.table.catalog.PhysicalColumn;
 import org.apache.seatunnel.api.table.catalog.TableIdentifier;
+import org.apache.seatunnel.api.table.catalog.TablePath;
 import org.apache.seatunnel.api.table.catalog.TableSchema;
 import org.apache.seatunnel.api.table.factory.TableSinkFactoryContext;
 import org.apache.seatunnel.api.table.factory.TableSourceFactoryContext;
@@ -46,8 +49,6 @@ import org.apache.seatunnel.connectors.seatunnel.jdbc.source.JdbcSourceSplitEnum
 import org.apache.seatunnel.connectors.seatunnel.jdbc.state.JdbcSourceState;
 import org.apache.seatunnel.e2e.common.container.TestContainer;
 
-import org.apache.commons.lang3.tuple.Pair;
-
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -61,7 +62,6 @@ import org.testcontainers.utility.DockerLoggerFactory;
 
 import com.mysql.cj.jdbc.ConnectionImpl;
 
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.sql.Date;
 import java.sql.SQLException;
@@ -79,7 +79,7 @@ import java.util.Properties;
 
 public class JdbcMysqlIT extends AbstractJdbcIT {
 
-    private static final String MYSQL_IMAGE = "mysql:8.0";
+    private static final String MYSQL_IMAGE = "mysql:8.0.43";
     private static final String MYSQL_CONTAINER_HOST = "mysql-e2e";
     private static final String MYSQL_DATABASE = "seatunnel";
     private static final String MYSQL_SOURCE = "source";
@@ -90,7 +90,7 @@ public class JdbcMysqlIT extends AbstractJdbcIT {
     private static final String MYSQL_PASSWORD = "Abc!@#135_seatunnel";
     private static final int MYSQL_PORT = 3306;
     private static final String MYSQL_URL = "jdbc:mysql://" + HOST + ":%s/%s?useSSL=false";
-    private static final String URL = "jdbc:mysql://" + HOST + ":3306/seatunnel";
+    private static final String URL = "jdbc:mysql://%s:%s/seatunnel";
 
     private static final String SQL = "select * from seatunnel.source";
 
@@ -111,7 +111,7 @@ public class JdbcMysqlIT extends AbstractJdbcIT {
                     + "    `c_bit_16`               bit(16)               DEFAULT NULL,\n"
                     + "    `c_bit_32`               bit(32)               DEFAULT NULL,\n"
                     + "    `c_bit_64`               bit(64)               DEFAULT NULL,\n"
-                    + "    `c_boolean`              tinyint(1)            DEFAULT NULL,\n"
+                    + "    `c_tinyint_1`              tinyint(1)            DEFAULT NULL,\n"
                     + "    `c_tinyint`              tinyint(4)            DEFAULT NULL,\n"
                     + "    `c_tinyint_unsigned`     tinyint(3) unsigned   DEFAULT NULL,\n"
                     + "    `c_smallint`             smallint(6)           DEFAULT NULL,\n"
@@ -198,7 +198,7 @@ public class JdbcMysqlIT extends AbstractJdbcIT {
                     "c_bit_16",
                     "c_bit_32",
                     "c_bit_64",
-                    "c_boolean",
+                    "c_tinyint_1",
                     "c_tinyint",
                     "c_tinyint_unsigned",
                     "c_smallint",
@@ -243,11 +243,6 @@ public class JdbcMysqlIT extends AbstractJdbcIT {
     }
 
     @Override
-    String driverUrl() {
-        return "https://repo1.maven.org/maven2/com/mysql/mysql-connector-j/8.0.32/mysql-connector-j-8.0.32.jar";
-    }
-
-    @Override
     Pair<String[], List<SeaTunnelRow>> initTestData() {
         String[] fieldNames =
                 new String[] {
@@ -256,7 +251,7 @@ public class JdbcMysqlIT extends AbstractJdbcIT {
                     "c_bit_16",
                     "c_bit_32",
                     "c_bit_64",
-                    "c_boolean",
+                    "c_tinyint_1",
                     "c_tinyint",
                     "c_tinyint_unsigned",
                     "c_smallint",
@@ -434,9 +429,6 @@ public class JdbcMysqlIT extends AbstractJdbcIT {
                         .withLogConsumer(
                                 new Slf4jLogConsumer(DockerLoggerFactory.getLogger(MYSQL_IMAGE)));
 
-        container.setPortBindings(
-                Lists.newArrayList(String.format("%s:%s", MYSQL_PORT, MYSQL_PORT)));
-
         return container;
     }
 
@@ -454,7 +446,7 @@ public class JdbcMysqlIT extends AbstractJdbcIT {
     }
 
     private String getUrl() {
-        return URL.replace("HOST", dbServer.getHost());
+        return String.format(URL, dbServer.getHost(), jdbcCase.getLocalPort());
     }
 
     @Test
@@ -464,7 +456,40 @@ public class JdbcMysqlIT extends AbstractJdbcIT {
         defaultMultiSinkParametersTest();
     }
 
-    void defaultSinkParametersTest() throws IOException, SQLException, ClassNotFoundException {
+    @Test
+    public void testTinyInt1AsBooleanOrTINYINT() throws SQLException {
+        testTinyInt1AsBooleanOrTINYINT(true, BasicType.BOOLEAN_TYPE);
+        testTinyInt1AsBooleanOrTINYINT(false, BasicType.BYTE_TYPE);
+    }
+
+    private void testTinyInt1AsBooleanOrTINYINT(boolean intTypeNarrowing, BasicType<?> exceptType)
+            throws SQLException {
+        try (MySqlCatalog catalogWithIntTypeNarrowing =
+                new MySqlCatalog(
+                        "mysql",
+                        jdbcCase.getUserName(),
+                        jdbcCase.getPassword(),
+                        JdbcUrlUtil.getUrlInfo(
+                                jdbcCase.getJdbcUrl().replace(HOST, dbServer.getHost())),
+                        null,
+                        intTypeNarrowing)) {
+            catalogWithIntTypeNarrowing.open();
+            CatalogTable tableFromPath =
+                    catalogWithIntTypeNarrowing.getTable(
+                            TablePath.of(MYSQL_DATABASE, MYSQL_SOURCE));
+            Assertions.assertEquals(
+                    exceptType,
+                    tableFromPath.getTableSchema().getColumn("c_tinyint_1").getDataType());
+            CatalogTable tableFromSQL =
+                    catalogWithIntTypeNarrowing.getTable(
+                            "select c_tinyint_1 from " + MYSQL_DATABASE + "." + MYSQL_SOURCE);
+            Assertions.assertEquals(
+                    exceptType,
+                    tableFromSQL.getTableSchema().getColumn("c_tinyint_1").getDataType());
+        }
+    }
+
+    void defaultSinkParametersTest() throws SQLException, ClassNotFoundException {
         TableSchema tableSchema =
                 TableSchema.builder()
                         .column(
@@ -549,7 +574,7 @@ public class JdbcMysqlIT extends AbstractJdbcIT {
         Assertions.assertEquals(connectionProperties4.get("rewriteBatchedStatements"), "false");
     }
 
-    void defaultMultiSinkParametersTest() throws IOException, SQLException, ClassNotFoundException {
+    void defaultMultiSinkParametersTest() throws SQLException {
         TableSchema tableSchema =
                 TableSchema.builder()
                         .column(
@@ -582,7 +607,9 @@ public class JdbcMysqlIT extends AbstractJdbcIT {
         JdbcSink jdbcSink1 = (JdbcSink) new JdbcSinkFactory().createSink(context1).createSink();
         JdbcMultiTableResourceManager multiTableResourceManager1 =
                 (JdbcMultiTableResourceManager)
-                        jdbcSink1.createWriter(null).initMultiTableResourceManager(1, 1);
+                        jdbcSink1
+                                .createWriter(new DefaultSinkWriterContext(0, 1))
+                                .initMultiTableResourceManager(1, 1);
         Properties connectionProperties1 = getMultiSinkProperties(multiTableResourceManager1);
         Assertions.assertEquals(connectionProperties1.get("rewriteBatchedStatements"), "true");
 
@@ -599,7 +626,9 @@ public class JdbcMysqlIT extends AbstractJdbcIT {
         JdbcSink jdbcSink2 = (JdbcSink) new JdbcSinkFactory().createSink(context2).createSink();
         JdbcMultiTableResourceManager multiTableResourceManager2 =
                 (JdbcMultiTableResourceManager)
-                        jdbcSink2.createWriter(null).initMultiTableResourceManager(1, 1);
+                        jdbcSink2
+                                .createWriter(new DefaultSinkWriterContext(0, 1))
+                                .initMultiTableResourceManager(1, 1);
         Properties connectionProperties2 = getMultiSinkProperties(multiTableResourceManager2);
         Assertions.assertEquals(connectionProperties2.get("rewriteBatchedStatements"), "false");
 
@@ -619,7 +648,9 @@ public class JdbcMysqlIT extends AbstractJdbcIT {
         JdbcSink jdbcSink3 = (JdbcSink) new JdbcSinkFactory().createSink(context3).createSink();
         JdbcMultiTableResourceManager multiTableResourceManager3 =
                 (JdbcMultiTableResourceManager)
-                        jdbcSink3.createWriter(null).initMultiTableResourceManager(1, 1);
+                        jdbcSink3
+                                .createWriter(new DefaultSinkWriterContext(0, 1))
+                                .initMultiTableResourceManager(1, 1);
         Properties connectionProperties3 = getMultiSinkProperties(multiTableResourceManager3);
         Assertions.assertEquals(connectionProperties3.get("rewriteBatchedStatements"), "false");
 
@@ -640,7 +671,9 @@ public class JdbcMysqlIT extends AbstractJdbcIT {
         JdbcSink jdbcSink4 = (JdbcSink) new JdbcSinkFactory().createSink(context4).createSink();
         JdbcMultiTableResourceManager multiTableResourceManager4 =
                 (JdbcMultiTableResourceManager)
-                        jdbcSink4.createWriter(null).initMultiTableResourceManager(1, 1);
+                        jdbcSink4
+                                .createWriter(new DefaultSinkWriterContext(0, 1))
+                                .initMultiTableResourceManager(1, 1);
         Properties connectionProperties4 = getMultiSinkProperties(multiTableResourceManager4);
         Assertions.assertEquals(connectionProperties4.get("useSSL"), "true");
         Assertions.assertEquals(connectionProperties4.get("rewriteBatchedStatements"), "false");
@@ -655,10 +688,9 @@ public class JdbcMysqlIT extends AbstractJdbcIT {
                                 .get()
                                 .getConnectionPool()
                                 .getConnection();
-        Properties connectionProperties =
-                ((ConnectionImpl) ReflectionUtils.getField(hikariProxyConnection, "delegate").get())
-                        .getProperties();
-        return connectionProperties;
+
+        return ((ConnectionImpl) ReflectionUtils.getField(hikariProxyConnection, "delegate").get())
+                .getProperties();
     }
 
     void defaultSourceParametersTest() throws Exception {
@@ -748,14 +780,14 @@ public class JdbcMysqlIT extends AbstractJdbcIT {
     }
 
     private Properties getSinkProperties(JdbcSink jdbcSink)
-            throws IOException, SQLException, ClassNotFoundException {
-        JdbcSinkWriter jdbcSinkWriter = (JdbcSinkWriter) jdbcSink.createWriter(null);
+            throws SQLException, ClassNotFoundException {
+        JdbcSinkWriter jdbcSinkWriter =
+                (JdbcSinkWriter) jdbcSink.createWriter(new DefaultSinkWriterContext(0, 1));
         JdbcConnectionProvider connectionProvider =
                 (JdbcConnectionProvider)
                         ReflectionUtils.getField(jdbcSinkWriter, "connectionProvider").get();
         ConnectionImpl connection = (ConnectionImpl) connectionProvider.getOrEstablishConnection();
-        Properties connectionProperties = connection.getProperties();
-        return connectionProperties;
+        return connection.getProperties();
     }
 
     private Properties getSourceProperties(JdbcSource jdbcSource) throws Exception {
@@ -767,7 +799,6 @@ public class JdbcMysqlIT extends AbstractJdbcIT {
                 (JdbcConnectionProvider)
                         ReflectionUtils.getField(splitter, "connectionProvider").get();
         ConnectionImpl connection = (ConnectionImpl) connectionProvider.getOrEstablishConnection();
-        Properties connectionProperties = connection.getProperties();
-        return connectionProperties;
+        return connection.getProperties();
     }
 }

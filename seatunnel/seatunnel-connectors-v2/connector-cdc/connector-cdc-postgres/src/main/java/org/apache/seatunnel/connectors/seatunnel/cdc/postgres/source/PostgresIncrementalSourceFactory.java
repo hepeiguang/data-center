@@ -17,6 +17,7 @@
 
 package org.apache.seatunnel.connectors.seatunnel.cdc.postgres.source;
 
+import org.apache.seatunnel.api.configuration.ReadonlyConfig;
 import org.apache.seatunnel.api.configuration.util.OptionRule;
 import org.apache.seatunnel.api.options.ConnectorCommonOptions;
 import org.apache.seatunnel.api.source.SeaTunnelSource;
@@ -26,26 +27,30 @@ import org.apache.seatunnel.api.table.catalog.CatalogTableUtil;
 import org.apache.seatunnel.api.table.catalog.TablePath;
 import org.apache.seatunnel.api.table.connector.TableSource;
 import org.apache.seatunnel.api.table.factory.Factory;
-import org.apache.seatunnel.api.table.factory.TableSourceFactory;
 import org.apache.seatunnel.api.table.factory.TableSourceFactoryContext;
 import org.apache.seatunnel.connectors.cdc.base.config.JdbcSourceTableConfig;
 import org.apache.seatunnel.connectors.cdc.base.option.JdbcSourceOptions;
+import org.apache.seatunnel.connectors.cdc.base.option.SourceOptions;
 import org.apache.seatunnel.connectors.cdc.base.option.StartupMode;
+import org.apache.seatunnel.connectors.cdc.base.source.BaseChangeStreamTableSourceFactory;
 import org.apache.seatunnel.connectors.cdc.base.utils.CatalogTableUtils;
-import org.apache.seatunnel.connectors.seatunnel.cdc.postgres.option.PostgresOptions;
-import org.apache.seatunnel.connectors.seatunnel.jdbc.catalog.JdbcCatalogOptions;
+import org.apache.seatunnel.connectors.seatunnel.cdc.postgres.config.PostgresIncrementalSourceOptions;
+import org.apache.seatunnel.connectors.seatunnel.jdbc.config.JdbcCommonOptions;
 
 import com.google.auto.service.AutoService;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.Serializable;
 import java.util.List;
 import java.util.Optional;
 
 @AutoService(Factory.class)
-public class PostgresIncrementalSourceFactory implements TableSourceFactory {
+@Slf4j
+public class PostgresIncrementalSourceFactory extends BaseChangeStreamTableSourceFactory {
     @Override
     public String factoryIdentifier() {
-        return PostgresIncrementalSource.IDENTIFIER;
+        return org.apache.seatunnel.connectors.seatunnel.cdc.postgres.source
+                .PostgresIncrementalSource.IDENTIFIER;
     }
 
     @Override
@@ -54,7 +59,7 @@ public class PostgresIncrementalSourceFactory implements TableSourceFactory {
                 .required(
                         JdbcSourceOptions.USERNAME,
                         JdbcSourceOptions.PASSWORD,
-                        JdbcCatalogOptions.BASE_URL)
+                        JdbcCommonOptions.URL)
                 .exclusive(ConnectorCommonOptions.TABLE_NAMES, ConnectorCommonOptions.TABLE_PATTERN)
                 .optional(
                         JdbcSourceOptions.DATABASE_NAMES,
@@ -62,32 +67,53 @@ public class PostgresIncrementalSourceFactory implements TableSourceFactory {
                         JdbcSourceOptions.CONNECT_TIMEOUT_MS,
                         JdbcSourceOptions.CONNECT_MAX_RETRIES,
                         JdbcSourceOptions.CONNECTION_POOL_SIZE,
-                        PostgresOptions.DECODING_PLUGIN_NAME,
-                        PostgresOptions.SLOT_NAME,
+                        PostgresIncrementalSourceOptions.DECODING_PLUGIN_NAME,
+                        PostgresIncrementalSourceOptions.SLOT_NAME,
+                        PostgresIncrementalSourceOptions.REQUIRE_REPLICA_IDENTITY_FULL,
                         JdbcSourceOptions.CHUNK_KEY_EVEN_DISTRIBUTION_FACTOR_LOWER_BOUND,
                         JdbcSourceOptions.CHUNK_KEY_EVEN_DISTRIBUTION_FACTOR_UPPER_BOUND,
                         JdbcSourceOptions.SAMPLE_SHARDING_THRESHOLD,
-                        JdbcSourceOptions.TABLE_NAMES_CONFIG)
+                        JdbcSourceOptions.INVERSE_SAMPLING_RATE,
+                        JdbcSourceOptions.SPLIT_ALLOW_SAMPLING,
+                        JdbcSourceOptions.TABLE_NAMES_CONFIG,
+                        SourceOptions.SCHEMA_CHANGES_ENABLED,
+                        SourceOptions.SCHEMA_CHANGES_INCLUDE,
+                        SourceOptions.SCHEMA_CHANGES_EXCLUDE)
                 .optional(PostgresSourceOptions.STARTUP_MODE, PostgresSourceOptions.STOP_MODE)
                 .conditional(
                         PostgresSourceOptions.STARTUP_MODE,
                         StartupMode.INITIAL,
+                        JdbcSourceOptions.EXACTLY_ONCE)
+                .conditional(
+                        PostgresSourceOptions.STARTUP_MODE,
+                        StartupMode.SNAPSHOT_ONLY,
                         JdbcSourceOptions.EXACTLY_ONCE)
                 .build();
     }
 
     @Override
     public Class<? extends SeaTunnelSource> getSourceClass() {
-        return PostgresIncrementalSource.class;
+        return org.apache.seatunnel.connectors.seatunnel.cdc.postgres.source
+                .PostgresIncrementalSource.class;
     }
 
     @Override
     public <T, SplitT extends SourceSplit, StateT extends Serializable>
-            TableSource<T, SplitT, StateT> createSource(TableSourceFactoryContext context) {
+            TableSource<T, SplitT, StateT> restoreSource(
+                    TableSourceFactoryContext context, List<CatalogTable> restoreTables) {
         return () -> {
+            // Load the JDBC driver in to DriverManager
+            try {
+                Class.forName("org.postgresql.Driver");
+            } catch (Exception e) {
+                log.warn("Failed to load JDBC driver {}", "org.postgresql.Driver", e);
+            }
+            ReadonlyConfig config = context.getOptions();
             List<CatalogTable> catalogTables =
-                    CatalogTableUtil.getCatalogTables(
-                            context.getOptions(), context.getClassLoader());
+                    CatalogTableUtil.getCatalogTables(config, context.getClassLoader());
+            if (!restoreTables.isEmpty() && config.get(SourceOptions.SCHEMA_CHANGES_ENABLED)) {
+                catalogTables = mergeTableStruct(catalogTables, restoreTables);
+            }
             Optional<List<JdbcSourceTableConfig>> tableConfigs =
                     context.getOptions().getOptional(JdbcSourceOptions.TABLE_NAMES_CONFIG);
             if (tableConfigs.isPresent()) {
@@ -96,7 +122,8 @@ public class PostgresIncrementalSourceFactory implements TableSourceFactory {
                                 catalogTables, tableConfigs.get(), s -> TablePath.of(s, true));
             }
             return (SeaTunnelSource<T, SplitT, StateT>)
-                    new PostgresIncrementalSource<>(context.getOptions(), catalogTables);
+                    new org.apache.seatunnel.connectors.seatunnel.cdc.postgres.source
+                            .PostgresIncrementalSource<>(config, catalogTables);
         };
     }
 }

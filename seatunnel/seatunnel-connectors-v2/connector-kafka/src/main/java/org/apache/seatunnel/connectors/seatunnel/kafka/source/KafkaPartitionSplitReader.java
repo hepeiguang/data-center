@@ -25,7 +25,7 @@ import org.apache.seatunnel.connectors.seatunnel.common.source.reader.RecordsWit
 import org.apache.seatunnel.connectors.seatunnel.common.source.reader.splitreader.SplitReader;
 import org.apache.seatunnel.connectors.seatunnel.common.source.reader.splitreader.SplitsAddition;
 import org.apache.seatunnel.connectors.seatunnel.common.source.reader.splitreader.SplitsChange;
-import org.apache.seatunnel.connectors.seatunnel.kafka.config.StartMode;
+import org.apache.seatunnel.connectors.seatunnel.kafka.KafkaClientUtils;
 
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -173,9 +173,7 @@ public class KafkaPartitionSplitReader
         // Assignment.
         List<TopicPartition> newPartitionAssignments = new ArrayList<>();
         // Starting offsets.
-        Map<TopicPartition, Long> partitionsStartingFromSpecifiedOffsets = new HashMap<>();
-        List<TopicPartition> partitionsStartingFromEarliest = new ArrayList<>();
-        List<TopicPartition> partitionsStartingFromLatest = new ArrayList<>();
+        Map<TopicPartition, Long> partitionsStartingOffsets = new HashMap<>();
         // Stopping offsets.
         List<TopicPartition> partitionsStoppingAtLatest = new ArrayList<>();
 
@@ -185,11 +183,7 @@ public class KafkaPartitionSplitReader
                 .forEach(
                         s -> {
                             newPartitionAssignments.add(s.getTopicPartition());
-                            parseStartingOffsets(
-                                    s,
-                                    partitionsStartingFromEarliest,
-                                    partitionsStartingFromLatest,
-                                    partitionsStartingFromSpecifiedOffsets);
+                            parseStartingOffsets(s, partitionsStartingOffsets);
                             parseStoppingOffsets(s, partitionsStoppingAtLatest);
                         });
 
@@ -198,10 +192,7 @@ public class KafkaPartitionSplitReader
         consumer.assign(newPartitionAssignments);
 
         // Seek on the newly assigned partitions to their stating offsets.
-        seekToStartingOffsets(
-                partitionsStartingFromEarliest,
-                partitionsStartingFromLatest,
-                partitionsStartingFromSpecifiedOffsets);
+        seekToStartingOffsets(partitionsStartingOffsets);
         // Setup the stopping offsets.
         acquireAndSetStoppingOffsets(partitionsStoppingAtLatest);
 
@@ -270,26 +261,11 @@ public class KafkaPartitionSplitReader
         stoppingOffsets.putAll(endOffset);
     }
 
-    private void seekToStartingOffsets(
-            List<TopicPartition> partitionsStartingFromEarliest,
-            List<TopicPartition> partitionsStartingFromLatest,
-            Map<TopicPartition, Long> partitionsStartingFromSpecifiedOffsets) {
-
-        if (!partitionsStartingFromEarliest.isEmpty()) {
-            LOG.trace("Seeking starting offsets to beginning: {}", partitionsStartingFromEarliest);
-            consumer.seekToBeginning(partitionsStartingFromEarliest);
-        }
-
-        if (!partitionsStartingFromLatest.isEmpty()) {
-            LOG.trace("Seeking starting offsets to end: {}", partitionsStartingFromLatest);
-            consumer.seekToEnd(partitionsStartingFromLatest);
-        }
-
-        if (!partitionsStartingFromSpecifiedOffsets.isEmpty()) {
+    private void seekToStartingOffsets(Map<TopicPartition, Long> partitionsStartingOffsets) {
+        if (!partitionsStartingOffsets.isEmpty()) {
             LOG.trace(
-                    "Seeking starting offsets to specified offsets: {}",
-                    partitionsStartingFromSpecifiedOffsets);
-            partitionsStartingFromSpecifiedOffsets.forEach(consumer::seek);
+                    "Seeking starting offsets to specified offsets: {}", partitionsStartingOffsets);
+            partitionsStartingOffsets.forEach(consumer::seek);
         }
     }
 
@@ -308,22 +284,10 @@ public class KafkaPartitionSplitReader
     }
 
     private void parseStartingOffsets(
-            KafkaSourceSplit split,
-            List<TopicPartition> partitionsStartingFromEarliest,
-            List<TopicPartition> partitionsStartingFromLatest,
-            Map<TopicPartition, Long> partitionsStartingFromSpecifiedOffsets) {
+            KafkaSourceSplit split, Map<TopicPartition, Long> partitionsStartingOffsets) {
         TopicPartition tp = split.getTopicPartition();
-        // Parse starting offsets.
-        ConsumerMetadata metadata = kafkaSourceConfig.getMapMetadata().get(split.getTablePath());
-        if (metadata.getStartMode() == StartMode.EARLIEST) {
-            partitionsStartingFromEarliest.add(tp);
-        } else if (metadata.getStartMode() == StartMode.LATEST) {
-            partitionsStartingFromLatest.add(tp);
-        } else if (metadata.getStartMode() == StartMode.GROUP_OFFSETS) {
-            // Do nothing here, the consumer will first try to get the committed offsets of
-            // these partitions by default.
-        } else {
-            partitionsStartingFromSpecifiedOffsets.put(tp, split.getStartOffset());
+        if (split.getStartOffset() >= 0) {
+            partitionsStartingOffsets.put(tp, split.getStartOffset());
         }
     }
 
@@ -334,7 +298,7 @@ public class KafkaPartitionSplitReader
 
     @Override
     public void close() throws Exception {
-        consumer.close();
+        KafkaClientUtils.runWithConnectorClassLoader(consumer::close);
     }
 
     public void notifyCheckpointComplete(
@@ -343,43 +307,53 @@ public class KafkaPartitionSplitReader
         consumer.commitAsync(offsetsToCommit, offsetCommitCallback);
     }
 
+    /**
+     * Builds Kafka consumer properties for the source reader.
+     *
+     * <p>The source either relies on checkpoint-triggered commits or Kafka auto commit, but never
+     * both at the same time.
+     */
+    static Properties buildConsumerProperties(
+            KafkaSourceConfig kafkaSourceConfig, int subtaskId, String clientIdPrefix) {
+        Properties props = new Properties();
+        kafkaSourceConfig
+                .getProperties()
+                .forEach(
+                        (key, value) ->
+                                props.setProperty(String.valueOf(key), String.valueOf(value)));
+        props.setProperty(ConsumerConfig.GROUP_ID_CONFIG, kafkaSourceConfig.getConsumerGroup());
+        props.setProperty(
+                ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaSourceConfig.getBootstrap());
+        if (kafkaSourceConfig.getProperties().get("client.id") == null) {
+            props.setProperty(
+                    ConsumerConfig.CLIENT_ID_CONFIG, clientIdPrefix + "-consumer-" + subtaskId);
+        } else {
+            props.setProperty(
+                    ConsumerConfig.CLIENT_ID_CONFIG,
+                    kafkaSourceConfig.getProperties().get("client.id").toString()
+                            + "-"
+                            + subtaskId);
+        }
+        props.setProperty(
+                ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG,
+                ByteArrayDeserializer.class.getName());
+        props.setProperty(
+                ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG,
+                ByteArrayDeserializer.class.getName());
+        props.setProperty(
+                ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG,
+                String.valueOf(!kafkaSourceConfig.isCommitOnCheckpoint()));
+        props.setProperty(ConsumerConfig.ALLOW_AUTO_CREATE_TOPICS_CONFIG, "false");
+        return props;
+    }
+
     private KafkaConsumer<byte[], byte[]> initConsumer(
             KafkaSourceConfig kafkaSourceConfig, int subtaskId) {
 
         try (TemporaryClassLoaderContext ignored =
                 TemporaryClassLoaderContext.of(kafkaSourceConfig.getClass().getClassLoader())) {
-            Properties props = new Properties();
-            kafkaSourceConfig
-                    .getProperties()
-                    .forEach(
-                            (key, value) ->
-                                    props.setProperty(String.valueOf(key), String.valueOf(value)));
-            props.setProperty(ConsumerConfig.GROUP_ID_CONFIG, kafkaSourceConfig.getConsumerGroup());
-            props.setProperty(
-                    ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaSourceConfig.getBootstrap());
-            if (this.kafkaSourceConfig.getProperties().get("client.id") == null) {
-                props.setProperty(
-                        ConsumerConfig.CLIENT_ID_CONFIG,
-                        CLIENT_ID_PREFIX + "-consumer-" + subtaskId);
-            } else {
-                props.setProperty(
-                        ConsumerConfig.CLIENT_ID_CONFIG,
-                        this.kafkaSourceConfig.getProperties().get("client.id").toString()
-                                + "-"
-                                + subtaskId);
-            }
-            props.setProperty(
-                    ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG,
-                    ByteArrayDeserializer.class.getName());
-            props.setProperty(
-                    ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG,
-                    ByteArrayDeserializer.class.getName());
-            props.setProperty(
-                    ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG,
-                    String.valueOf(kafkaSourceConfig.isCommitOnCheckpoint()));
-
-            // Disable auto create topics feature
-            props.setProperty(ConsumerConfig.ALLOW_AUTO_CREATE_TOPICS_CONFIG, "false");
+            Properties props =
+                    buildConsumerProperties(kafkaSourceConfig, subtaskId, CLIENT_ID_PREFIX);
             return new KafkaConsumer<>(props);
         }
     }

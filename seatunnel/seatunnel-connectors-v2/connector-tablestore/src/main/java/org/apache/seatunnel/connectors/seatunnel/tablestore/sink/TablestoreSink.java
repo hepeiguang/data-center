@@ -17,81 +17,41 @@
 
 package org.apache.seatunnel.connectors.seatunnel.tablestore.sink;
 
-import org.apache.seatunnel.shade.com.typesafe.config.Config;
-
-import org.apache.seatunnel.api.common.PrepareFailException;
-import org.apache.seatunnel.api.common.SeaTunnelAPIErrorCode;
-import org.apache.seatunnel.api.sink.SeaTunnelSink;
+import org.apache.seatunnel.api.configuration.ReadonlyConfig;
 import org.apache.seatunnel.api.sink.SinkWriter;
 import org.apache.seatunnel.api.table.catalog.CatalogTable;
 import org.apache.seatunnel.api.table.type.SeaTunnelRow;
-import org.apache.seatunnel.api.table.type.SeaTunnelRowType;
-import org.apache.seatunnel.common.config.CheckConfigUtil;
-import org.apache.seatunnel.common.config.CheckResult;
-import org.apache.seatunnel.common.constants.PluginType;
 import org.apache.seatunnel.connectors.seatunnel.common.sink.AbstractSimpleSink;
 import org.apache.seatunnel.connectors.seatunnel.common.sink.AbstractSinkWriter;
-import org.apache.seatunnel.connectors.seatunnel.tablestore.config.TablestoreOptions;
-import org.apache.seatunnel.connectors.seatunnel.tablestore.exception.TablestoreConnectorException;
-
-import com.google.auto.service.AutoService;
+import org.apache.seatunnel.connectors.seatunnel.tablestore.config.TableStoreConfig;
+import org.apache.seatunnel.connectors.seatunnel.tablestore.config.TableStoreSinkOptions;
 
 import java.io.IOException;
 import java.util.Optional;
 
-import static org.apache.seatunnel.connectors.seatunnel.tablestore.config.TablestoreConfig.ACCESS_KEY_ID;
-import static org.apache.seatunnel.connectors.seatunnel.tablestore.config.TablestoreConfig.ACCESS_KEY_SECRET;
-import static org.apache.seatunnel.connectors.seatunnel.tablestore.config.TablestoreConfig.END_POINT;
-import static org.apache.seatunnel.connectors.seatunnel.tablestore.config.TablestoreConfig.INSTANCE_NAME;
-import static org.apache.seatunnel.connectors.seatunnel.tablestore.config.TablestoreConfig.PRIMARY_KEYS;
-import static org.apache.seatunnel.connectors.seatunnel.tablestore.config.TablestoreConfig.TABLE;
+public class TableStoreSink extends AbstractSimpleSink<SeaTunnelRow, Void> {
 
-@AutoService(SeaTunnelSink.class)
-public class TablestoreSink extends AbstractSimpleSink<SeaTunnelRow, Void> {
+    private final CatalogTable catalogTable;
+    private final TableStoreConfig tableStoreConfig;
 
-    private SeaTunnelRowType rowType;
-
-    private TablestoreOptions tablestoreOptions;
+    public TableStoreSink(ReadonlyConfig pluginConfig, CatalogTable catalogTable) {
+        this.tableStoreConfig = new TableStoreConfig(pluginConfig);
+        this.catalogTable = catalogTable;
+    }
 
     @Override
     public String getPluginName() {
-        return "Tablestore";
-    }
-
-    @Override
-    public void prepare(Config pluginConfig) throws PrepareFailException {
-        CheckResult result =
-                CheckConfigUtil.checkAllExists(
-                        pluginConfig,
-                        END_POINT.key(),
-                        TABLE.key(),
-                        INSTANCE_NAME.key(),
-                        ACCESS_KEY_ID.key(),
-                        ACCESS_KEY_SECRET.key(),
-                        PRIMARY_KEYS.key());
-        if (!result.isSuccess()) {
-            throw new TablestoreConnectorException(
-                    SeaTunnelAPIErrorCode.CONFIG_VALIDATION_FAILED,
-                    String.format(
-                            "PluginName: %s, PluginType: %s, Message: %s",
-                            getPluginName(), PluginType.SINK, result.getMsg()));
-        }
-        tablestoreOptions = new TablestoreOptions(pluginConfig);
-    }
-
-    @Override
-    public void setTypeInfo(SeaTunnelRowType seaTunnelRowType) {
-        this.rowType = seaTunnelRowType;
+        return TableStoreSinkOptions.identifier;
     }
 
     @Override
     public AbstractSinkWriter<SeaTunnelRow, Void> createWriter(SinkWriter.Context context)
             throws IOException {
-        return new TablestoreWriter(tablestoreOptions, rowType);
+        return new TableStoreWriter(tableStoreConfig, catalogTable.getSeaTunnelRowType());
     }
 
     @Override
     public Optional<CatalogTable> getWriteCatalogTable() {
-        return super.getWriteCatalogTable();
+        return Optional.of(catalogTable);
     }
 }

@@ -32,9 +32,6 @@ public class EnvironmentWorkerGroupRelation {
     @TableId(value = "id", type = IdType.AUTO)
     private Integer id;
 
-    /**
-     * environment code
-     */
     private Long environmentCode;
 
     /**
@@ -45,7 +42,7 @@ public class EnvironmentWorkerGroupRelation {
     /**
      * operator user id
      */
-    private String operator;
+    private Integer operator;
 
     private Date createTime;
 

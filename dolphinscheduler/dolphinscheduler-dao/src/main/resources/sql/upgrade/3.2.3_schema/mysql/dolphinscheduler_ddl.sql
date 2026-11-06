@@ -1,1 +1,0 @@
-ALTER TABLE t_ds_audit_log ADD COLUMN http_method varchar(50) NULL COMMENT 'http获取请求方法';

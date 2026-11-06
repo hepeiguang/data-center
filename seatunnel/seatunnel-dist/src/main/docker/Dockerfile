@@ -1,23 +1,17 @@
-# 使用基础镜像：JDK 8
-FROM openjdk:8-jdk
+FROM seatunnelhub/openjdk:8u342 as builder
 
-# 设置环境变量
-ENV SEATUNNEL_VERSION=2.3.10
-ENV SEATUNNEL_HOME=/opt/seatunnel
-ENV PATH=$SEATUNNEL_HOME/bin:$PATH
+ARG VERSION
 
-WORKDIR $SEATUNNEL_HOME
+COPY ./target/apache-seatunnel-${VERSION}-bin.tar.gz /opt/
+RUN cd /opt && \
+    tar -zxvf apache-seatunnel-${VERSION}-bin.tar.gz && \
+    mv apache-seatunnel-${VERSION} seatunnel && \
+    rm apache-seatunnel-${VERSION}-bin.tar.gz && \
+    sed -i 's/#rootLogger.appenderRef.consoleStdout.ref/rootLogger.appenderRef.consoleStdout.ref/' seatunnel/config/log4j2.properties && \
+    sed -i 's/#rootLogger.appenderRef.consoleStderr.ref/rootLogger.appenderRef.consoleStderr.ref/' seatunnel/config/log4j2.properties && \
+    sed -i 's/rootLogger.appenderRef.file.ref/#rootLogger.appenderRef.file.ref/' seatunnel/config/log4j2.properties && \
+    cp seatunnel/config/hazelcast-master.yaml seatunnel/config/hazelcast-worker.yaml
 
-ADD ./bin $SEATUNNEL_HOME/bin
-ADD ./lib $SEATUNNEL_HOME/lib
-ADD ./connectors $SEATUNNEL_HOME/connectors
-ADD ./plugins $SEATUNNEL_HOME/plugins
-ADD ./config $SEATUNNEL_HOME/config
-ADD ./licenses $SEATUNNEL_HOME/licenses
-ADD ./starter $SEATUNNEL_HOME/starter
-
-RUN mkdir -p $SEATUNNEL_HOME/logs/
-# 暴露 Hazelcast 端口和 HTTP 接口端口
-EXPOSE 5801 8080
-
-CMD ["/bin/bash", "-c", "./bin/seatunnel-cluster.sh -r $SEATUNNEL_ROLE"]
+FROM seatunnelhub/openjdk:8u342
+COPY --from=builder /opt/seatunnel /opt/seatunnel
+WORKDIR /opt/seatunnel

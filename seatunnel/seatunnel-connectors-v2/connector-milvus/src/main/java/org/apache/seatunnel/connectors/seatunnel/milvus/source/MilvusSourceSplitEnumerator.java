@@ -22,7 +22,7 @@ import org.apache.seatunnel.api.source.SourceSplitEnumerator;
 import org.apache.seatunnel.api.table.catalog.CatalogTable;
 import org.apache.seatunnel.api.table.catalog.TablePath;
 import org.apache.seatunnel.common.exception.CommonErrorCodeDeprecated;
-import org.apache.seatunnel.connectors.seatunnel.milvus.config.MilvusSourceConfig;
+import org.apache.seatunnel.connectors.seatunnel.milvus.config.MilvusSourceOptions;
 import org.apache.seatunnel.connectors.seatunnel.milvus.exception.MilvusConnectionErrorCode;
 import org.apache.seatunnel.connectors.seatunnel.milvus.exception.MilvusConnectorException;
 
@@ -41,11 +41,14 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class MilvusSourceSplitEnumerator
@@ -57,6 +60,8 @@ public class MilvusSourceSplitEnumerator
     private final Map<Integer, List<MilvusSourceSplit>> pendingSplits;
     private final Object stateLock = new Object();
     private MilvusClient client = null;
+    // Keeps round-robin assignment global across collections and restore.
+    private final AtomicInteger assignCount = new AtomicInteger(0);
 
     private final ReadonlyConfig config;
 
@@ -74,6 +79,7 @@ public class MilvusSourceSplitEnumerator
         } else {
             this.pendingTables = new ConcurrentLinkedQueue<>(sourceState.getPendingTables());
             this.pendingSplits = new HashMap<>(sourceState.getPendingSplits());
+            this.assignCount.set(sourceState.getAssignCount());
         }
     }
 
@@ -81,8 +87,8 @@ public class MilvusSourceSplitEnumerator
     public void open() {
         ConnectParam connectParam =
                 ConnectParam.newBuilder()
-                        .withUri(config.get(MilvusSourceConfig.URL))
-                        .withToken(config.get(MilvusSourceConfig.TOKEN))
+                        .withUri(config.get(MilvusSourceOptions.URL))
+                        .withToken(config.get(MilvusSourceOptions.TOKEN))
                         .build();
         this.client = new MilvusServiceClient(connectParam);
     }
@@ -160,22 +166,28 @@ public class MilvusSourceSplitEnumerator
         return milvusSourceSplits;
     }
 
-    protected String createSplitId(TablePath tablePath, String index) {
+    private String createSplitId(TablePath tablePath, String index) {
         return String.format("%s-%s", tablePath, index);
     }
 
     private void addPendingSplit(Collection<MilvusSourceSplit> splits) {
         int readerCount = context.currentParallelism();
-        for (MilvusSourceSplit split : splits) {
-            int ownerReader = getSplitOwner(split.splitId(), readerCount);
+
+        List<MilvusSourceSplit> sortedSplits =
+                splits.stream()
+                        .sorted(Comparator.comparing(MilvusSourceSplit::getSplitId))
+                        .collect(Collectors.toList());
+
+        for (MilvusSourceSplit split : sortedSplits) {
+            int ownerReader = getSplitOwner(assignCount.getAndIncrement(), readerCount);
             log.info("Assigning {} to {} reader.", split, ownerReader);
 
             pendingSplits.computeIfAbsent(ownerReader, r -> new ArrayList<>()).add(split);
         }
     }
 
-    private static int getSplitOwner(String tp, int numReaders) {
-        return (tp.hashCode() & Integer.MAX_VALUE) % numReaders;
+    private static int getSplitOwner(int assignCount, int numReaders) {
+        return assignCount % numReaders;
     }
 
     private void assignSplit(Collection<Integer> readers) {
@@ -200,19 +212,17 @@ public class MilvusSourceSplitEnumerator
     @Override
     public void addSplitsBack(List<MilvusSourceSplit> splits, int subtaskId) {
         if (!splits.isEmpty()) {
-            synchronized (stateLock) {
-                addPendingSplit(splits, subtaskId);
-                if (context.registeredReaders().contains(subtaskId)) {
-                    assignSplit(Collections.singletonList(subtaskId));
-                } else {
-                    log.warn(
-                            "Reader {} is not registered. Pending splits {} are not assigned.",
-                            subtaskId,
-                            splits);
-                }
+            addPendingSplit(splits, subtaskId);
+            if (context.registeredReaders().contains(subtaskId)) {
+                assignSplit(Collections.singletonList(subtaskId));
+            } else {
+                log.warn(
+                        "Reader {} is not registered. Pending splits {} are not assigned.",
+                        subtaskId,
+                        splits);
             }
         }
-        log.info("Add back splits {} to JdbcSourceSplitEnumerator.", splits.size());
+        log.info("Add back splits {} to MilvusSourceSplitEnumerator.", splits.size());
     }
 
     private void addPendingSplit(Collection<MilvusSourceSplit> splits, int ownerReader) {
@@ -235,9 +245,7 @@ public class MilvusSourceSplitEnumerator
     public void registerReader(int subtaskId) {
         log.info("Register reader {} to MilvusSourceSplitEnumerator.", subtaskId);
         if (!pendingSplits.isEmpty()) {
-            synchronized (stateLock) {
-                assignSplit(Collections.singletonList(subtaskId));
-            }
+            assignSplit(Collections.singletonList(subtaskId));
         }
     }
 
@@ -245,7 +253,9 @@ public class MilvusSourceSplitEnumerator
     public MilvusSourceState snapshotState(long checkpointId) throws Exception {
         synchronized (stateLock) {
             return new MilvusSourceState(
-                    new ArrayList(pendingTables), new HashMap<>(pendingSplits));
+                    new ArrayList<>(pendingTables),
+                    new HashMap<>(pendingSplits),
+                    assignCount.get());
         }
     }
 

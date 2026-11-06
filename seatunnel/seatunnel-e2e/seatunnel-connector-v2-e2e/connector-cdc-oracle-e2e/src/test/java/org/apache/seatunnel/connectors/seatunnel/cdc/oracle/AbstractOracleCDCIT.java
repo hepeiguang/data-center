@@ -53,9 +53,9 @@ import static org.junit.Assert.assertNotNull;
 @Slf4j
 public class AbstractOracleCDCIT extends TestSuiteBase {
 
-    protected static final String ORACLE_IMAGE = "goodboy008/oracle-19.3.0-ee:non-cdb";
+    protected static final String ORACLE_IMAGE = "seatunnelhub/oracle-19.3.0-ee:non-cdb";
 
-    protected static final String ORACLE_IMAGE_ARM = "goodboy008/oracle-19.3.0-ee:arm-non-cdb";
+    protected static final String ORACLE_IMAGE_ARM = "seatunnelhub/oracle-19.3.0-ee:arm-non-cdb";
 
     protected static final String HOST = "oracle-host";
 
@@ -80,6 +80,8 @@ public class AbstractOracleCDCIT extends TestSuiteBase {
     protected static final String SOURCE_TABLE1 = "FULL_TYPES";
 
     protected static final String SOURCE_TABLE2 = "FULL_TYPES2";
+    protected static final String ORACLE_CDC_PLUGIN_LIB = "/tmp/seatunnel/plugins/Oracle-CDC/lib";
+    protected static final String JDBC_PLUGIN_LIB = "/tmp/seatunnel/plugins/Jdbc/lib";
 
     protected static final OracleContainer ORACLE_CONTAINER =
             new OracleContainer(getImage())
@@ -100,10 +102,6 @@ public class AbstractOracleCDCIT extends TestSuiteBase {
         } else {
             return ORACLE_IMAGE;
         }
-    }
-
-    protected String oracleDriverUrl() {
-        return "https://repo1.maven.org/maven2/com/oracle/database/jdbc/ojdbc8/12.2.0.1/ojdbc8-12.2.0.1.jar";
     }
 
     static {

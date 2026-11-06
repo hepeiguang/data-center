@@ -22,8 +22,6 @@ import org.apache.dolphinscheduler.common.thread.ThreadLocalContext;
 
 import org.apache.commons.lang3.StringUtils;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -31,7 +29,6 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.Objects;
 import java.util.TimeZone;
 
 import javax.annotation.Nonnull;
@@ -64,9 +61,14 @@ public final class DateUtils {
      * @return local datetime
      */
     private static LocalDateTime date2LocalDateTime(Date date) {
-        String timezone = ThreadLocalContext.getTimezoneThreadLocal().get();
+        String timezone = ThreadLocalContext.getTimezone();
         ZoneId zoneId = StringUtils.isNotEmpty(timezone) ? ZoneId.of(timezone) : ZoneId.systemDefault();
         return date2LocalDateTime(date, zoneId);
+    }
+
+    public static String getTimezone() {
+        String timezone = ThreadLocalContext.getTimezone();
+        return StringUtils.isNotEmpty(timezone) ? timezone : ZoneId.systemDefault().getId();
     }
 
     /**
@@ -87,7 +89,7 @@ public final class DateUtils {
      * @return date
      */
     private static Date localDateTime2Date(LocalDateTime localDateTime) {
-        String timezone = ThreadLocalContext.getTimezoneThreadLocal().get();
+        String timezone = ThreadLocalContext.getTimezone();
         ZoneId zoneId = StringUtils.isNotEmpty(timezone) ? ZoneId.of(timezone) : ZoneId.systemDefault();
         return localDateTime2Date(localDateTime, zoneId);
     }
@@ -181,17 +183,6 @@ public final class DateUtils {
      * convert zone date time to yyyy-MM-dd HH:mm:ss format
      *
      * @param zonedDateTime zone date time
-     * @param timezone      time zone
-     * @return zone date time string
-     */
-    public static String dateToString(ZonedDateTime zonedDateTime, String timezone) {
-        return dateToString(zonedDateTime, ZoneId.of(timezone));
-    }
-
-    /**
-     * convert zone date time to yyyy-MM-dd HH:mm:ss format
-     *
-     * @param zonedDateTime zone date time
      * @param zoneId        zone id
      * @return zone date time string
      */
@@ -222,15 +213,6 @@ public final class DateUtils {
             log.error("error while parse date:" + date, e);
         }
         return null;
-    }
-
-    public static ZonedDateTime parseZoneDateTime(@Nonnull String date, @Nonnull DateTimeFormatter dateTimeFormatter,
-                                                  @Nullable String timezone) {
-        ZonedDateTime zonedDateTime = ZonedDateTime.parse(date, dateTimeFormatter);
-        if (StringUtils.isNotEmpty(timezone)) {
-            return zonedDateTime.withZoneSameInstant(ZoneId.of(timezone));
-        }
-        return zonedDateTime;
     }
 
     /**
@@ -286,10 +268,7 @@ public final class DateUtils {
      * @return differ ms
      */
     public static long differMs(Date d1, Date d2) {
-        // 忽略毫秒计算
-        long time1 = (d1.getTime() / 1000) * 1000;
-        long time2 = (d2.getTime() / 1000) * 1000;
-        return Math.abs(time1 - time2);
+        return Math.abs(d1.getTime() - d2.getTime());
     }
 
     /**
@@ -350,7 +329,7 @@ public final class DateUtils {
      * format time to duration, if end date is null, use current time as end time
      *
      * @param start start
-     * @param end   end
+     * @param end end
      * @return format time
      */
     public static String format2Duration(Date start, Date end) {
@@ -589,14 +568,6 @@ public final class DateUtils {
         return intervalSeconds - usedTime;
     }
 
-    public static long getRemainTime(Long baseTime, long intervalSeconds) {
-        if (baseTime == null) {
-            return 0;
-        }
-        long usedTime = (System.currentTimeMillis() - baseTime) / 1000;
-        return intervalSeconds - usedTime;
-    }
-
     /**
      * get current time stamp : yyyyMMddHHmmssSSS
      *
@@ -678,7 +649,6 @@ public final class DateUtils {
 
     /**
      * transform date to timeStamp
-     *
      * @param date date
      * @return time stamp (milliseconds)
      */
@@ -687,34 +657,9 @@ public final class DateUtils {
     }
 
     /**
-     * a default datetime formatter for the timestamp
-     */
-    private static final DateTimeFormatter DEFAULT_DATETIME_FORMATTER =
-            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-
-    /**
-     * @param timeMillis timeMillis like System.currentTimeMillis()
-     * @return string formatted as yyyy-MM-dd HH:mm:ss
-     */
-    public static String formatTimeStamp(long timeMillis) {
-        return formatTimeStamp(timeMillis, DEFAULT_DATETIME_FORMATTER);
-    }
-
-    /**
-     * @param timeMillis        timeMillis like System.currentTimeMillis()
-     * @param dateTimeFormatter expect formatter, like yyyy-MM-dd HH:mm:ss
-     * @return formatted string
-     */
-    public static String formatTimeStamp(long timeMillis, DateTimeFormatter dateTimeFormatter) {
-        Objects.requireNonNull(dateTimeFormatter);
-        return dateTimeFormatter.format(LocalDateTime.ofInstant(Instant.ofEpochMilli(timeMillis),
-                ZoneId.systemDefault()));
-    }
-
-    /**
      * get the formatted date string
      *
-     * @param date   date
+     * @param date date
      * @param format e.g. yyyy-MM-dd HH:mm:ss
      * @return date string
      */
@@ -725,7 +670,7 @@ public final class DateUtils {
     /**
      * convert string to date and time
      *
-     * @param date   date
+     * @param date date
      * @param format format
      * @return date
      */
@@ -737,16 +682,6 @@ public final class DateUtils {
             log.error("error while parse date:" + date, e);
         }
         return null;
-    }
-
-    /**
-     * convert schedule string to date
-     *
-     * @param schedule schedule
-     * @return convert schedule string to date
-     */
-    public static Date getScheduleDate(String schedule) {
-        return stringToDate(schedule);
     }
 
     public static Date addMonths(Date date, int amount) {
@@ -763,17 +698,6 @@ public final class DateUtils {
 
     public static String getTimestampString() {
         return String.valueOf(System.currentTimeMillis());
-    }
-
-    public static void main(String[] args) {
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
-        try {
-            Date startDate = sdf.parse("2025-07-16 23:25:18.856");
-            Date endDate = sdf.parse("2025-07-16 23:25:20.109");
-            System.out.println(DateUtils.format2Duration(startDate, endDate));
-        } catch (ParseException e) {
-            e.printStackTrace();
-        }
     }
 
 }

@@ -19,6 +19,7 @@
 package org.apache.seatunnel.connectors.seatunnel.jdbc.catalog.mysql;
 
 import org.apache.seatunnel.shade.com.google.common.base.Preconditions;
+import org.apache.seatunnel.shade.org.apache.commons.lang3.StringUtils;
 
 import org.apache.seatunnel.api.table.catalog.CatalogTable;
 import org.apache.seatunnel.api.table.catalog.Column;
@@ -26,25 +27,32 @@ import org.apache.seatunnel.api.table.catalog.ConstraintKey;
 import org.apache.seatunnel.api.table.catalog.TableIdentifier;
 import org.apache.seatunnel.api.table.catalog.TablePath;
 import org.apache.seatunnel.api.table.catalog.exception.CatalogException;
+import org.apache.seatunnel.api.table.catalog.exception.TableNotExistException;
 import org.apache.seatunnel.api.table.converter.BasicTypeDefine;
 import org.apache.seatunnel.common.utils.JdbcUrlUtil;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.catalog.AbstractJdbcCatalog;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.catalog.utils.CatalogUtils;
+import org.apache.seatunnel.connectors.seatunnel.jdbc.config.JdbcCommonOptions;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.dialect.mysql.MySqlTypeConverter;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.dialect.mysql.MySqlTypeMapper;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.dialect.mysql.MySqlVersion;
 
 import com.mysql.cj.MysqlType;
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Properties;
 
 @Slf4j
 public class MySqlCatalog extends AbstractJdbcCatalog {
@@ -58,8 +66,17 @@ public class MySqlCatalog extends AbstractJdbcCatalog {
     private static final String SELECT_TABLE_EXISTS =
             "SELECT TABLE_SCHEMA,TABLE_NAME FROM information_schema.tables WHERE table_schema = '%s' AND table_name = '%s'";
 
+    private static final String SELECT_TABLE_META_SQL =
+            "SELECT TABLE_COMMENT, ENGINE, TABLE_COLLATION FROM INFORMATION_SCHEMA.TABLES "
+                    + "WHERE TABLE_SCHEMA = '%s' AND TABLE_NAME = '%s'";
+
+    public static final String TABLE_OPTION_ENGINE = "engine";
+    public static final String TABLE_OPTION_CHARSET = "charset";
+    public static final String TABLE_OPTION_COLLATE = "collate";
+
     private MySqlVersion version;
     private MySqlTypeConverter typeConverter;
+    private boolean intTypeNarrowing = JdbcCommonOptions.INT_TYPE_NARROWING.defaultValue();
 
     public MySqlCatalog(
             String catalogName,
@@ -69,7 +86,20 @@ public class MySqlCatalog extends AbstractJdbcCatalog {
             String driverClass) {
         super(catalogName, username, pwd, urlInfo, null, driverClass);
         this.version = resolveVersion();
-        this.typeConverter = new MySqlTypeConverter(version);
+        this.typeConverter = new MySqlTypeConverter(version, intTypeNarrowing);
+    }
+
+    public MySqlCatalog(
+            String catalogName,
+            String username,
+            String pwd,
+            JdbcUrlUtil.UrlInfo urlInfo,
+            String driverClass,
+            boolean intTypeNarrowing) {
+        super(catalogName, username, pwd, urlInfo, null, driverClass);
+        this.intTypeNarrowing = intTypeNarrowing;
+        this.version = resolveVersion();
+        this.typeConverter = new MySqlTypeConverter(version, intTypeNarrowing);
     }
 
     @Override
@@ -132,6 +162,58 @@ public class MySqlCatalog extends AbstractJdbcCatalog {
             }
         }
         return indexList;
+    }
+
+    @Override
+    protected Optional<String> getTableComment(
+            DatabaseMetaData metaData, String database, String schema, String table)
+            throws SQLException {
+        String url = getUrlFromDatabaseName(database);
+        String sql = String.format(SELECT_TABLE_META_SQL, database, table);
+        try (PreparedStatement ps = getConnection(url).prepareStatement(sql);
+                ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                String comment = rs.getString("TABLE_COMMENT");
+                return Optional.ofNullable(comment != null && !comment.isEmpty() ? comment : null);
+            }
+        }
+        return Optional.empty();
+    }
+
+    @Override
+    public CatalogTable getTable(TablePath tablePath)
+            throws CatalogException, TableNotExistException {
+        CatalogTable catalogTable = super.getTable(tablePath);
+        readAndFillTableMetaOptions(
+                tablePath.getDatabaseName(), tablePath.getTableName(), catalogTable.getOptions());
+        return catalogTable;
+    }
+
+    private void readAndFillTableMetaOptions(
+            String database, String tableName, Map<String, String> options) {
+        String url = getUrlFromDatabaseName(database);
+        String sql = String.format(SELECT_TABLE_META_SQL, database, tableName);
+        try (PreparedStatement ps = getConnection(url).prepareStatement(sql);
+                ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                String engine = rs.getString("ENGINE");
+                if (StringUtils.isNotBlank(engine)) {
+                    options.put(TABLE_OPTION_ENGINE, engine);
+                }
+                String collation = rs.getString("TABLE_COLLATION");
+                if (StringUtils.isNotBlank(collation)) {
+                    options.put(TABLE_OPTION_COLLATE, collation);
+                    String charset = collation.split("_")[0];
+                    options.put(TABLE_OPTION_CHARSET, charset);
+                }
+            }
+        } catch (SQLException e) {
+            log.warn(
+                    "Failed to read table metadata from information_schema for {}.{}: {}",
+                    database,
+                    tableName,
+                    e.getMessage());
+        }
     }
 
     @Override
@@ -206,6 +288,17 @@ public class MySqlCatalog extends AbstractJdbcCatalog {
         Connection defaultConnection = getConnection(defaultUrl);
         return CatalogUtils.getCatalogTable(
                 defaultConnection, sqlQuery, new MySqlTypeMapper(typeConverter));
+    }
+
+    @Override
+    protected @NonNull Properties getConnectionProperties() {
+        Properties info = super.getConnectionProperties();
+        if (!intTypeNarrowing) {
+            // we should not use tinyint(1) as boolean type when intTypeNarrowing is false, so
+            // cannot convert tinyint(1) to bit
+            info.put("tinyInt1isBit", "false");
+        }
+        return info;
     }
 
     @Override

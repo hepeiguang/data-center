@@ -72,13 +72,10 @@ export function useDms(model: { [field: string]: any }): IJsonItem[] {
       span: 12
     },
     {
-      type: 'mirror',
+      type: 'editor',
       field: 'jsonData',
       name: 'jsonData',
-      span: jsonDataSpan,
-      props: {
-        language: 'sql',
-      }
+      span: jsonDataSpan
     },
     {
       type: 'select',
@@ -112,13 +109,10 @@ export function useDms(model: { [field: string]: any }): IJsonItem[] {
       span: targetEndpointArnSpan
     },
     {
-      type: 'mirror',
+      type: 'editor',
       field: 'tableMappings',
       name: 'tableMappings',
-      span: tableMappingsSpan,
-      props: {
-        language: 'sql',
-      }
+      span: tableMappingsSpan
     },
     {
       type: 'input',
@@ -127,7 +121,11 @@ export function useDms(model: { [field: string]: any }): IJsonItem[] {
       span: replicationTaskArnSpan
     },
     useResources(),
-    ...useCustomParams({ model, field: 'localParams', isSimple: false })
+    ...useCustomParams({
+      model,
+      field: 'localParams',
+      isSimple: model.readonly
+    })
   ]
 }
 

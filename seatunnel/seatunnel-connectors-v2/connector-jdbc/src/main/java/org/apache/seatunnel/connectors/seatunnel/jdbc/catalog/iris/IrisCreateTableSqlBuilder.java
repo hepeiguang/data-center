@@ -17,16 +17,18 @@
 
 package org.apache.seatunnel.connectors.seatunnel.jdbc.catalog.iris;
 
+import org.apache.seatunnel.shade.org.apache.commons.lang3.StringUtils;
+
 import org.apache.seatunnel.api.table.catalog.CatalogTable;
 import org.apache.seatunnel.api.table.catalog.Column;
 import org.apache.seatunnel.api.table.catalog.ConstraintKey;
 import org.apache.seatunnel.api.table.catalog.PrimaryKey;
 import org.apache.seatunnel.api.table.catalog.TablePath;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.catalog.utils.CatalogUtils;
+import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.dialect.DatabaseIdentifier;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.dialect.iris.IrisTypeConverter;
 
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -108,7 +110,16 @@ public class IrisCreateTableSqlBuilder {
         StringBuilder columnSql = new StringBuilder();
         columnSql.append("\"").append(column.getName()).append("\" ");
 
-        String columnType = IrisTypeConverter.INSTANCE.reconvert(column).getColumnType();
+        String columnType;
+        if (column.getSinkType() != null) {
+            columnType = column.getSinkType();
+        } else if (StringUtils.equals(sourceCatalogName, DatabaseIdentifier.IRIS)
+                && StringUtils.isNotEmpty(column.getSourceType())) {
+            columnType = column.getSourceType();
+        } else {
+            columnType = IrisTypeConverter.INSTANCE.reconvert(column).getColumnType();
+        }
+
         columnSql.append(columnType);
 
         if (!column.isNullable()) {

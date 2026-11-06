@@ -17,28 +17,31 @@
 
 package org.apache.dolphinscheduler.plugin.datasource.mysql.param;
 
-import com.alibaba.druid.sql.parser.SQLParserUtils;
-import com.google.auto.service.AutoService;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.MapUtils;
 import org.apache.dolphinscheduler.common.constants.Constants;
-import org.apache.dolphinscheduler.common.constants.DataSourceConstants;
 import org.apache.dolphinscheduler.common.utils.JSONUtils;
+import org.apache.dolphinscheduler.plugin.datasource.api.constants.DataSourceConstants;
 import org.apache.dolphinscheduler.plugin.datasource.api.datasource.AbstractDataSourceProcessor;
 import org.apache.dolphinscheduler.plugin.datasource.api.datasource.BaseDataSourceParamDTO;
 import org.apache.dolphinscheduler.plugin.datasource.api.datasource.DataSourceProcessor;
+import org.apache.dolphinscheduler.plugin.datasource.api.datasource.JdbcDriverConnectionProvider;
 import org.apache.dolphinscheduler.plugin.datasource.api.utils.PasswordUtils;
 import org.apache.dolphinscheduler.spi.datasource.BaseConnectionParam;
 import org.apache.dolphinscheduler.spi.datasource.ConnectionParam;
 import org.apache.dolphinscheduler.spi.enums.DbType;
 
+import org.apache.commons.collections4.MapUtils;
+
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+
+import lombok.extern.slf4j.Slf4j;
+
+import com.alibaba.druid.sql.parser.SQLParserUtils;
+import com.google.auto.service.AutoService;
 
 @AutoService(DataSourceProcessor.class)
 @Slf4j
@@ -91,8 +94,6 @@ public class MySQLDataSourceProcessor extends AbstractDataSourceProcessor {
         mysqlConnectionParam.setDriverClassName(getDatasourceDriver());
         mysqlConnectionParam.setValidationQuery(getValidationQuery());
         mysqlConnectionParam.setOther(mysqlDatasourceParam.getOther());
-        mysqlConnectionParam.setHost(dataSourceParam.getHost());
-        mysqlConnectionParam.setPort(dataSourceParam.getPort());
 
         return mysqlConnectionParam;
     }
@@ -123,9 +124,8 @@ public class MySQLDataSourceProcessor extends AbstractDataSourceProcessor {
     }
 
     @Override
-    public Connection getConnection(ConnectionParam connectionParam) throws ClassNotFoundException, SQLException {
+    public Connection getConnection(ConnectionParam connectionParam) throws SQLException {
         MySQLConnectionParam mysqlConnectionParam = (MySQLConnectionParam) connectionParam;
-        Class.forName(getDatasourceDriver());
         String user = mysqlConnectionParam.getUser();
         if (user.contains(AUTO_DESERIALIZE)) {
             log.warn("sensitive param : {} in username field is filtered", AUTO_DESERIALIZE);
@@ -136,17 +136,18 @@ public class MySQLDataSourceProcessor extends AbstractDataSourceProcessor {
             log.warn("sensitive param : {} in password field is filtered", AUTO_DESERIALIZE);
             password = password.replace(AUTO_DESERIALIZE, "");
         }
-
-        Properties connectionProperties = getConnectionProperties(mysqlConnectionParam, user, password);
-
-        return DriverManager.getConnection(getJdbcUrl(connectionParam), connectionProperties);
+        return JdbcDriverConnectionProvider.builder()
+                .jdbcDriverClassName(getDatasourceDriver())
+                .jdbcUrl(getJdbcUrl(mysqlConnectionParam))
+                .username(user)
+                .password(PasswordUtils.decodePassword(password))
+                .properties(getConnectionProperties(mysqlConnectionParam))
+                .build()
+                .getConnection();
     }
 
-    private Properties getConnectionProperties(MySQLConnectionParam mysqlConnectionParam, String user,
-                                               String password) {
+    private Properties getConnectionProperties(MySQLConnectionParam mysqlConnectionParam) {
         Properties connectionProperties = new Properties();
-        connectionProperties.put("user", user);
-        connectionProperties.put("password", password);
         Map<String, String> paramMap = mysqlConnectionParam.getOther();
         if (MapUtils.isNotEmpty(paramMap)) {
             paramMap.forEach((k, v) -> {

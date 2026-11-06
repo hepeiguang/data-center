@@ -13,15 +13,24 @@ import com.google.auto.service.AutoService;
 import java.io.Serializable;
 import static org.apache.seatunnel.connectors.seatunnel.udp.config.UdpOptions.BUFFER_SIZE;
 import static org.apache.seatunnel.connectors.seatunnel.udp.config.UdpOptions.CHARSET;
+import static org.apache.seatunnel.connectors.seatunnel.udp.config.UdpOptions.DECODER_CLASS;
+import static org.apache.seatunnel.connectors.seatunnel.udp.config.UdpOptions.DECODER_INCLUDE_META;
+import static org.apache.seatunnel.connectors.seatunnel.udp.config.UdpOptions.DECODER_NAME;
 import static org.apache.seatunnel.connectors.seatunnel.udp.config.UdpOptions.FORMAT;
 import static org.apache.seatunnel.connectors.seatunnel.udp.config.UdpOptions.HOST;
 import static org.apache.seatunnel.connectors.seatunnel.udp.config.UdpOptions.IDENTIFIER;
 import static org.apache.seatunnel.connectors.seatunnel.udp.config.UdpOptions.OFFSET_TABLE;
 import static org.apache.seatunnel.connectors.seatunnel.udp.config.UdpOptions.OFFSET_TABLE_PATH;
+import static org.apache.seatunnel.connectors.seatunnel.udp.config.UdpOptions.PARSE_ERROR_HANDLE_WAY;
 import static org.apache.seatunnel.connectors.seatunnel.udp.config.UdpOptions.PARSE_MODE;
 import static org.apache.seatunnel.connectors.seatunnel.udp.config.UdpOptions.PORT;
+import static org.apache.seatunnel.connectors.seatunnel.udp.config.UdpOptions.RECEIVE_QUEUE_SIZE;
 import static org.apache.seatunnel.connectors.seatunnel.udp.config.UdpOptions.SCRIPT_CONTENT;
 import static org.apache.seatunnel.connectors.seatunnel.udp.config.UdpOptions.SCRIPT_PATH;
+import static org.apache.seatunnel.connectors.seatunnel.udp.config.UdpOptions.SO_RCVBUF;
+import static org.apache.seatunnel.connectors.seatunnel.udp.config.UdpOptions.TRANSPORT;
+import static org.apache.seatunnel.connectors.seatunnel.udp.config.UdpOptions.UDF_NAME;
+import static org.apache.seatunnel.connectors.seatunnel.udp.config.UdpOptions.WORKER_THREADS;
 
 /**
  * 负责插件配置解析和组件实例化。
@@ -63,8 +72,17 @@ public class UdpSourceFactory implements TableSourceFactory {
                         PARSE_MODE,
                         SCRIPT_PATH,
                         SCRIPT_CONTENT,
+                        UDF_NAME,
                         OFFSET_TABLE,
-                        OFFSET_TABLE_PATH)
+                        OFFSET_TABLE_PATH,
+                        DECODER_CLASS,
+                        DECODER_NAME,
+                        DECODER_INCLUDE_META,
+                        PARSE_ERROR_HANDLE_WAY,
+                        TRANSPORT,
+                        WORKER_THREADS,
+                        RECEIVE_QUEUE_SIZE,
+                        SO_RCVBUF)
                 .build();
     }
 

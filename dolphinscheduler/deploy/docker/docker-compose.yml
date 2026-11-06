@@ -14,65 +14,62 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-#version: "3.8"
+version: "3.8"
 
 services:
-  postgresql:
-    image: postgresql:15.2.0
+  dolphinscheduler-postgresql:
+    image: bitnamilegacy/postgresql:15.2.0-debian-11-r9
+
     ports:
       - "5432:5432"
     profiles: ["all", "schema"]
     environment:
       POSTGRESQL_USERNAME: root
       POSTGRESQL_PASSWORD: root
-      POSTGRESQL_DATABASE: dam
+      POSTGRESQL_DATABASE: dolphinscheduler
     volumes:
-      - ds-postgresql:/opt/postgresql
+      - dolphinscheduler-postgresql:/bitnami/postgresql
     healthcheck:
       test: ["CMD", "bash", "-c", "cat < /dev/null > /dev/tcp/127.0.0.1/5432"]
       interval: 5s
       timeout: 60s
       retries: 120
     networks:
-      - zdkj-net
+      - dolphinscheduler
 
-  zookeeper:
-    image: zookeeper:3.8.1
-    ports:
-      - "2181:2181"
+  dolphinscheduler-zookeeper:
+    image: bitnamilegacy/zookeeper:3.7.1-debian-11-r99
     profiles: ["all"]
     environment:
       ALLOW_ANONYMOUS_LOGIN: "yes"
       ZOO_4LW_COMMANDS_WHITELIST: srvr,ruok,wchs,cons
     volumes:
-      - ${SERVICE_HOME}/zookeeper:/opt/zookeeper
+      - dolphinscheduler-zookeeper:/bitnami/zookeeper
     healthcheck:
       test: ["CMD", "bash", "-c", "cat < /dev/null > /dev/tcp/127.0.0.1/2181"]
       interval: 5s
       timeout: 60s
       retries: 120
     networks:
-      - zdkj-net
+      - dolphinscheduler
 
-  ds-schema-initializer:
-    image: dolphinscheduler-tools:${TAG}
+  dolphinscheduler-schema-initializer:
+    image: ${HUB}/dolphinscheduler-tools:${TAG}
     env_file: .env
     profiles: ["schema"]
     command: [ tools/bin/upgrade-schema.sh ]
-#    depends_on:
-#      ds-postgresql:
-#        condition: service_healthy
+    depends_on:
+      dolphinscheduler-postgresql:
+        condition: service_healthy
     volumes:
-      - ds-logs:/opt/dolphinscheduler/logs
-      - ${DEPENDS_SOFT_HOME}:/opt/soft
-      - ds-resource-local:/dolphinscheduler
+      - dolphinscheduler-logs:/opt/dolphinscheduler/logs
+      - dolphinscheduler-shared-local:/opt/soft
+      - dolphinscheduler-resource-local:/dolphinscheduler
     networks:
-      - zdkj-net
+      - dolphinscheduler
 
-  api-server:
-    mem_limit: 2g
-    cpus: 2
-    image: zdkj/api-server:${TAG}
+  dolphinscheduler-api:
+    image: ${HUB}/dolphinscheduler-api:${TAG}
     ports:
       - "12345:12345"
       - "25333:25333"
@@ -83,17 +80,18 @@ services:
       interval: 30s
       timeout: 5s
       retries: 3
-#    depends_on:
-#      zookeeper:
-#        condition: service_healthy
+    depends_on:
+      dolphinscheduler-zookeeper:
+        condition: service_healthy
     volumes:
-      - ${SERVICE_HOME}/dolphinscheduler/api-server:/opt/dolphinscheduler/api-server
-      - ${DEPENDS_SOFT_HOME}:/opt/soft
+      - dolphinscheduler-logs:/opt/dolphinscheduler/logs
+      - dolphinscheduler-shared-local:/opt/soft
+      - dolphinscheduler-resource-local:/dolphinscheduler
     networks:
-      - zdkj-net
+      - dolphinscheduler
 
-  alert-server:
-    image: zdkj/alert-server:${TAG}
+  dolphinscheduler-alert:
+    image: ${HUB}/dolphinscheduler-alert-server:${TAG}
     profiles: ["all"]
     env_file: .env
     healthcheck:
@@ -101,18 +99,16 @@ services:
       interval: 30s
       timeout: 5s
       retries: 3
-#    depends_on:
-#      zookeeper:
-#        condition: service_healthy
+    depends_on:
+      dolphinscheduler-zookeeper:
+        condition: service_healthy
     volumes:
-      - ${SERVICE_HOME}/dolphinscheduler/alert-server:/opt/dolphinscheduler/alert-server
+      - dolphinscheduler-logs:/opt/dolphinscheduler/logs
     networks:
-      - zdkj-net
+      - dolphinscheduler
 
-  master-server:
-    mem_limit: 4g
-    cpus: 2
-    image: zdkj/master-server:${TAG}
+  dolphinscheduler-master:
+    image: ${HUB}/dolphinscheduler-master:${TAG}
     profiles: ["all"]
     env_file: .env
     healthcheck:
@@ -120,19 +116,17 @@ services:
       interval: 30s
       timeout: 5s
       retries: 3
-#    depends_on:
-#      zookeeper:
-#        condition: service_healthy
+    depends_on:
+      dolphinscheduler-zookeeper:
+        condition: service_healthy
     volumes:
-      - ${SERVICE_HOME}/dolphinscheduler/master-server:/opt/dolphinscheduler/master-server
-      - ${DEPENDS_SOFT_HOME}:/opt/soft
+      - dolphinscheduler-logs:/opt/dolphinscheduler/logs
+      - dolphinscheduler-shared-local:/opt/soft
     networks:
-      - zdkj-net
+      - dolphinscheduler
 
-  worker-server:
-    mem_limit: 4g
-    cpus: 2
-    image: zdkj/worker-server:${TAG}
+  dolphinscheduler-worker:
+    image: ${HUB}/dolphinscheduler-worker:${TAG}
     profiles: ["all"]
     env_file: .env
     healthcheck:
@@ -140,24 +134,25 @@ services:
       interval: 30s
       timeout: 5s
       retries: 3
-#    depends_on:
-#      zookeeper:
-#        condition: service_healthy
+    depends_on:
+      dolphinscheduler-zookeeper:
+        condition: service_healthy
     volumes:
-      - /tmp/dolphinscheduler:/tmp/dolphinscheduler
-      - ${SERVICE_HOME}/dolphinscheduler/worker-server:/opt/dolphinscheduler/worker-server
-      - ${DEPENDS_SOFT_HOME}:/opt/soft
-      - /dolphinscheduler:/dolphinscheduler
+      - dolphinscheduler-worker-data:/tmp/dolphinscheduler
+      - dolphinscheduler-logs:/opt/dolphinscheduler/logs
+      - dolphinscheduler-shared-local:/opt/soft
+      - dolphinscheduler-resource-local:/dolphinscheduler
     networks:
-      - zdkj-net
+      - dolphinscheduler
 
 networks:
-  zdkj-net:
+  dolphinscheduler:
     driver: bridge
 
-#volumes:
-#  ds-postgresql:
-#  ds-zookeeper:
-#  ds-worker-data:
-#  ds-logs:
-#  ds-resource-local:
+volumes:
+  dolphinscheduler-postgresql:
+  dolphinscheduler-zookeeper:
+  dolphinscheduler-worker-data:
+  dolphinscheduler-logs:
+  dolphinscheduler-shared-local:
+  dolphinscheduler-resource-local:

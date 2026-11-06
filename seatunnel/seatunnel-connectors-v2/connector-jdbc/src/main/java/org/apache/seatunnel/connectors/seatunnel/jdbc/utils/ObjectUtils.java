@@ -26,7 +26,21 @@ public class ObjectUtils {
      * will throw {@link ArithmeticException} if number overflows.
      */
     public static Object plus(Object number, int augend) throws ArithmeticException {
-        if (number instanceof Integer) {
+        if (number instanceof Byte) {
+            // Byte and Short are promoted to int before addition; check their own ranges
+            // before narrowing the result back to the original type.
+            int result = Math.addExact((Byte) number, augend);
+            if (result < Byte.MIN_VALUE || result > Byte.MAX_VALUE) {
+                throw new ArithmeticException("byte overflow");
+            }
+            return (byte) result;
+        } else if (number instanceof Short) {
+            int result = Math.addExact((Short) number, augend);
+            if (result < Short.MIN_VALUE || result > Short.MAX_VALUE) {
+                throw new ArithmeticException("short overflow");
+            }
+            return (short) result;
+        } else if (number instanceof Integer) {
             return Math.addExact((Integer) number, augend);
         } else if (number instanceof Long) {
             return Math.addExact((Long) number, augend);
@@ -67,8 +81,8 @@ public class ObjectUtils {
             return BigDecimal.valueOf((long) minuend)
                     .subtract(BigDecimal.valueOf((long) subtrahend));
         } else if (minuend instanceof Float) {
-            return BigDecimal.valueOf((float) minuend)
-                    .subtract(BigDecimal.valueOf((float) subtrahend));
+            return new BigDecimal(minuend.toString())
+                    .subtract(new BigDecimal(subtrahend.toString()));
         } else if (minuend instanceof Double) {
             return BigDecimal.valueOf((double) minuend)
                     .subtract(BigDecimal.valueOf((double) subtrahend));

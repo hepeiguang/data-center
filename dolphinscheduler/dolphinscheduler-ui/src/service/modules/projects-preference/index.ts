@@ -50,18 +50,3 @@ export function updateProjectPreferenceState(
     data
   })
 }
-
-export function getOutputFields(
-  data: any,
-): any {
-  return axios({
-    url: `/seatunnelTask/getSeatunnelTaskOutput`,
-    method: 'post',
-    data,
-    headers: {
-      'Content-Type': 'application/json;'
-    },
-    transformRequest: (params) => JSON.stringify(params)
-  })
-}
-

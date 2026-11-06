@@ -29,6 +29,10 @@ const User = defineComponent({
     userDropdownOptions: {
       type: Array as PropType<any>,
       default: []
+    },
+    collapsed: {
+      type: Boolean,
+      default: false
     }
   },
   setup() {
@@ -49,10 +53,14 @@ const User = defineComponent({
           <NIcon class={styles.icon}>
             <UserOutlined />
           </NIcon>
-          {(this.userStore.getUserInfo as UserInfoRes).userName}
-          <NIcon class={styles.icon}>
-            <DownOutlined />
-          </NIcon>
+          {!this.collapsed && (
+            <>
+              {(this.userStore.getUserInfo as UserInfoRes).userName}
+              <NIcon class={styles.icon}>
+                <DownOutlined />
+              </NIcon>
+            </>
+          )}
         </NButton>
       </NDropdown>
     )

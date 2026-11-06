@@ -18,8 +18,8 @@
 export default {
   file: {
     file_manage: '文件管理',
-    create_folder: '添加文件夹', // '创建文件夹',
-    create_file: '添加文件', // '创建文件',
+    create_folder: '创建文件夹',
+    create_file: '创建文件',
     upload_files: '上传文件',
     enter_keyword_tips: '请输入关键词',
     name: '名称',
@@ -53,28 +53,9 @@ export default {
     success: '成功',
     file_details: '文件详情',
     return: '返回',
-    save: '保存',
-
-
-    //自定义资源上传
-    enter_type_option_tips: '请选择资源类型',
-    type:'资源类型',
-    type_file:'文件夹',
-    type_hive:'HIVE',
-    type_seatunnel:'SEATUNNEL',
-    type_unknow:'UDF',
-    resource_file_must_endwith_jar:'资源文件必须以.jar结尾',
-  },
-  udf: {
-    udf_resources: 'UDF资源',
-    upload_udf_resources: '上传UDF资源',
-    udf_source_name: 'UDF资源名称'
+    save: '保存'
   },
   function: {
-    udf_function: 'UDF函数',
-    create_udf_function: '添加', // '创建UDF函数',
-    edit_udf_function: '编辑', // '编辑UDF函数',
-    udf_function_name: 'UDF函数名称',
     user_name: '所属用户',
     class_name: '类名',
     type: '类型',
@@ -87,46 +68,21 @@ export default {
     delete: '删除',
     success: '成功',
     package_name: '包名类名',
-    udf_resources: 'UDF资源',
     instructions: '使用说明',
     upload_resources: '上传资源',
-    udf_resources_directory: 'UDF资源目录',
     delete_confirm: '确定删除吗?',
     enter_keyword_tips: '请输入关键词',
-    enter_udf_unction_name_tips: '请输入UDF函数名称',
     enter_package_name_tips: '请输入包名类名',
-    enter_select_udf_resources_tips: '请选择UDF资源',
-    enter_select_udf_resources_directory_tips: '请选择UDF资源目录',
     enter_instructions_tips: '请输入使用说明',
     enter_name_tips: '请输入名称',
     enter_description_tips: '请输入描述',
-    upload: '上传',
-    upload_udf_resources: '上传UDF资源',
-
-
-    //自定义提示字段--setunnel函数上传
-    udf_app_name: '函数应用名称',
-    udf_display_name: '函数显示名称',
-    enter_app_name_tips: '请输入应用名称',
-    enter_display_name_tips: '请输入显示名称',
-    enter_app_name_must_english_tips: "应用名称只能输入英文字符",
-    enter_seatunnel_app_udf_unction_name_tips: '函数定义代码中制定名称，如SUBSTRING',
-    enter_seatunnel_display_udf_unction_name_tips: '页面展示名称，如 字符串截取',
-    enter_seatunnel_params_input_udf_unction_name_tips:'请输入参数名称',
-    udf_param_name: 'UDF参数设置',
-    udf_param_name_tip: '请输入参数名称',
-    //seatunnel udf 参数
-    list_must_having_args_or_params: 'UDF参数名称不能为空',
-    list_must_having_unique_params: 'UDF参数名称不能重复',
-    funcNameOrDisplayName:'函数名称',
-    select_option_required:'请输入选择器的参数',
-    select_option_length:'参数数量',
+    upload: '上传'
   },
   task_group_option: {
     manage: '任务组管理',
     option: '任务组配置',
-    create: '添加', //'创建任务组',
-    edit: '编辑', // '编辑任务组',
+    create: '创建任务组',
+    edit: '编辑任务组',
     delete: '删除任务组',
     view_queue: '查看任务组队列',
     switch_status: '切换任务组状态',

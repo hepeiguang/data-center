@@ -46,10 +46,10 @@ import org.apache.dolphinscheduler.dao.entity.Project;
 import org.apache.dolphinscheduler.dao.entity.User;
 import org.apache.dolphinscheduler.dao.mapper.CommandMapper;
 import org.apache.dolphinscheduler.dao.mapper.ErrorCommandMapper;
-import org.apache.dolphinscheduler.dao.mapper.ProcessDefinitionMapper;
-import org.apache.dolphinscheduler.dao.mapper.ProcessInstanceMapper;
-import org.apache.dolphinscheduler.dao.mapper.ProjectMapper;
-import org.apache.dolphinscheduler.dao.mapper.TaskInstanceMapper;
+import org.apache.dolphinscheduler.dao.repository.ProjectDao;
+import org.apache.dolphinscheduler.dao.repository.TaskInstanceDao;
+import org.apache.dolphinscheduler.dao.repository.WorkflowDefinitionDao;
+import org.apache.dolphinscheduler.dao.repository.WorkflowInstanceDao;
 import org.apache.dolphinscheduler.plugin.task.api.enums.TaskExecutionStatus;
 
 import java.text.MessageFormat;
@@ -76,9 +76,6 @@ import org.slf4j.LoggerFactory;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 
-/**
- * data analysis service test
- */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class DataAnalysisServiceTest {
@@ -89,16 +86,16 @@ public class DataAnalysisServiceTest {
     private DataAnalysisServiceImpl dataAnalysisServiceImpl;
 
     @Mock
-    ProjectMapper projectMapper;
+    ProjectDao projectDao;
 
     @Mock
     ProjectService projectService;
 
     @Mock
-    ProcessInstanceMapper processInstanceMapper;
+    WorkflowInstanceDao workflowInstanceDao;
 
     @Mock
-    ProcessDefinitionMapper processDefinitionMapper;
+    WorkflowDefinitionDao workflowDefinitionDao;
 
     @Mock
     CommandMapper commandMapper;
@@ -107,7 +104,7 @@ public class DataAnalysisServiceTest {
     ErrorCommandMapper errorCommandMapper;
 
     @Mock
-    TaskInstanceMapper taskInstanceMapper;
+    TaskInstanceDao taskInstanceDao;
 
     @Mock
     private ResourcePermissionCheckService resourcePermissionCheckService;
@@ -123,20 +120,20 @@ public class DataAnalysisServiceTest {
 
         user = new User();
         user.setUserType(UserType.ADMIN_USER);
-        user.setId("1");
+        user.setId(1);
         project = new Project();
         project.setId(1);
         project.setCode(1);
         project.setName("test");
         resultMap = new HashMap<>();
 
-        when(projectMapper.queryByCode(1L)).thenReturn(project);
+        when(projectDao.queryByCode(1L)).thenReturn(project);
     }
 
     @AfterEach
     public void after() {
         user = null;
-        projectMapper = null;
+        projectDao = null;
         resultMap = null;
     }
 
@@ -193,9 +190,9 @@ public class DataAnalysisServiceTest {
 
         // when general user doesn't have any task then return all count are 0
         user.setUserType(UserType.GENERAL_USER);
-        when(resourcePermissionCheckService.userOwnedResourceIdsAcquisition(AuthorizationType.PROJECTS, "1",
+        when(resourcePermissionCheckService.userOwnedResourceIdsAcquisition(AuthorizationType.PROJECTS, 1,
                 serviceLogger)).thenReturn(projectIds());
-        when(taskInstanceMapper.countTaskInstanceStateByProjectCodes(any(), any(), any()))
+        when(taskInstanceDao.countTaskInstanceStateByProjectCodes(any(), any(), any()))
                 .thenReturn(Collections.emptyList());
         assertDoesNotThrow(() -> dataAnalysisServiceImpl.getTaskInstanceStateCountByProject(user, 1L, null, null));
 
@@ -204,12 +201,12 @@ public class DataAnalysisServiceTest {
     @Test
     public void testCountTaskStateByProject_noData() {
         doNothing().when(projectService).checkProjectAndAuthThrowException(any(), anyLong(), any());
-        when(resourcePermissionCheckService.userOwnedResourceIdsAcquisition(AuthorizationType.PROJECTS, "1",
+        when(resourcePermissionCheckService.userOwnedResourceIdsAcquisition(AuthorizationType.PROJECTS, 1,
                 serviceLogger)).thenReturn(projectIds());
 
         // when instanceStateCounter return null, then return nothing
         user.setUserType(UserType.GENERAL_USER);
-        when(taskInstanceMapper.countTaskInstanceStateByProjectCodes(any(), any(), any()))
+        when(taskInstanceDao.countTaskInstanceStateByProjectCodes(any(), any(), any()))
                 .thenReturn(Collections.emptyList());
         TaskInstanceCountVO taskInstanceStateCountByProject =
                 dataAnalysisServiceImpl.getTaskInstanceStateCountByProject(user, 1L, null, null);
@@ -238,11 +235,11 @@ public class DataAnalysisServiceTest {
     public void testCountDefinitionByUser() {
         doNothing().when(projectService).checkProjectAndAuthThrowException(any(), anyLong(), any());
 
-        when(resourcePermissionCheckService.userOwnedResourceIdsAcquisition(AuthorizationType.PROJECTS, "1",
+        when(resourcePermissionCheckService.userOwnedResourceIdsAcquisition(AuthorizationType.PROJECTS, 1,
                 serviceLogger)).thenReturn(projectIds());
         assertDoesNotThrow(() -> dataAnalysisServiceImpl.getWorkflowDefinitionCountByProject(user, 0L));
 
-        when(resourcePermissionCheckService.userOwnedResourceIdsAcquisition(AuthorizationType.PROJECTS, "1",
+        when(resourcePermissionCheckService.userOwnedResourceIdsAcquisition(AuthorizationType.PROJECTS, 1,
                 serviceLogger)).thenReturn(Collections.emptySet());
         assertDoesNotThrow(() -> dataAnalysisServiceImpl.getWorkflowDefinitionCountByProject(user, 0L));
     }
@@ -251,14 +248,14 @@ public class DataAnalysisServiceTest {
     public void testCountCommandState() {
         User user = new User();
         user.setUserType(UserType.ADMIN_USER);
-        user.setId("1");
+        user.setId(1);
 
         assertDoesNotThrow(() -> dataAnalysisServiceImpl.countCommandState(user));
 
         // when no command found then return all count are 0
         when(commandMapper.countCommandState(any(), any(), any())).thenReturn(Collections.emptyList());
         when(errorCommandMapper.countCommandState(any(), any(), any())).thenReturn(Collections.emptyList());
-        when(resourcePermissionCheckService.userOwnedResourceIdsAcquisition(AuthorizationType.PROJECTS, "1",
+        when(resourcePermissionCheckService.userOwnedResourceIdsAcquisition(AuthorizationType.PROJECTS, 1,
                 serviceLogger)).thenReturn(projectIds());
 
         List<CommandStateCount> commandStateCounts = dataAnalysisServiceImpl.countCommandState(user);
@@ -304,13 +301,13 @@ public class DataAnalysisServiceTest {
         PageInfo<Command> list1 = dataAnalysisServiceImpl.listPendingCommands(user, 1L, 1, 10);
         assertThat(list1.getTotal()).isEqualTo(2);
         user.setUserType(UserType.GENERAL_USER);
-        when(resourcePermissionCheckService.userOwnedResourceIdsAcquisition(AuthorizationType.PROJECTS, "1",
+        when(resourcePermissionCheckService.userOwnedResourceIdsAcquisition(AuthorizationType.PROJECTS, 1,
                 serviceLogger))
                         .thenReturn(projectIds());
         PageInfo<Command> list2 = dataAnalysisServiceImpl.listPendingCommands(user, 1L, 1, 10);
         assertThat(list2.getTotal()).isEqualTo(0);
-        when(projectMapper.selectBatchIds(any())).thenReturn(Collections.singletonList(project));
-        when(processDefinitionMapper.queryDefinitionCodeListByProjectCodes(any()))
+        when(projectDao.queryByIds(any())).thenReturn(Collections.singletonList(project));
+        when(workflowDefinitionDao.queryDefinitionCodeListByProjectCodes(any()))
                 .thenReturn(Collections.singletonList(1L));
         when(commandMapper.queryCommandPageByIds(any(), any())).thenReturn(page);
         PageInfo<Command> list3 = dataAnalysisServiceImpl.listPendingCommands(user, 1L, 1, 10);
@@ -326,13 +323,13 @@ public class DataAnalysisServiceTest {
         PageInfo<ErrorCommand> list1 = dataAnalysisServiceImpl.listErrorCommand(user, 1L, 1, 10);
         assertThat(list1.getTotal()).isEqualTo(2);
         user.setUserType(UserType.GENERAL_USER);
-        when(resourcePermissionCheckService.userOwnedResourceIdsAcquisition(AuthorizationType.PROJECTS, "1",
+        when(resourcePermissionCheckService.userOwnedResourceIdsAcquisition(AuthorizationType.PROJECTS, 1,
                 serviceLogger))
                         .thenReturn(projectIds());
         PageInfo<ErrorCommand> list2 = dataAnalysisServiceImpl.listErrorCommand(user, 1L, 1, 10);
         assertThat(list2.getTotal()).isEqualTo(0);
-        when(projectMapper.selectBatchIds(any())).thenReturn(Collections.singletonList(project));
-        when(processDefinitionMapper.queryDefinitionCodeListByProjectCodes(any()))
+        when(projectDao.queryByIds(any())).thenReturn(Collections.singletonList(project));
+        when(workflowDefinitionDao.queryDefinitionCodeListByProjectCodes(any()))
                 .thenReturn(Collections.singletonList(1L));
         when(errorCommandMapper.queryErrorCommandPageByIds(any(), any())).thenReturn(page);
         PageInfo<ErrorCommand> list3 = dataAnalysisServiceImpl.listErrorCommand(user, 1L, 1, 10);
@@ -384,7 +381,7 @@ public class DataAnalysisServiceTest {
         project.setCode(1L);
         project.setId(1);
         project.setName(projectName);
-        project.setUserId("1");
+        project.setUserId(1);
         return project;
     }
 

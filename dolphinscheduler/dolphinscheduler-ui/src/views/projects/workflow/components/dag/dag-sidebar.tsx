@@ -15,7 +15,13 @@
  * limitations under the License.
  */
 
-import { defineComponent, onMounted, reactive, PropType } from 'vue'
+import {
+  defineComponent,
+  onBeforeUnmount,
+  onMounted,
+  reactive,
+  ref
+} from 'vue'
 import styles from './dag.module.scss'
 import type { TaskType } from './types'
 import { NCollapse, NCollapseItem, NIcon } from 'naive-ui'
@@ -25,18 +31,41 @@ import {
   Collection,
   getDagMenu
 } from '@/service/modules/dag-menu'
-import { getTaskTypes } from '@/service/modules/process-definition'
 import { useI18n } from 'vue-i18n'
-const props = {
-  externalParam: {
-    type: String as PropType<string>,
-    default: ''
+import {
+  buildDataComputationSidebarTree,
+  isSeaTunnelChildType,
+  taskIconCssVars
+} from './seatunnel-compute-utils'
+
+const SIDEBAR_WIDTH_KEY = 'ds-dag-sidebar-width'
+const SIDEBAR_DEFAULT_WIDTH = 280
+const SIDEBAR_MIN_WIDTH = 200
+const SIDEBAR_MAX_WIDTH = 480
+const ST_CONNECTOR_FAV_KEY = 'ds-st-compute-favs'
+
+function readSidebarWidth(): number {
+  const raw = Number(localStorage.getItem(SIDEBAR_WIDTH_KEY))
+  if (!Number.isFinite(raw)) return SIDEBAR_DEFAULT_WIDTH
+  return Math.min(SIDEBAR_MAX_WIDTH, Math.max(SIDEBAR_MIN_WIDTH, raw))
+}
+
+function readLocalStFavs(): Set<string> {
+  try {
+    const raw = JSON.parse(localStorage.getItem(ST_CONNECTOR_FAV_KEY) || '[]')
+    return new Set(Array.isArray(raw) ? raw.map(String) : [])
+  } catch {
+    return new Set()
   }
 }
+
+function writeLocalStFavs(set: Set<string>) {
+  localStorage.setItem(ST_CONNECTOR_FAV_KEY, JSON.stringify([...set]))
+}
+
 export default defineComponent({
   name: 'workflow-dag-sidebar',
   emits: ['dragStart'],
-  props,
   setup(props, context) {
     const variables = reactive({
       dataList: [],
@@ -44,54 +73,73 @@ export default defineComponent({
       cloud: [],
       logic: [],
       di: [],
-      dq: [],
+      dc: [],
       ml: [],
       other: [],
-      fav: [],
-      SEATUNNEL: [],
-      DATAX: [],
-      SQOOP: [],
-      SOURCE: [],
-      SINK: [],
-      TRANSFORM: [],
-      minio: [],
+      fav: []
     })
-    const resData = reactive([])
+
+    const sidebarWidth = ref(readSidebarWidth())
+    const resizing = ref(false)
+    let resizeStartX = 0
+    let resizeStartWidth = SIDEBAR_DEFAULT_WIDTH
+
+    const onResizeMove = (e: MouseEvent) => {
+      if (!resizing.value) return
+      const next = Math.min(
+        SIDEBAR_MAX_WIDTH,
+        Math.max(
+          SIDEBAR_MIN_WIDTH,
+          resizeStartWidth + (e.clientX - resizeStartX)
+        )
+      )
+      sidebarWidth.value = next
+    }
+
+    const stopResize = () => {
+      if (!resizing.value) return
+      resizing.value = false
+      document.body.style.cursor = ''
+      document.body.style.userSelect = ''
+      localStorage.setItem(SIDEBAR_WIDTH_KEY, String(sidebarWidth.value))
+      window.removeEventListener('mousemove', onResizeMove)
+      window.removeEventListener('mouseup', stopResize)
+    }
+
+    const startResize = (e: MouseEvent) => {
+      e.preventDefault()
+      e.stopPropagation()
+      resizing.value = true
+      resizeStartX = e.clientX
+      resizeStartWidth = sidebarWidth.value
+      document.body.style.cursor = 'col-resize'
+      document.body.style.userSelect = 'none'
+      window.addEventListener('mousemove', onResizeMove)
+      window.addEventListener('mouseup', stopResize)
+    }
+
     const { t } = useI18n()
-    // 配合业管使用
-    const handleDagMenu = async () => {
-    // 业管使用 需要过滤掉现在的显示内容
-      
+
+    const handleDagMenu = () => {
       getDagMenu().then((res: any) => {
-        const temp = setDataType(res)
-        if (props.externalParam) {
-         handlerYgShowSide(temp)
-          console.log(resData, 'resData')
-          return
-        }
-        temp.forEach((item: any) => {
-          // 分组需要特殊处理
-          if (item.taskType == 'seatunnel_group') {
-            const children = item.children && item.children.length ? item.children.map(sitem => {
-              sitem.taskType = sitem.taskType.toUpperCase()
-              return sitem.children && sitem.children.length ? { ...sitem, children: handleSeaTunnel(sitem.children, sitem.taskType.toUpperCase())}: sitem
-            }) : null
-            resData.push({ ...item, children})
-          }else {
-            resData.push(item)
-          }
-
-
-        })
-        // console.log(resData)
-        return
         variables.dataList = res.map((item: any) => {
+          const taskType = item.taskType
+          const isChild = isSeaTunnelChildType(taskType)
           return {
             ...item,
             starHover: false,
-            type: item.taskType
+            type: taskType,
+            taskName: isChild
+              ? String(taskType).replace(/_(SOURCE|SINK|TRANSFORM)$/, '')
+              : item.taskName || taskType
           }
         })
+        const favSet = new Set<string>([
+          ...variables.dataList
+            .filter((item: any) => item.collection)
+            .map((item: any) => item.taskType as string),
+          ...readLocalStFavs()
+        ])
         variables.universal = variables.dataList.filter(
           (item: any) => item.taskCategory === 'Universal'
         )
@@ -104,134 +152,120 @@ export default defineComponent({
         variables.di = variables.dataList.filter(
           (item: any) => item.taskCategory === 'DataIntegration'
         )
-        variables.dq = variables.dataList.filter(
-          (item: any) => item.taskCategory === 'DataQuality'
+        const dcRaw = variables.dataList.filter(
+          (item: any) => item.taskCategory === 'DataComputation'
         )
+        // Nest SeaTunnel Compute connectors like ds_ui_code seatunnel_group.
+        variables.dc = dcRaw.map((item: any) => {
+          if (
+            item.taskType === 'SEATUNNEL_COMPUTE' ||
+            item.type === 'SEATUNNEL_COMPUTE'
+          ) {
+            return buildDataComputationSidebarTree(item, favSet)
+          }
+          return item
+        })
         variables.ml = variables.dataList.filter(
           (item: any) => item.taskCategory === 'MachineLearning'
         )
         variables.other = variables.dataList.filter(
           (item: any) => item.taskCategory === 'Other'
         )
-        // llxl 增加测试
-        variables.minio = variables.dataList.filter(
-          (item: any) => item.taskCategory === 'Metadata'
-        )
-        variables.fav = variables.dataList.filter(
+        const apiFav = variables.dataList.filter(
           (item: any) => item.collection === true
         )
-        variables.SEATUNNEL = variables.dataList.filter(
-          (item: any) => item.taskCategory === 'Seatunnel'
-        )
-        variables.DATAX = variables.dataList.filter(
-          (item: any) => item.taskCategory === 'Datax'
-        )
-        variables.SQOOP = variables.dataList.filter(
-          (item: any) => item.taskCategory === 'Sqoop'
-        )
-
-        variables.SOURCE = variables.dataList.filter(
-          (item: any) => item.taskCategory === 'Source'
-        )
-        variables.SINK = variables.dataList.filter(
-          (item: any) => item.taskCategory === 'Sink'
-        )
-        variables.TRANSFORM = variables.dataList.filter(
-          (item: any) => item.taskCategory === 'Transform'
-        )
-
-        variables.SOURCE.map((item: any) => {
-          item.type = `${item.taskType.toUpperCase()}_${item.taskCategory.toUpperCase()}`
-          return item
-        })
-
-        variables.SINK.map((item: any) => {
-          item.type = `${item.taskType.toUpperCase()}_${item.taskCategory.toUpperCase()}`
-          return item
-        })
-
-        variables.TRANSFORM.map((item: any) => {
-          item.type = `${item.taskType.toUpperCase()}_${item.taskCategory.toUpperCase()}`
-          return item
-        })
+        const apiFavTypes = new Set(apiFav.map((i: any) => i.taskType))
+        // Local-only connector favs (before/without API listing them)
+        const localExtra = [...favSet]
+          .filter((t) => !apiFavTypes.has(t) && isSeaTunnelChildType(t))
+          .map((taskType) => ({
+            taskType,
+            type: taskType,
+            taskName: taskType.replace(/_(SOURCE|SINK|TRANSFORM)$/, ''),
+            taskCategory: taskType.endsWith('_SOURCE')
+              ? 'Source'
+              : taskType.endsWith('_SINK')
+                ? 'Sink'
+                : 'Transform',
+            collection: true,
+            starHover: false
+          }))
+        variables.fav = [...apiFav, ...localExtra]
       })
     }
-    // 处理业管数据
-    const handlerYgShowSide = (temp:any) => {
-      const ygWhite = ['logic', 'universal'];
-      const ygWhiteSub = {
-        'universal': ['FLEXIBLE_HTTP']
-      };
-      const ygSubKeys = Object.keys(ygWhiteSub)
-      return temp.filter((item:any) => {
-          if (ygWhite.includes(item.taskType) && !ygSubKeys.includes(item.taskType)) {
-            resData.push(item)
-          } else if (ygWhite.includes(item.taskType) && ygSubKeys.includes(item.taskType)) {
-            if (item.children.length) {
-              const children = item.children.filter((ele:any) => {
-                if (ygWhiteSub[item.taskType].includes(ele.taskType)) {
-                  return ele
-                }
-              })
-            
-              resData.push({ ...item, children})
-            }
-          }
-      })
 
-
-
-    }
-
-
-    const handleSeaTunnel = (data: any, category='') => {
-      if (data && data.length) {
-        return data.map((item: any) => {
-          item.type = `${item.taskType.toUpperCase()}_${category}`
-          return item
-        })
-      } else {
-        return null
+    const handleCollection = (item: any, e?: MouseEvent) => {
+      e?.stopPropagation()
+      e?.preventDefault()
+      const taskType = item.taskType || item.type
+      const next = !item.collection
+      item.collection = next
+      if (isSeaTunnelChildType(taskType) || taskType === 'SEATUNNEL_COMPUTE') {
+        const local = readLocalStFavs()
+        if (next) local.add(taskType)
+        else local.delete(taskType)
+        writeLocalStFavs(local)
       }
+      const req = next ? Collection(taskType) : CancelCollection(taskType)
+      req.then(() => handleDagMenu()).catch(() => handleDagMenu())
     }
 
-    const setDataType = (data) => {
-      if (data && data.length) {
-        return data.map(item => {
-          item.type = item.taskType
-          if (item.children && item.children.length) {
-            item.children = setDataType(item.children)
-          }
-          if (item.collection) {
-            variables.fav.push(item)
-          }
-          return item
-        })
-      }else {
-        return null
+    const renderStar = (task: any) => (
+      <div
+        class={styles.stars}
+        onMouseenter={() => {
+          task.starHover = true
+        }}
+        onMouseleave={() => {
+          task.starHover = false
+        }}
+        onClick={(e: MouseEvent) => handleCollection(task, e)}
+        onMousedown={(e: MouseEvent) => e.stopPropagation()}
+      >
+        <NIcon
+          size='20'
+          color={task.collection || task.starHover ? '#288FFF' : '#ccc'}
+        >
+          {task.collection ? <StarFilled /> : <StarOutlined />}
+        </NIcon>
+      </div>
+    )
+
+    const renderSidebarIcon = (type: string) => {
+      if (
+        type === 'SEATUNNEL_COMPUTE' ||
+        isSeaTunnelChildType(type) ||
+        type === 'SEATUNNEL'
+      ) {
+        return (
+          <em class={styles['sidebar-icon']} style={taskIconCssVars(type)} />
+        )
       }
-    }
-
-
-    const handleCollection = (item: any) => {
-      item.collection
-        ? CancelCollection(item.taskType).then(() => {
-          handleDagMenu()
-        })
-        : Collection(item.taskType).then(() => {
-          handleDagMenu()
-        })
-      item.collection = !item.collection
+      return (
+        <em
+          class={[
+            styles['sidebar-icon'],
+            styles['icon-' + String(type).toLocaleLowerCase()]
+          ]}
+        />
+      )
     }
 
     onMounted(() => {
       handleDagMenu()
-      console.log(resData)
+    })
+
+    onBeforeUnmount(() => {
+      stopResize()
     })
 
     return () => (
-      <div class={styles.sidebar}>
-        <NCollapse default-expanded-names={['SEATUNNEL', 'DATAX', 'SQOOP']}>
+      <div
+        class={styles['sidebar-wrap']}
+        style={{ width: `${sidebarWidth.value}px` }}
+      >
+        <div class={styles.sidebar}>
+        <NCollapse default-expanded-names='1' accordion>
           {variables.fav.length > 0 && (
             <NCollapseItem
               title={t('project.menu.fav')}
@@ -244,7 +278,31 @@ export default defineComponent({
                       class={[styles.draggable, `task-item-${task.type}`]}
                       draggable='true'
                       onDragstart={(e) => {
-                        context.emit('dragStart', e, task.type as TaskType, task.taskName)
+                        context.emit('dragStart', e, task.type as TaskType)
+                      }}
+                    >
+                      {renderSidebarIcon(String(task.type || task.taskType))}
+                      <span>{task.taskName || task.taskType}</span>
+                      {renderStar(task)}
+                    </div>
+                  ))
+                }
+              }}
+            ></NCollapseItem>
+          )}
+          {variables.universal.length > 0 && (
+            <NCollapseItem
+              title={t('project.menu.universal')}
+              name='1'
+              class='task-cate-universal'
+              v-slots={{
+                default: () => {
+                  return variables.universal.map((task: any) => (
+                    <div
+                      class={[styles.draggable, `task-item-${task.type}`]}
+                      draggable='true'
+                      onDragstart={(e) => {
+                        context.emit('dragStart', e, task.type as TaskType)
                       }}
                     >
                       <em
@@ -281,167 +339,362 @@ export default defineComponent({
               }}
             ></NCollapseItem>
           )}
-        { resData.length > 0 && resData.map((group, i) => {
-            const { taskName, taskType, children } = { ...group }
-            if (taskType == 'seatunnel_group') {
-              return (
-                <NCollapseItem
-                  title={taskName}
-                  name={taskType}
-                  v-slots={{
-                    default: () => {
-                      return children.map((task: any) => {
-                        if (task.taskType == 'SEATUNNEL') {
-                          return (
-                            <div
-                            class={[styles.draggable, `task-item-${task.type}`]}
-                            draggable='true'
-                            onDragstart={(e) => {
-                              context.emit('dragStart', e, task.type as TaskType, task.taskName)
-                            }}
-                          >
-                            <em
-                              class={[
-                                styles['sidebar-icon'],
-                                styles['icon-' + task.type.toLocaleLowerCase()]
-                              ]}
-                            />
-                            <span>{task.taskName}</span>
-                            <div
-                              class={styles.stars}
-                              onMouseenter={() => {
-                                task.starHover = true
-                              }}
-                              onMouseleave={() => {
-                                task.starHover = false
-                              }}
-                              onClick={() => handleCollection(task)}
-                            >
-                              <NIcon
-                                size='20'
-                                color={
-                                  task.collection || task.starHover
-                                    ? '#288FFF'
-                                    : '#ccc'
-                                }
-                              >
-                                {task.collection ? <StarFilled /> : <StarOutlined />}
-                              </NIcon>
-                            </div>
-                          </div>
-                          )
-                        } else {
-                          return (
-                            <NCollapse>
-                                <NCollapseItem
-                                  title={task.taskName}
-                                  name={task.taskType}
-                                  class='task-cate-logic'
-                                  style="margin-left: 0"
-                                >
-                                  {
-                                    task.children.length > 0 && task.children.map((stask: any) => (
+          {variables.cloud.length > 0 && (
+            <NCollapseItem
+              title={t('project.menu.cloud')}
+              name='2'
+              class='task-cate-cloud'
+              v-slots={{
+                default: () => {
+                  return variables.cloud.map((task: any) => (
+                    <div
+                      class={[styles.draggable, `task-item-${task.type}`]}
+                      draggable='true'
+                      onDragstart={(e) => {
+                        context.emit('dragStart', e, task.type as TaskType)
+                      }}
+                    >
+                      <em
+                        class={[
+                          styles['sidebar-icon'],
+                          styles['icon-' + task.type.toLocaleLowerCase()]
+                        ]}
+                      />
+                      <span>{task.taskType}</span>
+                      <div
+                        class={styles.stars}
+                        onMouseenter={() => {
+                          task.starHover = true
+                        }}
+                        onMouseleave={() => {
+                          task.starHover = false
+                        }}
+                        onClick={() => handleCollection(task)}
+                      >
+                        <NIcon
+                          size='20'
+                          color={
+                            task.collection || task.starHover
+                              ? '#288FFF'
+                              : '#ccc'
+                          }
+                        >
+                          {task.collection ? <StarFilled /> : <StarOutlined />}
+                        </NIcon>
+                      </div>
+                    </div>
+                  ))
+                }
+              }}
+            ></NCollapseItem>
+          )}
+          {variables.logic.length > 0 && (
+            <NCollapseItem
+              title={t('project.menu.logic')}
+              name='3'
+              class='task-cate-logic'
+              v-slots={{
+                default: () => {
+                  return variables.logic.map((task: any) => (
+                    <div
+                      class={[styles.draggable, `task-item-${task.type}`]}
+                      draggable='true'
+                      onDragstart={(e) => {
+                        context.emit('dragStart', e, task.type as TaskType)
+                      }}
+                    >
+                      <em
+                        class={[
+                          styles['sidebar-icon'],
+                          styles['icon-' + task.type.toLocaleLowerCase()]
+                        ]}
+                      />
+                      <span>{task.taskType}</span>
+                      <div
+                        class={styles.stars}
+                        onMouseenter={() => {
+                          task.starHover = true
+                        }}
+                        onMouseleave={() => {
+                          task.starHover = false
+                        }}
+                        onClick={() => handleCollection(task)}
+                      >
+                        <NIcon
+                          size='20'
+                          color={
+                            task.collection || task.starHover
+                              ? '#288FFF'
+                              : '#ccc'
+                          }
+                        >
+                          {task.collection ? <StarFilled /> : <StarOutlined />}
+                        </NIcon>
+                      </div>
+                    </div>
+                  ))
+                }
+              }}
+            ></NCollapseItem>
+          )}
+          {variables.di.length > 0 && (
+            <NCollapseItem
+              title={t('project.menu.di')}
+              name='4'
+              class='task-cate-di'
+              v-slots={{
+                default: () => {
+                  return variables.di.map((task: any) => (
+                    <div
+                      class={[styles.draggable, `task-item-${task.type}`]}
+                      draggable='true'
+                      onDragstart={(e) => {
+                        context.emit('dragStart', e, task.type as TaskType)
+                      }}
+                    >
+                      <em
+                        class={[
+                          styles['sidebar-icon'],
+                          styles['icon-' + task.type.toLocaleLowerCase()]
+                        ]}
+                      />
+                      <span>{task.taskType}</span>
+                      <div
+                        class={styles.stars}
+                        onMouseenter={() => {
+                          task.starHover = true
+                        }}
+                        onMouseleave={() => {
+                          task.starHover = false
+                        }}
+                        onClick={() => handleCollection(task)}
+                      >
+                        <NIcon
+                          size='20'
+                          color={
+                            task.collection || task.starHover
+                              ? '#288FFF'
+                              : '#ccc'
+                          }
+                        >
+                          {task.collection ? <StarFilled /> : <StarOutlined />}
+                        </NIcon>
+                      </div>
+                    </div>
+                  ))
+                }
+              }}
+            ></NCollapseItem>
+          )}
+          {variables.dc.length > 0 && (
+            <NCollapseItem
+              title={t('project.menu.dc')}
+              name='5'
+              class='task-cate-dc'
+              v-slots={{
+                default: () => {
+                  return variables.dc.map((group: any) => {
+                    if (group.taskType === 'seatunnel_compute_group') {
+                      return (
+                        <NCollapse default-expanded-names={['SEATUNNEL_COMPUTE']}>
+                          <NCollapseItem
+                            title={group.taskName}
+                            name='SEATUNNEL_COMPUTE'
+                            v-slots={{
+                              default: () =>
+                                (group.children || []).map((task: any) => {
+                                  if (task.leaf && task.type === 'SEATUNNEL_COMPUTE') {
+                                    return (
                                       <div
-                                        class={[styles.draggable, `task-item-${stask.type}`]}
+                                        class={[
+                                          styles.draggable,
+                                          `task-item-${task.type}`
+                                        ]}
                                         draggable='true'
                                         onDragstart={(e) => {
-                                          e.stopPropagation();
-                                          context.emit('dragStart', e, stask.type as TaskType, stask.taskName);
+                                          context.emit(
+                                            'dragStart',
+                                            e,
+                                            task.type as TaskType
+                                          )
                                         }}
                                       >
-                                        <em
-                                          class={[
-                                            styles['sidebar-icon'],
-                                            styles['icon-' + stask.type.toLocaleLowerCase()]
-                                          ]}
-                                        />
-                                        <span>{stask.taskName}</span>
-                                        <div
-                                          class={styles.stars}
-                                          onMouseenter={() => {
-                                            stask.starHover = true
-                                          }}
-                                          onMouseleave={() => {
-                                            stask.starHover = false
-                                          }}
-                                          onClick={() => handleCollection(stask)}
-                                        >
-                                          <NIcon
-                                            size='20'
-                                            color={
-                                              stask.collection || stask.starHover
-                                                ? '#288FFF'
-                                                : '#ccc'
-                                            }
-                                          >
-                                            {stask.collection ? <StarFilled /> : <StarOutlined />}
-                                          </NIcon>
-                                        </div>
+                                        {renderSidebarIcon('SEATUNNEL_COMPUTE')}
+                                        <span>{task.taskName || task.taskType}</span>
+                                        {renderStar(task)}
                                       </div>
-                                    ))
+                                    )
                                   }
-                                </NCollapseItem>
-                            </NCollapse>
-                          )
-                        }
-                    })
-                    }
-                  }}
-                ></NCollapseItem>
-              )
-            } else {
-              return (
-                <NCollapseItem
-                  title={taskName}
-                  name={taskType}
-                  v-slots={{
-                    default: () => {
-                      return children.map((task: any) => (
-                        <div
-                          class={[styles.draggable, `task-item-${task.type}`]}
-                          draggable='true'
-                          onDragstart={(e) => {
-                            context.emit('dragStart', e, task.type as TaskType, task.taskName)
-                          }}
-                        >
-                          <em
-                            class={[
-                              styles['sidebar-icon'],
-                              styles['icon-' + task.type.toLocaleLowerCase()]
-                            ]}
+                                  return (
+                                    <NCollapse>
+                                      <NCollapseItem
+                                        title={task.taskName}
+                                        name={task.taskType}
+                                        style='margin-left: 8px; border-top: 1px solid rgba(0,0,0,0.08); padding: 4px 0;'
+                                      >
+                                        <div class={styles.stConnectorGrid}>
+                                          {(task.children || []).map(
+                                            (stask: any) => (
+                                              <div
+                                                class={[
+                                                  styles.draggable,
+                                                  `task-item-${stask.type}`
+                                                ]}
+                                                draggable='true'
+                                                title={stask.taskName}
+                                                onDragstart={(e) => {
+                                                  e.stopPropagation()
+                                                  context.emit(
+                                                    'dragStart',
+                                                    e,
+                                                    stask.type as TaskType
+                                                  )
+                                                }}
+                                              >
+                                                {renderSidebarIcon(
+                                                  String(stask.type)
+                                                )}
+                                                <span>{stask.taskName}</span>
+                                                {renderStar(stask)}
+                                              </div>
+                                            )
+                                          )}
+                                        </div>
+                                      </NCollapseItem>
+                                    </NCollapse>
+                                  )
+                                })
+                            }}
                           />
-                          <span>{task.taskName}</span>
-                          <div
-                            class={styles.stars}
-                            onMouseenter={() => {
-                              task.starHover = true
-                            }}
-                            onMouseleave={() => {
-                              task.starHover = false
-                            }}
-                            onClick={() => handleCollection(task)}
-                          >
-                            <NIcon
-                              size='20'
-                              color={
-                                task.collection || task.starHover
-                                  ? '#288FFF'
-                                  : '#ccc'
-                              }
-                            >
-                              {task.collection ? <StarFilled /> : <StarOutlined />}
-                            </NIcon>
-                          </div>
-                        </div>
-                      ))
+                        </NCollapse>
+                      )
                     }
-                  }}
-                ></NCollapseItem>
-              )
-            }
-          })}
-
+                    return (
+                      <div
+                        class={[styles.draggable, `task-item-${group.type}`]}
+                        draggable='true'
+                        onDragstart={(e) => {
+                          context.emit('dragStart', e, group.type as TaskType)
+                        }}
+                      >
+                        {renderSidebarIcon(String(group.type || group.taskType))}
+                        <span>{group.taskType}</span>
+                        {renderStar(group)}
+                      </div>
+                    )
+                  })
+                }
+              }}
+            ></NCollapseItem>
+          )}
+          {variables.ml.length > 0 && (
+            <NCollapseItem
+              title={t('project.menu.ml')}
+              name='6'
+              class='task-cate-ml'
+              v-slots={{
+                default: () => {
+                  return variables.ml.map((task: any) => (
+                    <div
+                      class={[styles.draggable, `task-item-${task.type}`]}
+                      draggable='true'
+                      onDragstart={(e) => {
+                        context.emit('dragStart', e, task.type as TaskType)
+                      }}
+                    >
+                      <em
+                        class={[
+                          styles['sidebar-icon'],
+                          styles['icon-' + task.type.toLocaleLowerCase()]
+                        ]}
+                      />
+                      <span>{task.taskType}</span>
+                      <div
+                        class={styles.stars}
+                        onMouseenter={() => {
+                          task.starHover = true
+                        }}
+                        onMouseleave={() => {
+                          task.starHover = false
+                        }}
+                        onClick={() => handleCollection(task)}
+                      >
+                        <NIcon
+                          size='20'
+                          color={
+                            task.collection || task.starHover
+                              ? '#288FFF'
+                              : '#ccc'
+                          }
+                        >
+                          {task.collection ? <StarFilled /> : <StarOutlined />}
+                        </NIcon>
+                      </div>
+                    </div>
+                  ))
+                }
+              }}
+            ></NCollapseItem>
+          )}
+          {variables.other.length > 0 && (
+            <NCollapseItem
+              title={t('project.menu.other')}
+              name='7'
+              class='task-cate-other'
+              v-slots={{
+                default: () => {
+                  return variables.other.map((task: any) => (
+                    <div
+                      class={[styles.draggable, `task-item-${task.type}`]}
+                      draggable='true'
+                      onDragstart={(e) => {
+                        context.emit('dragStart', e, task.type as TaskType)
+                      }}
+                    >
+                      <em
+                        class={[
+                          styles['sidebar-icon'],
+                          styles['icon-' + task.type.toLocaleLowerCase()]
+                        ]}
+                      />
+                      <span>{task.taskType}</span>
+                      <div
+                        class={styles.stars}
+                        onMouseenter={() => {
+                          task.starHover = true
+                        }}
+                        onMouseleave={() => {
+                          task.starHover = false
+                        }}
+                        onClick={() => handleCollection(task)}
+                      >
+                        <NIcon
+                          size='20'
+                          color={
+                            task.collection || task.starHover
+                              ? '#288FFF'
+                              : '#ccc'
+                          }
+                        >
+                          {task.collection ? <StarFilled /> : <StarOutlined />}
+                        </NIcon>
+                      </div>
+                    </div>
+                  ))
+                }
+              }}
+            ></NCollapseItem>
+          )}
         </NCollapse>
+        </div>
+        <div
+          class={[
+            styles['sidebar-resizer'],
+            resizing.value ? styles['sidebar-resizer-active'] : null
+          ]}
+          title='拖拽调整宽度'
+          onMousedown={startResize}
+        />
       </div>
     )
   }

@@ -19,21 +19,22 @@
 package org.apache.seatunnel.connectors.seatunnel.jdbc;
 
 import org.apache.seatunnel.shade.com.google.common.collect.Lists;
+import org.apache.seatunnel.shade.org.apache.commons.lang3.tuple.Pair;
 
 import org.apache.seatunnel.api.table.type.SeaTunnelRow;
 import org.apache.seatunnel.common.exception.SeaTunnelRuntimeException;
 
-import org.apache.commons.lang3.tuple.Pair;
-
 import org.testcontainers.containers.Db2Container;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
+import org.testcontainers.containers.wait.strategy.LogMessageWaitStrategy;
 import org.testcontainers.utility.DockerLoggerFactory;
 
 import java.math.BigDecimal;
 import java.sql.Date;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -55,8 +56,11 @@ public class JdbcDb2IT extends AbstractJdbcIT {
     private static final List<String> CONFIG_FILE =
             Lists.newArrayList("/jdbc_db2_source_and_sink.conf");
 
-    /** <a href="https://hub.docker.com/r/ibmcom/db2">db2 in dockerhub</a> */
-    private static final String DB2_IMAGE = "ibmcom/db2";
+    /**
+     * Keep the tag aligned with Testcontainers' validated default instead of relying on {@code
+     * latest}, whose startup behavior is not stable enough for CI.
+     */
+    private static final String DB2_IMAGE = "ibmcom/db2:11.5.0.0a";
 
     private static final int PORT = 50000;
     private static final int LOCAL_PORT = 50000;
@@ -83,7 +87,8 @@ public class JdbcDb2IT extends AbstractJdbcIT {
                     + "    C_VARCHAR          VARCHAR(255),\n"
                     + "    C_BINARY           BINARY(1),\n"
                     + "    C_VARBINARY        VARBINARY(2048),\n"
-                    + "    C_DATE             DATE\n"
+                    + "    C_DATE             DATE,\n"
+                    + "    \"c_int_2\"             INTEGER\n"
                     + ");\n";
 
     @Override
@@ -111,15 +116,11 @@ public class JdbcDb2IT extends AbstractJdbcIT {
                 .sourceTable(DB2_SOURCE)
                 .sinkTable(DB2_SINK)
                 .createSql(CREATE_SQL)
+                .sinkCreateSql(CREATE_SQL)
                 .configFile(CONFIG_FILE)
                 .insertSql(insertSql)
                 .testData(testDataSet)
                 .build();
-    }
-
-    @Override
-    String driverUrl() {
-        return "https://repo1.maven.org/maven2/com/ibm/db2/jcc/db2jcc/db2jcc4/db2jcc-db2jcc4.jar";
     }
 
     @Override
@@ -143,6 +144,7 @@ public class JdbcDb2IT extends AbstractJdbcIT {
             "C_BINARY",
             "C_VARBINARY",
             "C_DATE",
+            "c_int_2"
         };
 
         List<SeaTunnelRow> rows = new ArrayList<>();
@@ -168,6 +170,7 @@ public class JdbcDb2IT extends AbstractJdbcIT {
                                 "f".getBytes(),
                                 "test".getBytes(),
                                 Date.valueOf(LocalDate.now()),
+                                i,
                             });
             rows.add(row);
         }
@@ -176,6 +179,8 @@ public class JdbcDb2IT extends AbstractJdbcIT {
 
     @Override
     protected GenericContainer<?> initContainer() {
+        // The DB2 port becomes reachable before the instance can accept JDBC logins, and the
+        // first-time initialization regularly exceeds the default 10 minute wait on slow runners.
         GenericContainer<?> container =
                 new Db2Container(DB2_IMAGE)
                         .withExposedPorts(PORT)
@@ -184,11 +189,13 @@ public class JdbcDb2IT extends AbstractJdbcIT {
                         .withDatabaseName(DB2_DATABASE)
                         .withUsername(DB2_USER)
                         .withPassword(DB2_PASSWORD)
+                        .waitingFor(
+                                new LogMessageWaitStrategy()
+                                        .withRegEx(".*Setup has completed\\..*")
+                                        .withStartupTimeout(Duration.ofMinutes(20)))
                         .withLogConsumer(
                                 new Slf4jLogConsumer(DockerLoggerFactory.getLogger(DB2_IMAGE)))
                         .acceptLicense();
-        container.setPortBindings(Lists.newArrayList(String.format("%s:%s", LOCAL_PORT, PORT)));
-
         return container;
     }
 

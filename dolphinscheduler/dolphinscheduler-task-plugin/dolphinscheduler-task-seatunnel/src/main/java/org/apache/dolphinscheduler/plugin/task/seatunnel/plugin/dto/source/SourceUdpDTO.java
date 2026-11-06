@@ -1,7 +1,7 @@
 package org.apache.dolphinscheduler.plugin.task.seatunnel.plugin.dto.source;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -23,16 +23,30 @@ public class SourceUdpDTO extends BaseSeatunnelSourceDTO {
     private Boolean replyEnabled;
     private String replyMessage;
     private String format;
-    /** none | js | offset_table */
+    /** none | js | offset_table | custom | string | bytes */
     private String parseMode;
+    /** skip | fail — 单包解析失败时跳过或作业失败 */
+    private String parseErrorHandleWay;
+    /** FQCN of PacketCodec / PacketCodecProvider when parseMode=custom */
+    private String decoderClass;
+    /** SPI PacketCodecProvider name (string / bytes / custom) */
+    private String decoderName;
+    /** Built-in string/bytes codecs also emit packet meta */
+    private Boolean decoderIncludeMeta;
+    /** netty (default) | jdk */
+    private String transport;
+    private Integer workerThreads;
+    private Integer receiveQueueSize;
+    private Integer soRcvBuf;
     private String scriptPath;
     private String scriptContent;
     private String offsetTable;
     private String offsetTablePath;
     /**
-     * UI/UDF 引用名（不写入 SeaTunnel conf），对应 {@code $SEATUNNEL_HOME/udf/udp-codec/} 下文件。
+     * UI/UDF 引用名：从 taskParams 反序列化，解析路径后清空，不写入 SeaTunnel conf。
+     * 对应 {@code $SEATUNNEL_HOME/udf/udp-codec/} 下文件。
      */
-    @JsonIgnore
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String udfName;
     /**
      * 前台使用的数据

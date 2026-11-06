@@ -20,7 +20,7 @@ import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { bytesToSize } from '@/common/common'
 import TableAction from './table-action'
-import { CustomResourceType, IRenameResource, IReuploadResource, ResourceType } from '../types'
+import { IRenameResource, IReuploadResource, ResourceType } from '../types'
 import ButtonLink from '@/components/button-link'
 import { NEllipsis } from 'naive-ui'
 import {
@@ -35,10 +35,7 @@ import { defineStore } from 'pinia'
 const goSubFolder = (router: Router, item: any) => {
   if (item.directory) {
     router.push({
-      name:
-        item.type === 'UDF'
-          ? 'resource-sub-manage'
-          : 'resource-file-subdirectory',
+      name: 'resource-file-subdirectory',
       query: { prefix: item.fullName, tenantCode: item.user_name }
     })
   } else if (item.type === 'FILE') {
@@ -58,10 +55,6 @@ export function useTable() {
     fullName: ref(String(router.currentRoute.value.query.prefix || '')),
     tenantCode: ref(String(router.currentRoute.value.query.tenantCode || '')),
     resourceType: ref<ResourceType>(),
-    //增加
-    customResourceType: ref<CustomResourceType>(),
-    isShowMutiSelect:ref(true),
-
     resourceList: ref(),
     folderShowRef: ref(false),
     uploadShowRef: ref(false),
@@ -78,9 +71,7 @@ export function useTable() {
       name: '',
       description: '',
       fullName: '',
-      user_name: '',
-      //增加字段
-      customType: '',
+      user_name: ''
     }),
     pagination: ref({
       page: 1,
@@ -121,25 +112,6 @@ export function useTable() {
               )
         }
       },
-
-      //增加资源类型列
-      {
-        title: t('resource.file.type'),
-        key: 'customType',
-        ...COLUMN_WIDTH_CONFIG['type'],
-        render: (row: any) => {
-          //console.log(row)
-          if (!row.directory) {
-            if (row.customType === 'HIVE') return t('resource.file.type_hive')
-            if (row.customType === 'SEATUNNEL') return t('resource.file.type_seatunnel')
-            // 默认返回未知类型
-            return t('resource.file.type_unknow')
-          }
-          return t('resource.file.type_file')
-        }
-      },
-
-
       {
         title: t('resource.file.tenant_name'),
         ...COLUMN_WIDTH_CONFIG['userName'],
@@ -179,15 +151,13 @@ export function useTable() {
         render: (row: any) =>
           h(TableAction, {
             row,
-            onReuploadResource: (name, description, fullName, user_name ,customType) =>
-              reuploadResource(name, description, fullName, user_name,customType),
+            onReuploadResource: (name, description, fullName, user_name) =>
+              reuploadResource(name, description, fullName, user_name),
             onRenameResource: (name, description, fullName, user_name) =>
               renameResource(name, description, fullName, user_name),
             onUpdateList: () => updateList()
           }),
-        ...COLUMN_WIDTH_CONFIG['operation'](
-          variables.resourceType === 'UDF' ? 4 : 5
-        )
+        ...COLUMN_WIDTH_CONFIG['operation'](5)
       }
     ]
   }
@@ -205,15 +175,13 @@ export function useTable() {
     name,
     description,
     fullName,
-    user_name,
-    customType,
+    user_name
   ) => {
     variables.reuploadInfo = {
       name: name,
       description: description,
       fullName: fullName,
-      user_name: user_name,
-      customType: customType,
+      user_name: user_name
     }
     variables.isReupload = true
     variables.uploadShowRef = true
@@ -241,11 +209,8 @@ export function useTable() {
   const { getResourceListState } = useFileState(setPagination)
   const detailPageStore = useDetailPageStore()
 
-  //增加返回字段
   const requestData = () => {
     variables.resourceList = getResourceListState(
-      //空值 如果有需求在该
-      <"HIVE" | "SEATUNNEL">'',
       variables.resourceType!,
       variables.fullName,
       variables.tenantCode,
@@ -278,10 +243,8 @@ export function useTable() {
 export const useDetailPageStore = defineStore('detailPage', {
   state: () => {
     let resourceTypeInitValue: ResourceType
-    let customResourceTypeInitValue: 'HIVE' | 'SEATUNNEL'
     return {
       resourceType: resourceTypeInitValue!,
-      customResourceType: customResourceTypeInitValue!,
       fullName: '',
       tenantCode: '',
       searchValue: '',
@@ -292,9 +255,6 @@ export const useDetailPageStore = defineStore('detailPage', {
   getters: {
     getResourceType(): ResourceType {
       return this.resourceType
-    },
-    getCustomResourceType(): 'HIVE' | 'SEATUNNEL' {
-      return this.customResourceType
     },
     getFullName(): string {
       return this.fullName
@@ -313,9 +273,6 @@ export const useDetailPageStore = defineStore('detailPage', {
     }
   },
   actions: {
-    setCustomResourceType(customResourceTypeValue: 'HIVE' | 'SEATUNNEL') {
-      this.customResourceType = customResourceTypeValue
-    },
     setResourceType(resourceTypeValue: ResourceType) {
       this.resourceType = resourceTypeValue
     },

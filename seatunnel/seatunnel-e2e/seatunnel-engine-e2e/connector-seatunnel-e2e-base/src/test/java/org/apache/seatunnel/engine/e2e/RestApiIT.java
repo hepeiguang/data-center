@@ -20,11 +20,16 @@ package org.apache.seatunnel.engine.e2e;
 import org.apache.seatunnel.engine.client.SeaTunnelClient;
 import org.apache.seatunnel.engine.client.job.ClientJobExecutionEnvironment;
 import org.apache.seatunnel.engine.client.job.ClientJobProxy;
+import org.apache.seatunnel.engine.common.Constant;
 import org.apache.seatunnel.engine.common.config.ConfigProvider;
 import org.apache.seatunnel.engine.common.config.JobConfig;
 import org.apache.seatunnel.engine.common.config.SeaTunnelConfig;
-import org.apache.seatunnel.engine.core.job.JobStatus;
+import org.apache.seatunnel.engine.common.job.JobStatus;
+import org.apache.seatunnel.engine.core.checkpoint.CheckpointType;
+import org.apache.seatunnel.engine.server.SeaTunnelServer;
 import org.apache.seatunnel.engine.server.SeaTunnelServerStarter;
+import org.apache.seatunnel.engine.server.checkpoint.CheckpointCloseReason;
+import org.apache.seatunnel.engine.server.checkpoint.monitor.CheckpointMonitorService;
 import org.apache.seatunnel.engine.server.rest.RestConstant;
 
 import org.apache.logging.log4j.LogManager;
@@ -40,13 +45,20 @@ import com.hazelcast.client.config.ClientConfig;
 import com.hazelcast.config.Config;
 import com.hazelcast.config.MemberAttributeConfig;
 import com.hazelcast.instance.impl.HazelcastInstanceImpl;
+import com.hazelcast.instance.impl.Node;
+import io.restassured.common.mapper.TypeRef;
 import lombok.extern.slf4j.Slf4j;
 
+import java.lang.reflect.Field;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -55,6 +67,7 @@ import static org.apache.seatunnel.e2e.common.util.ContainerUtil.PROJECT_ROOT_PA
 import static org.apache.seatunnel.engine.server.rest.RestConstant.CONTEXT_PATH;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasKey;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.lessThan;
@@ -80,6 +93,8 @@ public class RestApiIT {
     private static SeaTunnelConfig node2Config;
 
     private static Map<Integer, Integer> ports;
+
+    private static CheckpointMonitorService checkpointMonitorService;
 
     @BeforeEach
     void beforeClass() throws Exception {
@@ -112,6 +127,8 @@ public class RestApiIT {
         node2Config.getEngineConfig().getSlotServiceConfig().setSlotNum(20);
         node2Config.setHazelcastConfig(node2hzconfig);
         node2 = SeaTunnelServerStarter.createHazelcastInstance(node2Config);
+
+        checkpointMonitorService = resolveCheckpointMonitorService(node1);
 
         String filePath = TestUtils.getResource("stream_fakesource_to_file.conf");
         JobConfig jobConfig = new JobConfig();
@@ -228,6 +245,124 @@ public class RestApiIT {
                                             verifyLogLink(logListV1);
                                             verifyLogLink(logListV2);
                                         }));
+    }
+
+    @Test
+    public void testLoggers() {
+        String loggersUrl =
+                HOST
+                        + node1Config.getEngineConfig().getHttpConfig().getPort()
+                        + node1Config.getEngineConfig().getHttpConfig().getContextPath()
+                        + RestConstant.REST_URL_LOGGERS;
+        // a logger of this test only, so that changing its level cannot hide job logs
+        String logger = "org.apache.seatunnel.engine.e2e.RestApiIT.loggers";
+
+        // the list reports every configured logger, the root logger included
+        given().get(loggersUrl)
+                .then()
+                .statusCode(200)
+                .body("node", notNullValue())
+                .body("loggers.name", hasItem("root"));
+
+        given().get(loggersUrl + "/root")
+                .then()
+                .statusCode(200)
+                .body("name", equalTo("root"))
+                .body("level", notNullValue())
+                .body("origin", equalTo("file"));
+
+        // an unknown level is rejected instead of being reported as applied
+        given().post(loggersUrl + "/" + logger + "?level=DEBUGG")
+                .then()
+                .statusCode(400)
+                .body("message", containsString("valid levels are"));
+
+        // a request without a level does not silently do nothing either
+        given().post(loggersUrl + "/" + logger)
+                .then()
+                .statusCode(400)
+                .body("message", containsString("level is required"));
+
+        given().post(loggersUrl + "?level=DEBUG")
+                .then()
+                .statusCode(400)
+                .body("message", containsString("logger name"));
+
+        given().get(loggersUrl + "?scope=galaxy")
+                .then()
+                .statusCode(400)
+                .body("message", containsString("valid scopes are"));
+
+        // the level is applied and reported as a runtime override, not as the file level
+        given().body("{\"level\":\"debug\"}")
+                .post(loggersUrl + "/" + logger)
+                .then()
+                .statusCode(200)
+                .body("status", equalTo("SUCCESS"))
+                .body("name", equalTo(logger))
+                .body("level", equalTo("DEBUG"))
+                .body("origin", equalTo("runtime-override"));
+
+        given().get(loggersUrl + "/" + logger)
+                .then()
+                .statusCode(200)
+                .body("level", equalTo("DEBUG"))
+                .body("origin", equalTo("runtime-override"));
+
+        // and the override can be reverted, which the legacy log-level endpoint cannot do
+        given().delete(loggersUrl + "/" + logger)
+                .then()
+                .statusCode(200)
+                .body("status", equalTo("SUCCESS"))
+                .body("previousLevel", equalTo("DEBUG"))
+                .body("origin", equalTo("file"));
+
+        given().delete(loggersUrl + "/" + logger)
+                .then()
+                .statusCode(200)
+                .body("status", equalTo("NO_OVERRIDE"));
+
+        // the cluster scope answers for every member
+        given().get(loggersUrl + "?scope=cluster")
+                .then()
+                .statusCode(200)
+                .body("scope", equalTo("cluster"))
+                .body("status", equalTo("SUCCESS"))
+                .body("nodes", hasSize(ports.size()));
+
+        given().post(loggersUrl + "/" + logger + "?scope=cluster&level=TRACE")
+                .then()
+                .statusCode(200)
+                .body("scope", equalTo("cluster"))
+                .body("status", equalTo("SUCCESS"))
+                .body("level", equalTo("TRACE"))
+                .body("nodes", hasSize(ports.size()))
+                .body("nodes[0].level", equalTo("TRACE"))
+                .body("nodes[0].origin", equalTo("runtime-override"));
+
+        given().delete(loggersUrl + "/" + logger + "?scope=cluster")
+                .then()
+                .statusCode(200)
+                .body("scope", equalTo("cluster"))
+                .body("status", equalTo("SUCCESS"))
+                .body("nodes[0].origin", equalTo("file"));
+    }
+
+    private CheckpointMonitorService resolveCheckpointMonitorService(
+            HazelcastInstanceImpl instance) {
+        try {
+            Field nodeField = HazelcastInstanceImpl.class.getDeclaredField("node");
+            nodeField.setAccessible(true);
+            Node node = (Node) nodeField.get(instance);
+            SeaTunnelServer seaTunnelServer =
+                    (SeaTunnelServer)
+                            node.getNodeExtension()
+                                    .createExtensionServices()
+                                    .get(Constant.SEATUNNEL_SERVICE_NAME);
+            return seaTunnelServer.getCheckpointMonitorService();
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to resolve CheckpointMonitorService", e);
+        }
     }
 
     private static void verifyLogLink(String logListV1) {
@@ -568,10 +703,10 @@ public class RestApiIT {
                                                         "jobDag.vertexInfoMap[1].tablePaths[0]",
                                                         equalTo("fake"))
                                                 .body(
-                                                        "metrics.TableSourceReceivedCount.fake",
+                                                        "metrics.TableSourceReceivedCount.'Source[0].fake'",
                                                         equalTo("5"))
                                                 .body(
-                                                        "metrics.TableSinkWriteCount.fake",
+                                                        "metrics.TableSinkWriteCount.'Sink[0].fake'",
                                                         equalTo("5"))
                                                 .body("metrics.SinkWriteCount", equalTo("5"))
                                                 .body("metrics.SourceReceivedCount", equalTo("5"))
@@ -634,13 +769,14 @@ public class RestApiIT {
                                                         "jobDag.vertexInfoMap[1].tablePaths[0]",
                                                         equalTo("fake"))
                                                 .body(
-                                                        "metrics.TableSourceReceivedCount.fake",
+                                                        "metrics.TableSourceReceivedCount.'Source[0].fake'",
                                                         equalTo("5"))
                                                 .body(
-                                                        "metrics.TableSinkWriteCount.fake",
+                                                        "metrics.TableSinkWriteCount.'Sink[0].fake'",
                                                         equalTo("5"))
                                                 .body("metrics.SinkWriteCount", equalTo("5"))
                                                 .body("metrics.SourceReceivedCount", equalTo("5"))
+                                                .body("metrics.IntermediateQueueSize", equalTo("0"))
                                                 .body(
                                                         "jobDag.envOptions.'job.mode'",
                                                         equalTo("BATCH"))
@@ -648,6 +784,40 @@ public class RestApiIT {
                                                 .body("jobStatus", equalTo("FINISHED"));
                                     });
                         });
+    }
+
+    @Test
+    public void testGetJobDiagnosticsOfRunningJob() {
+        // the diagnostics of a running job must be identical no matter which member serves the
+        // request: the master builds them locally, other members fetch them from the master
+        ports.forEach(
+                (key, value) ->
+                        given().get(
+                                        HOST
+                                                + value
+                                                + node1Config
+                                                        .getEngineConfig()
+                                                        .getHttpConfig()
+                                                        .getContextPath()
+                                                + RestConstant.REST_URL_JOB_INFO
+                                                + "/"
+                                                + clientJobProxy.getJobId())
+                                .then()
+                                .statusCode(200)
+                                .body("jobStatus", equalTo("RUNNING"))
+                                .body(
+                                        "diagnostics.jobId",
+                                        equalTo(Long.toString(clientJobProxy.getJobId())))
+                                .body("diagnostics.generatedAt", notNullValue())
+                                .body("diagnostics.stateTimestamps.RUNNING", notNullValue())
+                                .body("diagnostics.pipelines", hasSize(1))
+                                .body("diagnostics.pipelines[0].pipelineId", equalTo(1))
+                                .body("diagnostics.pipelines[0].pipelineStatus", equalTo("RUNNING"))
+                                .body("diagnostics.pipelines[0].restoreCount", equalTo(0))
+                                .body(
+                                        "diagnostics.pipelines[0].stateTimestamps.RUNNING",
+                                        notNullValue())
+                                .body("diagnostics.totalPipelineRestoreCount", equalTo(0)));
     }
 
     @Test
@@ -666,7 +836,8 @@ public class RestApiIT {
                                                 .statusCode(200)
                                                 .body("projectVersion", notNullValue())
                                                 .body("totalSlot", equalTo("40"))
-                                                .body("workers", equalTo("2"));
+                                                .body("workers", equalTo("2"))
+                                                .body("pendingJobs", notNullValue());
                                         given().get(
                                                         HOST
                                                                 + value
@@ -679,7 +850,8 @@ public class RestApiIT {
                                                 .statusCode(200)
                                                 .body("projectVersion", notNullValue())
                                                 .body("totalSlot", equalTo("40"))
-                                                .body("workers", equalTo("2"));
+                                                .body("workers", equalTo("2"))
+                                                .body("pendingJobs", notNullValue());
                                     });
                         });
     }
@@ -1021,6 +1193,277 @@ public class RestApiIT {
                         });
     }
 
+    @Test
+    public void testSubmitJobWithSqlFormat() {
+        String sqlConfig =
+                "/* config\n"
+                        + "env {\n"
+                        + "  parallelism = 1\n"
+                        + "  job.mode = \"BATCH\"\n"
+                        + "}\n"
+                        + "*/\n"
+                        + "\n"
+                        + "CREATE TABLE test_source (\n"
+                        + "    id INT,\n"
+                        + "    name STRING,\n"
+                        + "    c_time TIMESTAMP\n"
+                        + ") WITH (\n"
+                        + "    'connector' = 'FakeSource',\n"
+                        + "    'schema' = '{ \n"
+                        + "      fields { \n"
+                        + "        id = \"int\", \n"
+                        + "        name = \"string\",\n"
+                        + "        c_time = \"timestamp\"\n"
+                        + "      } \n"
+                        + "    }',\n"
+                        + "    'rows' = '[ \n"
+                        + "      { fields = [1, \"test\", null], kind = INSERT }\n"
+                        + "    ]',\n"
+                        + "    'type' = 'source'\n"
+                        + ");\n"
+                        + "\n"
+                        + "CREATE TABLE test_sink (\n"
+                        + "    id INT,\n"
+                        + "    name STRING,\n"
+                        + "    c_time TIMESTAMP\n"
+                        + ") WITH (\n"
+                        + "    'connector' = 'Console',\n"
+                        + "    'type' = 'sink'\n"
+                        + ");\n"
+                        + "\n"
+                        + "INSERT INTO test_sink SELECT * FROM test_source;";
+
+        Arrays.asList(node2, node1)
+                .forEach(
+                        instance -> {
+                            ports.forEach(
+                                    (key, value) -> {
+                                        given().body(sqlConfig)
+                                                .queryParam("format", "sql")
+                                                .queryParam("jobName", "test-sql-job")
+                                                .post(HOST + key + CONTEXT_PATH + "/submit-job")
+                                                .then()
+                                                .statusCode(200)
+                                                .body("jobId", notNullValue())
+                                                .body("jobName", equalTo("test-sql-job"));
+                                    });
+                        });
+    }
+
+    @Test
+    public void testSubmitJobWithJsonFormat() {
+        String jsonConfig =
+                "{\n"
+                        + "    \"env\": {\n"
+                        + "        \"parallelism\": 1,\n"
+                        + "        \"job.mode\": \"BATCH\"\n"
+                        + "    },\n"
+                        + "    \"source\": [\n"
+                        + "        {\n"
+                        + "            \"plugin_name\": \"FakeSource\",\n"
+                        + "            \"plugin_output\": \"fake\",\n"
+                        + "            \"row.num\": 2,\n"
+                        + "            \"schema\": {\n"
+                        + "                \"fields\": {\n"
+                        + "                    \"name\": \"string\",\n"
+                        + "                    \"age\": \"int\"\n"
+                        + "                }\n"
+                        + "            }\n"
+                        + "        }\n"
+                        + "    ],\n"
+                        + "    \"sink\": [\n"
+                        + "        {\n"
+                        + "            \"plugin_name\": \"Console\",\n"
+                        + "            \"plugin_input\": [\"fake\"]\n"
+                        + "        }\n"
+                        + "    ]\n"
+                        + "}";
+
+        Arrays.asList(node2, node1)
+                .forEach(
+                        instance -> {
+                            ports.forEach(
+                                    (key, value) -> {
+                                        given().body(jsonConfig)
+                                                .queryParam("jobName", "test-json-job")
+                                                .post(HOST + key + CONTEXT_PATH + "/submit-job")
+                                                .then()
+                                                .statusCode(200)
+                                                .body("jobId", notNullValue())
+                                                .body("jobName", equalTo("test-json-job"));
+                                    });
+                        });
+    }
+
+    @Test
+    public void testSubmitJobWithHoconFormat() {
+        String hoconConfig =
+                "env {\n"
+                        + "  parallelism = 1\n"
+                        + "  job.mode = \"BATCH\"\n"
+                        + "}\n"
+                        + "\n"
+                        + "source {\n"
+                        + "  FakeSource {\n"
+                        + "    plugin_output = \"fake\"\n"
+                        + "    row.num = 2\n"
+                        + "    schema = {\n"
+                        + "      fields {\n"
+                        + "        name = \"string\"\n"
+                        + "        age = \"int\"\n"
+                        + "      }\n"
+                        + "    }\n"
+                        + "  }\n"
+                        + "}\n"
+                        + "\n"
+                        + "sink {\n"
+                        + "  Console {\n"
+                        + "    plugin_input = \"fake\"\n"
+                        + "  }\n"
+                        + "}";
+
+        Arrays.asList(node2, node1)
+                .forEach(
+                        instance -> {
+                            ports.forEach(
+                                    (key, value) -> {
+                                        given().body(hoconConfig)
+                                                .queryParam("format", "hocon")
+                                                .queryParam("jobName", "test-hocon-job")
+                                                .post(HOST + key + CONTEXT_PATH + "/submit-job")
+                                                .then()
+                                                .statusCode(200)
+                                                .body("jobId", notNullValue())
+                                                .body("jobName", equalTo("test-hocon-job"));
+                                    });
+                        });
+    }
+
+    @Test
+    public void testCheckpointOverviewAndHistoryApi() {
+        long jobId = clientJobProxy.getJobId();
+        List<Integer> httpPorts = new ArrayList<>(ports.values());
+
+        AtomicReference<Map<String, Object>> overviewRef = new AtomicReference<>();
+        Awaitility.await()
+                .atMost(2, TimeUnit.MINUTES)
+                .until(
+                        () -> {
+                            Map<String, Object> overview =
+                                    getCheckpointOverview(
+                                            jobId, buildHttpBaseUrl(httpPorts.get(0)));
+                            List<Map<String, Object>> pipelines =
+                                    castList(overview.get("pipelines"));
+                            if (pipelines.isEmpty()) {
+                                return false;
+                            }
+                            Map<String, Object> pipeline = pipelines.get(0);
+                            Map<String, Object> counts = castMap(pipeline.get("counts"));
+                            if (counts.isEmpty()) {
+                                return false;
+                            }
+                            if (getLong(counts, "completed") > 0L) {
+                                overviewRef.set(overview);
+                                return true;
+                            }
+                            return false;
+                        });
+
+        Map<String, Object> latestOverview = overviewRef.get();
+        Assertions.assertNotNull(
+                latestOverview, "Failed to fetch checkpoint overview with completed counts");
+        List<Map<String, Object>> pipelines = castList(latestOverview.get("pipelines"));
+        Assertions.assertFalse(
+                pipelines.isEmpty(), "Checkpoint overview does not contain any pipelines");
+        Map<String, Object> pipeline = pipelines.get(0);
+        int pipelineId = ((Number) pipeline.get("pipelineId")).intValue();
+        Map<String, Object> counts = castMap(pipeline.get("counts"));
+        Assertions.assertFalse(counts.isEmpty(), "Checkpoint overview missing count metrics");
+        Assertions.assertTrue(getLong(counts, "triggered") >= 1L);
+        Assertions.assertTrue(getLong(counts, "completed") >= 1L);
+        Assertions.assertEquals(0L, getLong(counts, "failed"));
+
+        long failedCheckpointId = System.currentTimeMillis();
+        checkpointMonitorService.onCheckpointFailed(
+                jobId,
+                pipelineId,
+                failedCheckpointId,
+                CheckpointType.CHECKPOINT_TYPE,
+                CheckpointCloseReason.CHECKPOINT_EXPIRED,
+                new RuntimeException("mock failure"),
+                System.currentTimeMillis());
+        long inProgressCheckpointId = failedCheckpointId + 1;
+        checkpointMonitorService.onCheckpointTriggered(
+                jobId,
+                pipelineId,
+                inProgressCheckpointId,
+                CheckpointType.CHECKPOINT_TYPE,
+                System.currentTimeMillis(),
+                4);
+        checkpointMonitorService.onCheckpointAcknowledge(
+                jobId, pipelineId, inProgressCheckpointId, 2, 4);
+        checkpointMonitorService.onPipelineRestored(jobId, pipelineId);
+
+        httpPorts.stream()
+                .map(this::buildHttpBaseUrl)
+                .forEach(
+                        baseUrl ->
+                                Awaitility.await()
+                                        .atMost(30, TimeUnit.SECONDS)
+                                        .untilAsserted(
+                                                () -> {
+                                                    Map<String, Object> overview =
+                                                            getCheckpointOverview(jobId, baseUrl);
+                                                    Map<String, Object> targetPipeline =
+                                                            findPipeline(overview, pipelineId);
+                                                    Map<String, Object> targetCounts =
+                                                            castMap(targetPipeline.get("counts"));
+                                                    Assertions.assertTrue(
+                                                            getLong(targetCounts, "failed") >= 1L);
+                                                    Assertions.assertTrue(
+                                                            getLong(targetCounts, "restored")
+                                                                    >= 1L);
+                                                    List<Map<String, Object>> inProgress =
+                                                            castList(
+                                                                    targetPipeline.get(
+                                                                            "inProgress"));
+                                                    Assertions.assertTrue(
+                                                            inProgress.stream()
+                                                                    .map(this::castMap)
+                                                                    .anyMatch(
+                                                                            info ->
+                                                                                    getLong(
+                                                                                                            info,
+                                                                                                            "checkpointId")
+                                                                                                    == inProgressCheckpointId
+                                                                                            && getInt(
+                                                                                                            info,
+                                                                                                            "acknowledged")
+                                                                                                    == 2
+                                                                                            && getInt(
+                                                                                                            info,
+                                                                                                            "total")
+                                                                                                    == 4));
+                                                    List<Map<String, Object>> history =
+                                                            getCheckpointHistory(
+                                                                    jobId, baseUrl, "FAILED");
+                                                    Assertions.assertTrue(
+                                                            history.stream()
+                                                                    .map(
+                                                                            record ->
+                                                                                    castMap(
+                                                                                            record
+                                                                                                    .get(
+                                                                                                            "checkpoint")))
+                                                                    .anyMatch(
+                                                                            checkpoint ->
+                                                                                    getLong(
+                                                                                                    checkpoint,
+                                                                                                    "checkpointId")
+                                                                                            == failedCheckpointId));
+                                                }));
+    }
+
     @AfterEach
     void afterClass() {
         if (engineClient != null) {
@@ -1033,5 +1476,61 @@ public class RestApiIT {
         if (node2 != null) {
             node2.shutdown();
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    private <T> List<T> castList(Object value) {
+        if (value == null) {
+            return Collections.emptyList();
+        }
+        return (List<T>) value;
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> castMap(Object value) {
+        if (value == null) {
+            return Collections.emptyMap();
+        }
+        return (Map<String, Object>) value;
+    }
+
+    private long getLong(Map<String, Object> source, String key) {
+        Object value = source.get(key);
+        return value instanceof Number ? ((Number) value).longValue() : 0L;
+    }
+
+    private int getInt(Map<String, Object> source, String key) {
+        Object value = source.get(key);
+        return value instanceof Number ? ((Number) value).intValue() : 0;
+    }
+
+    private Map<String, Object> getCheckpointOverview(long jobId, String baseUrl) {
+        return given().get(baseUrl + RestConstant.REST_URL_CHECKPOINT_OVERVIEW + "/" + jobId)
+                .then()
+                .statusCode(200)
+                .extract()
+                .as(new TypeRef<Map<String, Object>>() {});
+    }
+
+    private List<Map<String, Object>> getCheckpointHistory(
+            long jobId, String baseUrl, String status) {
+        return given().queryParam("status", status)
+                .get(baseUrl + RestConstant.REST_URL_CHECKPOINT_HISTORY + "/" + jobId)
+                .then()
+                .statusCode(200)
+                .extract()
+                .as(new TypeRef<List<Map<String, Object>>>() {});
+    }
+
+    private Map<String, Object> findPipeline(Map<String, Object> overview, int pipelineId) {
+        return castList(overview.get("pipelines")).stream()
+                .map(item -> (Map<String, Object>) item)
+                .filter(pipeline -> ((Number) pipeline.get("pipelineId")).intValue() == pipelineId)
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("Pipeline not found"));
+    }
+
+    private String buildHttpBaseUrl(int httpPort) {
+        return HOST + httpPort + node1Config.getEngineConfig().getHttpConfig().getContextPath();
     }
 }

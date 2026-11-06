@@ -17,13 +17,15 @@
 
 package org.apache.seatunnel.connectors.seatunnel.jdbc.internal;
 
+import org.apache.seatunnel.shade.org.apache.commons.lang3.StringUtils;
+
 import org.apache.seatunnel.api.table.catalog.Column;
-import org.apache.seatunnel.api.table.catalog.TablePath;
 import org.apache.seatunnel.api.table.catalog.TableSchema;
 import org.apache.seatunnel.api.table.type.SeaTunnelRow;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.config.JdbcSinkConfig;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.connection.JdbcConnectionProvider;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.converter.JdbcRowConverter;
+import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.dialect.DatabaseIdentifier;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.dialect.JdbcDialect;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.executor.BufferReducedBatchStatementExecutor;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.executor.BufferedBatchStatementExecutor;
@@ -32,8 +34,6 @@ import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.executor.FieldNam
 import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.executor.InsertOrUpdateBatchStatementExecutor;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.executor.JdbcBatchStatementExecutor;
 import org.apache.seatunnel.connectors.seatunnel.jdbc.internal.executor.SimpleBatchStatementExecutor;
-
-import org.apache.commons.lang3.StringUtils;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -61,12 +61,9 @@ public class JdbcOutputFormatBuilder {
         JdbcOutputFormat.StatementExecutorFactory statementExecutorFactory;
 
         final String database = jdbcSinkConfig.getDatabase();
-        final String table =
-                dialect.extractTableName(
-                        TablePath.of(
-                                jdbcSinkConfig.getDatabase() + "." + jdbcSinkConfig.getTable()));
-
+        final String table = jdbcSinkConfig.getTable();
         final List<String> primaryKeys = jdbcSinkConfig.getPrimaryKeys();
+        validateOracleInsertMode(dialect, jdbcSinkConfig, primaryKeys);
         if (jdbcSinkConfig.isUseCopyStatement()) {
             statementExecutorFactory =
                     () ->
@@ -85,7 +82,12 @@ public class JdbcOutputFormatBuilder {
             statementExecutorFactory =
                     () ->
                             createSimpleBufferedExecutor(
-                                    dialect, database, table, tableSchema, databaseTableSchema);
+                                    dialect,
+                                    jdbcSinkConfig,
+                                    database,
+                                    table,
+                                    tableSchema,
+                                    databaseTableSchema);
         } else {
             statementExecutorFactory =
                     () ->
@@ -109,12 +111,14 @@ public class JdbcOutputFormatBuilder {
 
     private static JdbcBatchStatementExecutor<SeaTunnelRow> createSimpleBufferedExecutor(
             JdbcDialect dialect,
+            JdbcSinkConfig jdbcSinkConfig,
             String database,
             String table,
             TableSchema tableSchema,
             TableSchema databaseTableSchema) {
         String insertSQL =
                 dialect.getInsertIntoStatement(database, table, tableSchema.getFieldNames());
+        insertSQL = applyOracleAppendValuesHintIfNeeded(jdbcSinkConfig, insertSQL);
         return createSimpleBufferedExecutor(
                 insertSQL, tableSchema, databaseTableSchema, dialect.getRowConverter());
     }
@@ -192,8 +196,7 @@ public class JdbcOutputFormatBuilder {
         }
         if (enableUpsert) {
             Optional<String> upsertSQL =
-                    dialect.getUpsertStatement(
-                            database, table, tableSchema.getFieldNames(), pkNames);
+                    dialect.getUpsertStatementByTableSchema(database, table, tableSchema, pkNames);
             if (upsertSQL.isPresent()) {
                 return createSimpleExecutor(
                         upsertSQL.get(),
@@ -350,6 +353,42 @@ public class JdbcOutputFormatBuilder {
                 tableSchema,
                 databaseTableSchema,
                 rowConverter);
+    }
+
+    static String applyOracleAppendValuesHintIfNeeded(
+            JdbcSinkConfig jdbcSinkConfig, String insertSQL) {
+        if (!isOracleAppendValuesConfigured(jdbcSinkConfig)) {
+            return insertSQL;
+        }
+        final String insertPrefix = "INSERT";
+        if (!insertSQL.regionMatches(true, 0, insertPrefix, 0, insertPrefix.length())) {
+            throw new IllegalArgumentException(
+                    "oracle_insert_mode=APPEND_VALUES only supports generated INSERT statements.");
+        }
+        String appendValuesSQL =
+                insertPrefix + " /*+ APPEND_VALUES */" + insertSQL.substring(insertPrefix.length());
+        log.info("Oracle APPEND_VALUES insert mode is enabled, generated SQL: {}", appendValuesSQL);
+        return appendValuesSQL;
+    }
+
+    private static void validateOracleInsertMode(
+            JdbcDialect dialect, JdbcSinkConfig jdbcSinkConfig, List<String> primaryKeys) {
+        if (!isOracleAppendValuesConfigured(jdbcSinkConfig)) {
+            return;
+        }
+        if (!DatabaseIdentifier.ORACLE.equals(dialect.dialectName())) {
+            throw new IllegalArgumentException(
+                    "oracle_insert_mode=APPEND_VALUES only supports Oracle JDBC sink.");
+        }
+        if (primaryKeys != null && !primaryKeys.isEmpty()) {
+            throw new IllegalArgumentException(
+                    "oracle_insert_mode=APPEND_VALUES only supports insert-only writes without primary keys.");
+        }
+    }
+
+    private static boolean isOracleAppendValuesConfigured(JdbcSinkConfig jdbcSinkConfig) {
+        return JdbcSinkConfig.OracleInsertMode.APPEND_VALUES.equals(
+                jdbcSinkConfig.getOracleInsertMode());
     }
 
     static Function<SeaTunnelRow, SeaTunnelRow> createKeyExtractor(int[] pkFields) {
