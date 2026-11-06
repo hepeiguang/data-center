@@ -202,8 +202,8 @@ export function defaultConnectorParams(
       parseMode: 'js',
       udfName: 'telemetry_struct',
       // Fallback when connector jar does not yet resolve udfName
-      scriptPath:
-        'D:/HPG/workspace/LHYF/apache-seatunnel-3.0.0/udf/udp-codec/telemetry_struct.js',
+      // R13 fix: removed hardcoded Windows developer path; use env-configurable placeholder
+      scriptPath: '${SEATUNNEL_HOME}/udf/udp-codec/telemetry_struct.js',
       parseErrorHandleWay: 'skip',
       charset: 'UTF-8',
       schema: {
@@ -228,8 +228,9 @@ export function defaultConnectorParams(
   }
   if (pluginName === 'LocalFile' && kind === 'SINK') {
     return {
-      path: 'D:/HPG/workspace/LHYF/data/udp-pipeline-out',
-      tmp_path: 'D:/HPG/workspace/LHYF/data/udp-pipeline-tmp',
+      // R13 fix: removed hardcoded Windows developer paths; use env-configurable placeholders
+      path: '${SEATUNNEL_DATA_DIR}/output',
+      tmp_path: '${SEATUNNEL_DATA_DIR}/tmp',
       file_format_type: 'json',
       custom_filename: true,
       file_name_expression: '${transactionId}_udp_${now}',

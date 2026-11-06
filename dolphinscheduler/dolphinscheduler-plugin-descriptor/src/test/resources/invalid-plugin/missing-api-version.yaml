@@ -1,0 +1,9 @@
+# Invalid: missing apiVersion
+task:
+  type: BAD_TASK
+  category: universal
+  name: Bad Task
+
+form:
+  - field: name
+    type: input

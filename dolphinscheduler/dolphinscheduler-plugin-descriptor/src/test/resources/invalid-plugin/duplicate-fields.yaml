@@ -1,0 +1,12 @@
+apiVersion: ds.plugin/v1
+
+task:
+  type: DUPLICATE_FIELD
+  category: universal
+  name: Duplicate Fields
+
+form:
+  - field: name
+    type: input
+  - field: name
+    type: select

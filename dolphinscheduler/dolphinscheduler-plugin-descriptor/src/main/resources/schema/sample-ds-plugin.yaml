@@ -1,0 +1,71 @@
+# Sample plugin descriptor for testing
+# Place this file at META-INF/ds-plugin.yaml in your task plugin JAR
+
+apiVersion: ds.plugin/v1
+
+task:
+  type: SAMPLE_TASK
+  category: universal
+  name: Sample Task
+  order: 100
+  executeType:
+    - BATCH
+  helpLink: /docs/tasks/sample
+  descriptorVersion: 1
+
+icon:
+  ref: META-INF/ds-plugin/icon.png
+  fallback: default
+
+locales:
+  zh_CN:
+    form.name: 任务名称
+    form.script: 脚本内容
+    tip.script: 输入要执行的脚本
+  en_US:
+    form.name: Task Name
+    form.script: Script Content
+    tip.script: Enter the script to execute
+
+params:
+  dtoClass: org.apache.dolphinscheduler.plugin.task.sample.SampleParameters
+  strict: false
+
+form:
+  - field: name
+    type: input
+    labelKey: form.name
+    required: true
+    placeholder: Enter task name
+
+  - field: script
+    type: editor
+    labelKey: form.script
+    tipKey: tip.script
+    language: shell
+    required: true
+    validate:
+      required: true
+      type: non-empty
+      message: Script cannot be empty
+
+  - field: runMode
+    type: select
+    label: Run Mode
+    options:
+      - label: Serial
+        value: serial
+      - label: Parallel
+        value: parallel
+    defaultValue: serial
+
+  - field: timeout
+    type: input-number
+    label: Timeout (seconds)
+    inputType: number
+    defaultValue: 3600
+    validate:
+      min: 0
+      max: 86400
+    when:
+      runMode: parallel

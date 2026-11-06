@@ -37,7 +37,10 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, 'src')
+      '@': path.resolve(__dirname, 'src'),
+      // Fork overlay: custom implementations that override upstream modules (L0 intrusion)
+      // See patches/ds-3.4.3-plugin-descriptor/README.md for registered overrides
+      '@/fork': path.resolve(__dirname, 'src/fork')
       // resolve vue-i18n warning: You are running the esm-bundler build of vue-i18n.
     }
   },

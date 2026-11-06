@@ -208,9 +208,21 @@ export const useTaskTypeStore = defineStore({
   actions: {
     setTaskTypes(types: TaskType[]): void {
       try {
+        // Patch P2 (R4): Include unknown types with a fallback entry instead of filtering them out.
+        // This prevents silent data loss when backend has types not registered in frontend.
         this.types = types
-          .filter((type) => !!TASK_TYPES_MAP[type])
-          .map((type) => ({ ...TASK_TYPES_MAP[type], type }))
+          .map((type) => {
+            const mapped = TASK_TYPES_MAP[type]
+            if (mapped) {
+              return { ...mapped, type }
+            }
+            // Unknown type: include with generic alias and mark as not descriptor-ized
+            return {
+              alias: type,
+              helperLinkDisable: true,
+              type
+            }
+          })
       } catch (err) {
         this.types = []
       }

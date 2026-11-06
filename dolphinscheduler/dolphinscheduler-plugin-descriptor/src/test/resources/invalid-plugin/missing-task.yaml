@@ -1,0 +1,6 @@
+apiVersion: ds.plugin/v1
+
+# Invalid: missing task section
+form:
+  - field: name
+    type: input

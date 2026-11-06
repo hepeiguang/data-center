@@ -1,0 +1,61 @@
+apiVersion: ds.plugin/v1
+
+task:
+  type: TEST_TASK
+  category: universal
+  name: Test Task
+  order: 1
+  executeType:
+    - BATCH
+  helpLink: /docs/test
+  descriptorVersion: 1
+
+icon:
+  ref: META-INF/ds-plugin/icon.png
+  fallback: default
+
+locales:
+  zh_CN:
+    form.name: 名称
+    form.value: 值
+  en_US:
+    form.name: Name
+    form.value: Value
+
+params:
+  dtoClass: org.apache.dolphinscheduler.plugin.task.test.TestParameters
+  strict: true
+
+form:
+  - field: name
+    type: input
+    labelKey: form.name
+    required: true
+    validate:
+      required: true
+      type: non-empty
+      message: Name is required
+
+  - field: value
+    type: input-number
+    labelKey: form.value
+    defaultValue: 0
+    validate:
+      min: 0
+      max: 100
+
+  - field: mode
+    type: select
+    label: Mode
+    options:
+      - label: Simple
+        value: simple
+      - label: Advanced
+        value: advanced
+    defaultValue: simple
+
+  - field: extraConfig
+    type: input
+    label: Extra Config
+    when:
+      mode: advanced

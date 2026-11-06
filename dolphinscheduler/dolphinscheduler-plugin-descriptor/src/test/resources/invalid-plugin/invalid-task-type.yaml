@@ -1,0 +1,10 @@
+apiVersion: ds.plugin/v1
+
+task:
+  type: lowercase_invalid
+  category: universal
+  name: Invalid Type Name
+
+form:
+  - field: name
+    type: input

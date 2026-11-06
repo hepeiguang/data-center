@@ -19,6 +19,7 @@ import nodes from './tasks'
 import getElementByJson from '@/components/form/get-elements-by-json'
 import { useTaskNodeStore } from '@/store/project/task-node'
 import { TASK_TYPES_MAP } from '@/store/project/task-type'
+import { descriptorCache, convertDescriptorToJson } from '@/fork/plugin-descriptor'
 import type {
   EditWorkflowDefinition,
   FormRules,
@@ -64,7 +65,38 @@ export function useTask({
   }
 
   const taskType = data.taskType || 'SHELL'
-  const nodeFactory = nodes[taskType] || nodes.SHELL
+  let nodeFactory = nodes[taskType]
+
+  // Patch P1 (R4): Try descriptor lookup before falling back to SHELL
+  // This prevents silent parameter overwrite for unknown task types
+  if (!nodeFactory && descriptorCache.hasDescriptor(taskType)) {
+    const detail = descriptorCache.getDetail(taskType)
+    if (detail?.descriptor) {
+      nodeFactory = (params: any) => {
+        const model: Record<string, any> = {
+          taskType,
+          ...params.data?.taskParams
+        }
+        const json = convertDescriptorToJson(
+          { form: detail.descriptor.form, params: detail.descriptor.params },
+          model
+        )
+        return { model: model as any, json }
+      }
+    }
+  }
+
+  // If still no factory, use empty factory instead of SHELL fallback
+  // This will render the read-only view for unknown types
+  if (!nodeFactory) {
+    nodeFactory = (params: any) => {
+      return {
+        model: { taskType, ...params.data?.taskParams } as any,
+        json: [] as IJsonItem[]
+      }
+    }
+  }
+
   const { model, json } = nodeFactory(params)
   jsonRef.value = json
   model.preTasks = taskStore.getPreTasks

@@ -1,0 +1,239 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://dolphinscheduler.apache.org/schemas/ds-plugin-v1.json",
+  "title": "DolphinScheduler Plugin Descriptor v1",
+  "description": "Schema for META-INF/ds-plugin.yaml in task plugin JARs",
+  "type": "object",
+  "required": ["apiVersion", "task", "form"],
+  "additionalProperties": false,
+  "properties": {
+    "apiVersion": {
+      "type": "string",
+      "const": "ds.plugin/v1",
+      "description": "Contract version. Must be exactly 'ds.plugin/v1'."
+    },
+    "task": {
+      "type": "object",
+      "required": ["type", "category", "name"],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "string",
+          "pattern": "^[A-Z][A-Z0-9_]*$",
+          "description": "Task type identifier. Must match TaskChannelFactory.getName()."
+        },
+        "category": {
+          "type": "string",
+          "enum": ["universal", "cloud", "logic", "dataIntegration", "dataComputation", "machineLearning", "other"],
+          "description": "Task category for sidebar grouping."
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "description": "Display name for the task type."
+        },
+        "order": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Sort order within the category."
+        },
+        "executeType": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["BATCH", "STREAM"]
+          },
+          "description": "Supported execution types."
+        },
+        "helpLink": {
+          "type": "string",
+          "format": "uri-reference",
+          "description": "Help documentation link."
+        },
+        "descriptorVersion": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Descriptor schema version for this task type."
+        }
+      }
+    },
+    "icon": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "ref": {
+          "type": "string",
+          "pattern": "^META-INF/ds-plugin/",
+          "description": "Path to icon file within the JAR."
+        },
+        "fallback": {
+          "type": "string",
+          "enum": ["default"],
+          "description": "Fallback strategy when icon is missing."
+        }
+      }
+    },
+    "locales": {
+      "type": "object",
+      "patternProperties": {
+        "^[a-z]{2}_[A-Z]{2}$": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "description": "i18n strings keyed by locale (e.g., zh_CN, en_US)."
+    },
+    "params": {
+      "type": "object",
+      "required": ["dtoClass"],
+      "additionalProperties": false,
+      "properties": {
+        "dtoClass": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)*\\.[A-Z][A-Za-z0-9]*$",
+          "description": "Fully qualified class name of the Parameters DTO."
+        },
+        "strict": {
+          "type": "boolean",
+          "default": false,
+          "description": "If true, reject save when taskParams contains undeclared fields."
+        }
+      }
+    },
+    "form": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/formField"
+      },
+      "description": "Form field descriptors."
+    }
+  },
+  "definitions": {
+    "formField": {
+      "type": "object",
+      "required": ["field", "type"],
+      "additionalProperties": false,
+      "properties": {
+        "field": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Model field name (supports dot notation)."
+        },
+        "type": {
+          "type": "string",
+          "enum": ["input", "select", "editor", "switch", "input-number", "radio", "checkbox", "tree-select", "custom", "custom-parameters", "custom-labels", "multi-input", "multi-condition", "code-editor", "json-editor"],
+          "description": "Widget type mapping to IJsonItem IType."
+        },
+        "labelKey": {
+          "type": "string",
+          "description": "i18n key for the field label."
+        },
+        "label": {
+          "type": "string",
+          "description": "Direct label text (used if labelKey is not provided)."
+        },
+        "required": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether the field is required."
+        },
+        "defaultValue": {
+          "description": "Default value for the field."
+        },
+        "inputType": {
+          "type": "string",
+          "enum": ["text", "number", "password"],
+          "description": "Input type hint."
+        },
+        "placeholder": {
+          "type": "string",
+          "description": "Placeholder text or i18n key."
+        },
+        "tipKey": {
+          "type": "string",
+          "description": "Tooltip text or i18n key."
+        },
+        "options": {
+          "type": "array",
+          "description": "Static options for select/radio/checkbox."
+        },
+        "optionsFrom": {
+          "type": "string",
+          "pattern": "^api:",
+          "description": "API reference for dynamic options."
+        },
+        "validate": {
+          "$ref": "#/definitions/fieldValidation"
+        },
+        "when": {
+          "type": "object",
+          "description": "Conditional visibility. Map of field name to expected value(s)."
+        },
+        "widget": {
+          "type": "string",
+          "description": "Widget name for custom type (references platform component registry)."
+        },
+        "widgetMinVersion": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Minimum required version of the referenced widget."
+        },
+        "props": {
+          "type": "object",
+          "description": "Props to pass to the custom widget component."
+        },
+        "language": {
+          "type": "string",
+          "description": "Programming language for editor type."
+        },
+        "span": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 24,
+          "description": "Grid column span."
+        },
+        "children": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/formField"
+          },
+          "description": "Nested form fields."
+        }
+      }
+    },
+    "fieldValidation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "required": {
+          "type": "boolean",
+          "default": false
+        },
+        "trigger": {
+          "type": "string",
+          "enum": ["blur", "change", "both"]
+        },
+        "type": {
+          "type": "string",
+          "enum": ["non-empty", "email", "url", "regex", "min", "max", "minLength", "maxLength"]
+        },
+        "message": {
+          "type": "string"
+        },
+        "min": {
+          "type": "number"
+        },
+        "max": {
+          "type": "number"
+        },
+        "pattern": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}
