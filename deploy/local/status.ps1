@@ -5,13 +5,17 @@ param(
     [int]$ApiPort = 12346,
     [int]$AssetPort = 12347,
     [int]$UiPort = 5173,
-    [int]$GatewayPort = 0
+    [int]$GatewayPort = 0,
+    [string]$RemoteIndexUrl = "http://123.57.2.64:9200"
 )
 
 # Port / pid / HTTP probe for every service of the local stack.
+# The search index normally lives on the 2C2G server; when nothing listens on the
+# local 9200 the OpenSearch row probes $RemoteIndexUrl instead (no auth there).
 
+$localIndex = [bool](Get-NetTCPConnection -State Listen -LocalPort $OsPort -ErrorAction SilentlyContinue)
 $services = @(
-    @{ n = "OpenSearch";    p = $OsPort;    u = "http://127.0.0.1:$OsPort/" },
+    @{ n = "OpenSearch";    p = $(if ($localIndex) { $OsPort } else { 0 }); u = $(if ($localIndex) { "http://127.0.0.1:$OsPort/" } else { $RemoteIndexUrl }); remote = (-not $localIndex) },
     @{ n = "OpenMetadata";  p = $OmPort;    u = "http://127.0.0.1:$OmPort/api/v1/system/version" },
     @{ n = "DS";            p = $DsPort;    u = "http://127.0.0.1:$DsPort/dolphinscheduler/actuator/health" },
     @{ n = "data-api";      p = $ApiPort;   u = "http://127.0.0.1:$ApiPort/data-api/health" },
@@ -25,6 +29,21 @@ if ($GatewayPort -gt 0) {
 Write-Host ("{0,-13} {1,-8} {2,-9} {3,-6} {4}" -f "service", "port", "pid", "http", "note")
 Write-Host ("{0,-13} {1,-8} {2,-9} {3,-6} {4}" -f "-------", "----", "---", "----", "----")
 foreach ($s in $services) {
+    if ($s.remote) {
+        $code = "-"
+        $note = $s.u
+        try {
+            $r = Invoke-WebRequest -UseBasicParsing -Uri "$($s.u)/_cluster/health" -TimeoutSec 8
+            $code = [string]$r.StatusCode
+            $j = $r.Content | ConvertFrom-Json
+            $note = "$($s.u)  $($j.cluster_name) $($j.status)"
+        } catch {
+            $st = $_.Exception.Response.StatusCode.value__
+            if ($st) { $code = [string]$st } else { $code = "ERR"; $note = "$($s.u) no response" }
+        }
+        Write-Host ("{0,-13} {1,-8} {2,-9} {3,-6} {4}" -f $s.n, "remote", "-", $code, $note)
+        continue
+    }
     $owner = Get-NetTCPConnection -State Listen -LocalPort $s.p -ErrorAction SilentlyContinue |
         Select-Object -First 1 -ExpandProperty OwningProcess
     if (-not $owner) {

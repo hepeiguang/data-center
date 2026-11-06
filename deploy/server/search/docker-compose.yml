@@ -1,0 +1,35 @@
+# OpenSearch for OpenMetadata on the 2C2G server (deployed at /opt/search).
+#
+# Single node, security plugin DISABLED: the endpoint is plain HTTP with no
+# credentials, so 9200 must be restricted by the ECS security group (never
+# 0.0.0.0/0). Memory numbers come from measurements on a 1.6GB box hosting PG:
+#   heap 256m + MaxDirectMemorySize 192m + Metaspace ~170m  -> ~650MB RSS
+#   700m mem_limit caused repeated cgroup OOM kills, 900m is stable
+# Replicas must stay 0 (single node): set per index and via the index template
+#   PUT /*/_settings {"index":{"number_of_replicas":0}}
+#   PUT /_index_template/om_single_node
+#     {"index_patterns":["*_search_index","*_data_index","top_queries-*","*-data-asset*"],
+#      "priority":200,"template":{"settings":{"number_of_replicas":0}}}
+# Otherwise copies stay UNASSIGNED, the cluster goes red and OM logs
+# "Failed to fetch cluster health".
+services:
+  opensearch:
+    image: opensearchproject/opensearch:3.4.0
+    container_name: om-opensearch
+    environment:
+      - discovery.type=single-node
+      - OPENSEARCH_JAVA_OPTS=-Xms256m -Xmx256m -XX:MaxDirectMemorySize=192m -XX:ActiveProcessorCount=2
+      - DISABLE_SECURITY_PLUGIN=true
+      # stops the entrypoint from re-installing the demo TLS/security config
+      - DISABLE_INSTALL_DEMO_CONFIG=true
+      - bootstrap.memory_lock=true
+    ulimits:
+      memlock: { soft: -1, hard: -1 }
+      nofile: { soft: 65536, hard: 65536 }
+    mem_limit: 900m
+    ports:
+      - "9200:9200"
+    volumes:
+      # the node runs as uid 1000; a root-owned data dir fails with AccessDenied
+      - ./data:/usr/share/opensearch/data
+    restart: unless-stopped

@@ -25,6 +25,9 @@ param(
     [string]$AssetJvmOpts = "-Xms64m -Xmx256m -Xss512k -XX:MaxMetaspaceSize=192m",
     [string]$OmJvmOpts = "-Xms512m -Xmx1024m -Xss512k -XX:MaxMetaspaceSize=320m",
     [string]$OsJvmOpts = "-Xms512m -Xmx640m -Xss512k -XX:MaxMetaspaceSize=256m",
+    # the index normally runs on the 2C2G server (see env.sh ELASTICSEARCH_HOST);
+    # pass -WithLocalIndex to start a local OpenSearch instead
+    [switch]$WithLocalIndex,
     [switch]$Force,
     [switch]$WithNginx,
     [string]$NginxExe = "D:\HPG\software\nginx-1.26.1\nginx-1.26.1\nginx.exe"
@@ -32,12 +35,14 @@ param(
 
 # ---------------------------------------------------------------------------
 # One command for the local stack, in dependency order:
-#   OpenSearch :9200 -> OpenMetadata :8585 -> DS standalone :12345
+#   [OpenSearch :9200] -> OpenMetadata :8585 -> DS standalone :12345
 #   -> data-api :12346 -> data-asset :12347 -> DS UI dev :5173 (-> nginx :8088)
-# Services whose port is already listening are skipped, so re-running this
-# script tops up a partially started stack. -Force turns an occupied port into
-# an error. -Profile picks which services are needed so a 2C-class dev box does
-# not have to hold the whole stack (OM + OpenSearch alone are ~1.4GB RSS).
+# The search index normally runs on the 2C2G server (openmetadata/env.sh points at
+# http://123.57.2.64:9200), so OpenSearch is NOT started here by default; pass
+# -WithLocalIndex if you want the old local one. Services whose port is already
+# listening are skipped, so re-running this script tops up a partial stack.
+# -Force turns an occupied port into an error. -Profile picks which services are
+# needed so a 2C-class dev box does not have to hold the whole stack.
 # Default is -Profile api (DS + data-api + UI); pass -Profile asset when the
 # catalog/lineage/governance pages need OpenMetadata, or -Profile all for both.
 # DS and the UI are always started: the UI requires a DS login, and data-api
@@ -58,7 +63,8 @@ if (-not $UiHome) {
 $Run = Join-Path $PSScriptRoot "run"
 New-Item -ItemType Directory -Path $Run -Force | Out-Null
 
-$WantIndex = $Profile -in @("all", "asset")   # OpenSearch + OpenMetadata
+$WantIndex = $Profile -in @("all", "asset")   # OpenMetadata (its index lives on the server)
+$WantLocalOs = $WithLocalIndex                # local OpenSearch is opt-in
 $WantApi = $Profile -in @("all", "api")       # data-api (magic console)
 $WantAsset = $Profile -in @("all", "asset")   # data-asset
 
@@ -116,7 +122,7 @@ if (Test-Path $HadoopHome) {
 $dbFile = Join-Path $DataDir "dsdb.mv.db"
 $dbUrl = "jdbc:h2:file:$($DataDir.Replace('\','/'))/dsdb;MODE=MySQL;AUTO_SERVER=TRUE;DB_CLOSE_DELAY=-1;DATABASE_TO_LOWER=true"
 
-if ($WantIndex) {
+if ($WantLocalOs) {
     Ensure-Service "OpenSearch" $OsPort {
         # launch opensearch.bat directly: the .cmd wrapper uses `start`, which dies when this
         # process already owns redirected stdout/stderr handles
@@ -138,7 +144,9 @@ if ($WantIndex) {
             Remove-Item Env:OPENSEARCH_JAVA_OPTS -ErrorAction SilentlyContinue
         }
     } 300 "$Run\opensearch.out.log"
+}
 
+if ($WantIndex) {
     Ensure-Service "OpenMetadata" $OmPort {
         $launch = Join-Path $LhyfRoot "openmetadata\start-om.cmd"
         if (-not (Test-Path $launch)) { throw "missing $launch" }
