@@ -17,8 +17,8 @@
 
 package org.apache.dolphinscheduler.dataapi.datasource;
 
-import org.apache.dolphinscheduler.dao.entity.DataSource;
-import org.apache.dolphinscheduler.spi.enums.DbType;
+import org.apache.dolphinscheduler.dataapi.meta.DsDataSource;
+import org.apache.dolphinscheduler.dataapi.meta.DbType;
 
 import java.util.Arrays;
 import java.util.Map;
@@ -30,22 +30,22 @@ class DsMagicDataSourceLoaderKeyTest {
 
     @Test
     void prefersSanitizedName() {
-        DataSource a = ds(1, "osint_mysql", DbType.MYSQL);
+        DsDataSource a = ds(1, "osint_mysql", DbType.MYSQL);
         Map<Integer, String> keys = DsMagicDataSourceLoader.assignKeys(Arrays.asList(a));
         Assertions.assertEquals("osint_mysql", keys.get(1));
     }
 
     @Test
     void sanitizesSpecialChars() {
-        DataSource a = ds(2, "Osint-MySQL 生产", DbType.MYSQL);
+        DsDataSource a = ds(2, "Osint-MySQL 生产", DbType.MYSQL);
         Map<Integer, String> keys = DsMagicDataSourceLoader.assignKeys(Arrays.asList(a));
         Assertions.assertEquals("Osint_MySQL", keys.get(2));
     }
 
     @Test
     void collisionAppendsId() {
-        DataSource a = ds(1, "demo", DbType.MYSQL);
-        DataSource b = ds(2, "demo", DbType.DORIS);
+        DsDataSource a = ds(1, "demo", DbType.MYSQL);
+        DsDataSource b = ds(2, "demo", DbType.DORIS);
         Map<Integer, String> keys = DsMagicDataSourceLoader.assignKeys(Arrays.asList(a, b));
         Assertions.assertEquals("demo", keys.get(1));
         Assertions.assertEquals("demo_2", keys.get(2));
@@ -53,20 +53,20 @@ class DsMagicDataSourceLoaderKeyTest {
 
     @Test
     void chineseNameFallsBackToTypeId() {
-        DataSource a = ds(9, "测试库", DbType.MYSQL);
+        DsDataSource a = ds(9, "测试库", DbType.MYSQL);
         Map<Integer, String> keys = DsMagicDataSourceLoader.assignKeys(Arrays.asList(a));
         Assertions.assertEquals("mysql_9", keys.get(9));
     }
 
     @Test
     void displayNameIncludesTypeIdDatabase() {
-        DataSource a = ds(3, "osint_mysql", DbType.MYSQL);
+        DsDataSource a = ds(3, "osint_mysql", DbType.MYSQL);
         String display = DsMagicDataSourceLoader.buildDisplayName(a, "osint");
         Assertions.assertEquals("osint_mysql [MYSQL#3 / osint]", display);
     }
 
-    private static DataSource ds(int id, String name, DbType type) {
-        DataSource d = new DataSource();
+    private static DsDataSource ds(int id, String name, DbType type) {
+        DsDataSource d = new DsDataSource();
         d.setId(id);
         d.setName(name);
         d.setType(type);

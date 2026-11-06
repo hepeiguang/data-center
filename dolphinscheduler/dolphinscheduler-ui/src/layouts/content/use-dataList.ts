@@ -227,6 +227,11 @@ export function useDataList() {
             label: t('menu.data_api_acl'),
             key: '/dataservice/acl',
             icon: renderIcon(SafetyOutlined)
+          },
+          {
+            label: t('menu.data_api_console'),
+            key: '/dataservice/console',
+            icon: renderIcon(DatabaseOutlined)
           }
         ]
       },

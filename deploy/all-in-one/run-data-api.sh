@@ -10,7 +10,14 @@ done
 
 export SPRING_DATASOURCE_URL='jdbc:h2:file:/opt/ds/data/dsdb;MODE=MySQL;AUTO_SERVER=TRUE;DB_CLOSE_DELAY=-1;DATABASE_TO_LOWER=true'
 
-exec java -Xms256m -Xmx512m \
+# Boot 3 needs 17+; the image default JDK stays 11 for DS/SeaTunnel (see Dockerfile)
+API_JAVA="${API_JAVA:-/usr/lib/jvm/java-17-openjdk-amd64/bin/java}"
+if [ ! -x "$API_JAVA" ]; then
+    echo "data-api needs a JDK 17+ runtime, not found: $API_JAVA (override with API_JAVA)" >&2
+    exit 1
+fi
+
+exec "$API_JAVA" -Xms256m -Xmx512m \
     -Dfile.encoding=UTF-8 \
     -Duser.timezone="${TZ:-Asia/Shanghai}" \
     -jar /opt/data-api/dolphinscheduler-data-api.jar \

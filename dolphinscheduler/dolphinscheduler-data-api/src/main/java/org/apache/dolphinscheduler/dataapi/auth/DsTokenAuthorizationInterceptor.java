@@ -17,12 +17,12 @@
 
 package org.apache.dolphinscheduler.dataapi.auth;
 
-import org.apache.dolphinscheduler.common.enums.Flag;
-import org.apache.dolphinscheduler.common.utils.EncryptionUtils;
-import org.apache.dolphinscheduler.dao.entity.Session;
-import org.apache.dolphinscheduler.dao.entity.User;
-import org.apache.dolphinscheduler.dao.repository.SessionDao;
-import org.apache.dolphinscheduler.dao.repository.UserDao;
+import org.apache.dolphinscheduler.dataapi.meta.Flag;
+import org.apache.dolphinscheduler.dataapi.meta.DsDigests;
+import org.apache.dolphinscheduler.dataapi.meta.Session;
+import org.apache.dolphinscheduler.dataapi.meta.User;
+import org.apache.dolphinscheduler.dataapi.meta.SessionRepository;
+import org.apache.dolphinscheduler.dataapi.meta.UserRepository;
 import org.apache.dolphinscheduler.dataapi.config.DataApiProperties;
 
 import java.util.Comparator;
@@ -43,16 +43,16 @@ import org.ssssssss.magicapi.core.interceptor.AuthorizationInterceptor;
 @Component
 public class DsTokenAuthorizationInterceptor implements AuthorizationInterceptor {
 
-    private final UserDao userDao;
-    private final SessionDao sessionDao;
+    private final UserRepository userRepository;
+    private final SessionRepository sessionRepository;
     private final DataApiProperties properties;
 
     /** Ephemeral tokens issued by username/password login (not persisted, bounded TTL). */
     private final Map<String, TokenEntry> sessionTokens = new ConcurrentHashMap<>();
 
-    public DsTokenAuthorizationInterceptor(UserDao userDao, SessionDao sessionDao, DataApiProperties properties) {
-        this.userDao = userDao;
-        this.sessionDao = sessionDao;
+    public DsTokenAuthorizationInterceptor(UserRepository userRepository, SessionRepository sessionRepository, DataApiProperties properties) {
+        this.userRepository = userRepository;
+        this.sessionRepository = sessionRepository;
         this.properties = properties;
     }
 
@@ -73,7 +73,7 @@ public class DsTokenAuthorizationInterceptor implements AuthorizationInterceptor
 
     @Override
     public MagicUser login(String username, String password) throws MagicLoginException {
-        User user = userDao.queryUserByNamePassword(username, EncryptionUtils.getMd5(password));
+        User user = userRepository.queryUserByNamePassword(username, DsDigests.md5(password));
         if (user == null) {
             throw new MagicLoginException("username or password incorrect");
         }
@@ -116,15 +116,15 @@ public class DsTokenAuthorizationInterceptor implements AuthorizationInterceptor
             sessionTokens.remove(token);
             return null;
         }
-        User byAccessToken = userDao.queryUserByToken(token, new Date());
+        User byAccessToken = userRepository.queryUserByToken(token, new Date());
         if (byAccessToken != null) {
             return byAccessToken;
         }
-        Session session = sessionDao.queryById(token);
+        Session session = sessionRepository.queryById(token);
         if (session == null) {
             return null;
         }
-        return userDao.queryById(session.getUserId());
+        return userRepository.queryById(session.getUserId());
     }
 
     private void assertEnabled(User user) throws MagicLoginException {

@@ -4,8 +4,9 @@
 set -euo pipefail
 
 JAVA_HOME="${JAVA_HOME:-/opt/jdk-11}"
-# data-asset is Spring Boot 3.0 (JDK 17+); DS and data-api stay on JAVA_HOME (11)
+# data-asset is Spring Boot 3.0 (JDK 17+); data-api moved to Boot 3.0.13/JDK 17 in the boot3 console migration
 ASSET_JAVA_HOME="${ASSET_JAVA_HOME:-/opt/jdk-17}"
+API_JAVA_HOME="${API_JAVA_HOME:-$ASSET_JAVA_HOME}"
 DS_HOME="${DS_HOME:-/opt/apache-dolphinscheduler-3.4.3-bin}"
 ST_HOME="${ST_HOME:-/opt/apache-seatunnel-3.0.0}"
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
@@ -25,7 +26,7 @@ DS_OPTS="${DS_OPTS:--Xms256m -Xmx512m -Xss512k -XX:MaxMetaspaceSize=256m}"
 API_OPTS="${API_OPTS:--Xms128m -Xmx256m -Xss512k -XX:MaxMetaspaceSize=192m}"
 ASSET_OPTS="${ASSET_OPTS:--Xms64m -Xmx256m -Xss512k -XX:MaxMetaspaceSize=192m}"
 
-for p in "$JAVA_HOME/bin/java" "$ASSET_JAVA_HOME/bin/java" "$DS_HOME/standalone-server/libs" "$ST_HOME/bin/seatunnel.sh" "$DATA_API_JAR"; do
+for p in "$JAVA_HOME/bin/java" "$ASSET_JAVA_HOME/bin/java" "$API_JAVA_HOME/bin/java" "$DS_HOME/standalone-server/libs" "$ST_HOME/bin/seatunnel.sh" "$DATA_API_JAR"; do
     [ -e "$p" ] || { echo "missing prerequisite: $p" >&2; exit 1; }
 done
 
@@ -85,7 +86,7 @@ DATA_API_HOME="${DATA_API_HOME:-$(cd "$(dirname "$DATA_API_JAR")/.." && pwd)}"
 cd "$DATA_API_HOME"
 # only data-api uses the DS H2 file; unset before data-asset so it keeps its own config DB
 export SPRING_DATASOURCE_URL="$DB_URL"
-nohup "$JAVA_HOME/bin/java" $API_OPTS \
+nohup "$API_JAVA_HOME/bin/java" $API_OPTS \
     -jar "$DATA_API_JAR" --spring.profiles.active=h2 --server.port="$API_PORT" \
     > "$RUN/data-api.out.log" 2>&1 &
 echo $! > "$RUN/data-api.pid"

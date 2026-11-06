@@ -22,7 +22,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Locale;
 
-import javax.annotation.PostConstruct;
+import jakarta.annotation.PostConstruct;
 import javax.sql.DataSource;
 
 import lombok.extern.slf4j.Slf4j;
@@ -90,6 +90,28 @@ public class DataApiSchemaBootstrap {
                         + "code INT,"
                         + "trace_id VARCHAR(64),"
                         + "create_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP)");
+                // DATA-API-BOOT3-CONSOLE-PLAN §5.3: governance extension keyed by t_ds_datasource.id
+                st.execute("CREATE TABLE IF NOT EXISTS da_datasource_ext ("
+                        + "datasource_id INT PRIMARY KEY,"
+                        + "console_enabled INT NOT NULL DEFAULT 0,"
+                        + "readonly_user VARCHAR(128),"
+                        + "readonly_password_enc " + text + ","
+                        + "max_rows INT NOT NULL DEFAULT 1000,"
+                        + "masked_columns VARCHAR(1024),"
+                        + "owner VARCHAR(128),"
+                        + "update_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP)");
+                // append-only console audit; SQL stored as 4KB digest + SHA-256 (plan §5.3 rule 2)
+                st.execute("CREATE TABLE IF NOT EXISTS da_console_query_log ("
+                        + "id " + id + ","
+                        + "user_id VARCHAR(64) NOT NULL,"
+                        + "datasource_id INT,"
+                        + "sql_excerpt " + text + ","
+                        + "sql_sha256 CHAR(64),"
+                        + "row_count INT,"
+                        + "latency_ms BIGINT,"
+                        + "result_code INT NOT NULL,"
+                        + "reject_reason VARCHAR(512),"
+                        + "create_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP)");
                 createIndexes(st, postgres, db);
             }
         } catch (SQLException e) {
@@ -106,6 +128,8 @@ public class DataApiSchemaBootstrap {
             safe(st, "CREATE UNIQUE INDEX IF NOT EXISTS uk_da_app_id ON da_app_credential (app_id)");
             safe(st, "CREATE INDEX IF NOT EXISTS idx_da_invoke_api_time"
                     + " ON da_api_invoke_log (api_path, create_time)");
+            safe(st, "CREATE INDEX IF NOT EXISTS idx_da_console_user_time"
+                    + " ON da_console_query_log (user_id, create_time)");
         } else {
             safe(st, "CREATE UNIQUE INDEX uk_da_release ON da_api_release (api_path, version)");
             safe(st, "CREATE INDEX idx_da_release_path ON da_api_release (api_path, create_time)");
@@ -113,6 +137,7 @@ public class DataApiSchemaBootstrap {
                     + " ON da_api_table_ref (api_path, datasource_key, table_name)");
             safe(st, "CREATE UNIQUE INDEX uk_da_app_id ON da_app_credential (app_id)");
             safe(st, "CREATE INDEX idx_da_invoke_api_time ON da_api_invoke_log (api_path, create_time)");
+            safe(st, "CREATE INDEX idx_da_console_user_time ON da_console_query_log (user_id, create_time)");
         }
     }
 
